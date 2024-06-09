@@ -1,0 +1,85 @@
+<mat-stepper [linear]="isLinear" #stepper>
+    <mat-step [stepControl]="firstFormGroup">
+        <form [formGroup]="firstFormGroup">
+            <div class="form-grid2">
+                <ng-template matStepLabel>Información de Contrato</ng-template>
+                <mat-form-field>
+                    <mat-label>Tipo de compromiso</mat-label>
+                    <mat-select>
+                        <mat-option *ngFor="let compromiso of compromisos" [value]="compromiso.value">
+                          {{compromiso.viewValue}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Tipo de contrato</mat-label>
+                    <mat-select>
+                        <mat-option *ngFor="let contrato of contratos" [value]="contrato.value">
+                          {{contrato.viewValue}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Perfil contratista</mat-label>
+                    <mat-select>
+                        <mat-option *ngFor="let compromiso of compromisos" [value]="compromiso.value">
+                            {{compromiso.viewValue}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Fecha Suscripción Estudios y Documentos Previos</mat-label>
+                    <input matInput [matDatepicker]="picker">
+                    <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Aplica póliza</mat-label>
+                    <mat-select>
+                        <!--<mat-option *ngFor="" [value]="value">
+                          {{viewValue}}
+                        </mat-option>-->
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Modalidad de Selección</mat-label>
+                    <mat-select>
+                        <!--<mat-option *ngFor="" [value]="value">
+                          {{viewValue}}
+                        </mat-option>-->
+                    </mat-select>
+                </mat-form-field>
+                <div>
+                    <button mat-button matStepperNext color="primary">Siguiente</button>
+                </div>
+            </div>
+        </form>
+    </mat-step>
+    <mat-step [stepControl]="secondFormGroup">
+        <form [formGroup]="secondFormGroup">
+            <ng-template matStepLabel>Garantía y Mecanismos de Cobertura del Riesgo</ng-template>
+            <div>
+                <button mat-button matStepperPrevious>Atras</button>
+                <button mat-button matStepperNext>Siguiente</button>
+            </div>
+        </form>
+    </mat-step>
+    <mat-step [stepControl]="thirdFormGroup">
+        <form [formGroup]="thirdFormGroup">
+            <ng-template matStepLabel>Información Solicitante y Supervisor</ng-template>
+            <div>
+                <button mat-button matStepperPrevious>Atras</button>
+                <button mat-button matStepperNext>Siguiente</button>
+            </div>
+        </form>
+    </mat-step>
+    <mat-step [stepControl]="fourthFormGroup">
+        <form [formGroup]="fourthFormGroup">
+            <ng-template matStepLabel>Información Contratista</ng-template>
+            <div>
+                <button mat-button matStepperPrevious>Atras</button>
+                <button mat-button matStepperNext>Siguiente</button>
+            </div>
+        </form>
+    </mat-step>
+</mat-stepper>
