@@ -89,7 +89,7 @@ El Core contiene componentes generales que construyen el layout y administran as
 
 Microcliente de gestion de contratos
 
-### Pasos para la Ejecución de usuario_mf
+### Pasos para la Ejecución de gestion_contractual_compras_contrato_mf
 
 1. Clonar el repositorio:
 
