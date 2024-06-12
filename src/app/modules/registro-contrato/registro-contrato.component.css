@@ -1,5 +1,16 @@
-.form-grid2{
+.form-grid2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
+}
+
+mat-table mat-cell,
+mat-table mat-header-cell {
+    border: 1px solid gray;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
 }

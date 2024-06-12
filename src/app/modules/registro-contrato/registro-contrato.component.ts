@@ -8,7 +8,14 @@ import { MatSelectModule } from '@angular/material/select';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule} from '@angular/material/core';
 import {NgFor} from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
 
+interface Fila {
+  amparo: string;
+  suficiencia: string;
+  descripcion: string;
+}
 
 @Component({
   selector: 'app-registro-contrato',
@@ -26,6 +33,8 @@ import {NgFor} from '@angular/common';
     NgFor,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatTableModule,
+    MatIconModule,
   ],
 })
 export class RegistroContratoComponent {
@@ -42,7 +51,7 @@ export class RegistroContratoComponent {
   fourthFormGroup = this._formBuilder.group({
     fourthCtrl: ['', Validators.required],
   });
-  isLinear = true;
+  isLinear = false;
 
   compromisos: any[] = [
     {value: '0', viewValue: 'Aa'},
@@ -55,6 +64,29 @@ export class RegistroContratoComponent {
     {value: '1', viewValue: 'Bb'},
     {value: '2', viewValue: 'Cc'},
   ];
+
+  amparos: any[] = [
+    {value: '0', viewValue: 'Aa'},
+    {value: '1', viewValue: 'Bb'},
+    {value: '2', viewValue: 'Cc'},
+  ];
+
+  displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
+  dataSource: Fila[] = [];
+
+  ngOnInit() {
+    this.dataSource = [
+      {amparo: 'Opción 1', suficiencia: 'Suficiencia 1', descripcion: 'Descripción 1'}
+    ];
+  }
+
+  agregarFila() {
+    this.dataSource = [...this.dataSource, {
+      amparo: '',
+      suficiencia: '',
+      descripcion: ''
+    }];
+  }
 
   constructor(private _formBuilder: FormBuilder) {}
 

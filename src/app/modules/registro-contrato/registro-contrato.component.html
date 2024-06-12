@@ -7,7 +7,7 @@
                     <mat-label>Tipo de Compromiso:</mat-label>
                     <mat-select>
                         <mat-option *ngFor="let compromiso of compromisos" [value]="compromiso.value">
-                          {{compromiso.viewValue}}
+                            {{compromiso.viewValue}}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
@@ -15,7 +15,7 @@
                     <mat-label>Tipo de Contrato:</mat-label>
                     <mat-select>
                         <mat-option *ngFor="let contrato of contratos" [value]="contrato.value">
-                          {{contrato.viewValue}}
+                            {{contrato.viewValue}}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
@@ -85,7 +85,7 @@
                         </mat-option>-->
                     </mat-select>
                 </mat-form-field>
-                <div>
+                <div class="btn-container">
                     <button mat-button matStepperNext color="primary">Siguiente</button>
                 </div>
             </div>
@@ -95,26 +95,74 @@
         <form [formGroup]="secondFormGroup">
             <ng-template matStepLabel>Garantía y Mecanismos de Cobertura del Riesgo</ng-template>
             <div>
-                <button mat-button matStepperPrevious>Atras</button>
-                <button mat-button matStepperNext>Siguiente</button>
+                <mat-table [dataSource]="dataSource">
+                    <ng-container matColumnDef="id">
+                        <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
+                        <mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="amparo">
+                        <mat-header-cell *matHeaderCellDef> AMPARO </mat-header-cell>
+                        <mat-cell *matCellDef="let element">
+                            <mat-select [(value)]="element.amparo">
+                                <mat-option *ngFor="let amparo of amparos" [value]="amparo.value">
+                                    {{amparo.viewValue}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="suficiencia">
+                        <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
+                        <mat-cell *matCellDef="let element">
+                            <input matInput [(ngModel)]="element.suficiencia" />
+                        </mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="descripcion">
+                        <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
+                        <mat-cell *matCellDef="let element">
+                            <input matInput [(ngModel)]="element.descripcion" />
+                        </mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="acciones">
+                        <mat-header-cell *matHeaderCellDef> ACCIONES </mat-header-cell>
+                        <mat-cell *matCellDef="let element">
+                            <button mat-icon-button>
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </mat-cell>
+                    </ng-container>
+
+                    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+                </mat-table>
+                <div class="btn-container">
+                    <button mat-button color="primary" (click)="agregarFila()">Agregar Registro</button>
+                </div>
+            </div>
+            <div class="btn-container">
+                <button mat-button matStepperPrevious color="primary">Atras</button>
+                <button mat-button matStepperNext color="primary">Siguiente</button>
             </div>
         </form>
     </mat-step>
     <mat-step [stepControl]="thirdFormGroup">
         <form [formGroup]="thirdFormGroup">
             <ng-template matStepLabel>Información Solicitante y Supervisor</ng-template>
-            <div>
-                <button mat-button matStepperPrevious>Atras</button>
-                <button mat-button matStepperNext>Siguiente</button>
+            <div class="btn-container">
+                <button mat-button matStepperPrevious color="primary">Atras</button>
+                <button mat-button matStepperNext color="primary">Siguiente</button>
             </div>
         </form>
     </mat-step>
     <mat-step [stepControl]="fourthFormGroup">
         <form [formGroup]="fourthFormGroup">
             <ng-template matStepLabel>Información Contratista</ng-template>
-            <div>
-                <button mat-button matStepperPrevious>Atras</button>
-                <button mat-button matStepperNext>Siguiente</button>
+            <div class="btn-container">
+                <button mat-button matStepperPrevious color="primary">Atras</button>
+                <button mat-button matStepperNext color="primary">Siguiente</button>
             </div>
         </form>
     </mat-step>
