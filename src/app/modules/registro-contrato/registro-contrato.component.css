@@ -1,6 +1,17 @@
+.form-grid1 {
+    padding: 2%;
+    gap: 20px;
+}
+
 .form-grid2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.form-grid3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
 
@@ -9,8 +20,13 @@ mat-table mat-header-cell {
     border: 1px solid gray;
 }
 
+mat-table {
+    padding-bottom: 2%;
+}
+
 .btn-container {
     display: flex;
     justify-content: flex-end;
     align-items: flex-end;
+    gap: 10px;
 }

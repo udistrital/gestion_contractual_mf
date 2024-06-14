@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import {FormBuilder, Validators, FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatStepperModule} from '@angular/material/stepper';
-import {MatButtonModule} from '@angular/material/button';
+import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatNativeDateModule} from '@angular/material/core';
-import {NgFor} from '@angular/common';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { NgFor } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -54,21 +54,21 @@ export class RegistroContratoComponent {
   isLinear = false;
 
   compromisos: any[] = [
-    {value: '0', viewValue: 'Aa'},
-    {value: '1', viewValue: 'Bb'},
-    {value: '2', viewValue: 'Cc'},
+    { value: '0', viewValue: 'Aa' },
+    { value: '1', viewValue: 'Bb' },
+    { value: '2', viewValue: 'Cc' },
   ];
 
   contratos: any[] = [
-    {value: '0', viewValue: 'Aa'},
-    {value: '1', viewValue: 'Bb'},
-    {value: '2', viewValue: 'Cc'},
+    { value: '0', viewValue: 'Aa' },
+    { value: '1', viewValue: 'Bb' },
+    { value: '2', viewValue: 'Cc' },
   ];
 
   amparos: any[] = [
-    {value: '0', viewValue: 'Aa'},
-    {value: '1', viewValue: 'Bb'},
-    {value: '2', viewValue: 'Cc'},
+    { value: '0', viewValue: 'Aa' },
+    { value: '1', viewValue: 'Bb' },
+    { value: '2', viewValue: 'Cc' },
   ];
 
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
@@ -76,7 +76,7 @@ export class RegistroContratoComponent {
 
   ngOnInit() {
     this.dataSource = [
-      {amparo: 'Opción 1', suficiencia: 'Suficiencia 1', descripcion: 'Descripción 1'}
+      { amparo: 'Opción 1', suficiencia: 'Suficiencia 1', descripcion: 'Descripción 1' }
     ];
   }
 
@@ -88,6 +88,35 @@ export class RegistroContratoComponent {
     }];
   }
 
-  constructor(private _formBuilder: FormBuilder) {}
+  supervisores: any[] = [{
+    dependencia: '',
+    sede: '',
+    nombre: '',
+    cargo: '',
+    tipoControl: '',
+    codigoVerificacion: ''
+  }];
+
+  agregarSupervisor() {
+    this.supervisores.push({
+      dependencia: '',
+      sede: '',
+      nombre: '',
+      cargo: '',
+      tipoControl: '',
+      codigoVerificacion: ''
+    });
+  }
+
+  eliminarSupervisor(index: number) {
+    if (this.supervisores.length > 1) {
+      this.supervisores.splice(index, 1);
+    } else {
+      // Opcional: mostrar un mensaje si intentan eliminar el último supervisor
+      console.log('No se puede eliminar el último supervisor');
+    }
+  }
+
+  constructor(private _formBuilder: FormBuilder) { }
 
 }
