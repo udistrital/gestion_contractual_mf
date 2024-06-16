@@ -4,7 +4,7 @@
             <div class="form-grid2">
                 <ng-template matStepLabel>Información de Contrato</ng-template>
                 <mat-form-field>
-                    <mat-label>Tipo de Compromiso:</mat-label>
+                    <mat-label>Tipo de Compromiso:*</mat-label>
                     <mat-select>
                         <mat-option *ngFor="let compromiso of compromisos" [value]="compromiso.value">
                             {{compromiso.viewValue}}
@@ -12,7 +12,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Tipo de Contrato:</mat-label>
+                    <mat-label>Tipo de Contrato:*</mat-label>
                     <mat-select>
                         <mat-option *ngFor="let contrato of contratos" [value]="contrato.value">
                             {{contrato.viewValue}}
@@ -20,7 +20,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Perfil del Contratista:</mat-label>
+                    <mat-label>Perfil del Contratista:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -34,7 +34,7 @@
                     <mat-datepicker #picker></mat-datepicker>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Aplica Póliza:</mat-label>
+                    <mat-label>Aplica Póliza:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -42,7 +42,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Modalidad de Selección:</mat-label>
+                    <mat-label>Modalidad de Selección:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -50,7 +50,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Tipología Espécifica (CGR):</mat-label>
+                    <mat-label>Tipología Espécifica (CGR):*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -58,7 +58,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Régimen de Contratación:</mat-label>
+                    <mat-label>Régimen de Contratación:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -66,7 +66,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Procedimiento:</mat-label>
+                    <mat-label>Procedimiento:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -74,11 +74,11 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Plazo Ejecución:</mat-label>
+                    <mat-label>Plazo Ejecución:*</mat-label>
                     <input matInput>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Unidad de Ejecución:</mat-label>
+                    <mat-label>Unidad de Ejecución:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -143,7 +143,7 @@
                 </div>
             </div>
             <div class="btn-container">
-                <button mat-raised-button matStepperPrevious color="primary">Atras</button>
+                <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
                 <button mat-raised-button matStepperNext color="primary">Siguiente</button>
             </div>
         </form>
@@ -154,7 +154,7 @@
             <h3>Solicitante</h3>
             <div class="form-grid2">
                 <mat-form-field>
-                    <mat-label>Dependencia:</mat-label>
+                    <mat-label>Dependencia:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -162,7 +162,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Sede:</mat-label>
+                    <mat-label>Sede:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -175,7 +175,7 @@
                 <h4>Supervisor {{i + 1}}</h4>
                 <div class="form-grid2">
                     <mat-form-field>
-                        <mat-label>Dependencia:</mat-label>
+                        <mat-label>Dependencia:*</mat-label>
                         <mat-select [(ngModel)]="supervisor.dependencia">
                             <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -183,7 +183,7 @@
                         </mat-select>
                     </mat-form-field>
                     <mat-form-field>
-                        <mat-label>Sede:</mat-label>
+                        <mat-label>Sede:*</mat-label>
                         <mat-select [(ngModel)]="supervisor.sede">
                             <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -191,15 +191,15 @@
                         </mat-select>
                     </mat-form-field>
                     <mat-form-field>
-                        <mat-label>Supervisor:</mat-label>
+                        <mat-label>Supervisor:*</mat-label>
                         <input matInput [(ngModel)]="supervisor.nombre">
                     </mat-form-field>
                     <mat-form-field>
-                        <mat-label>Cargo:</mat-label>
+                        <mat-label>Cargo:*</mat-label>
                         <input matInput [(ngModel)]="supervisor.cargo">
                     </mat-form-field>
                     <mat-form-field>
-                        <mat-label>Tipo de Control:</mat-label>
+                        <mat-label>Tipo de Control:*</mat-label>
                         <mat-select [(ngModel)]="supervisor.tipoControl">
                             <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -207,7 +207,7 @@
                         </mat-select>
                     </mat-form-field>
                     <mat-form-field>
-                        <mat-label>Código de Verificación:</mat-label>
+                        <mat-label>Código de Verificación:*</mat-label>
                         <input matInput [(ngModel)]="supervisor.codigoVerificacion">
                     </mat-form-field>
                 </div>
@@ -222,7 +222,7 @@
             <h3>Lugar de Ejecución</h3>
             <div class="form-grid3">
                 <mat-form-field>
-                    <mat-label>Pais:</mat-label>
+                    <mat-label>Pais:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -230,7 +230,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Departamento:</mat-label>
+                    <mat-label>Departamento:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -238,7 +238,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Sede:</mat-label>
+                    <mat-label>Sede:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -246,7 +246,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Municipio/Ciudad:</mat-label>
+                    <mat-label>Municipio/Ciudad:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -254,7 +254,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Dependencia:</mat-label>
+                    <mat-label>Dependencia:*</mat-label>
                     <mat-select>
                         <!--<mat-option *ngFor="" [value]="value">
                           {{viewValue}}
@@ -262,12 +262,12 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Dirección:</mat-label>
+                    <mat-label>Dirección:*</mat-label>
                     <input matInput>
                 </mat-form-field>
             </div>
             <div class="btn-container">
-                <button mat-raised-button matStepperPrevious color="primary">Atras</button>
+                <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
                 <button mat-raised-button matStepperNext color="primary">Siguiente</button>
             </div>
         </form>
@@ -276,7 +276,7 @@
         <form [formGroup]="fourthFormGroup">
             <ng-template matStepLabel>Información Contratista</ng-template>
             <div class="btn-container">
-                <button mat-raised-button matStepperPrevious color="primary">Atras</button>
+                <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
                 <button mat-raised-button matStepperNext color="primary">Siguiente</button>
             </div>
         </form>
