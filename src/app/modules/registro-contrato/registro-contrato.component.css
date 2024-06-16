@@ -7,12 +7,14 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
+    padding: 2%;
 }
 
 .form-grid3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
+    padding: 2%;
 }
 
 mat-table mat-cell,
@@ -29,4 +31,20 @@ mat-table {
     justify-content: flex-end;
     align-items: flex-end;
     gap: 10px;
+}
+
+.centered-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.centered-content {
+    width: 100%;
+    text-align: center;
+    padding: 2%;
+}
+
+mat-form-field {
+    width: 100%;
 }
