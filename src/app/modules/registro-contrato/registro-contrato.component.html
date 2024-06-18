@@ -1,8 +1,8 @@
-<mat-stepper [linear]="isLinear" #stepper>
+<mat-stepper [linear]="isLinear" #stepper labelPosition="bottom">
     <mat-step [stepControl]="firstFormGroup">
         <form [formGroup]="firstFormGroup">
+            <ng-template matStepLabel>Información de Contrato</ng-template>
             <div class="form-grid2">
-                <ng-template matStepLabel>Información de Contrato</ng-template>
                 <mat-form-field>
                     <mat-label>Tipo de Compromiso:*</mat-label>
                     <mat-select>
@@ -309,6 +309,33 @@
                     <p>ENTIDAD BANCARIA: {{datosContratista.entidadBancaria}}</p>
                 </div>
             </div>
+            <div class="btn-container">
+                <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+                <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+            </div>
+        </form>
+    </mat-step>
+    <mat-step [stepControl]="fifthFormGroup">
+        <form [formGroup]="fifthFormGroup">
+            <ng-template matStepLabel>Información Presupuestal</ng-template>
+            <div class="btn-container">
+                <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+                <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+            </div>
+        </form>
+    </mat-step>
+    <mat-step [stepControl]="sixthFormGroup">
+        <form [formGroup]="sixthFormGroup">
+            <ng-template matStepLabel>Objeto, Justificación y Condiciones de Contrato</ng-template>
+            <div class="btn-container">
+                <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+                <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+            </div>
+        </form>
+    </mat-step>
+    <mat-step [stepControl]="seventhFormGroup">
+        <form [formGroup]="seventhFormGroup">
+            <ng-template matStepLabel>Observaciones</ng-template>
             <div class="btn-container">
                 <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
                 <button mat-raised-button matStepperNext color="primary">Siguiente</button>

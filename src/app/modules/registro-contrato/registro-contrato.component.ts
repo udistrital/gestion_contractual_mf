@@ -187,6 +187,21 @@ export class RegistroContratoComponent {
     }
   }
 
+  // Paso 5
+  fifthFormGroup = this._formBuilder.group({
+    thirdCtrl: ['', Validators.required],
+  });
+
+  // Paso 6
+  sixthFormGroup = this._formBuilder.group({
+    thirdCtrl: ['', Validators.required],
+  });
+  
+  // Paso 7
+  seventhFormGroup = this._formBuilder.group({
+    thirdCtrl: ['', Validators.required],
+  });
+
   // General 
 
   ngOnInit() {
