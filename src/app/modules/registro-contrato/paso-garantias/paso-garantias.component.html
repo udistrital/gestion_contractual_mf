@@ -1,0 +1,49 @@
+<form [formGroup]="secondFormGroup">
+    <div class="form-grid1">
+        <mat-table [dataSource]="dataSource">
+            <ng-container matColumnDef="id">
+                <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
+                <mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="amparo">
+                <mat-header-cell *matHeaderCellDef> AMPARO </mat-header-cell>
+                <mat-cell *matCellDef="let element">
+                    <mat-select [(value)]="element.amparo">
+                        <mat-option *ngFor="let amparo of amparos" [value]="amparo.value">
+                            {{amparo.viewValue}}
+                        </mat-option>
+                    </mat-select>
+                </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="suficiencia">
+                <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
+                <mat-cell *matCellDef="let element">
+                    <input matInput [(ngModel)]="element.suficiencia" />
+                </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="descripcion">
+                <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
+                <mat-cell *matCellDef="let element">
+                    <input matInput [(ngModel)]="element.descripcion" />
+                </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="acciones">
+                <mat-header-cell *matHeaderCellDef> ACCIONES </mat-header-cell>
+                <mat-cell *matCellDef="let element">
+                    <button mat-icon-button>
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-cell>
+            </ng-container>
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+        </mat-table>
+        <div class="btn-container">
+            <button mat-raised-button color="primary" (click)="agregarFila()">Agregar Registro</button>
+        </div>
+    </div>
+    <div class="btn-container">
+        <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+        <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+    </div>
+</form>

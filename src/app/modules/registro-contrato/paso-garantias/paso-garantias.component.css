@@ -1,0 +1,20 @@
+.form-grid1 {
+    padding: 2%;
+    gap: 20px;
+}
+
+mat-table mat-cell,
+mat-table mat-header-cell {
+    border: 1px solid gray;
+}
+
+mat-table {
+    padding-bottom: 2%;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 10px;
+}
