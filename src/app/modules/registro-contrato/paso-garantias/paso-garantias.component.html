@@ -8,23 +8,29 @@
             <ng-container matColumnDef="amparo">
                 <mat-header-cell *matHeaderCellDef> AMPARO </mat-header-cell>
                 <mat-cell *matCellDef="let element">
-                    <mat-select [(value)]="element.amparo">
-                        <mat-option *ngFor="let amparo of amparos" [value]="amparo.value">
-                            {{amparo.viewValue}}
-                        </mat-option>
-                    </mat-select>
+                    <mat-form-field>
+                        <mat-select [(value)]="element.amparo">
+                            <mat-option *ngFor="let amparo of amparos" [value]="amparo.value">
+                                {{amparo.viewValue}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
                 </mat-cell>
             </ng-container>
             <ng-container matColumnDef="suficiencia">
                 <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
                 <mat-cell *matCellDef="let element">
-                    <input matInput [(ngModel)]="element.suficiencia" />
+                    <mat-form-field>
+                        <input matInput [(ngModel)]="element.suficiencia" />
+                    </mat-form-field>
                 </mat-cell>
             </ng-container>
             <ng-container matColumnDef="descripcion">
                 <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
                 <mat-cell *matCellDef="let element">
-                    <input matInput [(ngModel)]="element.descripcion" />
+                    <mat-form-field>
+                        <input matInput [(ngModel)]="element.descripcion" />
+                    </mat-form-field>
                 </mat-cell>
             </ng-container>
             <ng-container matColumnDef="acciones">
