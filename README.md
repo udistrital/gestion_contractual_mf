@@ -9,6 +9,7 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
 - [Angular](https://angular.io/docs) 16.2.14
   - Incluye Animations, Common, Compiler, Core, Forms, Platform-Browser, Platform-Browser-Dynamic, Router
 - [Angular Material](https://material.angular.io/) 16.2.14
+- [Node](https://nodejs.org/en) 18.10.0
 - [RxJS](https://rxjs.dev/guide/overview) ~7.8.0
 - [Single-spa](https://single-spa.js.org/) >=4.0.0
   - Incluye single-spa-angular

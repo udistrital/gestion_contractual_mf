@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { GuardarInfoComponent } from '../guardar-info/guardar-info.component';
 
 @Component({
@@ -23,7 +23,8 @@ import { GuardarInfoComponent } from '../guardar-info/guardar-info.component';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatDialogModule
+    GuardarInfoComponent,
+    MatIconModule
   ],
 })
 export class PasoObjetoComponent {
@@ -31,14 +32,5 @@ export class PasoObjetoComponent {
     sixthCtrl: ['', Validators.required],
   });
 
-  constructor(
-    private _formBuilder: FormBuilder,
-    private dialog: MatDialog
-  ) { }
-
-  openDialog() {
-    this.dialog.open(GuardarInfoComponent, {
-      width: '550px',
-    });
-  }
+  constructor(private _formBuilder: FormBuilder) { }
 }
