@@ -1,6 +1,32 @@
 <form [formGroup]="sixthFormGroup">
+    <div class="full-width-field">
+        <div class="title-box">Objeto del Contrato:</div>
+        <mat-form-field appearance="fill" class="full-width">
+            <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+        </mat-form-field>
+    </div>
+    <div class="full-width-field">
+        <div class="title-box">Actividades:</div>
+        <mat-form-field appearance="fill" class="full-width">
+            <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+        </mat-form-field>
+    </div>
+    <div class="full-width-field">
+        <div class="title-box">Justificación:</div>
+        <mat-form-field appearance="fill" class="full-width">
+            <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+        </mat-form-field>
+    </div>
+    <div class="full-width-field">
+        <div class="title-box">Condiciones:</div>
+        <mat-form-field appearance="fill" class="full-width">
+            <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+        </mat-form-field>
+    </div>
     <div class="btn-container">
         <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-        <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+        <div class="btn-container">
+            <button mat-raised-button color="primary" (click)="openDialog()">Guardar Información</button>
+        </div>
     </div>
 </form>

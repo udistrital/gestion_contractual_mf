@@ -1,16 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
+import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { NgFor } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { GuardarInfoComponent } from '../guardar-info/guardar-info.component';
 
 @Component({
   selector: 'app-paso-objeto',
@@ -26,19 +23,22 @@ import { MatIconModule } from '@angular/material/icon';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    NgFor,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatTableModule,
-    MatIconModule,
+    MatDialogModule
   ],
 })
 export class PasoObjetoComponent {
-  // Paso 6
   sixthFormGroup = this._formBuilder.group({
     sixthCtrl: ['', Validators.required],
   });
 
-  constructor(private _formBuilder: FormBuilder) { }
+  constructor(
+    private _formBuilder: FormBuilder,
+    private dialog: MatDialog
+  ) { }
 
+  openDialog() {
+    this.dialog.open(GuardarInfoComponent, {
+      width: '550px',
+    });
+  }
 }
