@@ -22,8 +22,11 @@ export class GuardarInfoComponent {
       <p style="margin: 5px 0;">VIGENCIA 2024</p>
     `,
       icon: "success",
-      confirmButtonText: 'OK',
+      showCancelButton: true,
+      confirmButtonText: `<span style="display: flex; align-items: center; justify-content: center;"><mat-icon class="material-icons" style="margin-right: 3px">system_update_alt</mat-icon> Descargar</span>`,
       confirmButtonColor: 'rgb(100, 21, 21)',
+      cancelButtonText: "OK",
+      cancelButtonColor: 'rgb(100, 21, 21)',
     });
   }
 }
