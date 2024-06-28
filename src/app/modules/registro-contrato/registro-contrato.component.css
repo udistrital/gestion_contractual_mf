@@ -1,50 +1,20 @@
-.form-grid1 {
-    padding: 2%;
-    gap: 20px;
-}
-
-.form-grid2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    padding: 2%;
-}
-
-.form-grid3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    padding: 2%;
-}
-
-mat-table mat-cell,
-mat-table mat-header-cell {
-    border: 1px solid gray;
-}
-
-mat-table {
-    padding-bottom: 2%;
-}
-
-.btn-container {
+::ng-deep .mat-horizontal-stepper-header-container {
     display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.centered-container {
+::ng-deep .mat-horizontal-stepper-header {
+    flex-basis: 25%;
+    flex-grow: 0;
+    max-width: 25%;
+}
+
+::ng-deep .mat-step-header .mat-step-icon-content {
     display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
-.centered-content {
-    width: 100%;
+::ng-deep .mat-step-text-label {
     text-align: center;
-    padding: 2%;
-}
-
-mat-form-field {
-    width: 100%;
+    white-space: normal;
+    overflow: visible;
 }

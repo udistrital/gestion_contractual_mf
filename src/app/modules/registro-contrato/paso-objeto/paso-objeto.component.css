@@ -1,0 +1,23 @@
+.btn-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.full-width-field {
+    width: 100%;
+    margin: 16px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.title-box {
+    background-color: rgb(100, 21, 21);
+    color: white;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}

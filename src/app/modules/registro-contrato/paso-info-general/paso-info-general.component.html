@@ -1,0 +1,89 @@
+<form [formGroup]="firstFormGroup">
+    <div class="form-grid2">
+        <mat-form-field>
+            <mat-label>Tipo de Compromiso:*</mat-label>
+            <mat-select>
+                <mat-option *ngFor="let compromiso of compromisos" [value]="compromiso.value">
+                    {{compromiso.viewValue}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Tipo de Contrato:*</mat-label>
+            <mat-select>
+                <mat-option *ngFor="let contrato of contratos" [value]="contrato.value">
+                    {{contrato.viewValue}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Perfil del Contratista:*</mat-label>
+            <mat-select>
+                <!--<mat-option *ngFor="" [value]="value">
+                      {{viewValue}}
+                    </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Fecha Suscripción Estudios y Documentos Previos:</mat-label>
+            <input matInput [matDatepicker]="picker">
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Aplica Póliza:*</mat-label>
+            <mat-select>
+                <!--<mat-option *ngFor="" [value]="value">
+                      {{viewValue}}
+                    </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Modalidad de Selección:*</mat-label>
+            <mat-select>
+                <!--<mat-option *ngFor="" [value]="value">
+                      {{viewValue}}
+                    </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Tipología Espécifica (CGR):*</mat-label>
+            <mat-select>
+                <!--<mat-option *ngFor="" [value]="value">
+                      {{viewValue}}
+                    </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Régimen de Contratación:*</mat-label>
+            <mat-select>
+                <!--<mat-option *ngFor="" [value]="value">
+                      {{viewValue}}
+                    </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Procedimiento:*</mat-label>
+            <mat-select>
+                <!--<mat-option *ngFor="" [value]="value">
+                      {{viewValue}}
+                    </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Plazo Ejecución:*</mat-label>
+            <input matInput>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Unidad de Ejecución:*</mat-label>
+            <mat-select>
+                <!--<mat-option *ngFor="" [value]="value">
+                      {{viewValue}}
+                    </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <div class="btn-container">
+            <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+        </div>
+    </div>
+</form>

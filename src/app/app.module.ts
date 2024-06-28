@@ -7,7 +7,7 @@ import { RegistroContratoComponent } from './modules/registro-contrato/registro-
 
 @NgModule({
   declarations: [
-    AppComponent,
+    AppComponent
   ],
   imports: [
     BrowserModule,

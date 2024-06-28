@@ -1,0 +1,40 @@
+<form [formGroup]="fourthFormGroup">
+    <div class="form-grid3">
+        <mat-form-field>
+            <mat-label>Clase Contratista:*</mat-label>
+            <mat-select formControlName="claseContratista">
+                <mat-option *ngFor="let tipo of tiposContratista" [value]="tipo.value">
+                    {{tipo.viewValue}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <div class="centered-container">
+        <div class="centered-content">
+            <h3>Consulta de Contratista</h3>
+            <mat-form-field>
+                <mat-label>Digite el documento del contratista*</mat-label>
+                <input matInput formControlName="documentoContratista">
+            </mat-form-field>
+            <h3>Información del Contratista</h3>
+            <p>TIPO PERSONA: {{datosContratista.tipoPersona}}</p>
+            <p>NOMBRE: {{datosContratista.nombre}}</p>
+            <p>DOCUMENTO: {{datosContratista.documento}}</p>
+            <p>CIUDAD DE CONTACTO: {{datosContratista.ciudadContacto}}</p>
+            <p>DIRECCIÓN: {{datosContratista.direccion}}</p>
+            <p>CORREO: {{datosContratista.correo}}</p>
+            <p>SITIO WEB: {{datosContratista.sitioWeb}}</p>
+            <p>ASESOR: {{datosContratista.asesor}}</p>
+            <p>TELÉFONO ASESOR: {{datosContratista.telefonoAsesor}}</p>
+            <p>DESCRIPCIÓN: {{datosContratista.descripcion}}</p>
+            <p>PUNTAJE DE EVALUACIÓN: {{datosContratista.puntajeEvaluacion}}</p>
+            <p>TIPO CUENTA BANCARIA: {{datosContratista.tipoCuentaBancaria}}</p>
+            <p>NÚMERO CUENTA: {{datosContratista.numeroCuenta}}</p>
+            <p>ENTIDAD BANCARIA: {{datosContratista.entidadBancaria}}</p>
+        </div>
+    </div>
+    <div class="btn-container">
+        <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+        <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+    </div>
+</form>
