@@ -1,3 +1,5 @@
 export const environment = {
-    production: true,
+  production: true,
+  PARAMETROS_SERVICE: 'http://pruebasapi.intranetoas.udistrital.edu.co:8510/v1/',
 };
+

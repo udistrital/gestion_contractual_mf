@@ -1,9 +1,9 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { RegistroContratoComponent } from './modules/registro-contrato/registro-contrato.component';
+import { ParametrosService } from './services/parametros.service';
+import { RequestManager } from './managers/requestManager';
 
 @NgModule({
   declarations: [
@@ -13,7 +13,12 @@ import { RegistroContratoComponent } from './modules/registro-contrato/registro-
     BrowserModule,
     AppRoutingModule
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  providers: [
+    ParametrosService,
+    RequestManager,
+  ],
+  bootstrap: [
+    AppComponent
+  ]
 })
 export class AppModule { }

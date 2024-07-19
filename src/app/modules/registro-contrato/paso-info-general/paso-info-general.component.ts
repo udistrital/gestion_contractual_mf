@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { NgFor } from '@angular/common';
+import { ParametrosService } from 'src/app/services/parametros.service';
 
 @Component({
   selector: 'app-paso-info-general',
@@ -27,25 +28,46 @@ import { NgFor } from '@angular/common';
     NgFor,
     MatDatepickerModule,
     MatNativeDateModule,
-  ],
+  ]
 })
+
 export class PasoInfoGeneralComponent {
+
+  constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService) { }
+
   // Paso 1 
   firstFormGroup = this._formBuilder.group({
     firstCtrl: ['', Validators.required],
   });
 
-  compromisos: any[] = [
-    { value: '0', viewValue: 'Aa' },
-    { value: '1', viewValue: 'Bb' },
-    { value: '2', viewValue: 'Cc' },
-  ];
+  compromisos: any[] = [];
+  contratos: any[] = [];
+  modalidad_seleccion: any[] = [];
+  tipologia_especifica: any[] = [];
+  regimen_contratacion: any[] = [];
+  procedimiento: any[] = [];
+  plazo_ejecucion: any[] = [];
+  unidad_ejecucion: any[] = [];
 
-  contratos: any[] = [
-    { value: '0', viewValue: 'Aa' },
-    { value: '1', viewValue: 'Bb' },
-    { value: '2', viewValue: 'Cc' },
-  ];
+  // orden-contrato
+  perfinl_contratista: any[] = [];
+  fecha_suscripcion: any[] = [];
+  aplica_poliza: any[] = [];
+  // convenio
+  vigencia_convenio: any[] = [];
+  convenio: any[] = [];
+  nombre_convenio: any[] = [];
 
-  constructor(private _formBuilder: FormBuilder) { }
+  ngOnInit():void{
+    this.CargarCompromisos();
+
+  }
+
+  CargarCompromisos(){
+    this.parametrosService.get('parametro?query=TipoParametroId__CodigoAbreviacion:COM&limit=0').subscribe((Response: any) => {
+      if(Response.Status == "200"){
+        this.compromisos = Response.Data;
+      }
+    })
+  }
 }
