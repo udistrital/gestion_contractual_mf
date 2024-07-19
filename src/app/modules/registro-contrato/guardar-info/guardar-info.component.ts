@@ -1,17 +1,10 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-guardar-info',
-  standalone: true,
   templateUrl: './guardar-info.component.html',
   styleUrls: ['./guardar-info.component.css'],
-  imports: [
-    CommonModule,
-    MatButtonModule
-  ]
 })
 export class GuardarInfoComponent {
   mostrarModal() {
