@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 
 interface Fila {
   amparo: string;
@@ -13,13 +12,10 @@ interface Fila {
   templateUrl: './paso-garantias.component.html',
   styleUrls: ['./paso-garantias.component.css'],
 })
+export class PasoGarantiasComponent implements OnInit {
+  secondFormGroup: FormGroup;
 
-export class PasoGarantiasComponent {
-  secondFormGroup = this._formBuilder.group({
-    secondCtrl: ['', Validators.required],
-  });
-
-  amparos: any[] = [
+  amparos: { value: string; viewValue: string }[] = [
     { value: '0', viewValue: 'Aa' },
     { value: '1', viewValue: 'Bb' },
     { value: '2', viewValue: 'Cc' },
@@ -28,19 +24,40 @@ export class PasoGarantiasComponent {
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
   dataSource: Fila[] = [];
 
-  agregarFila() {
-    this.dataSource = [...this.dataSource, {
-      amparo: '',
-      suficiencia: '',
-      descripcion: ''
-    }];
+  constructor(private _formBuilder: FormBuilder) {
+    this.secondFormGroup = this._formBuilder.group({
+      filas: this._formBuilder.array([])
+    });
   }
 
   ngOnInit() {
-    this.dataSource = [
-      { amparo: 'Opción 1', suficiencia: 'Suficiencia 1', descripcion: 'Descripción 1' }
-    ];
+    // Agregar una fila inicial
+    this.agregarFila();
   }
 
-  constructor(private _formBuilder: FormBuilder) { }
+  get filasFormArray(): FormArray {
+    return this.secondFormGroup.get('filas') as FormArray;
+  }
+
+  crearFilaFormGroup(): FormGroup {
+    return this._formBuilder.group({
+      amparo: ['', Validators.required],
+      suficiencia: ['', Validators.required],
+      descripcion: ['', Validators.required]
+    });
+  }
+
+  agregarFila() {
+    this.filasFormArray.push(this.crearFilaFormGroup());
+    this.actualizarDataSource();
+  }
+
+  eliminarFila(index: number) {
+    this.filasFormArray.removeAt(index);
+    this.actualizarDataSource();
+  }
+
+  actualizarDataSource() {
+    this.dataSource = this.filasFormArray.controls.map(control => control.value);
+  }
 }

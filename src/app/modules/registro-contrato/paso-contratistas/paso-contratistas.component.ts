@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
-
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, Validators, FormGroup } from '@angular/forms';
 
 interface DatosContratista {
   tipoPersona: string;
@@ -24,16 +23,21 @@ interface DatosContratista {
   templateUrl: './paso-contratistas.component.html',
   styleUrls: ['./paso-contratistas.component.css'],
 })
-export class PasoContratistasComponent {
-  fourthFormGroup!: FormGroup;
-  tiposContratista: any[] = [
+export class PasoContratistasComponent implements OnInit {
+  fourthFormGroup = this._formBuilder.group({
+    claseContratista: ['', Validators.required],
+    documentoContratista: ['', Validators.required],
+  });
+
+  tiposContratista: { value: string; viewValue: string }[] = [
     { value: 'clase1', viewValue: 'Clase 1' },
     { value: 'clase2', viewValue: 'Clase 2' }
   ];
-  datosContratista: any = {};
+  datosContratista: DatosContratista | null = null;
+  datosContratistaArray: { label: string; value: string }[] = [];
 
   // Datos mock
-  contratosMock: { [key: string]: { [key: string]: DatosContratista } } = {
+  private readonly contratosMock: Record<string, Record<string, DatosContratista>> = {
     'clase1': {
       '12345': {
         tipoPersona: 'Aa',
@@ -72,31 +76,35 @@ export class PasoContratistasComponent {
     }
   };
 
+  constructor(private _formBuilder: FormBuilder) { }
+
+  ngOnInit() {
+    this.fourthFormGroup.valueChanges.subscribe(() => this.buscarContratista());
+  }
+
   buscarContratista() {
     const { claseContratista, documentoContratista } = this.fourthFormGroup.value;
     if (claseContratista && documentoContratista) {
       const contratosTipo = this.contratosMock[claseContratista];
       if (contratosTipo) {
-        this.datosContratista = contratosTipo[documentoContratista] || {};
+        this.datosContratista = contratosTipo[documentoContratista] || null;
       } else {
-        this.datosContratista = {};
+        this.datosContratista = null;
       }
     } else {
-      this.datosContratista = {};
+      this.datosContratista = null;
+    }
+    this.actualizarDatosContratistaArray();
+  }
+
+  private actualizarDatosContratistaArray() {
+    if (this.datosContratista) {
+      this.datosContratistaArray = Object.entries(this.datosContratista).map(([key, value]) => ({
+        label: key.toUpperCase(),
+        value: value
+      }));
+    } else {
+      this.datosContratistaArray = [];
     }
   }
-  
-  ngOnInit() {
-
-    this.fourthFormGroup = this._formBuilder.group({
-      thirdCtrl: ['', Validators.required],
-      claseContratista: [''],
-      documentoContratista: ['']
-    });
-
-    this.fourthFormGroup.valueChanges.subscribe(() => this.buscarContratista());
-  }
-
-  constructor(private _formBuilder: FormBuilder) { }
-
 }

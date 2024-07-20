@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators} from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-paso-info-general',
@@ -10,11 +11,20 @@ import { ParametrosService } from 'src/app/services/parametros.service';
 
 export class PasoInfoGeneralComponent {
 
-  constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService) { }
+  constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService) {}
 
-  // Paso 1 
   firstFormGroup = this._formBuilder.group({
-    firstCtrl: ['', Validators.required],
+    tipoCompromiso: ['', Validators.required],
+    tipoContrato: ['', Validators.required],
+    perfilContratista: ['', Validators.required],
+    fechaSuscripcion: ['', Validators.required],
+    aplicaPoliza: ['', Validators.required],
+    modalidadSeleccion: ['', Validators.required],
+    tipologiaEspecifica: ['', Validators.required],
+    regimenContratacion: ['', Validators.required],
+    procedimiento: ['', Validators.required],
+    plazoEjecucion: ['', Validators.required],
+    unidadEjecucion: ['', Validators.required],
   });
 
   compromisos: any[] = [];
@@ -41,7 +51,15 @@ export class PasoInfoGeneralComponent {
   }
 
   CargarCompromisos(){
-    this.parametrosService.get('parametro?query=TipoParametroId__CodigoAbreviacion:COM&limit=0').subscribe((Response: any) => {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_COMPROMISO_ID + '&limit=0').subscribe((Response: any) => {
+      if(Response.Status == "200"){
+        this.compromisos = Response.Data;
+      }
+    })
+  }
+
+  CargarContratos(){
+    this.parametrosService.get('parametro?query=ParametroPadreId:' + /*id compromiso*/ + '&TipoParametroId:'+ environment.TIPO_CONTRATO_ID +'&limit=0').subscribe((Response: any) => {
       if(Response.Status == "200"){
         this.compromisos = Response.Data;
       }

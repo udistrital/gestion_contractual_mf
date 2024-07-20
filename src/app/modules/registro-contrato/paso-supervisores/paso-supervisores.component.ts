@@ -10,7 +10,16 @@ import { FormBuilder, Validators } from '@angular/forms';
 
 export class PasoSupervisoresComponent {
   thirdFormGroup = this._formBuilder.group({
-    thirdCtrl: ['', Validators.required],
+    dependencia: ['', Validators.required],
+    sede: ['', Validators.required],
+    supervisor: ['', Validators.required],
+    cargo: ['', Validators.required],
+    tipoControl: ['', Validators.required],
+    codigoVerificacion: ['', Validators.required],
+    pais: ['', Validators.required],
+    departamento: ['', Validators.required],
+    municipioCiudad: ['', Validators.required],
+    direccion: ['', Validators.required]
   });
 
   supervisores: any[] = [{
