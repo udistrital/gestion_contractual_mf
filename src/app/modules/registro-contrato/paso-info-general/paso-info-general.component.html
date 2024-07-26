@@ -3,7 +3,7 @@
         <mat-form-field>
             <mat-label>Tipo de Compromiso:</mat-label>
             <mat-select formControlName="tipoCompromiso">
-                <mat-option *ngFor="let compromiso of compromisos" [value]="compromiso.value">
+                <mat-option *ngFor="let compromiso of compromisos" [value]="compromiso.Id">
                     {{compromiso.Nombre}}
                 </mat-option>
             </mat-select>
@@ -11,63 +11,96 @@
         <mat-form-field>
             <mat-label>Tipo de Contrato:</mat-label>
             <mat-select formControlName="tipoContrato">
-                <mat-option *ngFor="let contrato of contratos" [value]="contrato.value">
+                <mat-option *ngFor="let contrato of contratos" [value]="contrato.Id">
                     {{contrato.Nombre}}
                 </mat-option>
             </mat-select>
         </mat-form-field>
-        <mat-form-field>
-            <mat-label>Perfil del Contratista:</mat-label>
-            <mat-select formControlName="perfilContratista">
-                <mat-option *ngFor="let perfil_contratista of perfil_contratista" [value]="perfil_contratista.value">
-                      {{perfil_contratista.Nombre}}
+
+        <ng-container *ngIf="showContratoFields">
+            <mat-form-field *ngIf="firstFormGroup.get('perfilContratista')?.enabled">
+                <mat-label>Perfil del Contratista:</mat-label>
+                <mat-select formControlName="perfilContratista">
+                    <mat-option *ngFor="let perfil_contratista of perfil_contratista" [value]="perfil_contratista.Id">
+                        {{perfil_contratista.Nombre}}
                     </mat-option>
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Fecha Suscripción Estudios y Documentos Previos:</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="fechaSuscripcion">
-            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Aplica Póliza:</mat-label>
-            <mat-select formControlName="aplicaPoliza">
-                <mat-option *ngFor="let aplica_poliza of aplica_poliza" [value]="aplica_poliza.value">
-                      {{aplica_poliza.viewValue}}
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Fecha Suscripción Estudios y Documentos Previos:</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="fechaSuscripcion">
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Aplica Póliza:</mat-label>
+                <mat-select formControlName="aplicaPoliza">
+                    <mat-option *ngFor="let aplica_poliza of aplica_poliza" [value]="aplica_poliza.value">
+                        {{aplica_poliza.viewValue}}
                     </mat-option>
-            </mat-select>
-        </mat-form-field>
+                </mat-select>
+            </mat-form-field>
+        </ng-container>
+
+        <ng-container *ngIf="showConvenioFields">
+            <mat-form-field>
+                <mat-label>Vigencia de Convenio:</mat-label>
+                <mat-select formControlName="vigenciaConvenio">
+                    <mat-option *ngFor="let vigencia_convenio of vigencia_convenio" [value]="vigencia_convenio.Id">
+                        {{vigencia_convenio.Nombre}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Convenio:</mat-label>
+                <mat-select formControlName="convenio">
+                    <mat-option *ngFor="let convenio of convenio" [value]="convenio.Id">
+                        {{convenio.Nombre}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Nombre Convenio:</mat-label>
+                <mat-select formControlName="nombreConvenio">
+                    <mat-option *ngFor="let nombre_convenio of nombre_convenio" [value]="nombre_convenio.Id">
+                        {{nombre_convenio.Nombre}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </ng-container>
+
         <mat-form-field>
             <mat-label>Modalidad de Selección:</mat-label>
             <mat-select formControlName="modalidadSeleccion">
-                <mat-option *ngFor="let modalidad_seleccion of modalidad_seleccion" [value]="modalidad_seleccion.value">
-                      {{modalidad_seleccion.Nombre}}
-                    </mat-option>
+                <mat-option *ngFor="let modalidad_seleccion of modalidad_seleccion" [value]="modalidad_seleccion.Id">
+                    {{modalidad_seleccion.Nombre}}
+                </mat-option>
             </mat-select>
         </mat-form-field>
         <mat-form-field>
             <mat-label>Tipología Espécifica (CGR):</mat-label>
             <mat-select formControlName="tipologiaEspecifica">
-                <mat-option *ngFor="let tipologia_especifica of tipologia_especifica" [value]="tipologia_especifica.value">
-                      {{tipologia_especifica.Nombre}}
-                    </mat-option>
+                <mat-option *ngFor="let tipologia_especifica of tipologia_especifica"
+                    [value]="tipologia_especifica.value">
+                    {{tipologia_especifica.Nombre}}
+                </mat-option>
             </mat-select>
         </mat-form-field>
         <mat-form-field>
             <mat-label>Régimen de Contratación:</mat-label>
             <mat-select formControlName="regimenContratacion">
-                <mat-option *ngFor="let regimen_contratacion of regimen_contratacion" [value]="regimen_contratacion.value">
-                      {{regimen_contratacion.Nombre}}
-                    </mat-option>
+                <mat-option *ngFor="let regimen_contratacion of regimen_contratacion"
+                    [value]="regimen_contratacion.value">
+                    {{regimen_contratacion.Nombre}}
+                </mat-option>
             </mat-select>
         </mat-form-field>
         <mat-form-field>
             <mat-label>Procedimiento:</mat-label>
             <mat-select formControlName="procedimiento">
-                <mat-option *ngFor="let procedimiento of procedimiento" [value]="procedimiento.value">
-                      {{procedimiento.Nombre}}
-                    </mat-option>
+                <mat-option *ngFor="let procedimiento of procedimiento" [value]="procedimiento.Id">
+                    {{procedimiento.Nombre}}
+                </mat-option>
             </mat-select>
         </mat-form-field>
         <mat-form-field>
@@ -77,13 +110,13 @@
         <mat-form-field>
             <mat-label>Unidad de Ejecución:</mat-label>
             <mat-select formControlName="unidadEjecucion">
-                <mat-option *ngFor="let unidad_ejecucion of unidad_ejecucion" [value]="unidad_ejecucion.value">
-                      {{unidad_ejecucion.Nombre}}
-                    </mat-option>
+                <mat-option *ngFor="let unidad_ejecucion of unidad_ejecucion" [value]="unidad_ejecucion.Id">
+                    {{unidad_ejecucion.Nombre}}
+                </mat-option>
             </mat-select>
         </mat-form-field>
         <div class="btn-container">
-            <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+            <button mat-raised-button matStepperNext color="primary">Guardar y Continuar</button>
         </div>
     </div>
 </form>
