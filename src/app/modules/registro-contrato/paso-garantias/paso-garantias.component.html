@@ -7,9 +7,9 @@
             </ng-container>
             <ng-container matColumnDef="amparo">
                 <mat-header-cell *matHeaderCellDef> AMPARO </mat-header-cell>
-                <mat-cell *matCellDef="let element">
+                <mat-cell *matCellDef="let element; let i = index">
                     <mat-form-field>
-                        <mat-select [(value)]="element.amparo">
+                        <mat-select [formControlName]="'amparo' + i">
                             <mat-option *ngFor="let amparo of amparos" [value]="amparo.value">
                                 {{amparo.viewValue}}
                             </mat-option>
@@ -19,24 +19,24 @@
             </ng-container>
             <ng-container matColumnDef="suficiencia">
                 <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
-                <mat-cell *matCellDef="let element">
+                <mat-cell *matCellDef="let element; let i = index">
                     <mat-form-field>
-                        <input matInput [(ngModel)]="element.suficiencia" />
+                        <input matInput [formControlName]="'suficiencia' + i" />
                     </mat-form-field>
                 </mat-cell>
             </ng-container>
             <ng-container matColumnDef="descripcion">
                 <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
-                <mat-cell *matCellDef="let element">
+                <mat-cell *matCellDef="let element; let i = index">
                     <mat-form-field>
-                        <input matInput [(ngModel)]="element.descripcion" />
+                        <input matInput [formControlName]="'descripcion' + i" />
                     </mat-form-field>
                 </mat-cell>
             </ng-container>
             <ng-container matColumnDef="acciones">
                 <mat-header-cell *matHeaderCellDef> ACCIONES </mat-header-cell>
-                <mat-cell *matCellDef="let element">
-                    <button mat-icon-button>
+                <mat-cell *matCellDef="let element; let i = index">
+                    <button mat-icon-button (click)="eliminarFila(i)">
                         <mat-icon>delete</mat-icon>
                     </button>
                 </mat-cell>
@@ -50,6 +50,6 @@
     </div>
     <div class="btn-container">
         <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-        <button mat-raised-button matStepperNext color="primary">Siguiente</button>
+        <button mat-raised-button matStepperNext color="primary" [disabled]="!secondFormGroup.valid">Guardar y Continuar</button>
     </div>
 </form>

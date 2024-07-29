@@ -1,19 +1,36 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { RegistroContratoComponent } from './modules/registro-contrato/registro-contrato.component';
+import { CommonModule } from '@angular/common';
+import { ParametrosService } from './services/parametros.service';
+import { RequestManager } from './managers/requestManager';
+import { RegistroContratoModule } from './modules/registro-contrato/registro-contrato.module';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatIconModule } from '@angular/material/icon';
+import { HttpClientModule } from '@angular/common/http';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
+    RegistroContratoModule,
     BrowserModule,
-    AppRoutingModule
+    BrowserAnimationsModule,
+    AppRoutingModule,
+    CommonModule,
+    MatIconModule,
+    HttpClientModule,
+    MatSnackBarModule
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  providers: [
+    ParametrosService,
+    RequestManager,
+  ],
+  bootstrap: [
+    AppComponent
+  ]
 })
 export class AppModule { }

@@ -1,29 +1,12 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators} from '@angular/forms';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatDialogModule } from '@angular/material/dialog';
-import { PasoInfoGeneralComponent } from './paso-info-general/paso-info-general.component';
-import { PasoGarantiasComponent } from './paso-garantias/paso-garantias.component';
-import { PasoSupervisoresComponent } from './paso-supervisores/paso-supervisores.component';
-import { PasoContratistasComponent } from './paso-contratistas/paso-contratistas.component';
-import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-info-presupuestal.component';
-import { PasoObjetoComponent } from './paso-objeto/paso-objeto.component';
+
 
 @Component({
   selector: 'app-registro-contrato',
   templateUrl: './registro-contrato.component.html',
   styleUrls: ['./registro-contrato.component.css'],
-  standalone: true,
-  imports: [
-    MatStepperModule,
-    MatDialogModule,
-    PasoInfoGeneralComponent,
-    PasoGarantiasComponent,
-    PasoSupervisoresComponent,
-    PasoContratistasComponent,
-    PasoInfoPresupuestalComponent,
-    PasoObjetoComponent
-  ],
+
 })
 
 export class RegistroContratoComponent {
