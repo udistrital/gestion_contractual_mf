@@ -32,7 +32,7 @@
                 <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
             </mat-form-field>
-            <mat-form-field>
+            <mat-form-field *ngIf="firstFormGroup.get('aplicaPoliza')?.enabled">
                 <mat-label>Aplica Póliza:</mat-label>
                 <mat-select formControlName="aplicaPoliza">
                     <mat-option *ngFor="let aplica_poliza of aplica_poliza" [value]="aplica_poliza.value">
@@ -61,11 +61,7 @@
             </mat-form-field>
             <mat-form-field>
                 <mat-label>Nombre Convenio:</mat-label>
-                <mat-select formControlName="nombreConvenio">
-                    <mat-option *ngFor="let nombre_convenio of nombre_convenio" [value]="nombre_convenio.Id">
-                        {{nombre_convenio.Nombre}}
-                    </mat-option>
-                </mat-select>
+                <input matInput formControlName="nombreConvenio">
             </mat-form-field>
         </ng-container>
 
@@ -81,7 +77,7 @@
             <mat-label>Tipología Espécifica (CGR):</mat-label>
             <mat-select formControlName="tipologiaEspecifica">
                 <mat-option *ngFor="let tipologia_especifica of tipologia_especifica"
-                    [value]="tipologia_especifica.value">
+                    [value]="tipologia_especifica.Id">
                     {{tipologia_especifica.Nombre}}
                 </mat-option>
             </mat-select>
@@ -90,7 +86,7 @@
             <mat-label>Régimen de Contratación:</mat-label>
             <mat-select formControlName="regimenContratacion">
                 <mat-option *ngFor="let regimen_contratacion of regimen_contratacion"
-                    [value]="regimen_contratacion.value">
+                    [value]="regimen_contratacion.Id">
                     {{regimen_contratacion.Nombre}}
                 </mat-option>
             </mat-select>
