@@ -57,7 +57,7 @@ export class RequestManager {
           }
         },
       ),
-      catchError(this.errManager.handleError.bind(this)),
+      catchError((error) => this.errManager.handleError(error)),
     );
   }
 
@@ -69,7 +69,7 @@ export class RequestManager {
    */
   post(endpoint: any, element: any) {
     return this.http.post<any>(`${this.path}${endpoint}`, element, this.httpOptions).pipe(
-      catchError(this.errManager.handleError),
+      catchError((error) => this.errManager.handleError(error)),
     );
   }
 
@@ -83,7 +83,7 @@ export class RequestManager {
     return this.http.post<any>(`${this.path}${endpoint}`, element, {    headers: new HttpHeaders({
       'Content-Type': 'multipart/form-data',
   })}).pipe(
-      catchError(this.errManager.handleError),
+      catchError((error) => this.errManager.handleError(error)),
     );
   }
 
@@ -96,7 +96,7 @@ export class RequestManager {
   put(endpoint: any, element: { Id: any; }) {
     const path = (element.Id) ? `${this.path}${endpoint}/${element.Id}` : `${this.path}${endpoint}`;
     return this.http.put<any>(path, element, this.httpOptions).pipe(
-      catchError(this.errManager.handleError),
+      catchError((error) => this.errManager.handleError(error)),
     );
   }
 
@@ -108,7 +108,7 @@ export class RequestManager {
    */
   delete(endpoint: any, id: any) {
     return this.http.delete<any>(`${this.path}${endpoint}/${id}`, this.httpOptions).pipe(
-      catchError(this.errManager.handleError),
+      catchError((error) => this.errManager.handleError(error)),
     );
   }
 };

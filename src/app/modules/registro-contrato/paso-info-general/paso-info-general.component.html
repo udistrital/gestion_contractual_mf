@@ -26,9 +26,9 @@
                     </mat-option>
                 </mat-select>
             </mat-form-field>
-            <mat-form-field>
+            <mat-form-field *ngIf="firstFormGroup.get('fechaSuscripcion')?.enabled">
                 <mat-label>Fecha Suscripción Estudios y Documentos Previos:</mat-label>
-                <input matInput [matDatepicker]="picker" formControlName="fechaSuscripcion">
+                <input matInput [matDatepicker]="picker" formControlName="fechaSuscripcion" [max]="maxDate">
                 <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
             </mat-form-field>
@@ -101,7 +101,9 @@
         </mat-form-field>
         <mat-form-field>
             <mat-label>Plazo Ejecución:</mat-label>
-            <input matInput formControlName="plazoEjecucion">
+            <input matInput 
+                   formControlName="plazoEjecucion" 
+                   (keydown)="onlyNumbers($event)">
         </mat-form-field>
         <mat-form-field>
             <mat-label>Unidad de Ejecución:</mat-label>

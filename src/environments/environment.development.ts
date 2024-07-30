@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   PARAMETROS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/',
+  PROVEEDORES_SERVICE: 'http://localhost:3000/',
   TIPO_COMPROMISO_ID: '111',
   TIPO_CONTRATO_ID: '112',
   PERFIL_CONTRATISTA_ID: '113',
@@ -25,5 +26,5 @@ export const environment = {
   CONTRATO_ID: '6535',
   CONVENIO_ID: '6536',
 
-  CONTRATO_PERFIL_CONTRATISTA_ID: '6546',
+  CONTRATO_PSPAG_ID: '6546',
 };

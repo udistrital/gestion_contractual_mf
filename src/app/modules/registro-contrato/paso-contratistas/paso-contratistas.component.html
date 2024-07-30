@@ -1,31 +1,45 @@
-<form [formGroup]="fourthFormGroup">
-    <div class="form-grid3">
-        <mat-form-field>
-            <mat-label>Clase Contratista:</mat-label>
-            <mat-select formControlName="claseContratista">
-                <mat-option *ngFor="let tipo of tiposContratista" [value]="tipo.value">
-                    {{tipo.viewValue}}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
-    </div>
+<form [formGroup]="form">
+  <div class="form-grid3">
+    <mat-form-field>
+      <mat-label>Clase Contratista:</mat-label>
+      <mat-select formControlName="claseContratista">
+        <mat-option *ngFor="let tipo of tiposContratista" [value]="tipo.value">
+          {{tipo.viewValue}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <ng-container *ngIf="mostrarConsulta">
     <div class="centered-container">
-        <div class="centered-content">
-            <h3>Consulta de Contratista</h3>
-            <mat-form-field>
-                <mat-label>Digite el documento del contratista</mat-label>
-                <input matInput formControlName="documentoContratista">
-            </mat-form-field>
-            <h3>Información del Contratista</h3>
-            <ng-container *ngIf="datosContratista">
-                <p *ngFor="let dato of datosContratistaArray">
-                    {{dato.label}}: {{dato.value}}
-                </p>
-            </ng-container>
+      <div class="centered-content">
+        <h3>Consulta de Contratista</h3>
+        <mat-form-field>
+          <mat-label>Digite el documento del contratista</mat-label>
+          <input matInput formControlName="documentoContratista" (keyup.enter)="buscarContratista()">
+        </mat-form-field>
+        <div *ngIf="loading">Buscando contratista...</div>
+        <div *ngIf="success">
+          <h3>Información del Contratista</h3>
+          <ng-container *ngIf="datosContratista">
+            <p>Tipo Persona: {{contratistaObject.tipo}}</p>
+            <p>Nombre: {{contratistaObject.nombre}}</p>
+            <p>Documento: {{contratistaObject.documento}}</p>
+            <p *ngIf="contratistaObject.lugar_expedicion">Lugar de Expedición Documento: {{contratistaObject.lugar_expedicion}}</p>
+            <p>Ciudad de Contacto: {{contratistaObject.ciudad_contacto}}</p>
+            <p>Dirección: {{contratistaObject.direccion}}</p>
+            <p>Correo: {{contratistaObject.correo}}</p>
+            <p *ngIf="contratistaObject.representante_legal">Representante Legal: {{contratistaObject.representante_legal}}</p>
+            <p *ngIf="contratistaObject.documento_rl">Documento Representante Legal: {{contratistaObject.documento_rl}}</p>
+            <p *ngIf="contratistaObject.lugar_expedicion_rl">Lugar Expedición RL: {{contratistaObject.lugar_expedicion_rl}}</p>
+
+          </ng-container>
         </div>
+        <p *ngIf="errorMessage" class="error-message">{{errorMessage}}</p>
+      </div>
     </div>
-    <div class="btn-container">
-        <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-        <button mat-raised-button matStepperNext color="primary" [disabled]="!fourthFormGroup.valid">Guardar y Continuar</button>
-    </div>
+  </ng-container>
+  <div class="btn-container">
+    <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+    <button mat-raised-button matStepperNext color="primary" [disabled]="!form.valid">Guardar y Continuar</button>
+  </div>
 </form>

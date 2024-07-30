@@ -12,6 +12,7 @@ import { environment } from 'src/environments/environment';
 export class PasoInfoGeneralComponent implements OnInit {
   showContratoFields = false;
   showConvenioFields = false;
+  maxDate!: Date;
 
   constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService, private cdRef: ChangeDetectorRef) { }
 
@@ -28,7 +29,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     tipologiaEspecifica: ['', Validators.required],
     regimenContratacion: ['', Validators.required],
     procedimiento: ['', Validators.required],
-    plazoEjecucion: ['', Validators.required],
+    plazoEjecucion: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
     unidadEjecucion: ['', Validators.required],
   });
 
@@ -43,7 +44,6 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   // orden-contrato
   perfil_contratista: any[] = [];
-  fecha_suscripcion: any[] = [];
   aplica_poliza: { value: string; viewValue: string }[] = [
     { value: '0', viewValue: 'No' },
     { value: '1', viewValue: 'Si' },
@@ -54,6 +54,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   nombre_convenio: any[] = [];
 
   ngOnInit(): void {
+    this.maxDate = new Date();
     this.CargarCompromisos();
     this.CargarModalidadSeleccion();
     this.CargarRegimenContratacion();
@@ -66,13 +67,12 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.showFieldsBasedOnCompromiso(id_compromiso);
         if (id_compromiso) {
           this.CargarTipologiaEspecifica(id_compromiso);
-  
+
           const idCompromisoStr = id_compromiso.toString();
           const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
-  
+
           const perfilCompromisoControl = this.firstFormGroup.get('aplicaPoliza');
           if (idCompromisoStr === perfilCompromisoIdStr) {
-            this.CargarPerfilContratista(id_compromiso);
             perfilCompromisoControl?.setValidators(Validators.required);
             perfilCompromisoControl?.enable();
           } else {
@@ -80,7 +80,7 @@ export class PasoInfoGeneralComponent implements OnInit {
             perfilCompromisoControl?.disable();
           }
           perfilCompromisoControl?.updateValueAndValidity();
-  
+
           this.cdRef.detectChanges();
         }
       }
@@ -91,16 +91,24 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.CargarTipologiaEspecifica(id_contrato);
 
         const idContratoStr = id_contrato.toString();
-        const perfilContratistaIdStr = environment.CONTRATO_PERFIL_CONTRATISTA_ID.toString();
+        const tipoContratoIdStr = environment.CONTRATO_PSPAG_ID.toString();
 
         const perfilContratistaControl = this.firstFormGroup.get('perfilContratista');
-        if (idContratoStr === perfilContratistaIdStr) {
+        const fechaSuscripcionControl = this.firstFormGroup.get('fechaSuscripcion');
+
+        if (idContratoStr === tipoContratoIdStr) {
           this.CargarPerfilContratista(id_contrato);
           perfilContratistaControl?.setValidators(Validators.required);
           perfilContratistaControl?.enable();
+
+          fechaSuscripcionControl?.setValidators(Validators.required);
+          fechaSuscripcionControl?.enable();
         } else {
           perfilContratistaControl?.clearValidators();
           perfilContratistaControl?.disable();
+
+          fechaSuscripcionControl?.clearValidators();
+          fechaSuscripcionControl?.disable();
         }
         perfilContratistaControl?.updateValueAndValidity();
 
@@ -145,7 +153,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   CargarUnidadEjecucion() {
-    this.parametrosService.get('parametro?query=TipoParametroId:'+ environment.UNIDAD_EJECUCION_ID +',Id__in:166|180|181&limit=0').subscribe((Response: any) => {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.UNIDAD_EJECUCION_ID + ',Id__in:166|180|181&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.unidad_ejecucion = Response.Data;
       }
@@ -160,15 +168,13 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.showContratoFields = idCompromisoStr === environment.CONTRATO_ID || idCompromisoStr === environment.ORDEN_ID;
     this.showConvenioFields = idCompromisoStr === environment.CONVENIO_ID;
 
-    const contratoFields = ['fechaSuscripcion'];
     const convenioFields = ['vigenciaConvenio', 'convenio', 'nombreConvenio'];
 
-    [...contratoFields, ...convenioFields, 'perfilContratista', 'aplicaPoliza'].forEach(field => {
+    [...convenioFields, 'perfilContratista', 'aplicaPoliza', 'fechaSuscripcion'].forEach(field => {
       const control = this.firstFormGroup.get(field);
       if (control) {
         control.reset();
-        if ((this.showContratoFields && contratoFields.includes(field)) ||
-          (this.showConvenioFields && convenioFields.includes(field))) {
+        if ((this.showConvenioFields && convenioFields.includes(field))) {
           control.setValidators(Validators.required);
           control.enable();
         } else {
@@ -199,13 +205,25 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   CargarPerfilContratista(id_contrato: string) {
-    console.log('Cargando perfil contratista para id_contrato:', id_contrato);
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.PERFIL_CONTRATISTA_ID + '&ParametroPadreId:' + id_contrato + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.perfil_contratista = Response.Data;
-        console.log('Perfiles de contratista cargados:', this.perfil_contratista);
-      }
-    });
+    if (id_contrato == environment.CONTRATO_PSPAG_ID) {
+      this.parametrosService.get('parametro?query=TipoParametroId:' + environment.PERFIL_CONTRATISTA_ID + '&ParametroPadreId:' + id_contrato + '&limit=0').subscribe((Response: any) => {
+        if (Response.Status == "200") {
+          this.perfil_contratista = Response.Data;
+        }
+      });
+    }
   }
 
+  // Método para manejar la entrada de solo números
+  
+  onlyNumbers(event: KeyboardEvent) {
+    const allowedKeys = [
+      'Backspace', 'Tab', 'End', 'Home', 'ArrowLeft', 'ArrowRight', 'Delete'
+    ];
+    const pattern = /^[0-9]$/;
+
+    if (!allowedKeys.includes(event.key) && !pattern.test(event.key)) {
+      event.preventDefault();
+    }
+  }
 }
