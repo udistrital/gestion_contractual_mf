@@ -155,32 +155,46 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     }
   }
 
-  private actualizarObjetoContratista() {
-    if (this.datosContratista) {
-      if(this.datosContratista.proveedor.tipo_persona === 'JURIDICA'){
-        this.contratistaObject = {
-          tipo: 'Jurídica',
-          nombre: this.datosContratista.proveedor.nombre_completo_proveedor,
-          documento: this.datosContratista.proveedor.numero_documento,
-          ciudad_contacto: this.datosContratista.proveedor.ciudad_contacto,
-          direccion: this.datosContratista.proveedor.direccion,
-          correo: this.datosContratista.proveedor.correo,
-          representante_legal: this.datosContratista.representante?.primer_nombre || '' + this.datosContratista.representante?.segundo_nombre || '' + this.datosContratista.representante?.primer_apellido || '' + this.datosContratista.representante?.segundo_apellido || '',
-          documento_rl: this.datosContratista.representante?.numero_documento || '',
-          lugar_expedicion_rl: this.datosContratista.representante?.ciudad_expedicion_documento || ''
-        }
-      } if (this.datosContratista.proveedor.tipo_persona === 'NATURAL') {
-        this.contratistaObject = {
-          tipo: 'Natural',
-          nombre: this.datosContratista.proveedor.nombre_completo_proveedor,
-          documento: this.datosContratista.proveedor.numero_documento,
-          lugar_expedicion: this.datosContratista.proveedor.ciudad_expedicion_documento,
-          ciudad_contacto: this.datosContratista.proveedor.ciudad_contacto,
-          direccion: this.datosContratista.proveedor.direccion,
-          correo: this.datosContratista.proveedor.correo,
-        }
-      }
+  private actualizarObjetoContratista(): void {
+    if (!this.datosContratista) return;
+
+    const { proveedor, representante } = this.datosContratista;
+    const tipoPersona = proveedor.tipo_persona;
+
+    const datosComunes = {
+      nombre: proveedor.nombre_completo_proveedor,
+      documento: proveedor.numero_documento,
+      ciudad_contacto: proveedor.ciudad_contacto,
+      direccion: proveedor.direccion,
+      correo: proveedor.correo,
+    };
+
+    if (tipoPersona === 'JURIDICA') {
+      this.contratistaObject = {
+        ...datosComunes,
+        tipo: 'Jurídica',
+        representante_legal: this.obtenerNombreCompleto(representante),
+        documento_rl: representante?.numero_documento || '',
+        lugar_expedicion_rl: representante?.ciudad_expedicion_documento || '',
+      };
+    } else if (tipoPersona === 'NATURAL') {
+      this.contratistaObject = {
+        ...datosComunes,
+        tipo: 'Natural',
+        lugar_expedicion: proveedor.ciudad_expedicion_documento,
+      };
     }
+  }
+
+  private obtenerNombreCompleto(persona: any): string {
+    if (!persona) return '';
+
+    return [
+      persona.primer_nombre,
+      persona.segundo_nombre,
+      persona.primer_apellido,
+      persona.segundo_apellido
+    ].filter(Boolean).join(' ');
   }
 
   private resetContratista() {
