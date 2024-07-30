@@ -14,18 +14,4 @@ export class ProveedoresService {
     return this.requestManager.get(endpoint);
   }
 
-  post(endpoint: string, element: any) {
-    this.requestManager.setPath('PROVEEDORES_SERVICE');
-    return this.requestManager.post(endpoint, element);
-  }
-
-  put(endpoint: string, element: { Id: any; }) {
-    this.requestManager.setPath('PROVEEDORES_SERVICE');
-    return this.requestManager.put(endpoint, element);
-  }
-
-  delete(endpoint: string, element: { Id: any; }) {
-    this.requestManager.setPath('PROVEEDORES_SERVICE');
-    return this.requestManager.delete(endpoint, element.Id);
-  }
 }
