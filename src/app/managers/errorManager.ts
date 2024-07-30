@@ -29,7 +29,7 @@ export class HttpErrorManager {
     let errorResponse: ErrorResponse;
 
     if (error.error instanceof ErrorEvent) {
-      // Client-side or network error
+
       errorResponse = {
         status: error.status,
         message: 'Error de red o del cliente',
@@ -37,7 +37,7 @@ export class HttpErrorManager {
       };
       console.error('Error del cliente:', error.error.message);
     } else {
-      // Backend error
+
       errorResponse = {
         status: error.status,
         message: this.getErrorMessage(error),
@@ -46,10 +46,8 @@ export class HttpErrorManager {
       console.error(`Error del backend ${error.status}:`, error.error);
     }
 
-    // Show error message to user
     this.showErrorMessage(errorResponse);
 
-    // Return an observable with a user-facing error message
     return throwError(errorResponse);
   }
 
@@ -81,16 +79,4 @@ export class HttpErrorManager {
     });
   }
 
-  public showCustomMessage(message: string, action: string = 'Cerrar', config?: MatSnackBarConfig): void {
-    this.ngZone.run(() => {
-      this.snackBar.open(message, action, {
-        ...this.defaultSnackBarConfig,
-        ...config
-      });
-    });
-  }
-
-  public isOk(error: any): boolean {
-    return error instanceof HttpErrorResponse && error.status === 200;
-  }
 }
