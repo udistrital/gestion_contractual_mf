@@ -26,5 +26,5 @@ export const environment = {
   CONTRATO_ID: '6535',
   CONVENIO_ID: '6536',
 
-  CONTRATO_PERFIL_CONTRATISTA_ID: '6546',
+  CONTRATO_PSPAG_ID: '6546',
 };
