@@ -3,6 +3,7 @@
     justify-content: flex-end;
     align-items: flex-end;
     gap: 10px;
+    margin-top: 15px;
 }
 
 .form-grid2 {
@@ -30,7 +31,6 @@ mat-table {
 
 .full-width-field {
     width: 100%;
-    margin: 16px;
 }
 
 .full-width {

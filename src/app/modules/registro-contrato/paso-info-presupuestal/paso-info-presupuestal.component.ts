@@ -25,6 +25,7 @@ const EXAMPLE_DATA: RowData[] = [
   templateUrl: './paso-info-presupuestal.component.html',
   styleUrls: ['./paso-info-presupuestal.component.css'],
 })
+
 export class PasoInfoPresupuestalComponent {
   form = this._formBuilder.group({
     vigencia: [''],
@@ -61,7 +62,7 @@ export class PasoInfoPresupuestalComponent {
 
   habilitarInput = false;
 
-  toggleInput() {
+  toggleInputOrdenador() {
     this.habilitarInput = !this.habilitarInput;
   }
 

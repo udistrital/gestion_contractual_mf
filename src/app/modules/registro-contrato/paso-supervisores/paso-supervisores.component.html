@@ -1,30 +1,12 @@
 <form [formGroup]="form">
-    <h3>Solicitante</h3>
-    <div class="form-grid2">
-        <mat-form-field>
-            <mat-label>Dependencia:*</mat-label>
-            <mat-select formControlName="dependencia">
-                <!--<mat-option *ngFor="" [value]="value">
-                  {{viewValue}}
-                </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Sede:*</mat-label>
-            <mat-select formControlName="sede">
-                <!--<mat-option *ngFor="" [value]="value">
-                  {{viewValue}}
-                </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-    </div>
-    <h3>Datos del Supervisor</h3>
-    <div *ngFor="let supervisor of supervisores; let i = index">
-        <h4>Supervisor {{i + 1}}</h4>
+    <div class="border">
+        <div class="title">
+            <h3>Información del Solicitante</h3>
+        </div>
         <div class="form-grid2">
             <mat-form-field>
                 <mat-label>Dependencia:*</mat-label>
-                <mat-select [(ngModel)]="supervisor.dependencia" formControlName="dependencia">
+                <mat-select formControlName="dependencia">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
@@ -32,86 +14,118 @@
             </mat-form-field>
             <mat-form-field>
                 <mat-label>Sede:*</mat-label>
-                <mat-select [(ngModel)]="supervisor.sede" formControlName="sede">
+                <mat-select formControlName="sede">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
                 </mat-select>
             </mat-form-field>
-            <mat-form-field>
-                <mat-label>Supervisor:*</mat-label>
-                <input matInput [(ngModel)]="supervisor.nombre" formControlName="supervisor">
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Cargo:*</mat-label>
-                <input matInput [(ngModel)]="supervisor.cargo" formControlName="cargo">
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Tipo de Control:*</mat-label>
-                <mat-select [(ngModel)]="supervisor.tipoControl" formControlName="tipoControl">
-                    <!--<mat-option *ngFor="" [value]="value">
+        </div>
+    </div>
+    <div class="border">
+        <div class="title">
+            <h3>Datos del Supervisor</h3>
+        </div>
+        <div *ngFor="let supervisor of supervisores; let i = index">
+            <h4>Supervisor {{i + 1}}</h4>
+            <div class="form-grid2">
+                <mat-form-field>
+                    <mat-label>Dependencia:*</mat-label>
+                    <mat-select [(ngModel)]="supervisor.dependencia" formControlName="dependencia">
+                        <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Código de Verificación:*</mat-label>
-                <input matInput [(ngModel)]="supervisor.codigoVerificacion" formControlName="codigoVerificacion">
-            </mat-form-field>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Sede:*</mat-label>
+                    <mat-select [(ngModel)]="supervisor.sede" formControlName="sede">
+                        <!--<mat-option *ngFor="" [value]="value">
+                  {{viewValue}}
+                </mat-option>-->
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Supervisor:*</mat-label>
+                    <input matInput [(ngModel)]="supervisor.nombre" formControlName="supervisor">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Cargo:*</mat-label>
+                    <input matInput [(ngModel)]="supervisor.cargo" formControlName="cargo">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Tipo de Control:*</mat-label>
+                    <mat-select [(ngModel)]="supervisor.tipoControl" formControlName="tipoControl">
+                        <!--<mat-option *ngFor="" [value]="value">
+                  {{viewValue}}
+                </mat-option>-->
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Código de Verificación:*</mat-label>
+                    <input matInput [(ngModel)]="supervisor.codigoVerificacion" formControlName="codigoVerificacion">
+                </mat-form-field>
+            </div>
+            <div class="btn-container">
+                <button mat-icon-button color="primary"
+                    (click)="eliminarSupervisor(i)"><mat-icon>delete</mat-icon></button>
+            </div>
         </div>
         <div class="btn-container">
-            <button mat-icon-button color="primary" (click)="eliminarSupervisor(i)"><mat-icon>delete</mat-icon></button>
+            <button mat-raised-button color="primary" (click)="agregarSupervisor()">Agregar Supervisor</button>
         </div>
     </div>
-    <div class="btn-container">
-        <button mat-raised-button color="primary" (click)="agregarSupervisor()">Agregar Supervisor</button>
-    </div>
-    <h3>Lugar de Ejecución</h3>
-    <div class="form-grid3">
-        <mat-form-field>
-            <mat-label>Pais:*</mat-label>
-            <mat-select formControlName="pais">
-                <!--<mat-option *ngFor="" [value]="value">
+    <div class="border">
+        <div class="title">
+            <h3>Lugar de Ejecución</h3>
+        </div>
+
+        <div class="form-grid3">
+            <mat-form-field>
+                <mat-label>Pais:*</mat-label>
+                <mat-select formControlName="pais">
+                    <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Departamento:*</mat-label>
-            <mat-select formControlName="departamento">
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Departamento:*</mat-label>
+                <mat-select formControlName="departamento">
+                    <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Sede:*</mat-label>
-            <mat-select formControlName="sede">
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Sede:*</mat-label>
+                <mat-select formControlName="sede">
+                    <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Municipio/Ciudad:*</mat-label>
-            <mat-select formControlName="municipioCiudad">
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Municipio/Ciudad:*</mat-label>
+                <mat-select formControlName="municipioCiudad">
+                    <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Dependencia:*</mat-label>
-            <mat-select formControlName="dependencia">
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Dependencia:*</mat-label>
+                <mat-select formControlName="dependencia">
+                    <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Dirección:*</mat-label>
-            <input matInput formControlName="direccion">
-        </mat-form-field>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Dirección:*</mat-label>
+                <input matInput formControlName="direccion">
+            </mat-form-field>
+        </div>
     </div>
     <div class="btn-container">
         <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
