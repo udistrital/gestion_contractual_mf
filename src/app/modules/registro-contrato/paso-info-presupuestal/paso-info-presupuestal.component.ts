@@ -26,7 +26,7 @@ const EXAMPLE_DATA: RowData[] = [
   styleUrls: ['./paso-info-presupuestal.component.css'],
 })
 export class PasoInfoPresupuestalComponent {
-  fifthFormGroup = this._formBuilder.group({
+  form = this._formBuilder.group({
     vigencia: [''],
     cdp: [''],
     valorAcumulado: ['']
@@ -81,9 +81,9 @@ export class PasoInfoPresupuestalComponent {
   }
 
   applyFilters(): Observable<any> {
-    const vigencia$ = this.fifthFormGroup.get('vigencia')?.valueChanges.pipe(startWith(''));
-    const cdp$ = this.fifthFormGroup.get('cdp')?.valueChanges.pipe(startWith(''));
-    const valorAcumulado$ = this.fifthFormGroup.get('valorAcumulado')?.valueChanges.pipe(startWith(''));
+    const vigencia$ = this.form.get('vigencia')?.valueChanges.pipe(startWith(''));
+    const cdp$ = this.form.get('cdp')?.valueChanges.pipe(startWith(''));
+    const valorAcumulado$ = this.form.get('valorAcumulado')?.valueChanges.pipe(startWith(''));
 
     return combineLatest([vigencia$, cdp$, valorAcumulado$]);
   }

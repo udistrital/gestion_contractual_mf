@@ -6,8 +6,8 @@
         <app-paso-info-general />
     </mat-step>
     <mat-step [stepControl]="secondFormGroup">
-        <ng-template matStepLabel>Garantía y Mecanismos de Cobertura del Riesgo</ng-template>
-        <app-paso-garantias />
+        <ng-template matStepLabel>Información Presupuestal</ng-template>
+        <app-paso-info-presupuestal />
     </mat-step>
     <mat-step [stepControl]="thirdFormGroup">
         <ng-template matStepLabel>Información Solicitante y Supervisor</ng-template>
@@ -18,12 +18,18 @@
         <app-paso-contratistas />
     </mat-step>
     <mat-step [stepControl]="fifthFormGroup">
-        <ng-template matStepLabel>Información Presupuestal</ng-template>
-        <app-paso-info-presupuestal />
+        <ng-template matStepLabel>Obligaciones del Contrato</ng-template>
+        <app-paso-objeto />
     </mat-step>
     <mat-step [stepControl]="sixthFormGroup">
-        <ng-template matStepLabel>Objeto de Contrato</ng-template>
-        <app-paso-objeto />
+        <ng-template matStepLabel>Especificaciones Técnicas</ng-template>
+    </mat-step>
+    <mat-step [stepControl]="seventhFormGroup">
+        <ng-template matStepLabel>Garantía y Mecanismos de Cobertura del Riesgo</ng-template>
+        <app-paso-garantias />
+    </mat-step>
+    <mat-step [stepControl]="eighthFormGroup">
+        <ng-template matStepLabel>Cláusulas y Parágrafos</ng-template>
     </mat-step>
 </mat-stepper>
 </div>

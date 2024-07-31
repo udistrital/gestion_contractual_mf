@@ -16,7 +16,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService, private cdRef: ChangeDetectorRef) { }
 
-  firstFormGroup = this._formBuilder.group({
+  form = this._formBuilder.group({
     tipoCompromiso: ['', Validators.required],
     tipoContrato: ['', Validators.required],
     perfilContratista: [''],
@@ -61,7 +61,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.CargarProcedimiento();
     this.CargarUnidadEjecucion();
 
-    this.firstFormGroup.get('tipoCompromiso')?.valueChanges.subscribe((id_compromiso) => {
+    this.form.get('tipoCompromiso')?.valueChanges.subscribe((id_compromiso) => {
       if (id_compromiso) {
         this.CargarContratos(id_compromiso);
         this.showFieldsBasedOnCompromiso(id_compromiso);
@@ -71,7 +71,7 @@ export class PasoInfoGeneralComponent implements OnInit {
           const idCompromisoStr = id_compromiso.toString();
           const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
 
-          const perfilCompromisoControl = this.firstFormGroup.get('aplicaPoliza');
+          const perfilCompromisoControl = this.form.get('aplicaPoliza');
           if (idCompromisoStr === perfilCompromisoIdStr) {
             perfilCompromisoControl?.setValidators(Validators.required);
             perfilCompromisoControl?.enable();
@@ -86,15 +86,15 @@ export class PasoInfoGeneralComponent implements OnInit {
       }
     });
 
-    this.firstFormGroup.get('tipoContrato')?.valueChanges.subscribe((id_contrato) => {
+    this.form.get('tipoContrato')?.valueChanges.subscribe((id_contrato) => {
       if (id_contrato) {
         this.CargarTipologiaEspecifica(id_contrato);
 
         const idContratoStr = id_contrato.toString();
         const tipoContratoIdStr = environment.CONTRATO_PSPAG_ID.toString();
 
-        const perfilContratistaControl = this.firstFormGroup.get('perfilContratista');
-        const fechaSuscripcionControl = this.firstFormGroup.get('fechaSuscripcion');
+        const perfilContratistaControl = this.form.get('perfilContratista');
+        const fechaSuscripcionControl = this.form.get('fechaSuscripcion');
 
         if (idContratoStr === tipoContratoIdStr) {
           this.CargarPerfilContratista(id_contrato);
@@ -171,7 +171,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     const convenioFields = ['vigenciaConvenio', 'convenio', 'nombreConvenio'];
 
     [...convenioFields, 'perfilContratista', 'aplicaPoliza', 'fechaSuscripcion'].forEach(field => {
-      const control = this.firstFormGroup.get(field);
+      const control = this.form.get(field);
       if (control) {
         control.reset();
         if ((this.showConvenioFields && convenioFields.includes(field))) {

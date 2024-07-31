@@ -8,7 +8,7 @@ import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angu
   styleUrls: ['./paso-objeto.component.css'],
 })
 export class PasoObjetoComponent {
-  sixthFormGroup = this._formBuilder.group({
+  form = this._formBuilder.group({
     sixthCtrl: ['', Validators.required],
   });
 

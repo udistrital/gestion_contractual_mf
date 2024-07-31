@@ -23,6 +23,7 @@ export class RegistroContratoComponent implements OnInit{
   fifthFormGroup: FormGroup;
   sixthFormGroup: FormGroup;
   seventhFormGroup: FormGroup;
+  eighthFormGroup: FormGroup;
 
 
   constructor(private _formBuilder: FormBuilder) {
@@ -33,6 +34,7 @@ export class RegistroContratoComponent implements OnInit{
     this.fifthFormGroup = this._formBuilder.group({});
     this.sixthFormGroup = this._formBuilder.group({});
     this.seventhFormGroup = this._formBuilder.group({});
+    this.eighthFormGroup = this._formBuilder.group({});
   }
 
   ngOnInit() {
@@ -70,6 +72,12 @@ export class RegistroContratoComponent implements OnInit{
     this.seventhFormGroup = this._formBuilder.group({
       seventhCtrl: ['', Validators.required],
     });
+
+    // Paso 8
+    this.eighthFormGroup = this._formBuilder.group({
+      seventhCtrl: ['', Validators.required],
+    });
+
   }
 
   isLinear = false;

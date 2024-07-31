@@ -13,7 +13,7 @@ interface Fila {
   styleUrls: ['./paso-garantias.component.css'],
 })
 export class PasoGarantiasComponent implements OnInit {
-  secondFormGroup: FormGroup;
+  form: FormGroup;
 
   amparos: { value: string; viewValue: string }[] = [
     { value: '0', viewValue: 'Aa' },
@@ -25,7 +25,7 @@ export class PasoGarantiasComponent implements OnInit {
   dataSource: Fila[] = [];
 
   constructor(private _formBuilder: FormBuilder) {
-    this.secondFormGroup = this._formBuilder.group({
+    this.form = this._formBuilder.group({
       filas: this._formBuilder.array([])
     });
   }
@@ -36,7 +36,7 @@ export class PasoGarantiasComponent implements OnInit {
   }
 
   get filasFormArray(): FormArray {
-    return this.secondFormGroup.get('filas') as FormArray;
+    return this.form.get('filas') as FormArray;
   }
 
   crearFilaFormGroup(): FormGroup {

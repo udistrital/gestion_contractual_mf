@@ -1,4 +1,4 @@
-<form [formGroup]="firstFormGroup">
+<form [formGroup]="form">
     <div class="form-grid2">
         <mat-form-field>
             <mat-label>Tipo de Compromiso:</mat-label>
@@ -18,7 +18,7 @@
         </mat-form-field>
 
         <ng-container *ngIf="showContratoFields">
-            <mat-form-field *ngIf="firstFormGroup.get('perfilContratista')?.enabled">
+            <mat-form-field *ngIf="form.get('perfilContratista')?.enabled">
                 <mat-label>Perfil del Contratista:</mat-label>
                 <mat-select formControlName="perfilContratista">
                     <mat-option *ngFor="let perfil_contratista of perfil_contratista" [value]="perfil_contratista.Id">
@@ -26,13 +26,13 @@
                     </mat-option>
                 </mat-select>
             </mat-form-field>
-            <mat-form-field *ngIf="firstFormGroup.get('fechaSuscripcion')?.enabled">
+            <mat-form-field *ngIf="form.get('fechaSuscripcion')?.enabled">
                 <mat-label>Fecha Suscripción Estudios y Documentos Previos:</mat-label>
                 <input matInput [matDatepicker]="picker" formControlName="fechaSuscripcion" [max]="maxDate">
                 <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
             </mat-form-field>
-            <mat-form-field *ngIf="firstFormGroup.get('aplicaPoliza')?.enabled">
+            <mat-form-field *ngIf="form.get('aplicaPoliza')?.enabled">
                 <mat-label>Aplica Póliza:</mat-label>
                 <mat-select formControlName="aplicaPoliza">
                     <mat-option *ngFor="let aplica_poliza of aplica_poliza" [value]="aplica_poliza.value">

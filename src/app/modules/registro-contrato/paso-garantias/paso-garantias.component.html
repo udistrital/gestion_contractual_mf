@@ -1,4 +1,4 @@
-<form [formGroup]="secondFormGroup">
+<form [formGroup]="form">
     <div class="form-grid1">
         <mat-table [dataSource]="dataSource">
             <ng-container matColumnDef="id">
@@ -50,6 +50,6 @@
     </div>
     <div class="btn-container">
         <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-        <button mat-raised-button matStepperNext color="primary" [disabled]="!secondFormGroup.valid">Guardar y Continuar</button>
+        <button mat-raised-button matStepperNext color="primary" [disabled]="!form.valid">Guardar y Continuar</button>
     </div>
 </form>
