@@ -17,6 +17,9 @@ import { PasoSupervisoresComponent } from './paso-supervisores/paso-supervisores
 import { PasoContratistasComponent } from './paso-contratistas/paso-contratistas.component';
 import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-info-presupuestal.component';
 import { PasoObligacionesComponent } from './paso-obligaciones/paso-obligaciones.component';
+import { PasoEspecificacionesComponent } from './paso-especificaciones/paso-especificaciones.component';
+import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos/paso-clausulas-paragrafos.component';
+
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from "@angular/material/checkbox";
@@ -28,6 +31,7 @@ import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
 
 
+
 @NgModule({
   declarations: [
     RegistroContratoComponent,
@@ -37,7 +41,9 @@ import { HttpClientModule } from '@angular/common/http';
     PasoContratistasComponent,
     PasoInfoPresupuestalComponent,
     PasoObligacionesComponent,
-    GuardarInfoComponent
+    GuardarInfoComponent,
+    PasoEspecificacionesComponent,
+    PasoClausulasParagrafosComponent
   ],
   imports: [
     CommonModule,

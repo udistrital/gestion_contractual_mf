@@ -23,6 +23,7 @@
         </mat-step>
         <mat-step [stepControl]="sixthFormGroup">
             <ng-template matStepLabel>Especificaciones Técnicas</ng-template>
+            <app-paso-especificaciones />
         </mat-step>
         <mat-step [stepControl]="seventhFormGroup">
             <ng-template matStepLabel>Garantías y Mecanismos de Cobertura del Riesgo</ng-template>
@@ -30,6 +31,7 @@
         </mat-step>
         <mat-step [stepControl]="eighthFormGroup">
             <ng-template matStepLabel>Cláusulas y Parágrafos</ng-template>
+            <app-paso-clausulas-paragrafos />
         </mat-step>
     </mat-stepper>
 </div>
