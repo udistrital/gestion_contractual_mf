@@ -29,6 +29,7 @@ import { RegistroContratoComponent } from './registro-contrato.component';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
+import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
 
 
 
@@ -43,7 +44,8 @@ import { HttpClientModule } from '@angular/common/http';
     PasoObligacionesComponent,
     GuardarInfoComponent,
     PasoEspecificacionesComponent,
-    PasoClausulasParagrafosComponent
+    PasoClausulasParagrafosComponent,
+    ParagrafoDialogComponent
   ],
   imports: [
     CommonModule,
