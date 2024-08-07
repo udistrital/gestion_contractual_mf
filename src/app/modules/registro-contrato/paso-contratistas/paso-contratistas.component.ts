@@ -130,7 +130,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.success = false;
 
-      this.proveedoresService.get(`contratista?id=${documentoContratista}`).pipe(
+      this.proveedoresService.get(`contratistas?id=${documentoContratista}`).pipe(
         takeUntil(this.destroy$)
       ).subscribe({
           next: (response: any) => {
