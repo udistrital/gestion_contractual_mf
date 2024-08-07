@@ -3,12 +3,12 @@ import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angu
 
 
 @Component({
-  selector: 'app-paso-objeto',
-  templateUrl: './paso-objeto.component.html',
-  styleUrls: ['./paso-objeto.component.css'],
+  selector: 'app-paso-obligaciones',
+  templateUrl: './paso-obligaciones.component.html',
+  styleUrls: ['./paso-obligaciones.component.css'],
 })
-export class PasoObjetoComponent {
-  sixthFormGroup = this._formBuilder.group({
+export class PasoObligacionesComponent {
+  form = this._formBuilder.group({
     sixthCtrl: ['', Validators.required],
   });
 

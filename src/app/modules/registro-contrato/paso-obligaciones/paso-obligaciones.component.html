@@ -1,0 +1,29 @@
+<form [formGroup]="form">
+    <div class="border">
+        <div class="title">
+            <h3>Obligaciones del Contrato</h3>
+        </div>
+        <div class="full-width-field">
+            <div class="title-box">Justificación:</div>
+            <mat-form-field appearance="fill" class="full-width">
+                <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+            </mat-form-field>
+        </div>
+        <div class="full-width-field">
+            <div class="title-box">Objeto del Contrato:</div>
+            <mat-form-field appearance="fill" class="full-width">
+                <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+            </mat-form-field>
+        </div>
+        <div class="full-width-field">
+            <div class="title-box">Actividades:</div>
+            <mat-form-field appearance="fill" class="full-width">
+                <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+            </mat-form-field>
+        </div>
+        <div class="btn-container">
+            <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+            <button mat-raised-button matStepperNext color="primary">Guardar y Continuar</button>
+        </div>
+    </div>
+</form>
