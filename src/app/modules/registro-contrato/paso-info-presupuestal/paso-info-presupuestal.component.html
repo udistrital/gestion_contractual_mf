@@ -5,7 +5,7 @@
         </div>
         <div class="form-grid3">
             <mat-form-field>
-                <mat-label>Vigencia:*</mat-label>
+                <mat-label>Vigencia:</mat-label>
                 <mat-select formControlName="vigencia">
                     <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia.value">
                         {{vigencia.viewValue}}
@@ -13,7 +13,7 @@
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Número de la Disponibilidad (CDP):*</mat-label>
+                <mat-label>Número de la Disponibilidad (CDP):</mat-label>
                 <mat-select formControlName="cdp">
                     <mat-option *ngFor="let cdp of cdps" [value]="cdp.value">
                         {{cdp.viewValue}}
@@ -21,7 +21,7 @@
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Valor Acumulado:*</mat-label>
+                <mat-label>Valor Acumulado:</mat-label>
                 <input matInput formControlName="valorAcumulado">
             </mat-form-field>
         </div>
@@ -66,81 +66,85 @@
         </div>
         <div class="form-grid2">
             <mat-form-field>
-                <mat-label>Tipo de Moneda:*</mat-label>
-                <mat-select>
-                    <!--<mat-option *ngFor="" [value]="value">
-                      {{viewValue}}
-                    </mat-option>-->
+                <mat-label>Tipo de Moneda:</mat-label>
+                <mat-select formControlName="tipoMoneda">
+                    <mat-option *ngFor="let moneda of monedas" [value]="moneda.Id">
+                        {{moneda.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Valor de Contrato en Pesos:*</mat-label>
-                <input matInput>
+                <mat-label>Valor de Contrato en Pesos:</mat-label>
+                <input matInput formControlName="valorContrato" (keydown)="onlyNumbers($event)">
             </mat-form-field>
             <mat-checkbox (change)="toggleInputOrdenador()">Ordenador Encargado</mat-checkbox>
             <mat-checkbox>Reversar saldos</mat-checkbox>
             <mat-form-field *ngIf="habilitarInput">
-                <mat-label>Resolución:*</mat-label>
-                <input matInput>
+                <mat-label>Resolución:</mat-label>
+                <input matInput formControlName="resolucion">
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Ordenador Gasto:*</mat-label>
-                <mat-select>
-                    <!--<mat-option *ngFor="" [value]="value">
-                      {{viewValue}}
-                    </mat-option>-->
+                <mat-label>Ordenador Gasto:</mat-label>
+                <mat-select formControlName="ordenadorGasto">
+                    <mat-option *ngFor="let ordenador of ordenadores" [value]="ordenador.Id">
+                        {{ordenador.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Nombre Ordenador:*</mat-label>
-                <input matInput>
+                <mat-label>Nombre Ordenador:</mat-label>
+                <input matInput formControlName="nombreOrdenador">
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Tipo Gasto:*</mat-label>
-                <mat-select>
-                    <!--<mat-option *ngFor="" [value]="value">
-                      {{viewValue}}
-                    </mat-option>-->
+                <mat-label>Tipo Gasto:</mat-label>
+                <mat-select formControlName="tipoGasto">
+                    <mat-option *ngFor="let gasto of gastos" [value]="gasto.Id">
+                        {{gasto.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Origen Recursos:*</mat-label>
-                <mat-select>
-                    <!--<mat-option *ngFor="" [value]="value">
-                      {{viewValue}}
-                    </mat-option>-->
+                <mat-label>Origen Recursos:</mat-label>
+                <mat-select formControlName="origenRecurso">
+                    <mat-option *ngFor="let origen_recurso of origen_recursos" [value]="origen_recurso.Id">
+                        {{origen_recurso.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Origen Presupuesto:*</mat-label>
-                <mat-select>
-                    <!--<mat-option *ngFor="" [value]="value">
-                      {{viewValue}}
-                    </mat-option>-->
+                <mat-label>Origen Presupuesto:</mat-label>
+                <mat-select formControlName="origenPresupuesto">
+                    <mat-option *ngFor="let origen_presupuesto of origen_presupuestos" [value]="origen_presupuesto.Id">
+                        {{origen_presupuesto.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Tema Gasto Inversión:*</mat-label>
-                <mat-select>
-                    <!--<mat-option *ngFor="" [value]="value">
-                      {{viewValue}}
-                    </mat-option>-->
+                <mat-label>Tema Gasto Inversión:</mat-label>
+                <mat-select formControlName="temaGasto">
+                    <mat-option *ngFor="let tema_gasto of tema_gasto" [value]="tema_gasto.Id">
+                        {{tema_gasto.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
+
+            <ng-container *ngIf="showCambioMonedaFields">
+                <mat-form-field>
+                    <mat-label>Valor Moneda Extranjera:</mat-label>
+                    <input matInput formControlName="monedaExtranjera" (keydown)="onlyNumbers($event)">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Valor de Tasa Cambio:</mat-label>
+                    <input matInput formControlName="tasaCambio" (keydown)="onlyNumbers($event)">
+                </mat-form-field>
+            </ng-container>
+
             <mat-form-field>
-                <mat-label>Valor Moneda Extranjera:*</mat-label>
-                <input matInput>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Valor de Tasa Cambio:*</mat-label>
-                <input matInput>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Medio de Pago:*</mat-label>
-                <mat-select>
-                    <!--<mat-option *ngFor="" [value]="value">
-                      {{viewValue}}
-                    </mat-option>-->
+                <mat-label>Medio de Pago:</mat-label>
+                <mat-select formControlName="medioPago">
+                    <mat-option *ngFor="let medios_pago of medios_pago" [value]="medios_pago.Id">
+                        {{medios_pago.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-checkbox [(ngModel)]="checked">Sujeto a Registro Presupuestal (Hasta Agotar Presupuesto)</mat-checkbox>

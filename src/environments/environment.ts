@@ -27,4 +27,6 @@ export const environment = {
   CONVENIO_ID: '6536',
 
   CONTRATO_PSPAG_ID: '6546',
+
+  PESO_COLOMBIANO_ID: '6634',
 };
