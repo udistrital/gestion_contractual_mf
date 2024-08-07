@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatCardModule } from '@angular/material/card';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgFor } from '@angular/common';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -15,7 +16,10 @@ import { PasoGarantiasComponent } from './paso-garantias/paso-garantias.componen
 import { PasoSupervisoresComponent } from './paso-supervisores/paso-supervisores.component';
 import { PasoContratistasComponent } from './paso-contratistas/paso-contratistas.component';
 import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-info-presupuestal.component';
-import { PasoObjetoComponent } from './paso-objeto/paso-objeto.component';
+import { PasoObligacionesComponent } from './paso-obligaciones/paso-obligaciones.component';
+import { PasoEspecificacionesComponent } from './paso-especificaciones/paso-especificaciones.component';
+import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos/paso-clausulas-paragrafos.component';
+
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from "@angular/material/checkbox";
@@ -25,6 +29,8 @@ import { RegistroContratoComponent } from './registro-contrato.component';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
+import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
+
 
 
 @NgModule({
@@ -35,8 +41,11 @@ import { HttpClientModule } from '@angular/common/http';
     PasoSupervisoresComponent,
     PasoContratistasComponent,
     PasoInfoPresupuestalComponent,
-    PasoObjetoComponent,
-    GuardarInfoComponent
+    PasoObligacionesComponent,
+    GuardarInfoComponent,
+    PasoEspecificacionesComponent,
+    PasoClausulasParagrafosComponent,
+    ParagrafoDialogComponent
   ],
   imports: [
     CommonModule,
@@ -49,6 +58,7 @@ import { HttpClientModule } from '@angular/common/http';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatCardModule,
     NgFor,
     MatDatepickerModule,
     MatNativeDateModule,

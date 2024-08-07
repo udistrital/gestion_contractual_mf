@@ -1,147 +1,156 @@
-<form [formGroup]="fifthFormGroup">
-    <h3>Disponibilidades Presupuestales Asociadas</h3>
-    <div class="form-grid3">
-        <mat-form-field>
-            <mat-label>Vigencia:*</mat-label>
-            <mat-select formControlName="vigencia">
-                <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia.value">
-                    {{vigencia.viewValue}}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Número de la Disponibilidad (CDP):*</mat-label>
-            <mat-select formControlName="cdp">
-                <mat-option *ngFor="let cdp of cdps" [value]="cdp.value">
-                    {{cdp.viewValue}}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Valor Acumulado:*</mat-label>
-            <input matInput formControlName="valorAcumulado">
-        </mat-form-field>
+<form [formGroup]="form">
+    <div class="border">
+        <div class="title">
+            <h3>Disponibilidades Presupuestales Asociadas</h3>
+        </div>
+        <div class="form-grid3">
+            <mat-form-field>
+                <mat-label>Vigencia:*</mat-label>
+                <mat-select formControlName="vigencia">
+                    <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia.value">
+                        {{vigencia.viewValue}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Número de la Disponibilidad (CDP):*</mat-label>
+                <mat-select formControlName="cdp">
+                    <mat-option *ngFor="let cdp of cdps" [value]="cdp.value">
+                        {{cdp.viewValue}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Valor Acumulado:*</mat-label>
+                <input matInput formControlName="valorAcumulado">
+            </mat-form-field>
+        </div>
+        <mat-table [dataSource]="filteredDataSource">
+            <ng-container matColumnDef="vigencia">
+                <mat-header-cell *matHeaderCellDef> Vigencia </mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.vigencia}} </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="solicitudNecesidad">
+                <mat-header-cell *matHeaderCellDef> Solicitud de Necesidad </mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.solicitudNecesidad}} </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="numeroCDP">
+                <mat-header-cell *matHeaderCellDef> Número de Disponibilidad </mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.numeroCDP}} </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="valor">
+                <mat-header-cell *matHeaderCellDef> Valor $ (En Pesos) </mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.valor}} </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="dependencia">
+                <mat-header-cell *matHeaderCellDef> Dependencia </mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.dependencia}} </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="rubro">
+                <mat-header-cell *matHeaderCellDef> Rubro </mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.rubro}} </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
     </div>
-    <mat-table [dataSource]="filteredDataSource">
-        <ng-container matColumnDef="vigencia">
-            <mat-header-cell *matHeaderCellDef> Vigencia </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.vigencia}} </mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="solicitudNecesidad">
-            <mat-header-cell *matHeaderCellDef> Solicitud de Necesidad </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.solicitudNecesidad}} </mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="numeroCDP">
-            <mat-header-cell *matHeaderCellDef> Número de Disponibilidad </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.numeroCDP}} </mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="valor">
-            <mat-header-cell *matHeaderCellDef> Valor $ (En Pesos) </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.valor}} </mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="dependencia">
-            <mat-header-cell *matHeaderCellDef> Dependencia </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.dependencia}} </mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="rubro">
-            <mat-header-cell *matHeaderCellDef> Rubro </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.rubro}} </mat-cell>
-        </ng-container>
-
-        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
-    <h3>Información Presupuestal</h3>
-    <div class="form-grid2">
-        <mat-form-field>
-            <mat-label>Tipo de Moneda:*</mat-label>
-            <mat-select>
-                <!--<mat-option *ngFor="" [value]="value">
+    <div class="border">
+        <div class="title">
+            <h3>Información Presupuestal</h3>
+        </div>
+        <div class="form-grid2">
+            <mat-form-field>
+                <mat-label>Tipo de Moneda:*</mat-label>
+                <mat-select>
+                    <!--<mat-option *ngFor="" [value]="value">
                       {{viewValue}}
                     </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Valor de Contrato en Pesos:*</mat-label>
-            <input matInput>
-        </mat-form-field>
-        <mat-checkbox (change)="toggleInput()">Ordenador Encargado</mat-checkbox>
-        <mat-form-field *ngIf="habilitarInput">
-            <mat-label>Resolución:*</mat-label>
-            <input matInput>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Ordenador Gasto:*</mat-label>
-            <mat-select>
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Valor de Contrato en Pesos:*</mat-label>
+                <input matInput>
+            </mat-form-field>
+            <mat-checkbox (change)="toggleInputOrdenador()">Ordenador Encargado</mat-checkbox>
+            <mat-checkbox>Reversar saldos</mat-checkbox>
+            <mat-form-field *ngIf="habilitarInput">
+                <mat-label>Resolución:*</mat-label>
+                <input matInput>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Ordenador Gasto:*</mat-label>
+                <mat-select>
+                    <!--<mat-option *ngFor="" [value]="value">
                       {{viewValue}}
                     </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Nombre Ordenador:*</mat-label>
-            <input matInput>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Tipo Gasto:*</mat-label>
-            <mat-select>
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Nombre Ordenador:*</mat-label>
+                <input matInput>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Tipo Gasto:*</mat-label>
+                <mat-select>
+                    <!--<mat-option *ngFor="" [value]="value">
                       {{viewValue}}
                     </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Origen Recursos:*</mat-label>
-            <mat-select>
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Origen Recursos:*</mat-label>
+                <mat-select>
+                    <!--<mat-option *ngFor="" [value]="value">
                       {{viewValue}}
                     </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Origen Presupuesto:*</mat-label>
-            <mat-select>
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Origen Presupuesto:*</mat-label>
+                <mat-select>
+                    <!--<mat-option *ngFor="" [value]="value">
                       {{viewValue}}
                     </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Tema Gasto Inversión:*</mat-label>
-            <mat-select>
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Tema Gasto Inversión:*</mat-label>
+                <mat-select>
+                    <!--<mat-option *ngFor="" [value]="value">
                       {{viewValue}}
                     </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Valor Moneda Extranjera:*</mat-label>
-            <input matInput>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Valor de Tasa Cambio:*</mat-label>
-            <input matInput>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Medio de Pago:*</mat-label>
-            <mat-select>
-                <!--<mat-option *ngFor="" [value]="value">
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Valor Moneda Extranjera:*</mat-label>
+                <input matInput>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Valor de Tasa Cambio:*</mat-label>
+                <input matInput>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Medio de Pago:*</mat-label>
+                <mat-select>
+                    <!--<mat-option *ngFor="" [value]="value">
                       {{viewValue}}
                     </mat-option>-->
-            </mat-select>
-        </mat-form-field>
-        <mat-checkbox [(ngModel)]="checked">Sujeto a Registro Presupuestal (Hasta Agotar Presupuesto)</mat-checkbox>
-    </div>
-    <div class="full-width-field">
-        <div class="title-box">Forma de Pago:</div>
-        <mat-form-field appearance="fill" class="full-width">
-            <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
-        </mat-form-field>
+                </mat-select>
+            </mat-form-field>
+            <mat-checkbox [(ngModel)]="checked">Sujeto a Registro Presupuestal (Hasta Agotar Presupuesto)</mat-checkbox>
+        </div>
+        <div class="full-width-field">
+            <div class="title-box">Forma de Pago:</div>
+            <mat-form-field appearance="fill" class="full-width">
+                <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+            </mat-form-field>
+        </div>
     </div>
     <div class="btn-container">
         <button mat-raised-button matStepperPrevious color="primary">Atrás</button>

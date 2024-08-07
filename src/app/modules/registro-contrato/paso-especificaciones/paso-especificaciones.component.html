@@ -1,0 +1,62 @@
+<form [formGroup]="form">
+    <div class="border">
+        <div class="full-width-field">
+            <div class="title-box">Especificaciones Técnicas</div>
+            <div class="form-grid2">
+                <p>Objeto:</p>
+                <mat-form-field appearance="fill" class="full-width">
+                    <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class="form-grid1">
+            <mat-table [dataSource]="dataSource">
+                <ng-container matColumnDef="item">
+                    <mat-header-cell *matHeaderCellDef> ITEM </mat-header-cell>
+                    <mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="descripcion">
+                    <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
+                    <mat-cell *matCellDef="let element; let i = index">
+                        <mat-form-field>
+                            <input matInput [formControlName]="'descripcion' + i" />
+                        </mat-form-field>
+                    </mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="cantidad">
+                    <mat-header-cell *matHeaderCellDef> CANTIDAD </mat-header-cell>
+                    <mat-cell *matCellDef="let element; let i = index">
+                        <mat-form-field>
+                            <input matInput [formControlName]="'cantidad' + i" />
+                        </mat-form-field>
+                    </mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="valorUnitario">
+                    <mat-header-cell *matHeaderCellDef> VALOR UNITARIO </mat-header-cell>
+                    <mat-cell *matCellDef="let element; let i = index">
+                        <mat-form-field>
+                            <input matInput [formControlName]="'valorUnitario' + i" />
+                        </mat-form-field>
+                    </mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="valorTotal">
+                    <mat-header-cell *matHeaderCellDef> VALOR TOTAL </mat-header-cell>
+                    <mat-cell *matCellDef="let element; let i = index">
+                        <mat-form-field>
+                            <input matInput [formControlName]="'valorTotal' + i" />
+                        </mat-form-field>
+                    </mat-cell>
+                </ng-container>
+                <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+            </mat-table>
+            <div class="btn-container">
+                <button mat-raised-button color="primary" (click)="agregarFila()">Agregar Registro</button>
+            </div>
+        </div>
+    </div>
+    <div class="btn-container">
+        <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+        <button mat-raised-button matStepperNext color="primary">Guardar y Continuar</button>
+    </div>
+</form>

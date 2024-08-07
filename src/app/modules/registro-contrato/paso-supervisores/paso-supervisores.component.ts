@@ -9,7 +9,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 })
 
 export class PasoSupervisoresComponent {
-  thirdFormGroup = this._formBuilder.group({
+  form = this._formBuilder.group({
     dependencia: ['', Validators.required],
     sede: ['', Validators.required],
     supervisor: ['', Validators.required],

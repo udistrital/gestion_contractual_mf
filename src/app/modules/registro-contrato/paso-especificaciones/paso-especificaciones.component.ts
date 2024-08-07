@@ -1,18 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 
 interface Fila {
-  amparo: string;
-  suficiencia: string;
   descripcion: string;
+  cantidad: string;
+  valorUnitario: string;
+  valorTotal: string;
 }
 
 @Component({
-  selector: 'app-paso-garantias',
-  templateUrl: './paso-garantias.component.html',
-  styleUrls: ['./paso-garantias.component.css'],
+  selector: 'app-paso-especificaciones',
+  templateUrl: './paso-especificaciones.component.html',
+  styleUrls: ['./paso-especificaciones.component.css']
 })
-export class PasoGarantiasComponent implements OnInit {
+
+export class PasoEspecificacionesComponent {
   form: FormGroup;
 
   amparos: { value: string; viewValue: string }[] = [
@@ -21,13 +23,15 @@ export class PasoGarantiasComponent implements OnInit {
     { value: '2', viewValue: 'Cc' },
   ];
 
-  displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
+  displayedColumns = ['item', 'descripcion', 'cantidad', 'valorUnitario', 'valorTotal'];
   dataSource: Fila[] = [];
 
-  constructor(private _formBuilder: FormBuilder) {
+  constructor(private _formBuilder: FormBuilder) { 
+
     this.form = this._formBuilder.group({
       filas: this._formBuilder.array([])
     });
+
   }
 
   ngOnInit() {
@@ -41,9 +45,10 @@ export class PasoGarantiasComponent implements OnInit {
 
   crearFilaFormGroup(): FormGroup {
     return this._formBuilder.group({
-      amparo: ['', Validators.required],
-      suficiencia: ['', Validators.required],
-      descripcion: ['', Validators.required]
+      descripcion: ['', Validators.required],
+      cantidad: ['', Validators.required],
+      valorUnitario: ['', Validators.required],
+      valorTotal: ['', Validators.required]
     });
   }
 
@@ -60,4 +65,6 @@ export class PasoGarantiasComponent implements OnInit {
   actualizarDataSource() {
     this.dataSource = this.filasFormArray.controls.map(control => control.value);
   }
+
+  
 }
