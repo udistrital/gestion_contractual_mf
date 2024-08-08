@@ -30,7 +30,8 @@ mat-table {
 }
 
 .full-width-field {
-    width: 100%;
+    width: 96%;
+    margin: 2%;
 }
 
 .full-width {

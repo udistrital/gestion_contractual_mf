@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { ChangeDetectorRef, Component } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 import { combineLatest, Observable, startWith } from 'rxjs';
+import { ParametrosService } from 'src/app/services/parametros.service';
+import { environment } from 'src/environments/environment';
 
 
 export interface RowData {
@@ -27,11 +29,36 @@ const EXAMPLE_DATA: RowData[] = [
 })
 
 export class PasoInfoPresupuestalComponent {
+  showCambioMonedaFields = false;
+
+  constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService, private cdRef: ChangeDetectorRef) { }
+
   form = this._formBuilder.group({
-    vigencia: [''],
-    cdp: [''],
-    valorAcumulado: ['']
+    vigencia: ['', Validators.required],
+    cdp: ['', Validators.required],
+    valorAcumulado: ['', Validators.required],
+    tipoMoneda: ['', Validators.required],
+    valorContrato: ['', Validators.required],
+    resolucion: [''],
+    ordenadorGasto: ['', Validators.required],
+    nombreOrdenador: ['', Validators.required],
+    tipoGasto: ['', Validators.required],
+    origenRecurso: ['', Validators.required],
+    origenPresupuesto: ['', Validators.required],
+    temaGasto: ['', Validators.required],
+    monedaExtranjera: ['', Validators.required],
+    tasaCambio: ['', Validators.required],
+    medioPago: ['', Validators.required],
   });
+
+  monedas: any[] = [];
+  resoluciones: any[] = [];
+  ordenadores: any[] = [];
+  gastos: any[] = [];
+  origen_recursos: any[] = [];
+  origen_presupuestos: any[] = [];
+  tema_gasto: any[] = [];
+  medios_pago: any[] = [];
 
   vigencias: any[] = [
     { value: '2023', viewValue: '2023' },
@@ -68,9 +95,21 @@ export class PasoInfoPresupuestalComponent {
 
   checked = true;
 
-  constructor(private _formBuilder: FormBuilder) { }
-
   ngOnInit() {
+
+    this.CargarMonedas();
+    this.CargarGastos();
+    this.CargarOrigenRecursos();
+    this.CargarOrigenPresupuesto();
+    this.CargarTemaGasto();
+    this.CargarMediosPago();
+
+    this.form.get('tipoMoneda')?.valueChanges.subscribe((id_moneda) => {
+      if(id_moneda){
+        this.CambioMoneda(id_moneda);
+      }
+    })
+
     this.applyFilters().subscribe(([vigencia, cdp, valorAcumulado]) => {
       this.filteredDataSource = this.dataSource.filter(row => {
         const vigenciaMatch = !vigencia || row.vigencia === vigencia;
@@ -87,6 +126,91 @@ export class PasoInfoPresupuestalComponent {
     const valorAcumulado$ = this.form.get('valorAcumulado')?.valueChanges.pipe(startWith(''));
 
     return combineLatest([vigencia$, cdp$, valorAcumulado$]);
+  }
+
+  CargarMonedas(){
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_MONEDA + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.monedas = Response.Data;
+      }
+    })
+  }
+
+  CargarGastos(){
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_GASTO_ID + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.gastos = Response.Data;
+      }
+    })
+  }
+
+  CargarOrigenRecursos(){
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.ORIGEN_RECURSOS_ID + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.origen_recursos = Response.Data;
+      }
+    })
+  }
+
+  CargarOrigenPresupuesto(){
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.ORIGEN_PRESUPUESTO_ID + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.origen_presupuestos = Response.Data;
+      }
+    })
+  }
+
+  CargarTemaGasto(){
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TEMA_GASTO_ID + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.tema_gasto = Response.Data;
+      }
+    })
+  }
+
+  CargarMediosPago(){
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.MEDIO_PAGO_ID + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.medios_pago = Response.Data;
+      }
+    })
+  }
+
+  CambioMoneda(id_moneda: string){
+    const idMonedaStr = id_moneda.toString();
+    
+    this.showCambioMonedaFields = idMonedaStr !== environment.PESO_COLOMBIANO_ID;
+
+    const monedaFields = ['monedaExtranjera', 'tasaCambio'];
+
+    [...monedaFields].forEach(field => {
+      const control = this.form.get(field);
+      if (control) {
+        control.reset();
+        if ((this.showCambioMonedaFields && monedaFields.includes(field))) {
+          control.setValidators(Validators.required);
+          control.enable();
+        } else {
+          control.clearValidators();
+          control.disable();
+        }
+        control.updateValueAndValidity();
+      }
+    });
+    this.cdRef.detectChanges();
+  }
+
+  // Método para manejar la entrada de solo números
+  
+  onlyNumbers(event: KeyboardEvent) {
+    const allowedKeys = [
+      'Backspace', 'Tab', 'End', 'Home', 'ArrowLeft', 'ArrowRight', 'Delete'
+    ];
+    const pattern = /^[0-9]$/;
+
+    if (!allowedKeys.includes(event.key) && !pattern.test(event.key)) {
+      event.preventDefault();
+    }
   }
 
 }
