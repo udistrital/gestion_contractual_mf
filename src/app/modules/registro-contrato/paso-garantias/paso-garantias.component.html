@@ -14,8 +14,8 @@
                     <mat-cell *matCellDef="let element; let i = index">
                         <mat-form-field>
                             <mat-select [formControlName]="'amparo' + i">
-                                <mat-option *ngFor="let amparo of amparos" [value]="amparo.value">
-                                    {{amparo.viewValue}}
+                                <mat-option *ngFor="let amparo of amparos" [value]="amparo.Id">
+                                    {{amparo.Nombre}}
                                 </mat-option>
                             </mat-select>
                         </mat-form-field>
@@ -25,7 +25,7 @@
                     <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
                     <mat-cell *matCellDef="let element; let i = index">
                         <mat-form-field>
-                            <input matInput [formControlName]="'suficiencia' + i" />
+                            <input matInput [formControlName]="'suficiencia' + i" placeholder="Porcentaje (%) -> 10%"/>
                         </mat-form-field>
                     </mat-cell>
                 </ng-container>
@@ -33,7 +33,7 @@
                     <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
                     <mat-cell *matCellDef="let element; let i = index">
                         <mat-form-field>
-                            <input matInput [formControlName]="'descripcion' + i" />
+                            <input matInput [formControlName]="'descripcion' + i" placeholder="Descripción"/>
                         </mat-form-field>
                     </mat-cell>
                 </ng-container>

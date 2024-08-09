@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { ParametrosService } from 'src/app/services/parametros.service';
+import { environment } from 'src/environments/environment';
 
 interface Fila {
   amparo: string;
@@ -15,24 +17,20 @@ interface Fila {
 export class PasoGarantiasComponent implements OnInit {
   form: FormGroup;
 
-  amparos: { value: string; viewValue: string }[] = [
-    { value: '0', viewValue: 'Aa' },
-    { value: '1', viewValue: 'Bb' },
-    { value: '2', viewValue: 'Cc' },
-  ];
+  amparos: any[] = [];
 
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
   dataSource: Fila[] = [];
 
-  constructor(private _formBuilder: FormBuilder) {
+  constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService, private cdRef: ChangeDetectorRef) {
     this.form = this._formBuilder.group({
       filas: this._formBuilder.array([])
     });
   }
 
   ngOnInit() {
-    // Agregar una fila inicial
     this.agregarFila();
+    this.CargarAmparos();
   }
 
   get filasFormArray(): FormArray {
@@ -60,4 +58,13 @@ export class PasoGarantiasComponent implements OnInit {
   actualizarDataSource() {
     this.dataSource = this.filasFormArray.controls.map(control => control.value);
   }
+
+  CargarAmparos() {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.AMPARO_ID + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.amparos = Response.Data;
+      }
+    })
+  }
+
 }
