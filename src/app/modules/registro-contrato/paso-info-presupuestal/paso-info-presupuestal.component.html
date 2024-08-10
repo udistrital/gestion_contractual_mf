@@ -23,9 +23,10 @@
             <mat-form-field>
                 <mat-label>Valor Acumulado:*</mat-label>
                 <input matInput formControlName="valorAcumulado">
+              <mat-icon matSuffix>monetization_on</mat-icon>
             </mat-form-field>
         </div>
-        <mat-table [dataSource]="filteredDataSource">
+        <table mat-table [dataSource]="dataSource" class="mat-elevation-z4" *ngIf="dataSource.length !=0">
             <ng-container matColumnDef="vigencia">
                 <mat-header-cell *matHeaderCellDef> Vigencia </mat-header-cell>
                 <mat-cell *matCellDef="let element"> {{element.vigencia}} </mat-cell>
@@ -33,32 +34,41 @@
 
             <ng-container matColumnDef="solicitudNecesidad">
                 <mat-header-cell *matHeaderCellDef> Solicitud de Necesidad </mat-header-cell>
-                <mat-cell *matCellDef="let element"> {{element.solicitudNecesidad}} </mat-cell>
+                <mat-cell *matCellDef="let element"> {{element.num_sol_adq}} </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="numeroCDP">
                 <mat-header-cell *matHeaderCellDef> Número de Disponibilidad </mat-header-cell>
-                <mat-cell *matCellDef="let element"> {{element.numeroCDP}} </mat-cell>
+                <mat-cell *matCellDef="let element"> {{element.numero_disponibilidad}} </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="valor">
                 <mat-header-cell *matHeaderCellDef> Valor $ (En Pesos) </mat-header-cell>
-                <mat-cell *matCellDef="let element"> {{element.valor}} </mat-cell>
+                <mat-cell *matCellDef="let element"> {{element.valor_contratacion}} </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="dependencia">
                 <mat-header-cell *matHeaderCellDef> Dependencia </mat-header-cell>
-                <mat-cell *matCellDef="let element"> {{element.dependencia}} </mat-cell>
+                <mat-cell *matCellDef="let element"> {{element.nombre_dependencia}} </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="rubro">
                 <mat-header-cell *matHeaderCellDef> Rubro </mat-header-cell>
-                <mat-cell *matCellDef="let element"> {{element.rubro}} </mat-cell>
+                <mat-cell *matCellDef="let element"> {{element.descripcion}} </mat-cell>
             </ng-container>
+
+          <ng-container matColumnDef="estado">
+            <mat-header-cell *matHeaderCellDef> Estado </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{element.estado}} </mat-cell>
+          </ng-container>
 
             <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
             <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-        </mat-table>
+        </table>
+      <div class="btn-container">
+        <button  *ngIf="dataSource.length !=0" mat-raised-button (click)="eliminarUltimoRegistroDataCDP()" color="warn">Eliminar último Registro</button>
+        <button  *ngIf="dataSource.length !=0" mat-raised-button  color="primary">Guardar</button>
+      </div>
     </div>
     <div class="border">
         <div class="title">
