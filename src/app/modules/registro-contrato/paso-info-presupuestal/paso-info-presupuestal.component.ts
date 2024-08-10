@@ -10,7 +10,7 @@ export interface RowData {
   vigencia: string;
   num_sol_adq: string;
   numero_disponibilidad: string;
-  valor_contratacion: number;
+  valor_contratacion: number | string;
   nombre_dependencia: string;
   descripcion: string;
   estado: string;
@@ -30,7 +30,7 @@ export class PasoInfoPresupuestalComponent {
   form = this._formBuilder.group({
     vigencia: ['', Validators.required],
     cdp: ['', Validators.required],
-    valorAcumulado: [{value: '', disabled: true}, Validators.required],
+    valorAcumulado: [{value: 0, disabled: true}, Validators.required],
     tipoMoneda: ['', Validators.required],
     valorContrato: ['', Validators.required],
     resolucion: [''],
@@ -178,6 +178,7 @@ export class PasoInfoPresupuestalComponent {
         next: (response: any) => {
           if (response.Status === 200) {
             this.dataSource = [...this.dataSource, ...response.Data];
+            this.updateValorAcumulado();
           } else {
             console.error('Error loading row data:', response.Message);
           }
@@ -193,9 +194,20 @@ export class PasoInfoPresupuestalComponent {
       const data = this.dataSource;
       data.pop();
       this.dataSource = [...data];
+      this.updateValorAcumulado();
     }
   }
 
+  updateValorAcumulado() {
+    const valorAcumulado = this.dataSource.reduce((sum, row) => {
+      const valor = typeof row.valor_contratacion === 'string'
+        ? parseFloat(row.valor_contratacion)
+        : row.valor_contratacion || 0;
+      return sum + valor;
+    }, 0);
+
+    this.form.get('valorAcumulado')?.setValue(valorAcumulado);
+  }
 
   CargarMonedas(){
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_MONEDA + '&limit=0').subscribe((Response: any) => {
