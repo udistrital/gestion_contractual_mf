@@ -11,11 +11,11 @@
                 </ng-container>
                 <ng-container matColumnDef="amparo">
                     <mat-header-cell *matHeaderCellDef> AMPARO </mat-header-cell>
-                    <mat-cell *matCellDef="let element; let i = index">
+                    <mat-cell *matCellDef="let filaFormGroup">
                         <mat-form-field>
-                            <mat-select [formControlName]="'amparo' + i">
-                                <mat-option *ngFor="let amparo of amparos" [value]="amparo.value">
-                                    {{amparo.viewValue}}
+                            <mat-select [formControl]="filaFormGroup.get('amparo')">
+                                <mat-option *ngFor="let amparo of amparos" [value]="amparo.Id">
+                                    {{amparo.Nombre}}
                                 </mat-option>
                             </mat-select>
                         </mat-form-field>
@@ -23,17 +23,24 @@
                 </ng-container>
                 <ng-container matColumnDef="suficiencia">
                     <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
-                    <mat-cell *matCellDef="let element; let i = index">
-                        <mat-form-field>
-                            <input matInput [formControlName]="'suficiencia' + i" />
+                    <mat-cell *matCellDef="let filaFormGroup">
+                        <mat-form-field *ngIf="filaFormGroup.get('suficienciaPorcentaje').enabled">
+                            <input matInput [formControl]="filaFormGroup.get('suficienciaPorcentaje')" 
+                            placeholder="Porcentaje (%) -> 10%"
+                            (keydown)="onlyNumbersFrom1To100($event, filaFormGroup.get('suficienciaPorcentaje').value)"/>
+                        </mat-form-field>
+                        <mat-form-field *ngIf="filaFormGroup.get('suficienciaSalarios').enabled">
+                            <input matInput [formControl]="filaFormGroup.get('suficienciaSalarios')"
+                            placeholder="Cantidad de SMLV"
+                            (keydown)="onlyPositiveIntegers($event, filaFormGroup.get('suficienciaSalarios').value)"/>
                         </mat-form-field>
                     </mat-cell>
                 </ng-container>
                 <ng-container matColumnDef="descripcion">
                     <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
-                    <mat-cell *matCellDef="let element; let i = index">
+                    <mat-cell *matCellDef="let filaFormGroup">
                         <mat-form-field>
-                            <input matInput [formControlName]="'descripcion' + i" />
+                            <input matInput [formControl]="filaFormGroup.get('descripcion')" placeholder="Descripción"/>
                         </mat-form-field>
                     </mat-cell>
                 </ng-container>
