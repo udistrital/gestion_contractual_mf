@@ -1,26 +1,20 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { combineLatest, Observable, startWith } from 'rxjs';
-import { ParametrosService } from 'src/app/services/parametros.service';
-import { environment } from 'src/environments/environment';
-
+import {ChangeDetectorRef, Component} from '@angular/core';
+import {FormBuilder, Validators} from '@angular/forms';
+import { combineLatest, Observable, startWith, Subject } from 'rxjs';
+import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
+import {CdpsService} from "src/app/services/cdps.service";
+import {ParametrosService} from "src/app/services/parametros.service";
+import {environment} from "src/environments/environment";
 
 export interface RowData {
   vigencia: string;
-  solicitudNecesidad: string;
-  numeroCDP: string;
-  valor: number;
-  dependencia: string;
-  rubro: string;
+  num_sol_adq: string;
+  numero_disponibilidad: string;
+  valor_contratacion: number | string;
+  nombre_dependencia: string;
+  descripcion: string;
+  estado: string;
 }
-
-const EXAMPLE_DATA: RowData[] = [
-  { vigencia: '2023', solicitudNecesidad: 'SN-001', numeroCDP: 'CDP-001', valor: 10000, dependencia: 'Departamento A', rubro: 'Rubro 1' },
-  { vigencia: '2023', solicitudNecesidad: 'SN-002', numeroCDP: 'CDP-002', valor: 20000, dependencia: 'Departamento B', rubro: 'Rubro 2' },
-  { vigencia: '2024', solicitudNecesidad: 'SN-001', numeroCDP: 'CDP-001', valor: 10000, dependencia: 'Departamento C', rubro: 'Rubro 3' },
-  { vigencia: '2024', solicitudNecesidad: 'SN-002', numeroCDP: 'CDP-002', valor: 20000, dependencia: 'Departamento D', rubro: 'Rubro 4' },
-];
-
 
 @Component({
   selector: 'app-paso-info-presupuestal',
@@ -28,15 +22,15 @@ const EXAMPLE_DATA: RowData[] = [
   styleUrls: ['./paso-info-presupuestal.component.css'],
 })
 
-export class PasoInfoPresupuestalComponent {
-  showCambioMonedaFields = false;
 
-  constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService, private cdRef: ChangeDetectorRef) { }
+export class PasoInfoPresupuestalComponent {
+
+  unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
 
   form = this._formBuilder.group({
     vigencia: ['', Validators.required],
     cdp: ['', Validators.required],
-    valorAcumulado: ['', Validators.required],
+    valorAcumulado: [{value: 0, disabled: true}, Validators.required],
     tipoMoneda: ['', Validators.required],
     valorContrato: ['', Validators.required],
     resolucion: [''],
@@ -60,19 +54,16 @@ export class PasoInfoPresupuestalComponent {
   tema_gasto: any[] = [];
   medios_pago: any[] = [];
 
+  showCambioMonedaFields = false;
+
+
   vigencias: any[] = [
     { value: '2023', viewValue: '2023' },
     { value: '2024', viewValue: '2024' },
     { value: '2025', viewValue: '2025' },
   ];
 
-  cdps: any[] = [
-    { value: 'CDP-001', viewValue: 'CDP-001' },
-    { value: 'CDP-002', viewValue: 'CDP-002' },
-    { value: 'CDP-003', viewValue: 'CDP-003' },
-  ];
-
-  datosContratista: any = {};
+  cdps: any[] = [];
 
   displayedColumns: string[] = [
     'vigencia',
@@ -81,11 +72,10 @@ export class PasoInfoPresupuestalComponent {
     'valor',
     'dependencia',
     'rubro',
+    'estado'
   ];
 
-  dataSource = EXAMPLE_DATA;
-
-  filteredDataSource: RowData[] = [];
+  dataSource: RowData[] = []; //Vacío o llenandose con datos guardados
 
   habilitarInput = false;
 
@@ -93,9 +83,22 @@ export class PasoInfoPresupuestalComponent {
     this.habilitarInput = !this.habilitarInput;
   }
 
+
   checked = true;
 
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private _formBuilder: FormBuilder,
+    private parametrosService: ParametrosService,
+    private cdRef: ChangeDetectorRef,
+    private cdpsService: CdpsService
+  ) { }
+
   ngOnInit() {
+    this.setupVigenciaListener();
+    this.setupCdpListener();
+    // TODO: Validar datos guardados en caso de que existan
 
     this.CargarMonedas();
     this.CargarGastos();
@@ -110,22 +113,100 @@ export class PasoInfoPresupuestalComponent {
       }
     })
 
-    this.applyFilters().subscribe(([vigencia, cdp, valorAcumulado]) => {
-      this.filteredDataSource = this.dataSource.filter(row => {
-        const vigenciaMatch = !vigencia || row.vigencia === vigencia;
-        const cdpMatch = !cdp || row.numeroCDP === cdp;
-        const valorMatch = !valorAcumulado || row.valor === Number(valorAcumulado);
-        return vigenciaMatch && cdpMatch && valorMatch;
-      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  setupVigenciaListener() {
+    this.form.get('vigencia')?.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      distinctUntilChanged()
+    ).subscribe(vigencia => {
+      if (vigencia) {
+        this.obtenerNumeroDisponibilidad(vigencia);
+      }
     });
   }
 
-  applyFilters(): Observable<any> {
-    const vigencia$ = this.form.get('vigencia')?.valueChanges.pipe(startWith(''));
-    const cdp$ = this.form.get('cdp')?.valueChanges.pipe(startWith(''));
-    const valorAcumulado$ = this.form.get('valorAcumulado')?.valueChanges.pipe(startWith(''));
+  setupCdpListener() {
+    this.form.get('cdp')?.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      distinctUntilChanged()
+    ).subscribe(cdp => {
+      const vigencia = this.form.get('vigencia')?.value
+      if (cdp && vigencia) {
+        this.obtenerCDP(vigencia, cdp);
+      }
+    });
 
-    return combineLatest([vigencia$, cdp$, valorAcumulado$]);
+  }
+
+  obtenerNumeroDisponibilidad(vigencia: string) {
+    // Se limpian los valores actuales
+    this.cdps = [];
+    this.form.get('cdp')?.reset();
+
+    this.cdpsService.get(`cdps/numeros-disponibilidad?vigencia=${vigencia}&unidadEjecutora=${this.unidadEjecutora}`).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (response: any) => {
+        if (response.Status === 200) {
+          this.cdps = response.Data
+            .filter((cdp: any) => cdp.estadocdp !== 'AGOTADO')
+            .map((cdp: any) => ({
+              value: cdp.numero_necesidad,
+              viewValue: cdp.numero_necesidad
+            }));
+        } else {
+          console.error('Error loading CDPs:', response.Message);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading CDPs:', error);
+      }
+    });
+  }
+
+  obtenerCDP(vigencia: string, numeroDisponibilidad: string) {
+
+      this.cdpsService.get(`cdps?vigencia=${vigencia}&unidadEjecutora=${this.unidadEjecutora}&numeroDisponibilidad=${numeroDisponibilidad}`).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (response: any) => {
+          if (response.Status === 200) {
+            this.dataSource = [...this.dataSource, ...response.Data];
+            this.updateValorAcumulado();
+          } else {
+            console.error('Error loading row data:', response.Message);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading row data:', error);
+        }
+      });
+  }
+
+  eliminarUltimoRegistroDataCDP() {
+    if(this.dataSource.length > 0) {
+      const data = this.dataSource;
+      data.pop();
+      this.dataSource = [...data];
+      this.updateValorAcumulado();
+    }
+  }
+
+  updateValorAcumulado() {
+    const valorAcumulado = this.dataSource.reduce((sum, row) => {
+      const valor = typeof row.valor_contratacion === 'string'
+        ? parseFloat(row.valor_contratacion)
+        : row.valor_contratacion || 0;
+      return sum + valor;
+    }, 0);
+
+    this.form.get('valorAcumulado')?.setValue(valorAcumulado);
   }
 
   CargarMonedas(){
@@ -178,7 +259,7 @@ export class PasoInfoPresupuestalComponent {
 
   CambioMoneda(id_moneda: string){
     const idMonedaStr = id_moneda.toString();
-    
+
     this.showCambioMonedaFields = idMonedaStr !== environment.PESO_COLOMBIANO_ID;
 
     const monedaFields = ['monedaExtranjera', 'tasaCambio'];
@@ -201,7 +282,7 @@ export class PasoInfoPresupuestalComponent {
   }
 
   // Método para manejar la entrada de solo números
-  
+
   onlyNumbers(event: KeyboardEvent) {
     const allowedKeys = [
       'Backspace', 'Tab', 'End', 'Home', 'ArrowLeft', 'ArrowRight', 'Delete'
