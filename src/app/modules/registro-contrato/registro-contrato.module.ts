@@ -30,6 +30,7 @@ import { ParametrosService } from 'src/app/services/parametros.service';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
 import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
+import {MatChipsModule} from "@angular/material/chips";
 
 
 
@@ -65,7 +66,8 @@ import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.co
     MatTableModule,
     MatIconModule,
     MatCheckboxModule,
-    HttpClientModule
+    HttpClientModule,
+    MatChipsModule
   ],
   providers:[
     ParametrosService,
