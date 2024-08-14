@@ -1,0 +1,14 @@
+.form-grid4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 2%;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
