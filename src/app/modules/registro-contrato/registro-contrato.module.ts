@@ -31,6 +31,7 @@ import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
 import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
 import {MatChipsModule} from "@angular/material/chips";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 
 
 
@@ -67,7 +68,7 @@ import {MatChipsModule} from "@angular/material/chips";
     MatIconModule,
     MatCheckboxModule,
     HttpClientModule,
-    MatChipsModule
+    MatProgressSpinnerModule
   ],
   providers:[
     ParametrosService,
