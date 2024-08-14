@@ -21,7 +21,11 @@
             <mat-label>Digite el documento del contratista</mat-label>
             <input matInput formControlName="documentoContratista" (keyup.enter)="buscarContratista()">
           </mat-form-field>
-          <div *ngIf="loading">Buscando contratista...</div>
+          <button mat-raised-button color="primary" (click)="buscarContratista()" [disabled]="loading">Buscar</button>
+          <div *ngIf="loading" class="spinner-container">
+            <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+            <p>Buscando contratista...</p>
+          </div>
           <div *ngIf="success">
             <h3>Información del Contratista</h3>
             <ng-container *ngIf="datosContratista">
@@ -39,7 +43,6 @@
                 {{contratistaObject.documento_rl}}</p>
               <p *ngIf="contratistaObject.lugar_expedicion_rl">Lugar Expedición RL:
                 {{contratistaObject.lugar_expedicion_rl}}</p>
-
             </ng-container>
           </div>
           <p *ngIf="errorMessage" class="error-message">{{errorMessage}}</p>
