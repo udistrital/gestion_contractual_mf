@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, NgZone } from '@angular/core';
-import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
 import { throwError, Observable } from 'rxjs';
+import Swal from 'sweetalert2';
 
 export interface ErrorResponse {
   status: number;
@@ -13,23 +13,12 @@ export interface ErrorResponse {
   providedIn: 'root',
 })
 export class HttpErrorManager {
-  private defaultSnackBarConfig: MatSnackBarConfig = {
-    duration: 5000,
-    horizontalPosition: 'center',
-    verticalPosition: 'bottom',
-    panelClass: ['error-snackbar']
-  };
-
-  constructor(
-    private snackBar: MatSnackBar,
-    private ngZone: NgZone
-  ) {}
+  constructor(private ngZone: NgZone) {}
 
   public handleError(error: HttpErrorResponse): Observable<ErrorResponse> {
     let errorResponse: ErrorResponse;
 
     if (error.error instanceof ErrorEvent) {
-
       errorResponse = {
         status: error.status,
         message: 'Error de red o del cliente',
@@ -37,7 +26,6 @@ export class HttpErrorManager {
       };
       console.error('Error del cliente:', error.error.message);
     } else {
-
       errorResponse = {
         status: error.status,
         message: this.getErrorMessage(error),
@@ -69,14 +57,18 @@ export class HttpErrorManager {
   }
 
   private showErrorMessage(error: ErrorResponse): void {
-    const message = `Error ${error.status}: ${error.message}`;
+    const message = `${error.message}`;
 
     this.ngZone.run(() => {
-      this.snackBar.open(message, 'Cerrar', {
-        ...this.defaultSnackBarConfig,
-        panelClass: [...(this.defaultSnackBarConfig.panelClass || []), `status-${error.status}`]
+      Swal.fire({
+        icon: 'error',
+        title: `Error ${error.status}`,
+        text: message,
+        confirmButtonText: 'Cerrar',
+        customClass: {
+          container: `status-${error.status}`
+        }
       });
     });
   }
-
 }
