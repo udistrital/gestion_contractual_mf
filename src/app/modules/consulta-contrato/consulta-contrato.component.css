@@ -1,8 +1,13 @@
 .form-grid4 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    padding: 2%;
+    gap: 2%;
+}
+
+.form-grid3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2%;
 }
 
 .btn-container {
