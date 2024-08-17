@@ -1,0 +1,74 @@
+<h1>Consultar Contrato</h1>
+<form [formGroup]="form">
+    <div class="form-grid4">
+        <mat-form-field>
+            <mat-label>Unidad Ejecutora</mat-label>
+            <mat-select formControlName="unidadEjecutora">
+                <!--<mat-option *ngFor="" [value]="">
+                    {{}}
+                </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Vigencia</mat-label>
+            <mat-select formControlName="vigencia">
+                <mat-option *ngFor="let vigencia of vigencia" [value]="vigencia.Id">
+                    {{vigencia.Nombre}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Tipo de Contrato</mat-label>
+            <mat-select formControlName="tipoContrato">
+                <!--<mat-option *ngFor="" [value]="">
+                    {{}}
+                </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Tipo de Persona</mat-label>
+            <mat-select formControlName="tipoPersona">
+                <mat-option *ngFor="let tipoPersona of tipoPersona" [value]="tipoPersona.Id">
+                    {{tipoPersona.Nombre}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <div class="form-grid3">
+        <mat-form-field>
+            <mat-label>Número de Elaboración</mat-label>
+            <input matInput formControlName="numeroElaboracion">
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Número de Contrato</mat-label>
+            <input matInput formControlName="numeroContrato">
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Contratista</mat-label>
+            <input matInput formControlName="contratista">
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Estado</mat-label>
+            <mat-select formControlName="estado">
+                <!--<mat-option *ngFor="" [value]="">
+                    {{}}
+                </mat-option>-->
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Desde</mat-label>
+            <input matInput [matDatepicker]="pickerDesde" formControlName="fechaDesde">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+            <mat-datepicker #pickerDesde></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Hasta</mat-label>
+            <input matInput [matDatepicker]="pickerHasta" formControlName="fechaHasta">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+            <mat-datepicker #pickerHasta></mat-datepicker>
+        </mat-form-field>
+    </div>
+    <div class="btn-container">
+        <button mat-raised-button color="primary">Consultar</button>
+    </div>
+</form>

@@ -20,6 +20,7 @@ export const environment = {
   ORIGEN_PRESUPUESTO_ID: '125',
   TEMA_GASTO_ID: '126',
   MEDIO_PAGO_ID: '127',
+  TIPO_PERSONA_ID: '132',
 
   UNIDAD_EJECUCION_ID: '7',
 

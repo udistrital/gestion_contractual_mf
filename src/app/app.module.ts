@@ -10,6 +10,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatIconModule } from '@angular/material/icon';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
 
 @NgModule({
   declarations: [
@@ -17,10 +18,12 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
   ],
   imports: [
     RegistroContratoModule,
+    ConsultaContratoModule,
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
     CommonModule,
+    
     MatIconModule,
     HttpClientModule,
     MatSnackBarModule
