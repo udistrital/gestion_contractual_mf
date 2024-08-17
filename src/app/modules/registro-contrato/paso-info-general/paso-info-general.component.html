@@ -1,5 +1,8 @@
-<div *ngIf="isLoading" class="spinner-container centered-container">
-  <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+<div class="loading-overlay" *ngIf="isLoading">
+  <div class="spinner-container">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <p>Cargando...</p>
+  </div>
 </div>
 
 <form [formGroup]="form" *ngIf="!isLoading && loaded">

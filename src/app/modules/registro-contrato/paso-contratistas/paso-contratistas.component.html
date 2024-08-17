@@ -22,10 +22,6 @@
             <input matInput formControlName="documentoContratista" (keyup.enter)="buscarContratista()">
           </mat-form-field>
           <button mat-raised-button color="primary" (click)="buscarContratista()" [disabled]="loading">Buscar</button>
-          <div *ngIf="loading" class="spinner-container">
-            <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
-            <p>Buscando contratista...</p>
-          </div>
           <div *ngIf="success">
             <h3>Información del Contratista</h3>
             <ng-container *ngIf="datosContratista">
@@ -55,3 +51,10 @@
     <button mat-raised-button matStepperNext color="primary" [disabled]="!form.valid">Guardar y Continuar</button>
   </div>
 </form>
+
+<div *ngIf="loading" class="loading-overlay">
+  <div class="spinner-container">
+    <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+    <p>Buscando contratista...</p>
+  </div>
+</div>
