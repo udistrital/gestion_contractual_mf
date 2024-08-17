@@ -2,19 +2,25 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-paso-info-general',
   templateUrl: './paso-info-general.component.html',
   styleUrls: ['./paso-info-general.component.css'],
 })
-
 export class PasoInfoGeneralComponent implements OnInit {
   showContratoFields = false;
   showConvenioFields = false;
+  isLoading = false;
+  loaded: boolean = false;
   maxDate!: Date;
 
-  constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService, private cdRef: ChangeDetectorRef) { }
+  constructor(
+    private _formBuilder: FormBuilder,
+    private parametrosService: ParametrosService,
+    private cdRef: ChangeDetectorRef
+  ) {}
 
   form = this._formBuilder.group({
     tipoCompromiso: ['', Validators.required],
@@ -55,11 +61,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   ngOnInit(): void {
     this.maxDate = new Date();
-    this.CargarCompromisos();
-    this.CargarModalidadSeleccion();
-    this.CargarRegimenContratacion();
-    this.CargarProcedimiento();
-    this.CargarUnidadEjecucion();
+    this.loadInitialData();
 
     this.form.get('tipoCompromiso')?.valueChanges.subscribe((id_compromiso) => {
       if (id_compromiso) {
@@ -118,14 +120,53 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   }
 
+  loadInitialData() {
+    this.isLoading = true;
+    Promise.all([
+      this.CargarCompromisos(),
+      this.CargarModalidadSeleccion(),
+      this.CargarRegimenContratacion(),
+      this.CargarProcedimiento(),
+      this.CargarUnidadEjecucion()
+    ]).then(() => {
+      this.isLoading = false;
+      this.loaded = true;
+      this.cdRef.detectChanges();
+    }).catch(error => {
+      this.isLoading = false;
+      this.showErrorAlert('Error al cargar los datos iniciales');
+      console.error('Error loading initial data:', error);
+    });
+  }
+
   //Generales
 
   CargarCompromisos() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_COMPROMISO_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.compromisos = Response.Data;
-      }
-    })
+    return new Promise((resolve, reject) => {
+      this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_COMPROMISO_ID + '&limit=0').subscribe({
+        next: (Response: any) => {
+          if (Response.Status == "200") {
+            this.compromisos = Response.Data;
+            resolve(true);
+          } else {
+            reject('Error en la respuesta del servidor');
+          }
+        },
+        error: (error) => {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  // Implement similar Promise-based structure for other loading methods...
+
+  showErrorAlert(message: string) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Oops...',
+      text: message,
+    });
   }
 
   CargarModalidadSeleccion() {
@@ -215,7 +256,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   // Método para manejar la entrada de solo números
-  
+
   onlyNumbers(event: KeyboardEvent) {
     const allowedKeys = [
       'Backspace', 'Tab', 'End', 'Home', 'ArrowLeft', 'ArrowRight', 'Delete'

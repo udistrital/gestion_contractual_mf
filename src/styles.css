@@ -1,1 +1,12 @@
-/* You can add global styles to this file, and also import other style files */
+.swal2-popup.status-400 {
+  background-color: #fff3cd;
+}
+.swal2-popup.status-401, .swal2-popup.status-403 {
+  background-color: #f8d7da;
+}
+.swal2-popup.status-404 {
+  background-color: #d1ecf1;
+}
+.swal2-popup.status-500 {
+  background-color: #d1ecf1;
+}

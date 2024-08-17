@@ -1,6 +1,6 @@
 import {ChangeDetectorRef, Component} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import { combineLatest, Observable, startWith, Subject } from 'rxjs';
+import {combineLatest, finalize, Observable, startWith, Subject} from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import {CdpsService} from "src/app/services/cdps.service";
 import {ParametrosService} from "src/app/services/parametros.service";
@@ -88,6 +88,8 @@ export class PasoInfoPresupuestalComponent {
 
   private destroy$ = new Subject<void>();
 
+  isLoading = false;
+
   constructor(
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
@@ -145,12 +147,16 @@ export class PasoInfoPresupuestalComponent {
   }
 
   obtenerNumeroDisponibilidad(vigencia: string) {
-    // Se limpian los valores actuales
+    this.isLoading = true;
     this.cdps = [];
     this.form.get('cdp')?.reset();
 
     this.cdpsService.get(`cdps/numeros-disponibilidad?vigencia=${vigencia}&unidadEjecutora=${this.unidadEjecutora}`).pipe(
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
+      finalize(() => {
+        this.isLoading = false;
+        this.cdRef.detectChanges();
+      })
     ).subscribe({
       next: (response: any) => {
         if (response.Status === 200) {
@@ -171,22 +177,26 @@ export class PasoInfoPresupuestalComponent {
   }
 
   obtenerCDP(vigencia: string, numeroDisponibilidad: string) {
-
-      this.cdpsService.get(`cdps?vigencia=${vigencia}&unidadEjecutora=${this.unidadEjecutora}&numeroDisponibilidad=${numeroDisponibilidad}`).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: (response: any) => {
-          if (response.Status === 200) {
-            this.dataSource = [...this.dataSource, ...response.Data];
-            this.updateValorAcumulado();
-          } else {
-            console.error('Error loading row data:', response.Message);
-          }
-        },
-        error: (error) => {
-          console.error('Error loading row data:', error);
+    this.isLoading = true;
+    this.cdpsService.get(`cdps?vigencia=${vigencia}&unidadEjecutora=${this.unidadEjecutora}&numeroDisponibilidad=${numeroDisponibilidad}`).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => {
+        this.isLoading = false;
+        this.cdRef.detectChanges();
+      })
+    ).subscribe({
+      next: (response: any) => {
+        if (response.Status === 200) {
+          this.dataSource = [...this.dataSource, ...response.Data];
+          this.updateValorAcumulado();
+        } else {
+          console.error('Error loading row data:', response.Message);
         }
-      });
+      },
+      error: (error) => {
+        console.error('Error loading row data:', error);
+      }
+    });
   }
 
   eliminarUltimoRegistroDataCDP() {
