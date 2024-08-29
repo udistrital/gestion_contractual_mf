@@ -5,7 +5,7 @@
         </div>
         <div class="form-grid2">
             <mat-form-field>
-                <mat-label>Dependencia:*</mat-label>
+                <mat-label>Dependencia:</mat-label>
                 <mat-select formControlName="dependencia">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -13,7 +13,7 @@
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Sede:*</mat-label>
+                <mat-label>Sede:</mat-label>
                 <mat-select formControlName="sede">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -30,7 +30,7 @@
             <h4>Supervisor {{i + 1}}</h4>
             <div class="form-grid2">
                 <mat-form-field>
-                    <mat-label>Dependencia:*</mat-label>
+                    <mat-label>Dependencia:</mat-label>
                     <mat-select [(ngModel)]="supervisor.dependencia" formControlName="dependencia">
                         <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -38,7 +38,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Sede:*</mat-label>
+                    <mat-label>Sede:</mat-label>
                     <mat-select [(ngModel)]="supervisor.sede" formControlName="sede">
                         <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -46,15 +46,15 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Supervisor:*</mat-label>
+                    <mat-label>Supervisor:</mat-label>
                     <input matInput [(ngModel)]="supervisor.nombre" formControlName="supervisor">
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Cargo:*</mat-label>
+                    <mat-label>Cargo:</mat-label>
                     <input matInput [(ngModel)]="supervisor.cargo" formControlName="cargo">
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Tipo de Control:*</mat-label>
+                    <mat-label>Tipo de Control:</mat-label>
                     <mat-select [(ngModel)]="supervisor.tipoControl" formControlName="tipoControl">
                         <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -62,7 +62,7 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Código de Verificación:*</mat-label>
+                    <mat-label>Código de Verificación:</mat-label>
                     <input matInput [(ngModel)]="supervisor.codigoVerificacion" formControlName="codigoVerificacion">
                 </mat-form-field>
             </div>
@@ -82,15 +82,15 @@
 
         <div class="form-grid3">
             <mat-form-field>
-                <mat-label>Pais:*</mat-label>
+                <mat-label>Pais:</mat-label>
                 <mat-select formControlName="pais">
-                    <!--<mat-option *ngFor="" [value]="value">
-                  {{viewValue}}
-                </mat-option>-->
+                    <mat-option *ngFor="let pais of pais" [value]="pais.Id">
+                        {{pais.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Departamento:*</mat-label>
+                <mat-label>Departamento:</mat-label>
                 <mat-select formControlName="departamento">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -98,7 +98,7 @@
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Sede:*</mat-label>
+                <mat-label>Sede:</mat-label>
                 <mat-select formControlName="sede">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -106,7 +106,7 @@
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Municipio/Ciudad:*</mat-label>
+                <mat-label>Municipio/Ciudad:</mat-label>
                 <mat-select formControlName="municipioCiudad">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -114,7 +114,7 @@
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Dependencia:*</mat-label>
+                <mat-label>Dependencia:</mat-label>
                 <mat-select formControlName="dependencia">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
@@ -122,7 +122,7 @@
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Dirección:*</mat-label>
+                <mat-label>Dirección:</mat-label>
                 <input matInput formControlName="direccion">
             </mat-form-field>
         </div>

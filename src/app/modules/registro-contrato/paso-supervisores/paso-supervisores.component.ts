@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-
+import { UbicacionService } from 'src/app/services/ubicacion.service';
 
 @Component({
   selector: 'app-paso-supervisores',
@@ -9,6 +9,12 @@ import { FormBuilder, Validators } from '@angular/forms';
 })
 
 export class PasoSupervisoresComponent {
+
+  constructor(
+    private _formBuilder: FormBuilder,
+    private ubicacionService: UbicacionService,
+  ) { }
+
   form = this._formBuilder.group({
     dependencia: ['', Validators.required],
     sede: ['', Validators.required],
@@ -31,6 +37,23 @@ export class PasoSupervisoresComponent {
     codigoVerificacion: ''
   }];
 
+  pais: any[] = [];
+  departamento: any[] = [];
+  municipioCiudad: any[] = [];
+
+  ngOnInit(): void {
+    this.CargarPais();
+
+  }
+
+  CargarPais() {
+    this.ubicacionService.get('lugar?query=TipoLugarId:1&limit=0').subscribe((Response: any) => {
+      if (Response.length != 0) {
+        this.pais = Response;
+      }
+    })
+  }
+
   agregarSupervisor() {
     this.supervisores.push({
       dependencia: '',
@@ -51,5 +74,4 @@ export class PasoSupervisoresComponent {
     }
   }
 
-  constructor(private _formBuilder: FormBuilder) { }
 }
