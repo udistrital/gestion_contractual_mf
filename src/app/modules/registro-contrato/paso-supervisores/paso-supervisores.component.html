@@ -92,9 +92,9 @@
             <mat-form-field>
                 <mat-label>Departamento:</mat-label>
                 <mat-select formControlName="departamento">
-                    <!--<mat-option *ngFor="" [value]="value">
-                  {{viewValue}}
-                </mat-option>-->
+                    <mat-option *ngFor="let departamento of departamento" [value]="departamento.LugarHijoId.Id">
+                        {{departamento.LugarHijoId.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
@@ -108,9 +108,9 @@
             <mat-form-field>
                 <mat-label>Municipio/Ciudad:</mat-label>
                 <mat-select formControlName="municipioCiudad">
-                    <!--<mat-option *ngFor="" [value]="value">
-                  {{viewValue}}
-                </mat-option>-->
+                    <mat-option *ngFor="let municipioCiudad of municipioCiudad" [value]="municipioCiudad.LugarHijoId.Id">
+                        {{municipioCiudad.LugarHijoId.Nombre}}
+                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
