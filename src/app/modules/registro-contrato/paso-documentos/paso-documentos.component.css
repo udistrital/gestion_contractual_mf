@@ -1,0 +1,48 @@
+.btn-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.full-width-field {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.title-box {
+    background-color: rgb(100, 21, 21);
+    color: white;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+.file-upload-container {
+    display: flex;
+    align-items: center;
+}
+
+.file-name-input {
+    width: 70%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #f5f5f5;
+}
+
+.file-upload-button {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 35px;
+    margin-left: 10px;
+}

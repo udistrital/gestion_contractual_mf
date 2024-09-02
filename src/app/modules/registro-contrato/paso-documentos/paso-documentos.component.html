@@ -1,0 +1,22 @@
+<form [formGroup]="form">
+    <div class="border">
+        <div class="full-width-field">
+            <div class="title-box">Documentos Contratista</div>
+            <p>Cargar documentos contratista aquí</p>
+            <div class="file-upload-container">
+                <input type="text" [value]="fileName" placeholder="Documentos precontractuales" class="file-name-input"readonly />
+                <label for="file-upload" class="file-upload-button">
+                    <mat-icon style="font-size:30px;">upload</mat-icon>
+                </label>
+                <input type="file" id="file-upload" (change)="onFileSelected($event)" accept=".pdf" style="display: none;" />
+            </div>
+        </div>
+        <div class="btn-container">
+            <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+            <button mat-raised-button color="primary" (click)="openPdfViewer()" [disabled]="!form.get('pdfFile')?.value">Ver
+                <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-raised-button matStepperNext color="primary">Guardar y Registrar</button>
+        </div>
+    </div>
+</form>
