@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-
+import { UbicacionService } from 'src/app/services/ubicacion.service';
 
 @Component({
   selector: 'app-paso-supervisores',
@@ -9,6 +9,13 @@ import { FormBuilder, Validators } from '@angular/forms';
 })
 
 export class PasoSupervisoresComponent {
+
+  constructor(
+    private _formBuilder: FormBuilder,
+    private ubicacionService: UbicacionService,
+    private cdRef: ChangeDetectorRef
+  ) { }
+
   form = this._formBuilder.group({
     dependencia: ['', Validators.required],
     sede: ['', Validators.required],
@@ -31,6 +38,51 @@ export class PasoSupervisoresComponent {
     codigoVerificacion: ''
   }];
 
+  pais: any[] = [];
+  departamento: any[] = [];
+  municipioCiudad: any[] = [];
+
+  ngOnInit(): void {
+    this.CargarPais();
+
+    this.form.get('pais')?.valueChanges.subscribe((id_pais) => {
+      if (id_pais) {
+        this.CargarDepartamento(id_pais);
+      }
+    });
+
+    this.form.get('departamento')?.valueChanges.subscribe((id_departamento) => {
+      if (id_departamento) {
+        this.CargarCiudad(id_departamento);
+      }
+    });
+
+  }
+
+  CargarPais() {
+    this.ubicacionService.get('lugar?query=TipoLugarId:1&limit=0').subscribe((Response: any) => {
+      if (Response.length != 0) {
+        this.pais = Response;
+      }
+    })
+  }
+
+  CargarDepartamento(id_pais: string) {
+    this.ubicacionService.get('relacion_lugares?query=LugarPadreId:' + id_pais + '&limit=0').subscribe((Response: any) => {
+      if (Response.length != 0) {
+        this.departamento = Response;
+      }
+    })
+  }
+
+  CargarCiudad(id_departamento: string) {
+    this.ubicacionService.get('relacion_lugares?query=LugarPadreId:' + id_departamento + '&limit=0').subscribe((Response: any) => {
+      if (Response.length != 0) {
+        this.municipioCiudad = Response;
+      }
+    })
+  }
+
   agregarSupervisor() {
     this.supervisores.push({
       dependencia: '',
@@ -51,5 +103,4 @@ export class PasoSupervisoresComponent {
     }
   }
 
-  constructor(private _formBuilder: FormBuilder) { }
 }

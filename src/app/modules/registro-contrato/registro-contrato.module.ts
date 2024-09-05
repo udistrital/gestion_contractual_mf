@@ -27,6 +27,7 @@ import { GuardarInfoComponent } from './guardar-info/guardar-info.component';
 import { RegistroContratoComponent } from './registro-contrato.component';
 
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { UbicacionService } from 'src/app/services/ubicacion.service';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
 import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
@@ -72,6 +73,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
   ],
   providers:[
     ParametrosService,
+    UbicacionService,
     RequestManager
   ]
 })
