@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
+import {FileService} from "./services/FileService";
 
 @NgModule({
   declarations: [
@@ -23,7 +24,6 @@ import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-con
     BrowserAnimationsModule,
     AppRoutingModule,
     CommonModule,
-    
     MatIconModule,
     HttpClientModule,
     MatSnackBarModule
@@ -31,6 +31,7 @@ import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-con
   providers: [
     ParametrosService,
     RequestManager,
+    FileService,
   ],
   bootstrap: [
     AppComponent

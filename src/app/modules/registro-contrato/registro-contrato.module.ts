@@ -33,12 +33,10 @@ import { ParametrosService } from 'src/app/services/parametros.service';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
 import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
-import {MatChipsModule} from "@angular/material/chips";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.component';
-
-
-
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {PdfViewerModule} from "ng2-pdf-viewer";
 
 @NgModule({
   declarations: [
@@ -77,7 +75,9 @@ import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.com
     HttpClientModule,
     MatProgressSpinnerModule,
     BrowserAnimationsModule,
-    BrowserModule
+    BrowserModule,
+    MatTooltipModule,
+    PdfViewerModule
   ],
   providers:[
     ParametrosService,

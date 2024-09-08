@@ -11,7 +11,7 @@ import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.co
 })
 export class PasoDocumentosComponent {
   form = this._formBuilder.group({
-    pdfFile: [null as File | null, Validators.required]
+    pdfFileName: ['', Validators.required]
   });
 
   constructor(
@@ -19,32 +19,30 @@ export class PasoDocumentosComponent {
     private dialog: MatDialog
   ) { }
 
-  fileName: string = '';
-  
+  pdfFile: File | null = null;
+
   onFileSelected(event: any) {
-    const element = event.currentTarget as HTMLInputElement;
-    const file = element.files ? element.files[0] : null;
+    const input = event.currentTarget as HTMLInputElement;
+    const file = input.files ? input.files[0] : null;
 
     if (file && file.type === 'application/pdf') {
+      this.pdfFile = file;
       this.form.patchValue({
-        pdfFile: file
+        pdfFileName: this.pdfFile.name
       });
-      this.fileName = file.name;
     } else {
       this.form.patchValue({
-        pdfFile: null
+        pdfFileName: null
       });
-      this.fileName = '';
     }
   }
 
   openPdfViewer(): void {
-    const pdfFile = this.form.get('pdfFile')?.value;
-    if (pdfFile) {
+    if (this.pdfFile) {
       this.dialog.open(PdfViewerModalComponent, {
         width: '80%',
         height: '80%',
-        data: { pdfFile }
+        data: { file: this.pdfFile }
       });
     }
   }
