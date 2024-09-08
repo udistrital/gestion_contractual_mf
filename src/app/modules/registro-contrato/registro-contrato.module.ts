@@ -30,6 +30,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { UbicacionService } from 'src/app/services/ubicacion.service';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
 import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
@@ -81,6 +82,7 @@ import {PdfViewerModule} from "ng2-pdf-viewer";
   ],
   providers:[
     ParametrosService,
+    UbicacionService,
     RequestManager
   ]
 })

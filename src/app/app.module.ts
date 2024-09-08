@@ -12,6 +12,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
 import {FileService} from "./services/FileService";
+import { UbicacionService } from './services/ubicacion.service';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import {FileService} from "./services/FileService";
   ],
   providers: [
     ParametrosService,
+    UbicacionService,
     RequestManager,
     FileService,
   ],

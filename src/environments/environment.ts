@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   PARAMETROS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/',
+  UBICACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ubicaciones_crud/v2/',
   PROVEEDORES_SERVICE: '',
   CDPS_SERVICE: '',
   TIPO_COMPROMISO_ID: '111',
