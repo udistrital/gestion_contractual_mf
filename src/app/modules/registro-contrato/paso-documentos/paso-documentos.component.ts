@@ -1,39 +1,49 @@
-import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
-
 
 @Component({
   selector: 'app-paso-documentos',
   templateUrl: './paso-documentos.component.html',
   styleUrls: ['./paso-documentos.component.css']
 })
-export class PasoDocumentosComponent {
-  form = this._formBuilder.group({
+export class PasoDocumentosComponent implements OnInit {
+  form: FormGroup = this.formBuilder.group({
     pdfFileName: ['', Validators.required]
   });
+  pdfFile: File | null = null;
+  errorMessage: string = '';
 
   constructor(
-    private _formBuilder: FormBuilder,
+    private formBuilder: FormBuilder,
     private dialog: MatDialog
   ) { }
 
-  pdfFile: File | null = null;
+  ngOnInit() {}
 
-  onFileSelected(event: any) {
-    const input = event.currentTarget as HTMLInputElement;
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
     const file = input.files ? input.files[0] : null;
 
-    if (file && file.type === 'application/pdf') {
-      this.pdfFile = file;
-      this.form.patchValue({
-        pdfFileName: this.pdfFile.name
-      });
-    } else {
-      this.form.patchValue({
-        pdfFileName: null
-      });
+    if (file) {
+      if (file.type === 'application/pdf') {
+        this.pdfFile = file;
+        this.form.patchValue({ pdfFileName: file.name });
+        this.errorMessage = '';
+      } else {
+        this.resetFileInput();
+        this.errorMessage = 'Por favor, seleccione un archivo PDF válido.';
+      }
+    }
+  }
+
+  resetFileInput() {
+    this.pdfFile = null;
+    this.form.patchValue({ pdfFileName: '' });
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
     }
   }
 
@@ -44,6 +54,14 @@ export class PasoDocumentosComponent {
         height: '80%',
         data: { file: this.pdfFile }
       });
+    }
+  }
+
+  onSubmit() {
+    if (this.form.valid && this.pdfFile) {
+      console.log('Formulario enviado', this.form.value);
+    } else {
+      this.errorMessage = 'Por favor, seleccione un archivo PDF antes de continuar.';
     }
   }
 }

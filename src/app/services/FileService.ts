@@ -13,5 +13,5 @@ export class FileService {
       reader.readAsArrayBuffer(file);
     });
   }
-  
+
 }
