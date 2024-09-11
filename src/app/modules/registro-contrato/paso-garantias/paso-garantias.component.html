@@ -1,10 +1,10 @@
-<form [formGroup]="form">
-    <div class="border">
-        <div class="title">
-            <h3>Garantías y Mecanismos de Cobertura del Riesgo</h3>
-        </div>
-        <div class="form-grid1">
-            <mat-table [dataSource]="dataSource">
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="border">
+    <div class="title">
+      <h3>Garantías y Mecanismos de Cobertura del Riesgo</h3>
+    </div>
+    <div class="form-grid1">
+      <mat-table [dataSource]="dataSource">
                 <ng-container matColumnDef="id">
                     <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
                     <mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</mat-cell>
@@ -25,7 +25,7 @@
                     <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
                     <mat-cell *matCellDef="let filaFormGroup">
                         <mat-form-field *ngIf="filaFormGroup.get('suficienciaPorcentaje').enabled">
-                            <input matInput [formControl]="filaFormGroup.get('suficienciaPorcentaje')" 
+                            <input matInput [formControl]="filaFormGroup.get('suficienciaPorcentaje')"
                             placeholder="Porcentaje (%) -> 10%"
                             (keydown)="onlyNumbersFrom1To100($event, filaFormGroup.get('suficienciaPorcentaje').value)"/>
                         </mat-form-field>
@@ -54,14 +54,14 @@
                 </ng-container>
                 <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
                 <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-            </mat-table>
-            <div class="btn-container">
-                <button mat-raised-button color="primary" (click)="agregarFila()">Agregar Registro</button>
-            </div>
-        </div>
+      </mat-table>
+      <div class="btn-container">
+        <button mat-raised-button color="primary" type="button" (click)="agregarFila()">Agregar Registro</button>
+      </div>
     </div>
-    <div class="btn-container">
-        <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-        <button mat-raised-button matStepperNext color="primary" [disabled]="!form.valid">Guardar y Continuar</button>
-    </div>
+  </div>
+  <div class="btn-container">
+    <button mat-raised-button type="button" matStepperPrevious color="primary">Atrás</button>
+    <button mat-raised-button type="submit" color="primary" [disabled]="!form.valid">Guardar y Continuar</button>
+  </div>
 </form>

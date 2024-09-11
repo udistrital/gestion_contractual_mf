@@ -24,7 +24,7 @@ import { UbicacionService } from './services/ubicacion.service';
     BrowserAnimationsModule,
     AppRoutingModule,
     CommonModule,
-    
+
     MatIconModule,
     HttpClientModule,
     MatSnackBarModule
