@@ -1,21 +1,30 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule, Routes, provideRouter } from '@angular/router';
+import { getSingleSpaExtraProviders } from 'single-spa-angular';
+import { provideHttpClient, withFetch } from '@angular/common/http';
+import { APP_BASE_HREF } from '@angular/common';
 import { RegistroContratoComponent } from './modules/registro-contrato/registro-contrato.component';
 import { ConsultaContratoComponent } from './modules/consulta-contrato/consulta-contrato.component';
 
 const routes: Routes = [
   {
-    path:"registrar-contrato",
+    path:"registrar",
     component: RegistroContratoComponent
   },
   {
-    path:"consultar-contrato",
+    path:"consultar",
     component: ConsultaContratoComponent
   }
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
+  providers: [
+    provideRouter(routes),
+    { provide: APP_BASE_HREF, useValue: '/contratos/' },
+    getSingleSpaExtraProviders(),
+    provideHttpClient(withFetch()),
+  ],
 })
 export class AppRoutingModule { }
