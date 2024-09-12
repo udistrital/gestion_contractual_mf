@@ -33,5 +33,9 @@
             <ng-template matStepLabel>Cláusulas y Parágrafos</ng-template>
             <app-paso-clausulas-paragrafos />
         </mat-step>
+        <mat-step [stepControl]="ninthFormGroup">
+            <ng-template matStepLabel>Documentos Contratista</ng-template>
+            <app-paso-documentos />
+        </mat-step>
     </mat-stepper>
 </div>

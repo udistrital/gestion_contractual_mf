@@ -1,0 +1,31 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="border">
+    <div class="full-width-field">
+      <h2 class="title-box">Documentos Contratista</h2>
+      <p>Sube el documento compendio del Contratista aquí:</p>
+      <div class="file-upload-container">
+        <div class="file-input-wrapper">
+          <input type="text" [value]="pdfFile ? (pdfFile.name + ' (' + (pdfFile.size / 1024 / 1024).toFixed(2) + ' MB)') : 'Ningún archivo seleccionado'"
+                 class="file-name-input" readonly aria-label="Nombre del archivo seleccionado" />
+          <button type="button" mat-raised-button color="primary" class="file-upload-button" (click)="fileInput.click()">
+            <mat-icon>upload</mat-icon>
+            <span>Seleccionar PDF</span>
+          </button>
+        </div>
+        <input #fileInput type="file" (change)="onFileSelected($event)" accept=".pdf" style="display: none;" />
+      </div>
+      <p *ngIf="errorMessage" class="error-message">
+        <mat-icon>error</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </p>
+    </div>
+    <div class="btn-container">
+      <button mat-raised-button type="button" matStepperPrevious>Atrás</button>
+      <button mat-raised-button type="button" color="accent" (click)="openPdfViewer()" [disabled]="!pdfFile">
+        Ver
+        <mat-icon>visibility</mat-icon>
+      </button>
+      <button mat-raised-button type="submit" color="primary" [disabled]="!form.valid || !pdfFile">Guardar y Registrar</button>
+    </div>
+  </div>
+</form>

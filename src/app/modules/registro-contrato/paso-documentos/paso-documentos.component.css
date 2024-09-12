@@ -1,0 +1,42 @@
+.file-upload-container {
+  margin-bottom: 15px;
+}
+
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.file-name-input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px 0 0 4px;
+  background-color: #f5f5f5;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.file-upload-button {
+  border-radius: 0 4px 4px 0 !important;
+}
+
+.file-upload-button mat-icon {
+  margin-right: 8px;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  color: #f44336;
+}
+
+.error-message mat-icon {
+  margin-right: 8px;
+}
+
+.btn-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}

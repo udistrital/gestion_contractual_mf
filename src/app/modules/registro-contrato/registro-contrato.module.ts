@@ -19,22 +19,25 @@ import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-inf
 import { PasoObligacionesComponent } from './paso-obligaciones/paso-obligaciones.component';
 import { PasoEspecificacionesComponent } from './paso-especificaciones/paso-especificaciones.component';
 import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos/paso-clausulas-paragrafos.component';
+import { PasoDocumentosComponent } from './paso-documentos/paso-documentos.component';
 
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { GuardarInfoComponent } from './guardar-info/guardar-info.component';
 import { RegistroContratoComponent } from './registro-contrato.component';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
 import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
-import {MatChipsModule} from "@angular/material/chips";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-
-
+import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.component';
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {PdfViewerModule} from "ng2-pdf-viewer";
 
 @NgModule({
   declarations: [
@@ -48,7 +51,9 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
     GuardarInfoComponent,
     PasoEspecificacionesComponent,
     PasoClausulasParagrafosComponent,
-    ParagrafoDialogComponent
+    ParagrafoDialogComponent,
+    PasoDocumentosComponent,
+    PdfViewerModalComponent
   ],
   imports: [
     CommonModule,
@@ -69,7 +74,11 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
     MatIconModule,
     MatCheckboxModule,
     HttpClientModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    BrowserAnimationsModule,
+    BrowserModule,
+    MatTooltipModule,
+    PdfViewerModule
   ],
   providers:[
     ParametrosService,
