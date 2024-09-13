@@ -2,6 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
+import {HttpClient, HttpHeaders} from "@angular/common/http";
+import Swal from "sweetalert2";
+import {ParametrosService} from "../../../services/parametros.service";
+import {DocumentosService} from "../../../services/documentos.service";
 
 @Component({
   selector: 'app-paso-documentos',
@@ -17,7 +21,9 @@ export class PasoDocumentosComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private http: HttpClient,
+    private documentosService: DocumentosService,
   ) { }
 
   ngOnInit() {}
@@ -60,8 +66,43 @@ export class PasoDocumentosComponent implements OnInit {
   onSubmit() {
     if (this.form.valid && this.pdfFile) {
       console.log('Formulario enviado', this.form.value);
+      this.uploadDocument();
     } else {
       this.errorMessage = 'Por favor, seleccione un archivo PDF antes de continuar.';
     }
+  }
+
+
+  uploadDocument() {
+    if (!this.pdfFile) {
+      this.errorMessage = 'No se ha seleccionado ningún archivo.';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const base64String = e.target.result.split(',')[1];
+
+      const payload = [{
+        IdTipoDocumento: 1,
+        nombre: this.pdfFile!.name,
+        descripcion: "Documento del Contratista",
+        metadatos: {},
+        file: base64String
+      }];
+
+      this.documentosService.postAny("/document/uploadAnyFormat", payload).subscribe({
+        next: (response) => {
+          console.log('Documento subido exitosamente', response);
+          Swal.fire('Documento subido exitosamente', '', 'success');
+        },
+        error: (error) => {
+          Swal.fire('Error al subir el documento', 'Por favor, intente de nuevo.', 'error');
+          console.error('Error al subir el documento', error);
+          this.errorMessage = 'Error al subir el documento. Por favor, intente de nuevo.';
+        }
+      });
+    }
+    reader.readAsDataURL(this.pdfFile);
   }
 }
