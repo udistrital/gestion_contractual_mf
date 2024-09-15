@@ -4,6 +4,7 @@ export const environment = {
   UBICACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ubicaciones_crud/v2/',
   PROVEEDORES_SERVICE: '',
   CDPS_SERVICE: '',
+  GESTOR_DOCUMENTAL_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
   TIPO_COMPROMISO_ID: '111',
   TIPO_CONTRATO_ID: '112',
   PERFIL_CONTRATISTA_ID: '113',
@@ -32,7 +33,7 @@ export const environment = {
   CONTRATO_PSPAG_ID: '6546',
 
   PESO_COLOMBIANO_ID: '6634',
-  
+
   AMPARO_CREC_ID: '6609',
   SUFICIENCIA_SMLV_ID: '6708',
   SUFICIENCIA_PORCENTAJE_ID: '6709',
