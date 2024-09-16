@@ -17,6 +17,7 @@ export class PasoGarantiasComponent implements OnInit {
   amparos: any[] = [];
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
   dataSource: MatTableDataSource<FormGroup>;
+  contratoGeneralId = '1234'; //ID Mock para pruebas
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -162,16 +163,24 @@ export class PasoGarantiasComponent implements OnInit {
   prepareFormData() {
     return this.filasFormArray.controls.map(control => {
       const formGroup = control as FormGroup;
-      console.log({
-        amparo_id: formGroup.get('amparo')?.value,
-        suficiencia: formGroup.get('suficienciaPorcentaje')?.value,
-        descripcion: formGroup.get('descripcion')?.value
-      })
-      return {
-        amparo_id: formGroup.get('amparo')?.value,
-        suficiencia: formGroup.get('suficienciaPorcentaje')?.value,
-        descripcion: formGroup.get('descripcion')?.value
-      };
+      if (formGroup.get('suficienciaSalarios')?.enabled) {
+        return {
+          amparo_id: formGroup.get('amparo')?.value,
+          suficiencia: formGroup.get('suficienciaSalarios')?.value,
+          descripcion: formGroup.get('descripcion')?.value,
+          contrato_general_id: this.contratoGeneralId,
+          tipo_valor_amparo_id: 1 //ID Mock para pruebas
+        };
+      } else {
+        return {
+          amparo_id: formGroup.get('amparo')?.value,
+          suficiencia: formGroup.get('suficienciaPorcentaje')?.value,
+          descripcion: formGroup.get('descripcion')?.value,
+          contrato_general_id: this.contratoGeneralId,
+          tipo_valor_amparo_id: 2 //ID Mock para pruebas
+        };
+      }
+
     });
   }
 
