@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
+import {FileService} from "./services/FileService";
 import { UbicacionService } from './services/ubicacion.service';
 
 @NgModule({
@@ -24,7 +25,6 @@ import { UbicacionService } from './services/ubicacion.service';
     BrowserAnimationsModule,
     AppRoutingModule,
     CommonModule,
-
     MatIconModule,
     HttpClientModule,
     MatSnackBarModule
@@ -33,6 +33,7 @@ import { UbicacionService } from './services/ubicacion.service';
     ParametrosService,
     UbicacionService,
     RequestManager,
+    FileService,
   ],
   bootstrap: [
     AppComponent
