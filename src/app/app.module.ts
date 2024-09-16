@@ -13,6 +13,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
 import {FileService} from "./services/FileService";
 import { UbicacionService } from './services/ubicacion.service';
+import {DocumentosService} from "./services/documentos.service";
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import { UbicacionService } from './services/ubicacion.service';
     UbicacionService,
     RequestManager,
     FileService,
+    DocumentosService,
   ],
   bootstrap: [
     AppComponent
