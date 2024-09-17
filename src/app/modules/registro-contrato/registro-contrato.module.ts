@@ -38,6 +38,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.component';
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {PdfViewerModule} from "ng2-pdf-viewer";
+import {EditorEnriquecidoComponent} from "../../components/editor-enriquecido/editor-enriquecido..component";
 
 @NgModule({
   declarations: [
@@ -55,31 +56,32 @@ import {PdfViewerModule} from "ng2-pdf-viewer";
     PasoDocumentosComponent,
     PdfViewerModalComponent
   ],
-  imports: [
-    CommonModule,
-    MatStepperModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatStepperModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCardModule,
-    NgFor,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatTableModule,
-    MatIconModule,
-    MatCheckboxModule,
-    HttpClientModule,
-    MatProgressSpinnerModule,
-    BrowserAnimationsModule,
-    BrowserModule,
-    MatTooltipModule,
-    PdfViewerModule
-  ],
+    imports: [
+        CommonModule,
+        MatStepperModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatStepperModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatCardModule,
+        NgFor,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatTableModule,
+        MatIconModule,
+        MatCheckboxModule,
+        HttpClientModule,
+        MatProgressSpinnerModule,
+        BrowserAnimationsModule,
+        BrowserModule,
+        MatTooltipModule,
+        PdfViewerModule,
+        EditorEnriquecidoComponent
+    ],
   providers:[
     ParametrosService,
     UbicacionService,
