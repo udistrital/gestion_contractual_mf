@@ -19,12 +19,10 @@
               <mat-label>Nombre</mat-label>
               <input matInput formControlName="nombre">
             </mat-form-field>
-            <mat-form-field>
-              <mat-label>Descripción</mat-label>
-              <input matInput formControlName="descripcion">
-            </mat-form-field>
+            <app-editor-enriquecido formControlName="descripcion" placeholder="Ingresa la descripción de la cláusula."></app-editor-enriquecido>
           </div>
         </div>
+
         <div formArrayName="paragrafos" class="paragrafo-container">
           <div *ngFor="let paragrafo of getParagrafos(clausula).controls; let j = index" [formGroupName]="j" class="paragrafo-item">
             <div class="btn-container3">
@@ -52,6 +50,6 @@
     <button mat-raised-button color="primary">Ver
       <mat-icon>visibility</mat-icon>
     </button>
-    <button mat-raised-button matStepperNext color="primary">Guardar y Continuar</button>
+    <button mat-raised-button matStepperNext color="primary" (click)="guardarYContinuar()" >Guardar y Continuar</button>
   </div>
 </form>
