@@ -1,0 +1,15 @@
+<form [formGroup]="editorForm">
+  <quill-editor formControlName="editorContent" [placeholder]="placeholder">
+    <div quill-editor-toolbar>
+      <span class="ql-formats">
+        <button class="ql-bold" [title]="'Bold'"></button>
+        <button class="ql-italic" [title]="'Italic'"></button>
+        <button class="ql-underline" [title]="'Underline'"></button>
+      </span>
+      <span class="ql-formats">
+        <button class="ql-list" value="ordered"></button>
+        <button class="ql-list" value="bullet"></button>
+      </span>
+    </div>
+  </quill-editor>
+</form>
