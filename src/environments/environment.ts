@@ -4,6 +4,7 @@ export const environment = {
   UBICACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ubicaciones_crud/v2/',
   PROVEEDORES_SERVICE: '',
   CDPS_SERVICE: '',
+  CLAUSULAS_PARAGRAFOS_SERVICE: '',
   GESTOR_DOCUMENTAL_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
   TIPO_COMPROMISO_ID: '111',
   TIPO_CONTRATO_ID: '112',
@@ -23,6 +24,7 @@ export const environment = {
   TEMA_GASTO_ID: '126',
   MEDIO_PAGO_ID: '127',
   TIPO_PERSONA_ID: '132',
+  ENUMERACION_CLAUSULAS_ID: '135',
 
   UNIDAD_EJECUCION_ID: '7',
 

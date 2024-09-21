@@ -1,48 +1,114 @@
+/* Estilos generales */
+.form-grid1,
+.form-grid2,
+.clausula-container,
+.paragrafo-container,
+.paragrafo-item,
+.clausula-select,
+.clausula-select mat-form-field,
+app-editor-enriquecido {
+    width: 100%;
+}
+
+/* Grids */
 .form-grid1 {
     display: grid;
+    gap: 10px;
 }
 
 .form-grid2 {
     display: grid;
-    grid-template-columns: minmax(100px, 35%) minmax(0, 65%);
+    grid-template-columns: minmax(150px, 25%) 1fr;
     gap: 20px;
     margin-top: 2%;
+    align-items: start;
 }
 
-.btn-container {
+/* Contenedores de botones */
+.btn-container,
+.btn-container2,
+.btn-container3 {
     display: flex;
     justify-content: flex-end;
-    align-items: flex-end;
+    align-items: center;
     gap: 10px;
     margin-top: 15px;
 }
 
-.btn-container2 {
-    display: flex;
-    justify-content: flex-start;
-}
-
-.btn-container3 {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-}
-
+/* Estilos específicos */
 .clausula-select {
     align-self: start;
-    width: 100%;
 }
 
-.clausula-select mat-form-field {
-    width: 100%;
+.clausula-container {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .paragrafo-container {
     display: flex;
     flex-direction: column;
+    margin-top: 20px;
 }
 
 .paragrafo-item {
+    display: grid;
+    grid-template-columns: minmax(150px, 25%) 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: start;
+}
+
+.paragrafo-label {
+    font-weight: bold;
+    color: #333;
+}
+
+.paragrafo-content {
     display: flex;
-    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.paragrafo-content app-editor-enriquecido {
+    flex-grow: 1;
+}
+
+/* Ajustes para los editores y campos de entrada */
+.form-grid1 app-editor-enriquecido,
+.paragrafo-content app-editor-enriquecido,
+.form-grid1 mat-form-field {
+    width: calc(100% - 40px); /* Ajustado para dejar espacio para el botón */
+}
+
+/* Ajustes de botones */
+.btn-container3 button[color="warn"] {
+    margin-left: 10px;
+}
+
+/* Estilo para hacer que el select ocupe todo el espacio disponible */
+.clausula-select,
+.paragrafo-label {
+    width: 100%;
+}
+
+/* Ajuste para el campo de nombre de la cláusula */
+.form-grid1 > mat-form-field {
+    width: 100%;
+}
+
+/* Contenedor para el editor y el botón de eliminar */
+.editor-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.editor-container app-editor-enriquecido {
+    flex-grow: 1;
+}
+
+.editor-container button {
+    flex-shrink: 0;
 }
