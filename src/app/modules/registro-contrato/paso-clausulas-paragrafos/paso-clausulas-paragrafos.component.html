@@ -10,8 +10,8 @@
             <mat-form-field>
               <mat-label>Cláusula</mat-label>
               <mat-select formControlName="index">
-                <mat-option *ngFor="let index of index" [value]="index.Id">
-                  {{index.Nombre}}
+                <mat-option *ngFor="let indice of indices" [value]="indice.Id">
+                  {{indice.Nombre}}
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -30,7 +30,7 @@
             </div>
           </div>
         </div>
-        
+
         <div formArrayName="paragrafos" class="paragrafo-container">
           <div *ngFor="let paragrafo of getParagrafos(clausula).controls; let j = index" [formGroupName]="j"
             class="paragrafo-item">

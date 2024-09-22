@@ -1,45 +1,87 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
-import { ParametrosService } from 'src/app/services/parametros.service';
 import { ClausulasParagrafosService } from 'src/app/services/clausulas-paragrafos.service';
+import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import { forkJoin, from, Observable } from 'rxjs';
-import { map, mergeMap, toArray, catchError } from 'rxjs/operators';
+
+interface Indice {
+  Id: string;
+  Nombre: string;
+}
 
 @Component({
   selector: 'app-paso-clausulas-paragrafos',
   templateUrl: './paso-clausulas-paragrafos.component.html',
   styleUrls: ['./paso-clausulas-paragrafos.component.css']
 })
-export class PasoClausulasParagrafosComponent {
+export class PasoClausulasParagrafosComponent implements OnInit {
   form: FormGroup;
-  index: any[] = [];
-  contratoId: string = 'contrato-quemado-123';
+  indices: Indice[] = [];
+  contratoId: string = '66f06032982c57db0cbb8612';
 
   constructor(
     private _formBuilder: FormBuilder,
-    private parametrosService: ParametrosService,
-    private clausulasParagrafosService: ClausulasParagrafosService
+    private clausulasParagrafosService: ClausulasParagrafosService,
+    private parametrosService: ParametrosService
   ) {
     this.form = this._formBuilder.group({
-      clausulas: this._formBuilder.array([this.crearClausula()])
+      clausulas: this._formBuilder.array([])
     });
   }
 
   ngOnInit(): void {
-    this.CargarClausulas();
+    this.cargarIndices();
   }
 
   get clausulas(): FormArray {
     return this.form.get('clausulas') as FormArray;
   }
 
-  crearClausula(): FormGroup {
-    return this._formBuilder.group({
-      index: ['', Validators.required],
-      nombre: ['', Validators.required],
-      descripcion: ['', Validators.required],
-      paragrafos: this._formBuilder.array([])
+  cargarIndices() {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.ENUMERACION_CLAUSULAS_ID + '&limit=0').subscribe(
+      (response: any) => {
+        if (response.Status == "200") {
+          this.indices = response.Data;
+          this.cargarContrato();
+        }
+      },
+      error => {
+        console.error('Error al cargar índices:', error);
+      }
+    );
+  }
+
+  cargarContrato() {
+    this.clausulasParagrafosService.get(`contratos/${this.contratoId}`).subscribe(
+      (response: any) => {
+        if (response.Success && response.Data) {
+          this.cargarClausulasYParagrafos(response.Data.clausulas);
+        }
+      },
+      error => {
+        console.error('Error al cargar el contrato:', error);
+      }
+    );
+  }
+
+  cargarClausulasYParagrafos(clausulas: any[]) {
+    clausulas.forEach((clausula: any, index: number) => {
+      const indiceId = this.indices[index] ? this.indices[index].Id : '';
+      const clausulaGroup = this._formBuilder.group({
+        index: [indiceId, Validators.required],
+        nombre: [clausula.nombre, Validators.required],
+        descripcion: [clausula.descripcion, Validators.required],
+        paragrafos: this._formBuilder.array([])
+      });
+
+      const paragrafosArray = clausulaGroup.get('paragrafos') as FormArray;
+      clausula.paragrafos.forEach((paragrafo: any) => {
+        paragrafosArray.push(this._formBuilder.group({
+          descripcion: [paragrafo.descripcion, Validators.required]
+        }));
+      });
+
+      this.clausulas.push(clausulaGroup);
     });
   }
 
@@ -48,13 +90,28 @@ export class PasoClausulasParagrafosComponent {
   }
 
   agregarClausula() {
-    this.clausulas.push(this.crearClausula());
+    const nuevoIndice = this.clausulas.length;
+    const indiceId = this.indices[nuevoIndice] ? this.indices[nuevoIndice].Id : '';
+    this.clausulas.push(this._formBuilder.group({
+      index: [indiceId, Validators.required],
+      nombre: ['', Validators.required],
+      descripcion: ['', Validators.required],
+      paragrafos: this._formBuilder.array([])
+    }));
   }
 
   eliminarClausula(index: number) {
     if (this.clausulas.length > 1) {
       this.clausulas.removeAt(index);
+      this.actualizarIndices();
     }
+  }
+
+  actualizarIndices() {
+    this.clausulas.controls.forEach((clausula: AbstractControl, index: number) => {
+      const indiceId = this.indices[index] ? this.indices[index].Id : '';
+      clausula.get('index')?.setValue(indiceId);
+    });
   }
 
   agregarParagrafo(clausulaIndex: number) {
@@ -71,102 +128,10 @@ export class PasoClausulasParagrafosComponent {
 
   guardarYContinuar() {
     if (this.form.valid) {
-      const clausulas = this.form.value.clausulas;
-      
-      from(clausulas).pipe(
-        mergeMap((clausula: any) => this.crearClausulaConParagrafos(clausula)),
-        toArray(),
-        mergeMap((clausulasCreadas: any[]) => {
-          const ordenClausulas = clausulasCreadas.map(c => c.clausula._id);
-          return this.crearOrdenClausulas(ordenClausulas);
-        }),
-        catchError(this.manejarError)
-      ).subscribe(
-        () => {
-          console.log('Datos guardados exitosamente');
-          // Aquí se puede agregar lógica adicional después de guardar exitosamente
-        },
-        (error) => {
-          console.error('Error al guardar los datos:', error);
-          // Aquí se puede manejar el error, por ejemplo, mostrando un mensaje al usuario
-        }
-      );
+      console.log(this.form.value);
+      // Aquí iría la lógica para guardar los cambios usando el clausulasParagrafosService
     } else {
       console.error('Formulario inválido');
-      // Aquí se puede agregar lógica para mostrar errores de validación al usuario
     }
-  }
-
-  private crearClausulaConParagrafos(clausula: any): Observable<any> {
-    return this.clausulasParagrafosService.post('clausulas', {
-      nombre: clausula.nombre,
-      descripcion: clausula.descripcion,
-      predeterminado: false,
-      activo: true
-    }).pipe(
-      mergeMap((nuevaClausula: any) => {
-        return from(clausula.paragrafos).pipe(
-          mergeMap((paragrafo: any) => this.crearParagrafo(paragrafo)),
-          toArray(),
-          mergeMap((paragrafosCreados: any[]) => {
-            const paragrafoIds = paragrafosCreados.map(p => p._id);
-            return this.crearOrdenParagrafos(nuevaClausula.Data._id, paragrafoIds).pipe(
-              map(() => ({ clausula: nuevaClausula.Data, paragrafos: paragrafosCreados }))
-            );
-          })
-        );
-      })
-    );
-  }
-
-  private crearParagrafo(paragrafo: any): Observable<any> {
-    return this.clausulasParagrafosService.post('paragrafos', {
-      descripcion: paragrafo.descripcion,
-      predeterminado: false,
-      activo: true
-    }).pipe(
-      map((response: any) => response.Data)
-    );
-  }
-
-  private crearOrdenParagrafos(clausulaId: string, paragrafoIds: string[]): Observable<any> {
-    return this.clausulasParagrafosService.post('orden-paragrafos', {
-      paragrafo_ids: paragrafoIds,
-      contrato_id: this.contratoId,
-      clausula_id: clausulaId
-    });
-  }
-
-  private crearOrdenClausulas(clausulaIds: string[]): Observable<any> {
-    return this.clausulasParagrafosService.post('orden-clausulas', {
-      clausula_ids: clausulaIds,
-      contrato_id: this.contratoId
-    });
-  }
-
-  private manejarError(error: any): Observable<never> {
-    let errorMessage = 'Ocurrió un error desconocido';
-    if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
-      errorMessage = `Error: ${error.error.message}`;
-    } else {
-      // El backend retornó un código de error
-      errorMessage = `Código de error: ${error.status}\nMensaje: ${error.message}`;
-    }
-    console.error(errorMessage);
-    return new Observable(observer => observer.error(errorMessage));
-  }
-
-  CargarClausulas() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.ENUMERACION_CLAUSULAS_ID + '&limit=0').subscribe(
-      (Response: any) => {
-        if (Response.Status == "200") {
-          this.index = Response.Data;
-        }
-      },
-      error => {
-        console.error('Error al cargar cláusulas:', error);
-      }
-    );
   }
 }
