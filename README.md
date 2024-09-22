@@ -6,17 +6,17 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
 
 ### Tecnologías Implementadas y Versiones
 
-- [Angular](https://angular.io/docs) 16.2.14
+- [Angular](https://angular.io/docs) 17.3
   - Incluye Animations, Common, Compiler, Core, Forms, Platform-Browser, Platform-Browser-Dynamic, Router
-- [Angular Material](https://material.angular.io/) 16.2.14
-- [Node](https://nodejs.org/en) 18.10.0
+- [Angular Material](https://material.angular.io/) 17.3
+- [Node](https://nodejs.org/en) 18.20.0
 - [RxJS](https://rxjs.dev/guide/overview) ~7.8.0
-- [Single-spa](https://single-spa.js.org/) >=4.0.0
+- [Single-spa](https://single-spa.js.org/) >=9.0.0
   - Incluye single-spa-angular
-- [SweetAlert2](https://sweetalert2.github.io/) 11.11.0
+- [SweetAlert2](https://sweetalert2.github.io/) 11.12.0
 - [ts-md5](https://github.com/cotag/ts-md5) 1.3.1
 - [tslib](https://github.com/Microsoft/tslib) 2.3.0
-- [Zone.js](https://github.com/angular/angular/tree/master/packages/zone.js) ~0.13.0
+- [Zone.js](https://github.com/angular/angular/tree/master/packages/zone.js) ~0.14.0
 
 ### Variables de Entorno
 ```bash
@@ -141,7 +141,7 @@ Con estos pasos, se tendrán las partes mínimas necesarias para ejecutar el pro
 ```bash
 # Developing
 ```
-| 
+|
 ## Licencia
 
 [This file is part of auditoria_plan_mejoramiento_usuario_mf](LICENSE)
