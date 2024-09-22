@@ -72,4 +72,8 @@ export class PasoClausulasParagrafosComponent {
     const paragrafos = this.getParagrafos(this.clausulas.at(clausulaIndex));
     paragrafos.removeAt(paragrafoIndex);
   }
+
+  guardarYContinuar() {
+    console.log('Datos del FormBuilder:', this.form.value);
+  }
 }

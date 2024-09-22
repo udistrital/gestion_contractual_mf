@@ -14,6 +14,7 @@ import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-con
 import {FileService} from "./services/FileService";
 import { UbicacionService } from './services/ubicacion.service';
 import {DocumentosService} from "./services/documentos.service";
+import {QuillModule} from "ngx-quill";
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import {DocumentosService} from "./services/documentos.service";
     CommonModule,
     MatIconModule,
     HttpClientModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    QuillModule.forRoot()
   ],
   providers: [
     ParametrosService,

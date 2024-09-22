@@ -73,10 +73,10 @@
           "builder": "@angular-builders/custom-webpack:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "gestion_contractual_compras_contrato_mf:build:production"
+              "buildTarget": "gestion_contractual_compras_contrato_mf:build:production"
             },
             "development": {
-              "browserTarget": "gestion_contractual_compras_contrato_mf:build:development"
+              "buildTarget": "gestion_contractual_compras_contrato_mf:build:development"
             }
           },
           "defaultConfiguration": "development"
