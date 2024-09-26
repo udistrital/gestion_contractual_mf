@@ -17,7 +17,7 @@ interface Indice {
 export class PasoClausulasParagrafosComponent implements OnInit {
   form: FormGroup;
   indices: Indice[] = [];
-  contratoId: string = '66f06032982c57db0cbb8612';
+  contratoId: number = 12345; 
 
   constructor(
     private _formBuilder: FormBuilder,
