@@ -1,8 +1,12 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, OnInit, Output, ViewChild} from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
+import {PolizasService} from "../../../services/polizas.service";
+import {MatStepper} from "@angular/material/stepper";
+import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
+import {ApiResponse} from "../../../services/polizas.interfaces";
 
 @Component({
   selector: 'app-paso-info-general',
@@ -10,6 +14,8 @@ import Swal from 'sweetalert2';
   styleUrls: ['./paso-info-general.component.css'],
 })
 export class PasoInfoGeneralComponent implements OnInit {
+  @Output() nextStep = new EventEmitter<void>();
+
   showContratoFields = false;
   showConvenioFields = false;
   isLoading = false;
@@ -19,24 +25,26 @@ export class PasoInfoGeneralComponent implements OnInit {
   constructor(
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
     private cdRef: ChangeDetectorRef
-  ) {}
+  ) {
+  }
 
   form = this._formBuilder.group({
-    tipoCompromiso: ['', Validators.required],
-    tipoContrato: ['', Validators.required],
+    tipoCompromisoId: ['', Validators.required],
+    tipoContratoId: ['', Validators.required],
     perfilContratista: [''],
     fechaSuscripcion: [''],
     aplicaPoliza: [''],
     vigenciaConvenio: [''],
     convenio: [''],
     nombreConvenio: [''],
-    modalidadSeleccion: ['', Validators.required],
-    tipologiaEspecifica: ['', Validators.required],
-    regimenContratacion: ['', Validators.required],
-    procedimiento: ['', Validators.required],
+    modalidadSeleccionId: ['', Validators.required],
+    tipologiaEspecificaId: ['', Validators.required],
+    regimenContratacionId: ['', Validators.required],
+    procedimientoId: ['', Validators.required],
     plazoEjecucion: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
-    unidadEjecucion: ['', Validators.required],
+    unidadEjecutoraId: ['', Validators.required],
   });
 
   compromisos: any[] = [];
@@ -44,15 +52,15 @@ export class PasoInfoGeneralComponent implements OnInit {
   modalidad_seleccion: any[] = [];
   tipologia_especifica: any[] = [];
   regimen_contratacion: any[] = [];
-  procedimiento: any[] = [];
+  procedimientoId: any[] = [];
   plazo_ejecucion: any[] = [];
   unidad_ejecucion: any[] = [];
 
   // orden-contrato
   perfil_contratista: any[] = [];
   aplica_poliza: { value: string; viewValue: string }[] = [
-    { value: '0', viewValue: 'No' },
-    { value: '1', viewValue: 'Si' },
+    {value: '0', viewValue: 'No'},
+    {value: '1', viewValue: 'Si'},
   ];
   // convenio
   vigencia_convenio: any[] = [];
@@ -63,12 +71,12 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.maxDate = new Date();
     this.loadInitialData();
 
-    this.form.get('tipoCompromiso')?.valueChanges.subscribe((id_compromiso) => {
+    this.form.get('tipoCompromisoId')?.valueChanges.subscribe((id_compromiso) => {
       if (id_compromiso) {
-        this.CargarContratos(id_compromiso);
+        this.CargartipoContratoIds(id_compromiso);
         this.showFieldsBasedOnCompromiso(id_compromiso);
         if (id_compromiso) {
-          this.CargarTipologiaEspecifica(id_compromiso);
+          this.CargartipologiaEspecificaId(id_compromiso);
 
           const idCompromisoStr = id_compromiso.toString();
           const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
@@ -88,17 +96,17 @@ export class PasoInfoGeneralComponent implements OnInit {
       }
     });
 
-    this.form.get('tipoContrato')?.valueChanges.subscribe((id_contrato) => {
+    this.form.get('tipoContratoId')?.valueChanges.subscribe((id_contrato) => {
       if (id_contrato) {
-        this.CargarTipologiaEspecifica(id_contrato);
+        this.CargartipologiaEspecificaId(id_contrato);
 
         const idContratoStr = id_contrato.toString();
-        const tipoContratoIdStr = environment.CONTRATO_PSPAG_ID.toString();
+        const tipoContratoIdIdStr = environment.CONTRATO_PSPAG_ID.toString();
 
         const perfilContratistaControl = this.form.get('perfilContratista');
         const fechaSuscripcionControl = this.form.get('fechaSuscripcion');
 
-        if (idContratoStr === tipoContratoIdStr) {
+        if (idContratoStr === tipoContratoIdIdStr) {
           this.CargarPerfilContratista(id_contrato);
           perfilContratistaControl?.setValidators(Validators.required);
           perfilContratistaControl?.enable();
@@ -124,10 +132,10 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.isLoading = true;
     Promise.all([
       this.CargarCompromisos(),
-      this.CargarModalidadSeleccion(),
-      this.CargarRegimenContratacion(),
-      this.CargarProcedimiento(),
-      this.CargarUnidadEjecucion()
+      this.CargarmodalidadSeleccionId(),
+      this.CargarregimenContratacionId(),
+      this.CargarprocedimientoId(),
+      this.CargarunidadEjecutoraId()
     ]).then(() => {
       this.isLoading = false;
       this.loaded = true;
@@ -159,17 +167,15 @@ export class PasoInfoGeneralComponent implements OnInit {
     });
   }
 
-  // Implement similar Promise-based structure for other loading methods...
-
-  showErrorAlert(message: string) {
-    Swal.fire({
+  async showErrorAlert(message: string) {
+    await Swal.fire({
       icon: 'error',
       title: 'Oops...',
       text: message,
     });
   }
 
-  CargarModalidadSeleccion() {
+  CargarmodalidadSeleccionId() {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.MODALIDAD_SELECCION_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.modalidad_seleccion = Response.Data;
@@ -177,7 +183,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     })
   }
 
-  CargarRegimenContratacion() {
+  CargarregimenContratacionId() {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.REGIMEN_CONTRATACION_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.regimen_contratacion = Response.Data;
@@ -185,15 +191,15 @@ export class PasoInfoGeneralComponent implements OnInit {
     })
   }
 
-  CargarProcedimiento() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.PROCEDIMIENTO_ID + '&limit=0').subscribe((Response: any) => {
+  CargarprocedimientoId() {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.procedimientoId_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
-        this.procedimiento = Response.Data;
+        this.procedimientoId = Response.Data;
       }
     })
   }
 
-  CargarUnidadEjecucion() {
+  CargarunidadEjecutoraId() {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.UNIDAD_EJECUCION_ID + ',Id__in:166|180|181&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.unidad_ejecucion = Response.Data;
@@ -229,7 +235,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.cdRef.detectChanges();
   }
 
-  CargarContratos(id_compromiso: string) {
+  CargartipoContratoIds(id_compromiso: string) {
     this.parametrosService.get('parametro?query=ParametroPadreId:' + id_compromiso + '&TipoParametroId:' + environment.TIPO_CONTRATO_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.contratos = Response.Data;
@@ -237,7 +243,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     })
   }
 
-  CargarTipologiaEspecifica(id_contrato: string) {
+  CargartipologiaEspecificaId(id_contrato: string) {
     this.parametrosService.get('parametro?query=ParametroPadreId:' + id_contrato + '&TipoParametroId:' + environment.TIPOLOGIA_ESPECIFICA_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.tipologia_especifica = Response.Data;
@@ -266,5 +272,35 @@ export class PasoInfoGeneralComponent implements OnInit {
     if (!allowedKeys.includes(event.key) && !pattern.test(event.key)) {
       event.preventDefault();
     }
+  }
+
+  async guardarYContinuar() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.isLoading = true;
+    this.contratoGeneralCrudService.post(this.form.value).subscribe({
+      next: (response: ApiResponse<any>) => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Datos guardados',
+          text: 'Los datos se guardaron correctamente. IDs: ' + response.Data.id,
+        });
+        this.isLoading = false;
+        this.nextStep.emit();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al guardar los datos',
+          text: 'Ocurrió un error al guardar los datos',
+        });
+        console.error('Error saving data:', error);
+      }
+    });
+
   }
 }

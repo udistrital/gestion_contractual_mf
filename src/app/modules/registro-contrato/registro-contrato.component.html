@@ -3,7 +3,7 @@
     <mat-stepper [linear]="isLinear" #stepper labelPosition="bottom">
         <mat-step [stepControl]="firstFormGroup">
             <ng-template matStepLabel>Información de Contrato</ng-template>
-            <app-paso-info-general />
+            <app-paso-info-general (nextStep)="stepper.next()"/>
         </mat-step>
         <mat-step [stepControl]="secondFormGroup">
             <ng-template matStepLabel>Información Presupuestal</ng-template>
