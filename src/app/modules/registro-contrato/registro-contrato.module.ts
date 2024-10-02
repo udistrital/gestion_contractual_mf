@@ -39,6 +39,7 @@ import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.com
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {PdfViewerModule} from "ng2-pdf-viewer";
 import {EditorEnriquecidoComponent} from "../../components/editor-enriquecido/editor-enriquecido..component";
+import {InViewDirective} from "../../directives/InViewDirective";
 
 @NgModule({
   declarations: [
@@ -54,7 +55,8 @@ import {EditorEnriquecidoComponent} from "../../components/editor-enriquecido/ed
     PasoClausulasParagrafosComponent,
     ParagrafoDialogComponent,
     PasoDocumentosComponent,
-    PdfViewerModalComponent
+    PdfViewerModalComponent,
+    InViewDirective
   ],
     imports: [
         CommonModule,

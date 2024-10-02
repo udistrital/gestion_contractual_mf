@@ -2,6 +2,7 @@ import {Component, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {PasoContratistasComponent} from "./paso-contratistas/paso-contratistas.component";
 import {MatStepper} from "@angular/material/stepper";
+import {PasoInfoGeneralComponent} from "./paso-info-general/paso-info-general.component";
 
 
 @Component({
@@ -15,6 +16,7 @@ export class RegistroContratoComponent implements OnInit{
 
   @ViewChild('stepper') stepper!: MatStepper;
   @ViewChild(PasoContratistasComponent) pasoContratistas!: PasoContratistasComponent;
+  @ViewChild(PasoInfoGeneralComponent) pasoInfoGeneral!: PasoInfoGeneralComponent;
 
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
