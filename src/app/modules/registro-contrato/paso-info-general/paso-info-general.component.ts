@@ -239,7 +239,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   }
 
   CargarprocedimientoId() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.procedimientoId_ID + '&limit=0').subscribe((Response: any) => {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.PROCEDIMIENTO_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.procedimientoId = Response.Data;
       }
