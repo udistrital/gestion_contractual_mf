@@ -1,0 +1,41 @@
+<h1>Detalle Contrato</h1>
+<div class="border">
+  <mat-stepper [linear]="false" #stepper labelPosition="bottom" (selectionChange)="$event">
+    <mat-step [stepControl]="formGroups[0]" errorMessage="Hay cambios sin guardar en este paso.">
+      <ng-template matStepLabel>Información de Contrato</ng-template>
+      <app-paso-info-general  [viewMode]="true" #pasoInfoGeneral (nextStep)="stepper.next()"/>
+    </mat-step>
+    <mat-step [stepControl]="formGroups[1]">
+      <ng-template matStepLabel>Información Presupuestal</ng-template>
+      <app-paso-info-presupuestal #pasoInfoPresupuestal (nextStep)="stepper.next()" />
+    </mat-step>
+    <mat-step [stepControl]="formGroups[2]">
+      <ng-template matStepLabel>Información Solicitante y Supervisor</ng-template>
+      <app-paso-supervisores  (nextStep)="stepper.next()" />
+    </mat-step>
+    <mat-step [stepControl]="formGroups[3]">
+      <ng-template matStepLabel>Información Contratista</ng-template>
+      <app-paso-contratistas  (nextStep)="stepper.next()" />
+    </mat-step>
+    <mat-step [stepControl]="formGroups[4]">
+      <ng-template matStepLabel>Obligaciones del Contrato</ng-template>
+      <app-paso-obligaciones #pasoObligaciones (nextStep)="stepper.next()" />
+    </mat-step>
+    <mat-step [stepControl]="formGroups[5]">
+      <ng-template matStepLabel>Especificaciones Técnicas</ng-template>
+      <app-paso-especificaciones (nextStep)="stepper.next()" />
+    </mat-step>
+    <mat-step [stepControl]="formGroups[6]">
+      <ng-template matStepLabel>Garantías y Mecanismos de Cobertura del Riesgo</ng-template>
+      <app-paso-garantias (nextStep)="stepper.next()" />
+    </mat-step>
+    <mat-step [stepControl]="formGroups[7]">
+      <ng-template matStepLabel>Cláusulas y Parágrafos</ng-template>
+      <app-paso-clausulas-paragrafos (nextStep)="stepper.next()" />
+    </mat-step>
+    <mat-step [stepControl]="formGroups[8]">
+      <ng-template matStepLabel>Documentos Contratista</ng-template>
+      <app-paso-documentos (nextStep)="stepper.next()" />
+    </mat-step>
+  </mat-stepper>
+</div>

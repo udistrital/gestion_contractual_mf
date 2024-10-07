@@ -6,7 +6,7 @@
     </div>
   </div>
 
-  <form [formGroup]="form" *ngIf="!isLoading && loadedData">
+  <form [formGroup]="formInfoGeneral" *ngIf="!isLoading && loadedData">
     <div class="border">
       <div class="title">
         <h3>Información General</h3>
@@ -30,7 +30,7 @@
         </mat-form-field>
 
         <ng-container *ngIf="showContratoFields">
-          <mat-form-field *ngIf="form.get('perfilContratista')?.enabled">
+          <mat-form-field *ngIf="formInfoGeneral.get('perfilContratista')?.enabled">
             <mat-label>Perfil del Contratista:</mat-label>
             <mat-select formControlName="perfilContratista">
               <mat-option *ngFor="let perfil_contratista of perfilContratista"
@@ -39,13 +39,13 @@
               </mat-option>
             </mat-select>
           </mat-form-field>
-          <mat-form-field *ngIf="form.get('fechaSuscripcion')?.enabled">
+          <mat-form-field *ngIf="formInfoGeneral.get('fechaSuscripcion')?.enabled">
             <mat-label>Fecha Suscripción Estudios y Documentos Previos:</mat-label>
             <input matInput [matDatepicker]="picker" formControlName="fechaSuscripcion" [max]="maxDate">
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
-          <mat-form-field *ngIf="form.get('aplicaPoliza')?.enabled">
+          <mat-form-field *ngIf="formInfoGeneral.get('aplicaPoliza')?.enabled">
             <mat-label>Aplica Póliza:</mat-label>
             <mat-select formControlName="aplicaPoliza">
               <mat-option *ngFor="let aplica_poliza of aplicaPoliza" [value]="aplica_poliza.value">
@@ -128,7 +128,7 @@
       </div>
     </div>
     <div class="btn-container">
-      <button mat-raised-button (click)="guardarYContinuar()" color="primary" [disabled]="!form.valid || isLoading">
+      <button mat-raised-button *ngIf="!viewMode" (click)="guardarYContinuar()" color="primary" [disabled]="!formInfoGeneral.valid || isLoading">
         Guardar y Continuar
       </button>
     </div>

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { PolizasService} from 'src/app/services/polizas.service';
@@ -13,6 +13,8 @@ import Swal from "sweetalert2";
   styleUrls: ['./paso-garantias.component.css'],
 })
 export class PasoGarantiasComponent implements OnInit {
+  @Output() nextStep = new EventEmitter<void>();
+
   form: FormGroup;
   amparos: any[] = [];
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];

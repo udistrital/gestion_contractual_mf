@@ -8,15 +8,15 @@ import {Observable} from "rxjs";
 export class ContratoGeneralCrudService {
 
   constructor(private requestManager: RequestManager) {
-    this.requestManager.setPath('CONTRATO_GENERAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
   }
   post(contrato_general_parcial: any): Observable<any> {
-    this.requestManager.setPath('CONTRATO_GENERAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post('contratos-generales', contrato_general_parcial);
   }
 
   put(id_contrato:number, contrato_general_parcial: any): Observable<any> {
-    this.requestManager.setPath('CONTRATO_GENERAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.put('contratos-generales/'+id_contrato, contrato_general_parcial);
   }
 }

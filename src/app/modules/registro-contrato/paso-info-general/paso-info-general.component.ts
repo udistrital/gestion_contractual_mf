@@ -1,17 +1,18 @@
-import {ChangeDetectorRef, Component, EventEmitter, OnChanges, OnInit, Output, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild} from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
 import {ApiResponse} from "../../../services/polizas.interfaces";
+import {ContratoGeneralMidService} from "../../../services/contrato-general-mid.service";
 
 interface Parametro {
-  Id: number;
+  Id: number | string;
   Nombre: string;
-  Descripcion: string;
-  CodigoAbreviacion: string;
-  Activo: boolean;
+  Descripcion?: string;
+  CodigoAbreviacion?: string;
+  Activo?: boolean;
 }
 
 @Component({
@@ -20,6 +21,7 @@ interface Parametro {
   styleUrls: ['./paso-info-general.component.css'],
 })
 export class PasoInfoGeneralComponent implements OnInit, OnChanges {
+  @Input() viewMode: boolean = false; //Determina si el paso es de creación o visualización
   @Output() nextStep = new EventEmitter<void>();
 
   showContratoFields = false;
@@ -29,15 +31,19 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   maxDate: Date = new Date();
   formId: number | null = null;
 
+  private initialFormValue: any;
+  private formSaved: boolean = false;
+
   constructor(
     private fb: FormBuilder,
     private parametrosService: ParametrosService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private contratoGeneralMidService: ContratoGeneralMidService,
     private cdRef: ChangeDetectorRef
   ) {
   }
 
-  form = this.fb.group({
+  formInfoGeneral = this.fb.group({
     tipoCompromisoId: ['', Validators.required],
     tipoContratoId: ['', Validators.required],
     perfilContratista: [''],
@@ -79,13 +85,25 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
    }
 
   ngOnInit(): void {
-    this.loadInitialData();
-    this.setuptipoCompromisoId();
-    this.setuptipoContratoId();
+    if (this.viewMode) {
+      this.formInfoGeneral.disable();
+      this.loadInfoDataMid();
+
+    } else {
+
+      this.loadInitialData();
+      this.setuptipoCompromisoId();
+      this.setuptipoContratoId();
+
+      this.initialFormValue = this.formInfoGeneral.value;
+      this.formInfoGeneral.valueChanges.subscribe(() => {
+        this.formSaved = false;
+      });
+    }
   }
 
   private setuptipoCompromisoId() {
-    this.form.get('tipoCompromisoId')?.valueChanges.subscribe((id_compromiso) => {
+    this.formInfoGeneral.get('tipoCompromisoId')?.valueChanges.subscribe((id_compromiso) => {
       if (id_compromiso) {
         this.CargartipoContratoIds(id_compromiso);
         this.showFieldsBasedOnCompromiso(id_compromiso);
@@ -95,7 +113,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
           const idCompromisoStr = id_compromiso.toString();
           const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
 
-          const perfilCompromisoControl = this.form.get('aplicaPoliza');
+          const perfilCompromisoControl = this.formInfoGeneral.get('aplicaPoliza');
           if (idCompromisoStr === perfilCompromisoIdStr) {
             perfilCompromisoControl?.setValidators(Validators.required);
             perfilCompromisoControl?.enable();
@@ -112,15 +130,15 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   }
 
   private setuptipoContratoId() {
-    this.form.get('tipoContratoId')?.valueChanges.subscribe((id_contrato) => {
+    this.formInfoGeneral.get('tipoContratoId')?.valueChanges.subscribe((id_contrato) => {
       if (id_contrato) {
         this.CargartipologiaEspecificaId(id_contrato);
 
         const idContratoStr = id_contrato.toString();
         const tipoContratoIdIdStr = environment.CONTRATO_PSPAG_ID.toString();
 
-        const perfilContratistaControl = this.form.get('perfilContratista');
-        const fechaSuscripcionControl = this.form.get('fechaSuscripcion');
+        const perfilContratistaControl = this.formInfoGeneral.get('perfilContratista');
+        const fechaSuscripcionControl = this.formInfoGeneral.get('fechaSuscripcion');
 
         if (idContratoStr === tipoContratoIdIdStr) {
           this.CargarPerfilContratista(id_contrato);
@@ -144,13 +162,13 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   }
 
   private loadSavedData(): void {
-    console.log('Loading saved data...');
+    console.log('Loading info general data data...');
     try{
       this.isLoading = true;
-      const savedForm = localStorage.getItem('contrato-general');
+      const savedForm = localStorage.getItem('paso-info-general');
       if (savedForm) {
         const parsedForm = JSON.parse(savedForm);
-        this.form.patchValue(parsedForm);
+        this.formInfoGeneral.patchValue(parsedForm);
         this.formId = parsedForm.id || null;
       }
     } catch (error) {
@@ -247,7 +265,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     const convenioFields = ['vigenciaConvenio', 'convenio', 'nombreConvenio'];
 
     [...convenioFields, 'perfilContratista', 'aplicaPoliza', 'fechaSuscripcion'].forEach(field => {
-      const control = this.form.get(field);
+      const control = this.formInfoGeneral.get(field);
       if (control) {
         control.reset();
         if ((this.showConvenioFields && convenioFields.includes(field))) {
@@ -303,16 +321,65 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   }
 
 
+  formHasUnsavedChanges(): boolean {
+    return !this.formSaved && JSON.stringify(this.initialFormValue) !== JSON.stringify(this.formInfoGeneral.value);
+  }
 
-  async guardarYContinuar() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+  loadInfoDataMid() {
+
+    this.isLoading = true;
+
+    const getOperation = this.contratoGeneralMidService.get("29"); //Id quemado para la prueba.
+
+    getOperation.subscribe({
+      next: async (response: ApiResponse<any>) => {
+        this.isLoading = false;
+
+        console.log('Response:', response.Data);
+
+        this.updateFormAndSelects(response.Data);
+        this.loadedData = true;
+      },
+      error: async (error) => {
+        this.isLoading = false;
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al obtener los datos',
+          text: 'Ocurrió un error al obtener los datos',
+        });
+        console.error('Error fetching data:', error);
+      }
+    });
+
+  }
+
+  updateFormAndSelects(data: any) {
+    this.formInfoGeneral.patchValue(data);
+
+    this.tipoCompromisos = this.createDynamicOption(data.tipoCompromisoId);
+    this.tipoContratos = this.createDynamicOption(data.tipoContratoId);
+    this.modalidadSeleccion = this.createDynamicOption(data.modalidadSeleccionId);
+    this.tipologiaEspecifica = this.createDynamicOption(data.tipologiaEspecificaId);
+    this.regimenContratacion = this.createDynamicOption(data.regimenContratacionId);
+    this.procedimientoId = this.createDynamicOption(data.procedimientoId);
+    this.unidadEjecucion = this.createDynamicOption(data.unidadEjecutoraId);
+  }
+
+  createDynamicOption(value: string | number): Parametro[] {
+    if (value === null || value === undefined) return [];
+    return [{ Id: value, Nombre: value.toString() }];
+  }
+
+  guardarYContinuar() {
+
+    if (this.viewMode) return;
+
+    if (this.formInfoGeneral.invalid) {
+      this.formInfoGeneral.markAllAsTouched();
       return;
     }
 
-    const formData = this.form.value;
-
-    localStorage.setItem('contrato-general', JSON.stringify({...formData, id: this.formId}));
+    const formData = this.formInfoGeneral.value;
 
     this.isLoading = true;
 
@@ -321,18 +388,24 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
       : this.contratoGeneralCrudService.post(formData);
 
     saveOperation.subscribe({
-      next: (response: ApiResponse<any>) => {
-        Swal.fire({
+      next: async (response: ApiResponse<any>) => {
+        this.isLoading = false;
+
+        await Swal.fire({
           icon: 'success',
           title: 'Datos guardados',
           text: 'Los datos se guardaron correctamente. IDs: ' + response.Data.id,
         });
-        this.isLoading = false;
+
+        localStorage.setItem(`paso-info-general`, JSON.stringify({...formData, id: response.Data.id}));
+
+        this.initialFormValue = this.formInfoGeneral.value;
+        this.formSaved = true;
         this.nextStep.emit();
       },
-      error: (error) => {
+      error: async (error) => {
         this.isLoading = false;
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'Error al guardar los datos',
           text: 'Ocurrió un error al guardar los datos',
@@ -343,15 +416,17 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
 
   }
 
-  onInView(inView: boolean) {
+  async onInView(inView: boolean) {
     if (inView) {
       this.loadSavedData();
+    } else {
+      console.log('Step 1 out of view');
     }
   }
 
-  private handleError(error: any): void {
+  private async handleError(error: any): Promise<void> {
     this.isLoading = false;
-    Swal.fire({
+    await Swal.fire({
       icon: 'error',
       title: 'Error al cargar los datos iniciales',
       text: 'Ocurrió un error al cargar los datos iniciales',

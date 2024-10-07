@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
@@ -13,6 +13,8 @@ import {DocumentosService} from "../../../services/documentos.service";
   styleUrls: ['./paso-documentos.component.css']
 })
 export class PasoDocumentosComponent implements OnInit {
+  @Output() nextStep = new EventEmitter<void>();
+
   form: FormGroup = this.formBuilder.group({
     pdfFileName: ['', Validators.required]
   });

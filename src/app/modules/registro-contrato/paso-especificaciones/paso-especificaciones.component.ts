@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, EventEmitter, Output} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 
 interface Fila {
@@ -15,6 +15,8 @@ interface Fila {
 })
 
 export class PasoEspecificacionesComponent {
+  @Output() nextStep = new EventEmitter<void>();
+
   form: FormGroup;
 
   amparos: { value: string; viewValue: string }[] = [
@@ -26,7 +28,7 @@ export class PasoEspecificacionesComponent {
   displayedColumns = ['item', 'descripcion', 'cantidad', 'valorUnitario', 'valorTotal'];
   dataSource: Fila[] = [];
 
-  constructor(private _formBuilder: FormBuilder) { 
+  constructor(private _formBuilder: FormBuilder) {
 
     this.form = this._formBuilder.group({
       filas: this._formBuilder.array([])
@@ -66,5 +68,5 @@ export class PasoEspecificacionesComponent {
     this.dataSource = this.filasFormArray.controls.map(control => control.value);
   }
 
-  
+
 }
