@@ -25,11 +25,6 @@ interface Paragrafo {
   predeterminado: boolean;
 }
 
-interface OrdenElemento {
-  _id: string;
-  elemento_ids: string[];
-}
-
 interface EstructuraContrato {
   clausula_ids: string[];
   paragrafos: ParagrafoEstructura[];
@@ -48,10 +43,20 @@ interface ParagrafoEstructura {
 export class PasoClausulasParagrafosComponent implements OnInit {
   form: FormGroup;
   indices: Indice[] = [];
-  contratoId: number = 78910;
+  contratoId: number = 15485;
   tipoContratoId: number = 1;
   clausulaModificada: boolean[] = [];
   formularioInicial: any;
+
+  cambiosTemporales: {
+    clausulas: Partial<Clausula>[];
+    paragrafos: { [clausulaId: string]: Partial<Paragrafo>[] };
+  } = { clausulas: [], paragrafos: {} };
+
+  elementosEliminados: {
+    clausulas: string[];
+    paragrafos: { [clausulaId: string]: string[] };
+  } = { clausulas: [], paragrafos: {} };
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -70,12 +75,6 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   ngOnInit(): void {
     this.cargarIndices();
   }
-
-  cambiosTemporales: {
-    clausulas: Partial<Clausula>[];
-    paragrafos: { [clausulaId: string]: Partial<Paragrafo>[] };
-  } = { clausulas: [], paragrafos: {} };
-
 
   get clausulas(): FormArray {
     return this.form.get('clausulas') as FormArray;
@@ -177,7 +176,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   private detectarCambiosEnFormulario() {
-    this.clausulaModificada = this.clausulas.controls.map((clausula, index) => {
+    this.clausulaModificada = this.clausulas.controls.map((clausula) => {
       const clausulaTemp = this.cambiosTemporales.clausulas.find(c => c._id === clausula.get('id')?.value);
       if (!clausulaTemp) return true;
 
@@ -228,9 +227,13 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
   eliminarClausula(index: number) {
     const clausula = this.clausulas.at(index);
+    const clausulaId = clausula.get('id')?.value;
     const esPredeterminada = clausula.get('predeterminado')?.value;
 
     if (this.clausulas.length > 1) {
+      if (!esPredeterminada) {
+        this.elementosEliminados.clausulas.push(clausulaId);
+      }
       this.clausulas.removeAt(index);
       this.actualizarIndices();
       Swal.fire({
@@ -248,9 +251,19 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   eliminarParagrafo(clausulaIndex: number, paragrafoIndex: number) {
-    const paragrafos = this.getParagrafos(this.clausulas.at(clausulaIndex));
+    const clausula = this.clausulas.at(clausulaIndex);
+    const clausulaId = clausula.get('id')?.value;
+    const paragrafos = this.getParagrafos(clausula);
     const paragrafo = paragrafos.at(paragrafoIndex);
+    const paragrafoId = paragrafo.get('_id')?.value;
     const esPredeterminado = paragrafo.get('predeterminado')?.value;
+
+    if (!esPredeterminado) {
+      if (!this.elementosEliminados.paragrafos[clausulaId]) {
+        this.elementosEliminados.paragrafos[clausulaId] = [];
+      }
+      this.elementosEliminados.paragrafos[clausulaId].push(paragrafoId);
+    }
 
     paragrafos.removeAt(paragrafoIndex);
     this.actualizarNombresParagrafos(clausulaIndex);
@@ -362,6 +375,18 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     };
 
     this.actualizarFormularioInicial();
+
+    for (const clausulaId of this.elementosEliminados.clausulas) {
+      await this.clausulasParagrafosService.delete('clausulas', clausulaId).toPromise();
+    }
+
+    for (const [clausulaId, paragrafos] of Object.entries(this.elementosEliminados.paragrafos)) {
+      for (const paragrafoId of paragrafos) {
+        await this.clausulasParagrafosService.delete('paragrafos', paragrafoId).toPromise();
+      }
+    }
+
+    this.elementosEliminados = { clausulas: [], paragrafos: {} };
   }
 
   public guardarClausula(index: number): void {
@@ -412,26 +437,17 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
   private async actualizarOrdenesParagrafos(paragrafos: ParagrafoEstructura[]) {
     for (const paragrafo of paragrafos) {
-      console.log(`Procesando orden de párrafos para cláusula ${paragrafo.clausula_id}`);
-      console.log(`Párrafos: ${JSON.stringify(paragrafo.paragrafo_ids)}`);
+      try {
+        const responseParagrafos = await this.clausulasParagrafosService.get(`orden-paragrafos?query=contrato_id:${this.contratoId}&query=clausula_id:${paragrafo.clausula_id}&limit=1`).toPromise();
 
-      if (paragrafo.paragrafo_ids.length > 0) {
-        try {
-          const responseParagrafos = await this.clausulasParagrafosService.get(`orden-paragrafos?query=contrato_id:${this.contratoId}&query=clausula_id:${paragrafo.clausula_id}&limit=1`).toPromise();
-
-          if (responseParagrafos.Data.length === 0) {
-            console.log(`Creando nueva orden de párrafos para cláusula ${paragrafo.clausula_id}`);
-            await this.crearOrdenParagrafos(paragrafo.clausula_id, paragrafo.paragrafo_ids);
-          } else {
-            console.log(`Actualizando orden de párrafos existente para cláusula ${paragrafo.clausula_id}`);
-            await this.actualizarOrdenParagrafos(responseParagrafos.Data[0]._id, paragrafo.paragrafo_ids);
-          }
-        } catch (error) {
-          console.error(`Error al procesar orden de párrafos para cláusula ${paragrafo.clausula_id}:`, error);
+        if (responseParagrafos.Data.length === 0) {
           await this.crearOrdenParagrafos(paragrafo.clausula_id, paragrafo.paragrafo_ids);
+        } else {
+          await this.actualizarOrdenParagrafos(responseParagrafos.Data[0]._id, paragrafo.paragrafo_ids);
         }
-      } else {
-        console.log(`No hay párrafos para crear orden en cláusula ${paragrafo.clausula_id}`);
+      } catch (error) {
+        console.error(`Error al procesar orden de párrafos para cláusula ${paragrafo.clausula_id}:`, error);
+        this.showErrorAlert('Error al procesar orden de párrafos');
       }
     }
 
