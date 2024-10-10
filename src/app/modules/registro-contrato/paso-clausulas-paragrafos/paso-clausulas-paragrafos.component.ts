@@ -43,7 +43,7 @@ interface ParagrafoEstructura {
 export class PasoClausulasParagrafosComponent implements OnInit {
   form: FormGroup;
   indices: Indice[] = [];
-  contratoId: number = 15485;
+  contratoId: number = 36547;
   tipoContratoId: number = 1;
   clausulaModificada: boolean[] = [];
   formularioInicial: any;
@@ -65,10 +65,6 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   ) {
     this.form = this._formBuilder.group({
       clausulas: this._formBuilder.array([])
-    });
-
-    this.form.valueChanges.subscribe(() => {
-      this.detectarCambiosEnFormulario();
     });
   }
 
@@ -258,17 +254,22 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     const paragrafoId = paragrafo.get('_id')?.value;
     const esPredeterminado = paragrafo.get('predeterminado')?.value;
 
+    console.log(`Eliminando párrafo - Cláusula ID: ${clausulaId}, Párrafo ID: ${paragrafoId}, Es predeterminado: ${esPredeterminado}`);
+
     if (!esPredeterminado) {
       if (!this.elementosEliminados.paragrafos[clausulaId]) {
         this.elementosEliminados.paragrafos[clausulaId] = [];
       }
       this.elementosEliminados.paragrafos[clausulaId].push(paragrafoId);
+      console.log('Elementos eliminados actualizados:', JSON.stringify(this.elementosEliminados));
     }
 
     paragrafos.removeAt(paragrafoIndex);
     this.actualizarNombresParagrafos(clausulaIndex);
     this.clausulaModificada[clausulaIndex] = true;
     this.detectarCambiosEnFormulario();
+
+    console.log(`Párrafo eliminado. Nuevos párrafos:`, paragrafos.value);
 
     Swal.fire({
       icon: 'success',
@@ -307,7 +308,9 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     if (this.form.valid) {
       this.guardarCambiosEnBD().then(() => {
         const estructuraContrato = this.prepararEstructuraContrato();
-        this.actualizarBackend(estructuraContrato);
+        console.log("/// estructuraContrato:")
+        console.log(estructuraContrato);
+        this.verificarYActualizarOrdenes(estructuraContrato);
       });
     } else {
       Swal.fire({
@@ -320,20 +323,26 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
   private async guardarCambiosEnBD(): Promise<void> {
     const nuevasClausulas: Partial<Clausula>[] = [];
+    let nuevoClausulaId: string;
 
     for (const clausulaTemp of this.cambiosTemporales.clausulas) {
+      const clausulaOriginal = this.formularioInicial.clausulas.values().find((c: any) => c.id === clausulaTemp._id);
+      console.log(clausulaOriginal);
       const nuevaClausula = {
         nombre: clausulaTemp.nombre,
         descripcion: clausulaTemp.descripcion,
         predeterminado: false
       };
+      if (clausulaTemp.nombre !== clausulaOriginal.nombre || clausulaTemp.descripcion !== clausulaOriginal.descripcion) {
+        const responseClausula = await this.clausulasParagrafosService.post('clausulas', nuevaClausula).toPromise();
+        nuevoClausulaId = responseClausula.Data._id;
+      } else {
+        nuevoClausulaId = clausulaTemp._id || '';
+      }
 
-      const responseClausula = await this.clausulasParagrafosService.post('clausulas', nuevaClausula).toPromise();
-      const nuevoClausulaId = responseClausula.Data._id;
 
       const paragrafosTemp = this.cambiosTemporales.paragrafos[clausulaTemp._id || ''] || [];
       const nuevosParagrafos = [];
-
       for (const paragrafoTemp of paragrafosTemp) {
         const nuevoParagrafo = {
           nombre: paragrafoTemp.nombre,
@@ -376,20 +385,33 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
     this.actualizarFormularioInicial();
 
+    console.log('Elementos a eliminar:', JSON.stringify(this.elementosEliminados));
+
     for (const clausulaId of this.elementosEliminados.clausulas) {
+      console.log(`Eliminando cláusula: ${clausulaId}`);
       await this.clausulasParagrafosService.delete('clausulas', clausulaId).toPromise();
     }
 
     for (const [clausulaId, paragrafos] of Object.entries(this.elementosEliminados.paragrafos)) {
+      console.log(`Procesando párrafos a eliminar para cláusula ${clausulaId}:`, paragrafos);
       for (const paragrafoId of paragrafos) {
-        await this.clausulasParagrafosService.delete('paragrafos', paragrafoId).toPromise();
+        console.log(`Eliminando párrafo: ${paragrafoId}`);
+        try {
+          await this.clausulasParagrafosService.delete('paragrafos', paragrafoId).toPromise();
+          console.log(`Párrafo ${paragrafoId} eliminado con éxito`);
+        } catch (error) {
+          console.error(`Error al eliminar párrafo ${paragrafoId}:`, error);
+        }
       }
     }
+
+    console.log('Eliminación de elementos completada');
 
     this.elementosEliminados = { clausulas: [], paragrafos: {} };
   }
 
   public guardarClausula(index: number): void {
+    const clausulaOriginal = this.formularioInicial.clausulas[index];
     const clausula = this.clausulas.at(index) as FormGroup;
     const clausulaData: Partial<Clausula> = {
       _id: clausula.get('id')?.value,
@@ -397,25 +419,31 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       descripcion: clausula.get('descripcion')?.value,
       predeterminado: clausula.get('predeterminado')?.value
     };
-
     this.cambiosTemporales.clausulas.push(clausulaData);
 
     const paragrafos = this.getParagrafos(clausula);
-    this.cambiosTemporales.paragrafos[clausulaData._id || ''] = paragrafos.controls.map(p => ({
-      _id: p.get('id')?.value,
-      nombre: p.get('nombre')?.value,
-      descripcion: p.get('descripcion')?.value,
-      predeterminado: p.get('predeterminado')?.value
-    }));
+    this.cambiosTemporales.paragrafos[clausulaData._id || ''] = paragrafos.controls
+      .map((p, idx) => {
+        const paragrafoOriginal = clausulaOriginal.paragrafos[idx];
+        const esNuevo = !paragrafoOriginal;
+        const hayCambios = esNuevo || p.get("descripcion")?.value !== paragrafoOriginal?.descripcion;
+
+        if (esNuevo || hayCambios) {
+          return {
+            _id: p.get('id')?.value,
+            nombre: p.get('nombre')?.value,
+            descripcion: p.get('descripcion')?.value,
+            predeterminado: p.get('predeterminado')?.value,
+            esNuevo: esNuevo
+          } as Partial<Paragrafo>;
+        }
+        return null;
+      })
+      .filter((p): p is Partial<Paragrafo> => p !== null);
 
     this.clausulaModificada[index] = false;
-    this.actualizarFormularioInicial();
 
     Swal.fire({ icon: 'success', title: 'Éxito', text: 'Cláusula guardada temporalmente' });
-  }
-
-  private actualizarBackend(estructuraContrato: EstructuraContrato) {
-    this.verificarYActualizarOrdenes(estructuraContrato);
   }
 
   private verificarYActualizarOrdenes(estructuraContrato: EstructuraContrato) {
@@ -438,7 +466,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   private async actualizarOrdenesParagrafos(paragrafos: ParagrafoEstructura[]) {
     for (const paragrafo of paragrafos) {
       try {
-        const responseParagrafos = await this.clausulasParagrafosService.get(`orden-paragrafos?query=contrato_id:${this.contratoId}&query=clausula_id:${paragrafo.clausula_id}&limit=1`).toPromise();
+        const responseParagrafos = await this.clausulasParagrafosService.get(`orden-paragrafos?query=contrato_id%3A${this.contratoId}%3Bclausula_id%3A${paragrafo.clausula_id}&limit=1`).toPromise();
 
         if (responseParagrafos.Data.length === 0) {
           await this.crearOrdenParagrafos(paragrafo.clausula_id, paragrafo.paragrafo_ids);
@@ -503,28 +531,30 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   private prepararEstructuraContrato(): EstructuraContrato {
-  interface ParagrafoEstructura {
-    clausula_id: string;
-    paragrafo_ids: string[];
+    interface ParagrafoEstructura {
+      clausula_id: string;
+      paragrafo_ids: string[];
+    }
+    const clausulasValue = this.form.get('clausulas')?.value;
+
+    const estructura = {
+      clausula_ids: clausulasValue
+        .filter((c: any) => c.id != null)
+        .map((c: any) => c.id),
+      paragrafos: clausulasValue
+        .filter((c: any) => c.id != null)
+        .map((c: any) => {
+          return {
+            clausula_id: c.id,
+            paragrafo_ids: c.paragrafos
+              .filter((p: any) => p._id != null)
+              .map((p: any) => p._id)
+          };
+        })
+        .filter((p: ParagrafoEstructura) => p.paragrafo_ids.length > 0)
+    };
+    return estructura;
   }
-
-  const clausulasValue = this.form.get('clausulas')?.value;
-
-  return {
-    clausula_ids: clausulasValue
-      .filter((c: any) => c.id != null)
-      .map((c: any) => c.id),
-    paragrafos: clausulasValue
-      .filter((c: any) => c.id != null)
-      .map((c: any) => ({
-        clausula_id: c.id,
-        paragrafo_ids: c.paragrafos
-          .filter((p: any) => p._id != null)
-          .map((p: any) => p._id)
-      }))
-      .filter((p: ParagrafoEstructura) => p.paragrafo_ids.length > 0)
-  };
-}
 
   private showErrorAlert(message: string) {
     Swal.fire({
