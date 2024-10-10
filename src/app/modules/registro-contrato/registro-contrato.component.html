@@ -1,41 +1,41 @@
 <h1>Registrar Contrato</h1>
 <div class="border">
     <mat-stepper [linear]="isLinear" #stepper labelPosition="bottom">
-        <mat-step [stepControl]="firstFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Información de Contrato</ng-template>
-            <app-paso-info-general />
+            <app-paso-info-general #pasoInfoGeneral (nextStep)="goToNextStep()"/>
         </mat-step>
-        <mat-step [stepControl]="secondFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Información Presupuestal</ng-template>
-            <app-paso-info-presupuestal />
+            <app-paso-info-presupuestal #pasoInfoPresupuestal (nextStep)="goToNextStep()" />
         </mat-step>
-        <mat-step [stepControl]="thirdFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Información Solicitante y Supervisor</ng-template>
-            <app-paso-supervisores />
+            <app-paso-supervisores  (nextStep)="goToNextStep()" />
         </mat-step>
-        <mat-step [stepControl]="fourthFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Información Contratista</ng-template>
-            <app-paso-contratistas />
+            <app-paso-contratistas  (nextStep)="goToNextStep()" />
         </mat-step>
-        <mat-step [stepControl]="fifthFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Obligaciones del Contrato</ng-template>
-            <app-paso-obligaciones />
+            <app-paso-obligaciones #pasoObligaciones (nextStep)="goToNextStep()" />
         </mat-step>
-        <mat-step [stepControl]="sixthFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Especificaciones Técnicas</ng-template>
-            <app-paso-especificaciones />
+            <app-paso-especificaciones (nextStep)="goToNextStep()" />
         </mat-step>
-        <mat-step [stepControl]="seventhFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Garantías y Mecanismos de Cobertura del Riesgo</ng-template>
-            <app-paso-garantias />
+            <app-paso-garantias (nextStep)="goToNextStep()" />
         </mat-step>
-        <mat-step [stepControl]="eighthFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Cláusulas y Parágrafos</ng-template>
-            <app-paso-clausulas-paragrafos />
+            <app-paso-clausulas-paragrafos (nextStep)="goToNextStep()" />
         </mat-step>
-        <mat-step [stepControl]="ninthFormGroup">
+        <mat-step>
             <ng-template matStepLabel>Documentos Contratista</ng-template>
-            <app-paso-documentos />
+            <app-paso-documentos (nextStep)="goToNextStep()" />
         </mat-step>
     </mat-stepper>
 </div>

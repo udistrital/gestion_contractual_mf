@@ -4,6 +4,8 @@ export const environment = {
   UBICACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ubicaciones_crud/v2/',
   PROVEEDORES_SERVICE: 'http://localhost:3000/',
   CDPS_SERVICE: 'http://localhost:3000/',
+  GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:3117/',
+  GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:3001/',
   POLIZAS_CRUD_SERVICE: 'http://localhost:3117/',
   GESTOR_DOCUMENTAL_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1',
   TIPO_COMPROMISO_ID: '111',

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, EventEmitter, Output} from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ParagrafoDialogComponent } from '../paragrafo-dialog/paragrafo-dialog.component';
@@ -9,6 +9,8 @@ import { ParagrafoDialogComponent } from '../paragrafo-dialog/paragrafo-dialog.c
   styleUrls: ['./paso-clausulas-paragrafos.component.css']
 })
 export class PasoClausulasParagrafosComponent {
+  @Output() nextStep = new EventEmitter<void>();
+
   form: FormGroup;
 
   constructor(

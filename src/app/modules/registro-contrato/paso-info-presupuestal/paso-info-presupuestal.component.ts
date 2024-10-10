@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, Output} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import {combineLatest, finalize, Observable, startWith, Subject} from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
@@ -24,6 +24,7 @@ export interface RowData {
 
 
 export class PasoInfoPresupuestalComponent {
+  @Output() nextStep = new EventEmitter<void>();
 
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
 

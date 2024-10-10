@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, EventEmitter, Output} from '@angular/core';
 import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 
@@ -8,9 +8,19 @@ import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angu
   styleUrls: ['./paso-obligaciones.component.css'],
 })
 export class PasoObligacionesComponent {
+  @Output() nextStep = new EventEmitter<void>();
+
   form = this._formBuilder.group({
     sixthCtrl: ['', Validators.required],
   });
 
   constructor(private _formBuilder: FormBuilder) { }
+
+  onInView(inView: boolean) {
+    if (inView) {
+      console.log('Step Obligaciones in view');
+    } else {
+      console.log('Step Obligaciones out of view');
+    }
+  }
 }

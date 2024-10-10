@@ -15,7 +15,7 @@ export class ConsultaContratoComponent {
   form = this._formBuilder.group({
     unidadEjecutora: [''],
     vigencia: [''],
-    tipoContrato: [''],
+    tipoContratoId: [''],
     tipoPersona: [''],
     numeroElaboracion: [''],
     numeroContrato: [''],
