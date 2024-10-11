@@ -241,6 +241,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
         });
       }
     });
+    this.actualizarIndices();
   }
 
   eliminarClausula(index: number) {
@@ -277,7 +278,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
         });
       }
     });
-
+    this.actualizarIndices();
   }
 
   eliminarParagrafo(clausulaIndex: number, paragrafoIndex: number) {
@@ -326,14 +327,15 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
   private actualizarIndices() {
     this.clausulas.controls.forEach((clausula: AbstractControl, index: number) => {
-      clausula.get('index')?.setValue(this.indices[index]?.Id || '');
+      const indiceId = this.indices[index]?.Id || '';
+      clausula.get('index')?.setValue(indiceId);
     });
   }
-  
+
   private validarIndices(): boolean {
     const indicesSeleccionados = this.clausulas.controls.map(control => control.get('index')?.value);
     const indicesUnicos = new Set(indicesSeleccionados);
-  
+
     if (indicesSeleccionados.length !== indicesUnicos.size) {
       Swal.fire({
         icon: 'error',
@@ -342,12 +344,12 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       });
       return false;
     }
-  
+
     const indicesOrdenados = Array.from(indicesUnicos).sort();
     for (let i = 0; i < indicesOrdenados.length - 1; i++) {
       const indiceActual = this.indices.findIndex(ind => ind.Id === indicesOrdenados[i]);
       const indiceSiguiente = this.indices.findIndex(ind => ind.Id === indicesOrdenados[i + 1]);
-      
+
       if (indiceSiguiente - indiceActual !== 1) {
         Swal.fire({
           icon: 'error',
@@ -357,7 +359,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
         return false;
       }
     }
-  
+
     return true;
   }
 
@@ -402,7 +404,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       if (!this.validarIndices()) {
         return;
       }
-      
+
       this.guardarCambiosEnBD().then(() => {
         const estructuraContrato = this.prepararEstructuraContrato();
         this.verificarYActualizarOrdenes(estructuraContrato);
@@ -643,21 +645,24 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
   private prepararEstructuraContrato(): EstructuraContrato {
     const clausulasValue = this.form.get('clausulas')?.value;
+    const clausulasOrdenadas = clausulasValue
+      .filter((c: any) => c.id != null)
+      .sort((a: any, b: any) => {
+        const indexA = this.indices.findIndex(i => i.Id === a.index);
+        const indexB = this.indices.findIndex(i => i.Id === b.index);
+        return indexA - indexB;
+      });
+
     const estructura = {
-      clausula_ids: clausulasValue
-        .filter((c: any) => c.id != null)
-        .map((c: any) => c.id),
-      paragrafos: clausulasValue
-        .filter((c: any) => c.id != null)
-        .map((c: any) => {
-          return {
-            clausula_id: c.id,
-            paragrafo_ids: c.paragrafos
-              .filter((p: any) => p._id != null)
-              .map((p: any) => p._id)
-          };
-        })
-        .filter((p: ParagrafoEstructura) => p.paragrafo_ids.length > 0)
+      clausula_ids: clausulasOrdenadas.map((c: any) => c.id),
+      paragrafos: clausulasOrdenadas.map((c: any) => {
+        return {
+          clausula_id: c.id,
+          paragrafo_ids: c.paragrafos
+            .filter((p: any) => p._id != null)
+            .map((p: any) => p._id)
+        };
+      }).filter((p: ParagrafoEstructura) => p.paragrafo_ids.length > 0)
     };
     return estructura;
   }
