@@ -24,6 +24,7 @@ export interface RowData {
 
 
 export class PasoInfoPresupuestalComponent {
+  @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
 
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
@@ -115,6 +116,10 @@ export class PasoInfoPresupuestalComponent {
         this.CambioMoneda(id_moneda);
       }
     })
+
+    this.form.statusChanges.subscribe(() => {
+      this.stepCompleted.emit(this.form.valid);
+    });
 
   }
 
@@ -305,4 +310,13 @@ export class PasoInfoPresupuestalComponent {
     }
   }
 
+
+  guardarYContinuar() {
+    if (this.form.valid) {
+      // ... lógica de guardado
+      this.nextStep.emit();
+    } else {
+      this.form.markAllAsTouched();
+    }
+  }
 }

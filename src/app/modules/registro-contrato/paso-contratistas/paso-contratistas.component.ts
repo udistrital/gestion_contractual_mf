@@ -65,6 +65,7 @@ interface ProveedorObject{
 })
 export class PasoContratistasComponent implements OnInit, OnDestroy {
   @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   form: FormGroup;
   tiposContratista = [

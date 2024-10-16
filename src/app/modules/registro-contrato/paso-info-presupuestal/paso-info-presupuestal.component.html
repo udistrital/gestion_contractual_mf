@@ -171,6 +171,6 @@
     </div>
     <div class="btn-container">
         <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-        <button mat-raised-button matStepperNext color="primary">Guardar y Continuar</button>
+        <button mat-raised-button (click)="guardarYContinuar()"  color="primary"  [disabled]="!form.valid || isLoading">Guardar y Continuar</button>
     </div>
 </form>

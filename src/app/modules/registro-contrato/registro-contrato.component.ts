@@ -2,8 +2,11 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { PasoContratistasComponent } from "./paso-contratistas/paso-contratistas.component";
 import { PasoInfoGeneralComponent } from "./paso-info-general/paso-info-general.component";
 import { PasoObligacionesComponent } from "./paso-obligaciones/paso-obligaciones.component";
-import {MatStepper} from "@angular/material/stepper";
-import {STEPPER_GLOBAL_OPTIONS} from '@angular/cdk/stepper';
+import { PasoInfoPresupuestalComponent } from "./paso-info-presupuestal/paso-info-presupuestal.component";
+import { MatStepper } from "@angular/material/stepper";
+import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-registro-contrato',
@@ -21,14 +24,14 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   @ViewChild(PasoContratistasComponent) pasoContratistas!: PasoContratistasComponent;
   @ViewChild(PasoInfoGeneralComponent) pasoInfoGeneral!: PasoInfoGeneralComponent;
   @ViewChild(PasoObligacionesComponent) pasoObligaciones!: PasoObligacionesComponent;
+  @ViewChild(PasoInfoPresupuestalComponent) pasoInfoPresupuestal!: PasoInfoPresupuestalComponent;
 
+  isLinear = true;
+  stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(new Array(8).fill(false));
 
   constructor() {}
 
-  ngOnInit() {
-  }
-
-  isLinear = true;
+  ngOnInit() {}
 
   goToNextStep() {
     if (this.stepper.selected) {
@@ -39,11 +42,21 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.stepper.selectionChange.subscribe((event) => {
-      //Reset del componente (ligado al orden)
       if (event.previouslySelectedIndex === 3 && event.selectedIndex !== 3) {
         this.pasoContratistas.onStepLeave();
       }
     });
   }
 
+  stepCompleted(stepIndex: number, isCompleted: boolean) {
+    const currentSteps = this.stepsCompleted.value;
+    currentSteps[stepIndex] = isCompleted;
+    this.stepsCompleted.next(currentSteps);
+  }
+
+  canProceedToStep(stepIndex: number): Observable<boolean> {
+    return this.stepsCompleted.pipe(
+      map(steps => steps.slice(0, stepIndex).every(step => step))
+    );
+  }
 }

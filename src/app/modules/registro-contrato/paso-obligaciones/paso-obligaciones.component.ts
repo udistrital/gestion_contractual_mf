@@ -9,6 +9,7 @@ import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angu
 })
 export class PasoObligacionesComponent {
   @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   form = this._formBuilder.group({
     sixthCtrl: ['', Validators.required],
