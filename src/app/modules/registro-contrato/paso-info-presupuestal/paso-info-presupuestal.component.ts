@@ -6,7 +6,7 @@ import {CdpsService} from "src/app/services/cdps.service";
 import {ParametrosService} from "src/app/services/parametros.service";
 import {environment} from "src/environments/environment";
 
-export interface RowData {
+export interface CDP {
   vigencia: string;
   num_sol_adq: string;
   numero_disponibilidad: string;
@@ -15,6 +15,21 @@ export interface RowData {
   descripcion: string;
   estado: string;
 }
+
+interface CDPData {
+  vigencia: string;
+  numero_necesidad: string;
+  estado_necesidad: string;
+  numero_disponibilidad: string;
+  estadocdp: string;
+  nombre_dependencia: string;
+  id_necesidad: string;
+}
+
+interface CDPResponse {
+  [key: string]: CDPData;
+}
+
 
 @Component({
   selector: 'app-paso-info-presupuestal',
@@ -77,7 +92,7 @@ export class PasoInfoPresupuestalComponent {
     'estado'
   ];
 
-  dataSource: RowData[] = []; //Vacío o llenandose con datos guardados
+  selectedCDP: CDP[] = [];
 
   habilitarInput = false;
 
@@ -166,12 +181,19 @@ export class PasoInfoPresupuestalComponent {
     ).subscribe({
       next: (response: any) => {
         if (response.Status === 200) {
-          this.cdps = response.Data
-            .filter((cdp: any) => cdp.estadocdp !== 'AGOTADO')
-            .map((cdp: any) => ({
-              value: cdp.numero_necesidad,
-              viewValue: cdp.numero_necesidad
-            }));
+
+          const uniqueCDPs = new Map<string, CDPData>();
+
+          response.Data.forEach((cdp: CDPData) => {
+            if (cdp.estadocdp !== 'AGOTADO' && !uniqueCDPs.has(cdp.numero_necesidad)) {
+              uniqueCDPs.set(cdp.numero_necesidad, cdp);
+            }
+          });
+
+          this.cdps = Array.from(uniqueCDPs.values()).map(cdp => ({
+            value: cdp.numero_necesidad,
+            viewValue: cdp.numero_disponibilidad,
+          }));
         } else {
           console.error('Error loading CDPs:', response.Message);
         }
@@ -193,7 +215,7 @@ export class PasoInfoPresupuestalComponent {
     ).subscribe({
       next: (response: any) => {
         if (response.Status === 200) {
-          this.dataSource = [...this.dataSource, ...response.Data];
+          this.selectedCDP = [...this.selectedCDP, ...response.Data];
           this.updateValorAcumulado();
         } else {
           console.error('Error loading row data:', response.Message);
@@ -206,16 +228,16 @@ export class PasoInfoPresupuestalComponent {
   }
 
   eliminarUltimoRegistroDataCDP() {
-    if(this.dataSource.length > 0) {
-      const data = this.dataSource;
+    if(this.selectedCDP.length > 0) {
+      const data = this.selectedCDP;
       data.pop();
-      this.dataSource = [...data];
+      this.selectedCDP = [...data];
       this.updateValorAcumulado();
     }
   }
 
   updateValorAcumulado() {
-    const valorAcumulado = this.dataSource.reduce((sum, row) => {
+    const valorAcumulado = this.selectedCDP.reduce((sum, row) => {
       const valor = typeof row.valor_contratacion === 'string'
         ? parseFloat(row.valor_contratacion)
         : row.valor_contratacion || 0;
