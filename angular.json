@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "gestion_contractual_compras_contrato_mf": {
+    "gestion_contractual_mf": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-builders/custom-webpack:browser",
           "options": {
-            "outputPath": "dist/gestion_contractual_compras_contrato_mf",
+            "outputPath": "dist",
             "index": "src/index.html",
             "main": "src/main.single-spa.ts",
             "polyfills": [
@@ -30,7 +30,7 @@
             "scripts": [],
             "customWebpackConfig": {
               "path": "extra-webpack.config.js",
-              "libraryName": "gestion_contractual_compras_contrato_mf",
+              "libraryName": "gestion_contractual_mf",
               "libraryTarget": "umd"
             },
             "deployUrl": "http://localhost:4201/"
@@ -41,7 +41,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumError": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -73,10 +73,10 @@
           "builder": "@angular-builders/custom-webpack:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "gestion_contractual_compras_contrato_mf:build:production"
+              "buildTarget": "gestion_contractual_mf:build:production"
             },
             "development": {
-              "buildTarget": "gestion_contractual_compras_contrato_mf:build:development"
+              "buildTarget": "gestion_contractual_mf:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -84,7 +84,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "gestion_contractual_compras_contrato_mf:build"
+            "buildTarget": "gestion_contractual_mf:build"
           }
         },
         "test": {
