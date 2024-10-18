@@ -185,13 +185,13 @@ export class PasoInfoPresupuestalComponent {
           const uniqueCDPs = new Map<string, CDPData>();
 
           response.Data.forEach((cdp: CDPData) => {
-            if (cdp.estadocdp !== 'AGOTADO' && !uniqueCDPs.has(cdp.numero_necesidad)) {
-              uniqueCDPs.set(cdp.numero_necesidad, cdp);
+            if (cdp.estadocdp !== 'AGOTADO' && !uniqueCDPs.has(cdp.numero_disponibilidad)) {
+              uniqueCDPs.set(cdp.numero_disponibilidad, cdp);
             }
           });
 
           this.cdps = Array.from(uniqueCDPs.values()).map(cdp => ({
-            value: cdp.numero_necesidad,
+            value: cdp.numero_disponibilidad,
             viewValue: cdp.numero_disponibilidad,
           }));
         } else {
