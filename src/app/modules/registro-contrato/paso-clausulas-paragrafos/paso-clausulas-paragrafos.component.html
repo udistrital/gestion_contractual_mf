@@ -35,7 +35,7 @@
           <div *ngFor="let paragrafo of getParagrafos(clausula).controls; let j = index" [formGroupName]="j"
             class="paragrafo-item">
             <div class="paragrafo-label">
-              <p>Parágrafo {{j + 1}}</p>
+              <p>{{paragrafo.get('nombre')?.value}}</p>
             </div>
             <div class="paragrafo-content">
               <app-editor-enriquecido formControlName="descripcion"
@@ -46,7 +46,7 @@
             </div>
           </div>
         </div>
-        <button mat-raised-button color="primary" (click)="guardarClausula(i)" [disabled]="!clausulaModificada[i]">Guardar Cláusula</button>
+        <button mat-raised-button color="primary" (click)="guardarClausula(i)">Guardar Cláusula</button>
         <div class="btn-container3">
           <button mat-raised-button color="primary" (click)="agregarParagrafo(i)">Agregar Parágrafo</button>
         </div>

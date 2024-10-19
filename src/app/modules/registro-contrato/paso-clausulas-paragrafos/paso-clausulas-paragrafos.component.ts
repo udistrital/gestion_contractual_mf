@@ -5,69 +5,33 @@ import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { MatStepper } from '@angular/material/stepper';
+import { NgZone } from '@angular/core';
 
-interface Indice {
-  Id: string;
-  Nombre: string;
-}
-
-interface Clausula {
-  _id?: string;
-  nombre: string;
-  descripcion: string;
-  predeterminado: boolean;
-  paragrafos: Paragrafo[];
-}
-
-interface Paragrafo {
-  _id?: string;
-  nombre?: string;
-  descripcion: string;
-  predeterminado: boolean;
-}
-
-interface EstructuraContrato {
-  clausula_ids: string[];
-  paragrafos: ParagrafoEstructura[];
-}
-
-interface ParagrafoEstructura {
-  clausula_id: string;
-  paragrafo_ids: string[];
-}
+interface Indice { Id: string; Nombre: string; }
+interface Clausula { _id?: string; nombre: string; descripcion: string; predeterminado: boolean; paragrafos: Paragrafo[]; }
+interface Paragrafo { _id?: string; nombre?: string; descripcion: string; predeterminado: boolean; }
 
 @Component({
   selector: 'app-paso-clausulas-paragrafos',
   templateUrl: './paso-clausulas-paragrafos.component.html',
   styleUrls: ['./paso-clausulas-paragrafos.component.css']
 })
+
 export class PasoClausulasParagrafosComponent implements OnInit {
   form: FormGroup;
   indices: Indice[] = [];
-  contratoId: number = 847415;
+  contratoId: number = 5678;
   tipoContratoId: number = 1;
-  clausulaModificada: boolean[] = [];
-  formularioInicial: any;
-
-  cambiosTemporales: {
-    clausulas: Partial<Clausula>[];
-    paragrafos: { [clausulaId: string]: Partial<Paragrafo>[] };
-  } = { clausulas: [], paragrafos: {} };
-
-  elementosEliminados: {
-    clausulas: string[];
-    paragrafos: { [clausulaId: string]: string[] };
-  } = { clausulas: [], paragrafos: {} };
+  usuarioId: number = 25;
 
   constructor(
-    private _formBuilder: FormBuilder,
+    private fb: FormBuilder,
     private clausulasParagrafosService: ClausulasParagrafosService,
     private parametrosService: ParametrosService,
-    private stepper: MatStepper
+    private stepper: MatStepper,
+    private zone: NgZone
   ) {
-    this.form = this._formBuilder.group({
-      clausulas: this._formBuilder.array([])
-    });
+    this.form = this.fb.group({ clausulas: this.fb.array([]) });
   }
 
   ngOnInit(): void {
@@ -86,127 +50,146 @@ export class PasoClausulasParagrafosComponent implements OnInit {
           this.cargarContrato();
         }
       },
-      error: (error) => {
-        console.error('Error al cargar índices:', error);
-        this.showErrorAlert('Error al cargar índices');
-      }
+      error: (error) => this.handleError('Error al cargar índices', error)
     });
   }
 
   private cargarContrato() {
     this.clausulasParagrafosService.get(`contratos/${this.contratoId}`).subscribe({
       next: (response: { Success: boolean, Data: Clausula[] }) => {
-        if (response.Success && response.Data && response.Data.length > 0) {
-          this.cargarClausulasYParagrafos(response.Data);
+        if (response.Success && response.Data?.length > 0) {
+          this.cargarContratoExistente(response.Data);
         } else {
           this.cargarPlantillaPorTipoContrato();
         }
       },
-      error: (error) => {
-        console.error('Error al cargar el contrato:', error);
-        this.cargarPlantillaPorTipoContrato();
-      }
+      error: (error) => this.handleError('Error al cargar el contrato', error, () => this.cargarPlantillaPorTipoContrato())
     });
   }
 
   private cargarPlantillaPorTipoContrato() {
     this.clausulasParagrafosService.get(`plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}`).subscribe({
       next: (response: { Success: boolean, Data: Clausula[] }) => {
-        if (response.Success && response.Data && response.Data.length > 0) {
-          this.cargarClausulasYParagrafos(response.Data);
+        if (response.Success && response.Data?.length > 0) {
+          this.crearContratoDesdePlantilla(response.Data);
         } else {
           this.showErrorAlert('No se encontró una plantilla para este tipo de contrato');
         }
       },
-      error: (error) => {
-        console.error('Error al cargar la plantilla por tipo de contrato:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'La plantilla para el tipo de contrato seleccionado no está disponible en este momento',
-          text: 'Comuniquese con nuestro equipo de sopote al correo soporteargo@udistrital.edu.co',
-        });
-      }
+      error: (error) => this.handleError('Error al cargar la plantilla por tipo de contrato', error)
     });
   }
 
-  private cargarClausulasYParagrafos(clausulas: Clausula[]) {
-    this.clausulas.clear();
-    this.clausulaModificada = clausulas.map(() => false);
-    clausulas.forEach((clausula, index) => {
-      const indiceId = this.indices[index]?.Id || '';
-      const clausulaGroup = this.crearClausulaFormGroup(clausula, indiceId);
-      this.clausulas.push(clausulaGroup);
-      this.actualizarNombresParagrafos(index);
+  private crearContratoDesdePlantilla(clausulas: Clausula[]) {
+    const nuevoContrato = {
+      clausula_ids: clausulas.map(c => c._id),
+      paragrafos: clausulas.map(c => ({
+        clausula_id: c._id,
+        paragrafo_ids: c.paragrafos.map(p => p._id)
+      })).filter(p => p.paragrafo_ids.length > 0),
+      creado_por: this.usuarioId,
+      actualizado_por: this.usuarioId
+    };
+
+    this.clausulasParagrafosService.post(`contratos/${this.contratoId}`, nuevoContrato).subscribe({
+      next: (response: any) => {
+        if (response.Success && response.Data) {
+          this.contratoId = response.Data.ordenClausula.contrato_id;
+          this.cargarContratoNuevo(response.Data, clausulas);
+          Swal.fire({
+            icon: 'success',
+            title: 'Contrato creado',
+            text: 'El contrato se ha creado exitosamente desde la plantilla.'
+          });
+        } else {
+          this.showErrorAlert('Error al crear el contrato: Respuesta inválida');
+        }
+      },
+      error: (error) => this.handleError('Error al crear el contrato desde la plantilla', error)
     });
-    this.actualizarFormularioInicial();
+  }
+
+  private cargarContratoNuevo(data: any, clausulasOriginales: Clausula[]) {
+    this.clausulas.clear();
+    data.ordenClausula.clausula_ids.forEach((clausulaId: string, index: number) => {
+      const clausula = clausulasOriginales.find(c => c._id === clausulaId);
+      if (clausula) {
+        const clausulaGroup = this.crearClausulaFormGroup(clausula, this.indices[index]?.Id || '');
+        this.clausulas.push(clausulaGroup);
+        const ordenParagrafo = data.ordenParagrafos.find((op: any) => op.clausula_id === clausulaId);
+        if (ordenParagrafo) {
+          const paragrafosArray = clausulaGroup.get('paragrafos') as FormArray;
+          paragrafosArray.clear();
+          ordenParagrafo.paragrafo_ids.forEach((paragrafoId: string, pIndex: number) => {
+            const paragrafo = clausula.paragrafos.find(p => p._id === paragrafoId);
+            if (paragrafo) {
+              paragrafosArray.push(this.crearParagrafoFormGroup(paragrafo, pIndex, ordenParagrafo.paragrafo_ids.length));
+            }
+          });
+        }
+      }
+    });
+
+    this.actualizarIndices();
+    this.form.updateValueAndValidity();
+  }
+
+  private cargarContratoExistente(clausulas: Clausula[]) {
+    this.zone.run(() => {
+      this.clausulas.clear();
+      clausulas.forEach((clausula, index) => {
+        const indiceId = this.indices[index]?.Id || '';
+        const clausulaFormGroup = this.crearClausulaFormGroup(clausula, indiceId);
+        this.clausulas.push(clausulaFormGroup);
+      });
+      this.actualizarIndices();
+      this.form.updateValueAndValidity();
+      this.form.markAsDirty();
+    });
   }
 
   private crearClausulaFormGroup(clausula: Clausula, indiceId: string): FormGroup {
-    const clausulaGroup = this._formBuilder.group({
+    const clausulaGroup = this.fb.group({
       id: [clausula._id || null],
       index: [indiceId, Validators.required],
       nombre: [clausula.nombre, Validators.required],
       descripcion: [clausula.descripcion, Validators.required],
       predeterminado: [clausula.predeterminado],
-      paragrafos: this._formBuilder.array([])
+      paragrafos: this.fb.array([])
     });
 
     const paragrafosArray = clausulaGroup.get('paragrafos') as FormArray;
-    if (clausula.paragrafos && clausula.paragrafos.length > 0) {
-      clausula.paragrafos.forEach((paragrafo: Paragrafo, index: number) => {
-        paragrafosArray.push(this.crearParagrafoFormGroup(paragrafo, index));
-      });
-    }
+    clausula.paragrafos?.forEach((paragrafo: Paragrafo, index: number) => {
+      paragrafosArray.push(this.crearParagrafoFormGroup(paragrafo, index, clausula.paragrafos?.length || 0));
+    });
 
     return clausulaGroup;
   }
 
-  private crearParagrafoFormGroup(paragrafo: Paragrafo, index: number): FormGroup {
-    const nombre = this.generarNombreParagrafo(index);
-    return this._formBuilder.group({
+  private crearParagrafoFormGroup(paragrafo: Paragrafo, index: number, totalParagrafos: number): FormGroup {
+    const paragrafoGroup = this.fb.group({
       _id: [paragrafo._id || null],
-      nombre: [nombre],
+      nombre: [this.generarNombreParagrafo(index, totalParagrafos)],
       descripcion: [paragrafo.descripcion, Validators.required],
       predeterminado: [paragrafo.predeterminado]
     });
+
+    return paragrafoGroup;
   }
 
-  private generarNombreParagrafo(index: number): string {
-    if (index === 0) return "PARÁGRAFO.";
-    const numerales = ["PRIMERO", "SEGUNDO", "TERCERO", "CUARTO", "QUINTO", "SEXTO", "SÉPTIMO", "OCTAVO", "NOVENO", "DÉCIMO"];
-    return `PARÁGRAFO ${numerales[index - 1] || (index + 1)}.`;
+  private generarNombreParagrafo(index: number, totalParagrafos: number): string {
+    if (totalParagrafos === 1) {
+      return "PARÁGRAFO.";
+    } else {
+      const numerales = ["PRIMERO", "SEGUNDO", "TERCERO", "CUARTO", "QUINTO", "SEXTO", "SÉPTIMO", "OCTAVO", "NOVENO", "DÉCIMO"];
+      return `PARÁGRAFO ${numerales[index] || (index + 1)}.`;
+    }
   }
 
-  private detectarCambiosEnFormulario() {
-    this.clausulaModificada = this.clausulas.controls.map((clausula) => {
-      const clausulaTemp = this.cambiosTemporales.clausulas.find(c => c._id === clausula.get('id')?.value);
-      if (!clausulaTemp) return true;
-
-      const nombreModificado = clausula.get('nombre')?.value !== clausulaTemp.nombre;
-      const descripcionModificada = clausula.get('descripcion')?.value !== clausulaTemp.descripcion;
-
-      const paragrafosTemp = this.cambiosTemporales.paragrafos[clausulaTemp._id || ''] || [];
-      const paragrafosActuales = this.getParagrafos(clausula).controls;
-      const paragrafosModificados = this.paragrafosModificados(paragrafosActuales, paragrafosTemp);
-
-      return nombreModificado || descripcionModificada || paragrafosModificados;
+  private actualizarIndices() {
+    this.clausulas.controls.forEach((clausula: AbstractControl, index: number) => {
+      clausula.get('index')?.setValue(this.indices[index]?.Id || '');
     });
-  }
-
-  private paragrafosModificados(paragrafosActuales: AbstractControl[], paragrafosTemp: Partial<Paragrafo>[]): boolean {
-    if (paragrafosActuales.length !== paragrafosTemp.length) return true;
-
-    return paragrafosActuales.some((paragrafo, index) => {
-      const paragrafoTemp = paragrafosTemp[index];
-      return paragrafo.get('nombre')?.value !== paragrafoTemp.nombre ||
-        paragrafo.get('descripcion')?.value !== paragrafoTemp.descripcion ||
-        paragrafo.get('predeterminado')?.value !== paragrafoTemp.predeterminado;
-    });
-  }
-
-  private actualizarFormularioInicial() {
-    this.formularioInicial = JSON.parse(JSON.stringify(this.form.value));
-    this.detectarCambiosEnFormulario();
   }
 
   getParagrafos(clausula: AbstractControl): FormArray {
@@ -214,188 +197,352 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   agregarClausula() {
-    Swal.fire({
-      text: "¿Está seguro(a) de agregar la cláusula al contrato?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      cancelButtonText: "Cancelar",
-      confirmButtonText: "Aceptar"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const nuevoIndice = this.clausulas.length;
-        const indiceId = this.indices[nuevoIndice]?.Id || '';
-        this.clausulas.push(this.crearClausulaFormGroup({
-          nombre: '',
-          descripcion: '',
-          predeterminado: false,
-          paragrafos: []
-        } as Clausula, indiceId));
-
-        this.clausulaModificada.push(true);
-        this.actualizarFormularioInicial();
-        Swal.fire({
-          title: "Cláusula agregada",
-          icon: "success"
-        });
-      }
+    this.confirmarAccion("¿Está seguro(a) de agregar la cláusula al contrato?", () => {
+      const nuevoIndice = this.clausulas.length;
+      const indiceId = this.indices[nuevoIndice]?.Nombre || '';
+      this.clausulas.push(this.crearClausulaFormGroup({ nombre: '', descripcion: '', predeterminado: false, paragrafos: [] } as Clausula, indiceId));
+      this.actualizarIndices();
+      Swal.fire({ title: "Cláusula agregada", icon: "success" });
     });
-    this.actualizarIndices();
   }
 
   eliminarClausula(index: number) {
-    Swal.fire({
-      text: "¿Está seguro(a) de eliminar la cláusula del contrato?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      cancelButtonText: "Cancelar",
-      confirmButtonText: "Aceptar"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const clausula = this.clausulas.at(index);
-        const clausulaId = clausula.get('id')?.value;
-        const esPredeterminada = clausula.get('predeterminado')?.value;
+    this.confirmarAccion("¿Está seguro(a) de eliminar la cláusula del contrato?", () => {
+      const clausula = this.clausulas.at(index);
+      const clausulaId = clausula.get('id')?.value;
+      const esPredeterminada = clausula.get('predeterminado')?.value;
 
-        if (this.clausulas.length > 1) {
-          if (!esPredeterminada) {
-            this.elementosEliminados.clausulas.push(clausulaId);
-          }
-          this.clausulas.removeAt(index);
-          this.actualizarIndices();
-        } else {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Advertencia',
-            text: 'Debe haber al menos una cláusula',
+      if (this.clausulas.length > 1) {
+        if (!esPredeterminada) {
+          this.clausulasParagrafosService.delete(`clausulas`, clausulaId).subscribe({
+            next: () => console.log('Cláusula eliminada'),
+            error: (error) => this.handleError('Error al eliminar cláusula', error)
           });
-        }
-        Swal.fire({
-          title: "Cláusula eliminada",
-          icon: "success"
-        });
-      }
-    });
-    this.actualizarIndices();
-  }
-
-  eliminarParagrafo(clausulaIndex: number, paragrafoIndex: number) {
-    Swal.fire({
-      text: "¿Está seguro(a) de eliminar el parágrafo de la cláusula?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      cancelButtonText: "Cancelar",
-      confirmButtonText: "Aceptar"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const clausula = this.clausulas.at(clausulaIndex);
-        const clausulaId = clausula.get('id')?.value;
-        const paragrafos = this.getParagrafos(clausula);
-        const paragrafo = paragrafos.at(paragrafoIndex);
-        const paragrafoId = paragrafo.get('_id')?.value;
-        const esPredeterminado = paragrafo.get('predeterminado')?.value;
-
-        console.log(`Eliminando párrafo - Cláusula ID: ${clausulaId}, Párrafo ID: ${paragrafoId}, Es predeterminado: ${esPredeterminado}`);
-
-        if (!esPredeterminado) {
-          if (!this.elementosEliminados.paragrafos[clausulaId]) {
-            this.elementosEliminados.paragrafos[clausulaId] = [];
-          }
-          this.elementosEliminados.paragrafos[clausulaId].push(paragrafoId);
-          console.log('Elementos eliminados actualizados:', JSON.stringify(this.elementosEliminados));
+          this.eliminarParagrafosAnidados(clausulaId);
         }
 
-        paragrafos.removeAt(paragrafoIndex);
-        this.actualizarNombresParagrafos(clausulaIndex);
-        this.clausulaModificada[clausulaIndex] = true;
-        this.detectarCambiosEnFormulario();
-
-        console.log(`Párrafo eliminado. Nuevos párrafos:`, paragrafos.value);
-
-        Swal.fire({
-          title: "Parágrafo eliminado",
-          icon: "success"
-        });
+        this.clausulas.removeAt(index);
+        this.actualizarIndices();
+        this.actualizarContrato().then(() => {
+          Swal.fire({ title: "Cláusula eliminada", icon: "success" });
+        }).catch(error => this.handleError('Error al actualizar contrato después de eliminar cláusula', error));
+      } else {
+        Swal.fire({ icon: 'warning', title: 'Advertencia', text: 'Debe haber al menos una cláusula' });
       }
-    });
-
-  }
-
-  private actualizarIndices() {
-    this.clausulas.controls.forEach((clausula: AbstractControl, index: number) => {
-      const indiceId = this.indices[index]?.Id || '';
-      clausula.get('index')?.setValue(indiceId);
     });
   }
 
-  private validarIndices(): boolean {
-    const indicesSeleccionados = this.clausulas.controls.map(control => control.get('index')?.value);
-    const indicesUnicos = new Set(indicesSeleccionados);
+  private eliminarParagrafosAnidados(clausulaId: string) {
+    this.clausulasParagrafosService.get(`orden-paragrafos?query=contrato_id:${this.contratoId};clausula_id:${clausulaId}`).subscribe({
+      next: (response: any) => {
+        response.Data?.forEach((ordenParagrafo: any) => {
+          const paragrafosPrederminados = ordenParagrafo.paragrafo_ids
+            .filter((paragrafo: any) => paragrafo && paragrafo.predeterminado === true)
+            .map((paragrafo: any) => paragrafo._id);
 
-    if (indicesSeleccionados.length !== indicesUnicos.size) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error en la enumeración del clausulado registrado.',
-        text: 'No se permiten índices repetidos en las cláusulas.'
-      });
-      return false;
-    }
+          const paragrafosNoPredeterminados = ordenParagrafo.paragrafo_ids
+            .filter((paragrafo: any) => paragrafo && paragrafo.predeterminado === false)
+            .map((paragrafo: any) => paragrafo._id);
 
-    const indicesOrdenados = Array.from(indicesUnicos).sort();
-    for (let i = 0; i < indicesOrdenados.length - 1; i++) {
-      const indiceActual = this.indices.findIndex(ind => ind.Id === indicesOrdenados[i]);
-      const indiceSiguiente = this.indices.findIndex(ind => ind.Id === indicesOrdenados[i + 1]);
+          paragrafosPrederminados.forEach((paragrafoId: string) => {
+            this.actualizarOrdenParagrafo(clausulaId, paragrafoId);
+          });
 
-      if (indiceSiguiente - indiceActual !== 1) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error en la enumeración del clausulado registrado.',
-          text: 'No se permiten saltos en la secuencia de índices de las cláusulas.'
+          paragrafosNoPredeterminados.forEach((paragrafoId: string) => {
+            this.eliminarParagrafoYOrden(clausulaId, paragrafoId);
+          });
+
+          this.clausulasParagrafosService.delete(`orden-paragrafos`, ordenParagrafo._id).subscribe({
+            next: () => console.log('Orden de parágrafos eliminado'),
+            error: (error) => this.handleError('Error al eliminar orden de parágrafos', error)
+          });
         });
-        return false;
-      }
-    }
-
-    return true;
+      },
+      error: (error) => this.handleError('Error al obtener órdenes de parágrafos', error)
+    });
   }
 
   agregarParagrafo(clausulaIndex: number) {
-    Swal.fire({
-      text: "¿Está seguro(a) de agregar el parágrafo a la cláusula?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      cancelButtonText: "Cancelar",
-      confirmButtonText: "Aceptar"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const paragrafos = this.getParagrafos(this.clausulas.at(clausulaIndex));
-        const nuevoIndex = paragrafos.length;
-        paragrafos.push(this.crearParagrafoFormGroup({
-          nombre: '',
-          descripcion: '',
-          predeterminado: false
-        } as Paragrafo, nuevoIndex));
-        this.actualizarNombresParagrafos(clausulaIndex);
-        this.clausulaModificada[clausulaIndex] = true;
-        this.detectarCambiosEnFormulario();
-        Swal.fire({
-          title: "Parágrafo agregado",
-          icon: "success"
-        });
-      }
+    this.confirmarAccion("¿Está seguro(a) de agregar el parágrafo a la cláusula?", () => {
+      const paragrafos = this.getParagrafos(this.clausulas.at(clausulaIndex));
+      const nuevoIndex = paragrafos.length;
+      const totalParagrafos = nuevoIndex + 1;
+      paragrafos.push(this.crearParagrafoFormGroup(
+        { nombre: '', descripcion: '', predeterminado: false } as Paragrafo,
+        nuevoIndex,
+        totalParagrafos
+      ));
+      this.actualizarNombresParagrafos(clausulaIndex);
+      Swal.fire({ title: "Parágrafo agregado", icon: "success" });
+    });
+  }
+
+  eliminarParagrafo(clausulaIndex: number, paragrafoIndex: number) {
+    this.confirmarAccion("¿Está seguro(a) de eliminar el parágrafo de la cláusula?", () => {
+      const clausula = this.clausulas.at(clausulaIndex);
+      const clausulaId = clausula.get('id')?.value;
+      const paragrafos = this.getParagrafos(clausula);
+      const paragrafo = paragrafos.at(paragrafoIndex);
+      const paragrafoId = paragrafo.get('_id')?.value;
+      const esPredeterminado = paragrafo.get('predeterminado')?.value;
+
+      esPredeterminado ? this.actualizarOrdenParagrafo(clausulaId, paragrafoId) : this.eliminarParagrafoYOrden(clausulaId, paragrafoId);
+
+      paragrafos.removeAt(paragrafoIndex);
+      this.actualizarNombresParagrafos(clausulaIndex);
+
+      Swal.fire({ title: "Parágrafo eliminado", icon: "success" });
+    });
+  }
+
+  private actualizarOrdenParagrafo(clausulaId: string, paragrafoId: string) {
+    this.clausulasParagrafosService.get(`orden-paragrafos?query=contrato_id:${this.contratoId};clausula_id:${clausulaId}`).subscribe({
+      next: (response: any) => {
+        if (response.Data?.length > 0) {
+          const ordenParagrafo = response.Data[0];
+          const nuevosParagrafos = ordenParagrafo.paragrafo_ids.filter((p: Paragrafo) => p._id !== paragrafoId);
+          if (nuevosParagrafos.length > 0) {
+            this.clausulasParagrafosService.put(`orden-paragrafos/${ordenParagrafo._id}`, { paragrafo_ids: nuevosParagrafos, actualizado_por: this.usuarioId }).subscribe({
+              next: () => console.log('Orden de parágrafos actualizado'),
+              error: (error) => this.handleError('Error al actualizar orden de parágrafos', error)
+            });
+          } else {
+            this.clausulasParagrafosService.delete(`orden-paragrafos`, ordenParagrafo._id).subscribe({
+              next: () => console.log('Orden de parágrafos eliminado'),
+              error: (error) => this.handleError('Error al eliminar orden de parágrafos', error)
+            });
+          }
+        }
+      },
+      error: (error) => this.handleError('Error al obtener orden de parágrafos', error)
+    });
+  }
+
+  private eliminarParagrafoYOrden(clausulaId: string, paragrafoId: string) {
+    this.actualizarOrdenParagrafo(clausulaId, paragrafoId);
+    this.clausulasParagrafosService.delete(`paragrafos`, paragrafoId).subscribe({
+      next: () => console.log('Parágrafo eliminado'),
+      error: (error) => this.handleError('Error al eliminar parágrafo', error)
     });
   }
 
   private actualizarNombresParagrafos(clausulaIndex: number) {
     const paragrafos = this.getParagrafos(this.clausulas.at(clausulaIndex));
+    const totalParagrafos = paragrafos.length;
     paragrafos.controls.forEach((paragrafo, index) => {
-      paragrafo.get('nombre')?.setValue(this.generarNombreParagrafo(index));
+      paragrafo.get('nombre')?.setValue(this.generarNombreParagrafo(index, totalParagrafos));
+    });
+  }
+
+  guardarClausula(index: number): void {
+    this.confirmarAccion("¿Está seguro(a) que desea guardar la cláusula?", () => {
+      const clausula = this.clausulas.at(index) as FormGroup;
+      const clausulaId = clausula.get('id')?.value;
+      const esPredeterminada = clausula.get('predeterminado')?.value;
+      const nombreModificado = clausula.get('nombre')?.dirty;
+      const descripcionModificada = clausula.get('descripcion')?.dirty;
+
+      console.log("nombreModificado:" + nombreModificado);
+      console.log("descripcionModificada:" + descripcionModificada);
+
+      if ((esPredeterminada || clausulaId === null) && (nombreModificado || descripcionModificada)) {
+        this.crearNuevaClausula(clausula);
+      } else if ((!esPredeterminada && clausulaId !== null) && (nombreModificado || descripcionModificada)) {
+        this.actualizarClausulaExistente(clausula);
+      }
+
+      this.actualizarParagrafos(clausulaId, clausula);
+      Swal.fire({ title: "Cláusula guardada correctamente", icon: "success" });
+    });
+  }
+
+  private crearNuevaClausula(clausula: FormGroup) {
+    const nuevaClausula = {
+      nombre: clausula.get('nombre')?.value,
+      descripcion: clausula.get('descripcion')?.value,
+      predeterminado: false,
+      creado_por: this.usuarioId,
+      actualizado_por: this.usuarioId
+    };
+
+    console.log(nuevaClausula);
+
+    this.clausulasParagrafosService.post('clausulas', nuevaClausula).subscribe({
+      next: (response: any) => {
+        const nuevoClausulaId = response.Data._id;
+        this.actualizarOrdenClausulaConNueva(clausula.get('id')?.value, nuevoClausulaId);
+      },
+      error: (error) => this.handleError('Error al crear nueva cláusula', error)
+    });
+  }
+
+  private actualizarClausulaExistente(clausula: FormGroup) {
+    const clausulaActualizada = {
+      nombre: clausula.get('nombre')?.value,
+      descripcion: clausula.get('descripcion')?.value,
+      predeterminado: clausula.get('predeterminado')?.value,
+      actualizado_por: this.usuarioId
+    };
+
+    this.clausulasParagrafosService.put(`clausulas/${clausula.get('id')?.value}`, clausulaActualizada).subscribe({
+      next: () => console.log('Cláusula actualizada'),
+      error: (error) => this.handleError('Error al actualizar cláusula', error)
+    });
+  }
+
+  private actualizarOrdenClausulaConNueva(viejaClausulaId: string, nuevoClausulaId: string) {
+    this.clausulasParagrafosService.get(`orden-clausulas?query=contrato_id:${this.contratoId}`).subscribe({
+      next: (response: any) => {
+        if (response.Data?.length > 0) {
+          const ordenClausula = response.Data[0];
+          let nuevasClausulas: string[];
+
+          if (viejaClausulaId === null) {
+            nuevasClausulas = [...ordenClausula.clausula_ids.map((c: Clausula) => c._id), nuevoClausulaId];
+          } else {
+            nuevasClausulas = ordenClausula.clausula_ids.map((c: Clausula) =>
+              c._id === viejaClausulaId ? nuevoClausulaId : c._id
+            );
+          }
+
+          const ordenActualizado = {
+            clausula_ids: nuevasClausulas,
+            contrato_id: this.contratoId,
+            actualizado_por: this.usuarioId
+          };
+          this.clausulasParagrafosService.put(`orden-clausulas/${ordenClausula._id}`, ordenActualizado).subscribe({
+            next: () => console.log('Orden de cláusulas actualizado'),
+            error: (error) => this.handleError('Error al actualizar orden de cláusulas', error)
+          });
+        }
+      },
+      error: (error) => this.handleError('Error al obtener orden de cláusulas', error)
+    });
+  }
+
+  private actualizarParagrafos(clausulaId: string, clausula: FormGroup) {
+    const paragrafos = this.getParagrafos(clausula);
+    paragrafos.controls.forEach((paragrafo: AbstractControl) => {
+      const paragrafoId = paragrafo.get('_id')?.value;
+      const esPredeterminado = paragrafo.get('predeterminado')?.value;
+      const descripcionModificada = paragrafo.get('descripcion')?.dirty;
+
+      if (paragrafoId && !esPredeterminado && descripcionModificada) {
+        this.actualizarParagrafoExistente(paragrafoId, paragrafo);
+      } else if (!paragrafoId || (esPredeterminado && descripcionModificada)) {
+        this.crearNuevoParagrafo(clausulaId, paragrafo, paragrafoId);
+      }
+    });
+  }
+
+  private actualizarParagrafoExistente(paragrafoId: string, paragrafo: AbstractControl) {
+    const paragrafoActualizado = {
+      nombre: paragrafo.get('nombre')?.value,
+      descripcion: paragrafo.get('descripcion')?.value,
+      predeterminado: paragrafo.get('predeterminado')?.value,
+      actualizado_por: this.usuarioId
+    };
+
+    this.clausulasParagrafosService.put(`paragrafos/${paragrafoId}`, paragrafoActualizado).subscribe({
+      next: () => console.log('Parágrafo actualizado'),
+      error: (error) => this.handleError('Error al actualizar parágrafo', error)
+    });
+  }
+
+  private crearNuevoParagrafo(clausulaId: string, paragrafo: AbstractControl, paragrafoId: string) {
+    const nuevoParagrafo = {
+      nombre: paragrafo.get('nombre')?.value,
+      descripcion: paragrafo.get('descripcion')?.value,
+      predeterminado: false,
+      creado_por: this.usuarioId,
+      actualizado_por: this.usuarioId
+    };
+
+    this.clausulasParagrafosService.post('paragrafos', nuevoParagrafo).subscribe({
+      next: (response: any) => {
+        const nuevoParagrafoId = response.Data._id;
+        paragrafo.patchValue({ _id: nuevoParagrafoId, predeterminado: false });
+        this.actualizarOrdenParagrafoConNuevo(clausulaId, nuevoParagrafoId, paragrafoId);
+      },
+      error: (error) => this.handleError('Error al crear nuevo parágrafo', error)
+    });
+  }
+
+  private actualizarOrdenParagrafoConNuevo(clausulaId: string, nuevoParagrafoId: string, paragrafoId: string) {
+    this.clausulasParagrafosService.get(`orden-paragrafos?query=contrato_id:${this.contratoId};clausula_id:${clausulaId}`).subscribe({
+      next: (response: any) => {
+        if (response.Data?.length > 0) {
+          const ordenParagrafo = response.Data[0];
+          const nuevosParagrafos = ordenParagrafo.paragrafo_ids
+            .filter((p: Paragrafo) => p._id !== paragrafoId)
+            .concat(nuevoParagrafoId);
+
+          console.log("nuevosParagrafos");
+          console.log(nuevosParagrafos);
+
+          const ordenActualizado = {
+            paragrafo_ids: nuevosParagrafos,
+            contrato_id: this.contratoId,
+            clausula_id: clausulaId,
+            actualizado_por: this.usuarioId
+          };
+          this.clausulasParagrafosService.put(`orden-paragrafos/${ordenParagrafo._id}`, ordenActualizado).subscribe({
+            next: () => console.log('Orden de parágrafos actualizado'),
+            error: (error) => this.handleError('Error al actualizar orden de parágrafos', error)
+          });
+        } else {
+          this.crearNuevoOrdenParagrafo(clausulaId, [nuevoParagrafoId]);
+        }
+      },
+      error: (error) => this.handleError('Error al obtener orden de parágrafos', error)
+    });
+  }
+
+  private crearNuevoOrdenParagrafo(clausulaId: string, paragrafoIds: string[]) {
+    const nuevoOrdenParagrafo = {
+      paragrafo_ids: paragrafoIds,
+      contrato_id: this.contratoId,
+      clausula_id: clausulaId,
+      creado_por: this.usuarioId,
+      actualizado_por: this.usuarioId
+    };
+
+    this.clausulasParagrafosService.post('orden-paragrafos', nuevoOrdenParagrafo).subscribe({
+      next: () => console.log('Nuevo orden de parágrafos creado'),
+      error: (error) => this.handleError('Error al crear nuevo orden de parágrafos', error)
+    });
+  }
+
+  private actualizarContrato(): Promise<void> {
+    const contratoActualizado = {
+      clausula_ids: this.clausulas.controls.map(c => c.get('id')?.value),
+      paragrafos: this.clausulas.controls
+        .map(c => ({
+          clausula_id: c.get('id')?.value,
+          paragrafo_ids: this.getParagrafos(c).controls
+            .map(p => p.get('_id')?.value)
+            .filter(id => id !== undefined && id !== null)
+        }))
+        .filter(c => c.paragrafo_ids.length > 0),
+      actualizado_por: this.usuarioId
+    };
+
+    return new Promise((resolve, reject) => {
+      this.clausulasParagrafosService.put(`contratos/${this.contratoId}`, contratoActualizado).subscribe({
+        next: (response: any) => {
+          if (response.Success) {
+            console.log('Contrato actualizado exitosamente');
+            resolve();
+          } else {
+            this.showErrorAlert('Error al actualizar el contrato');
+            reject(new Error('Error al actualizar el contrato'));
+          }
+        },
+        error: (error) => {
+          this.handleError('Error al actualizar el contrato', error);
+          reject(error);
+        }
+      });
     });
   }
 
@@ -404,12 +551,9 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       if (!this.validarIndices()) {
         return;
       }
-
-      this.guardarCambiosEnBD().then(() => {
-        const estructuraContrato = this.prepararEstructuraContrato();
-        this.verificarYActualizarOrdenes(estructuraContrato);
+      this.actualizarContrato().then(() => {
         this.stepper.next();
-      });
+      }).catch((error) => this.handleError('Error al guardar y continuar', error));
     } else {
       Swal.fire({
         icon: 'warning',
@@ -419,98 +563,46 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     }
   }
 
-  private async guardarCambiosEnBD(): Promise<void> {
-    const nuevasClausulas: Partial<Clausula>[] = [];
-    let nuevoClausulaId: string;
+  private validarIndices(): boolean {
+    const indicesSeleccionados = this.clausulas.controls.map(control => control.get('index')?.value);
+    const indicesUnicos = new Set(indicesSeleccionados);
 
-    for (const clausulaTemp of this.cambiosTemporales.clausulas) {
-      const clausulaOriginal = this.formularioInicial.clausulas.values().find((c: any) => c.id === clausulaTemp._id);
-      console.log(clausulaOriginal);
-      const nuevaClausula = {
-        nombre: clausulaTemp.nombre,
-        descripcion: clausulaTemp.descripcion,
-        predeterminado: false
-      };
-      if (clausulaTemp.nombre !== clausulaOriginal.nombre || clausulaTemp.descripcion !== clausulaOriginal.descripcion) {
-        const responseClausula = await this.clausulasParagrafosService.post('clausulas', nuevaClausula).toPromise();
-        nuevoClausulaId = responseClausula.Data._id;
-      } else {
-        nuevoClausulaId = clausulaTemp._id || '';
-      }
+    if (indicesSeleccionados.length !== indicesUnicos.size) {
+      this.showErrorAlert('No se permiten índices repetidos en las cláusulas.');
+      return false;
+    }
 
+    const indicesOrdenados = Array.from(indicesUnicos).sort();
+    for (let i = 0; i < indicesOrdenados.length - 1; i++) {
+      const indiceActual = this.indices.findIndex(ind => ind.Id === indicesOrdenados[i]);
+      const indiceSiguiente = this.indices.findIndex(ind => ind.Id === indicesOrdenados[i + 1]);
 
-      const paragrafosTemp = this.cambiosTemporales.paragrafos[clausulaTemp._id || ''] || [];
-      const nuevosParagrafos = [];
-      for (const paragrafoTemp of paragrafosTemp) {
-        const nuevoParagrafo = {
-          nombre: paragrafoTemp.nombre,
-          descripcion: paragrafoTemp.descripcion,
-          predeterminado: false,
-          clausula_id: nuevoClausulaId
-        };
-
-        const responseParagrafo = await this.clausulasParagrafosService.post('paragrafos', nuevoParagrafo).toPromise();
-        nuevosParagrafos.push(responseParagrafo.Data);
-      }
-
-      nuevasClausulas.push({
-        ...nuevaClausula,
-        _id: nuevoClausulaId,
-        paragrafos: nuevosParagrafos
-      });
-
-      const clausulaIndex = this.clausulas.controls.findIndex(c => c.get('id')?.value === clausulaTemp._id);
-      if (clausulaIndex !== -1) {
-        const clausulaGroup = this.clausulas.at(clausulaIndex) as FormGroup;
-        clausulaGroup.patchValue({ id: nuevoClausulaId });
-
-        const paragrafosArray = clausulaGroup.get('paragrafos') as FormArray;
-        nuevosParagrafos.forEach((nuevoParagrafo, index) => {
-          if (paragrafosArray.at(index)) {
-            paragrafosArray.at(index).patchValue({ _id: nuevoParagrafo._id });
-          }
-        });
+      if (indiceSiguiente - indiceActual !== 1) {
+        this.showErrorAlert('No se permiten saltos en la secuencia de índices de las cláusulas.');
+        return false;
       }
     }
 
-    this.cambiosTemporales = {
-      clausulas: nuevasClausulas,
-      paragrafos: nuevasClausulas.reduce((acc, clausula) => {
-        acc[clausula._id!] = clausula.paragrafos!;
-        return acc;
-      }, {} as { [clausulaId: string]: Partial<Paragrafo>[] })
-    };
-
-    this.actualizarFormularioInicial();
-
-    console.log('Elementos a eliminar:', JSON.stringify(this.elementosEliminados));
-
-    for (const clausulaId of this.elementosEliminados.clausulas) {
-      console.log(`Eliminando cláusula: ${clausulaId}`);
-      await this.clausulasParagrafosService.delete('clausulas', clausulaId).toPromise();
-    }
-
-    for (const [clausulaId, paragrafos] of Object.entries(this.elementosEliminados.paragrafos)) {
-      console.log(`Procesando párrafos a eliminar para cláusula ${clausulaId}:`, paragrafos);
-      for (const paragrafoId of paragrafos) {
-        console.log(`Eliminando párrafo: ${paragrafoId}`);
-        try {
-          await this.clausulasParagrafosService.delete('paragrafos', paragrafoId).toPromise();
-          console.log(`Párrafo ${paragrafoId} eliminado con éxito`);
-        } catch (error) {
-          console.error(`Error al eliminar párrafo ${paragrafoId}:`, error);
-        }
-      }
-    }
-
-    console.log('Eliminación de elementos completada');
-
-    this.elementosEliminados = { clausulas: [], paragrafos: {} };
+    return true;
   }
 
-  public guardarClausula(index: number): void {
+  private showErrorAlert(message: string) {
     Swal.fire({
-      text: "¿Está seguro(a) que desea guardar los cambios?",
+      icon: 'error',
+      title: 'Error',
+      text: message,
+    });
+  }
+
+  private handleError(message: string, error: any, callback?: () => void) {
+    console.error(message, error);
+    this.showErrorAlert(message);
+    if (callback) callback();
+  }
+
+  private confirmarAccion(mensaje: string, accion: () => void) {
+    Swal.fire({
+      text: mensaje,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -519,159 +611,8 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       confirmButtonText: "Aceptar"
     }).then((result) => {
       if (result.isConfirmed) {
-        const clausulaOriginal = this.formularioInicial.clausulas[index];
-        const clausula = this.clausulas.at(index) as FormGroup;
-        const clausulaData: Partial<Clausula> = {
-          _id: clausula.get('id')?.value,
-          nombre: clausula.get('nombre')?.value,
-          descripcion: clausula.get('descripcion')?.value,
-          predeterminado: clausula.get('predeterminado')?.value
-        };
-        this.cambiosTemporales.clausulas.push(clausulaData);
-
-        const paragrafos = this.getParagrafos(clausula);
-        this.cambiosTemporales.paragrafos[clausulaData._id || ''] = paragrafos.controls
-          .map((p, idx) => {
-            const paragrafoOriginal = clausulaOriginal.paragrafos[idx];
-            const esNuevo = !paragrafoOriginal;
-            const hayCambios = esNuevo || p.get("descripcion")?.value !== paragrafoOriginal?.descripcion;
-
-            if (esNuevo || hayCambios) {
-              return {
-                _id: p.get('id')?.value,
-                nombre: p.get('nombre')?.value,
-                descripcion: p.get('descripcion')?.value,
-                predeterminado: p.get('predeterminado')?.value,
-                esNuevo: esNuevo
-              } as Partial<Paragrafo>;
-            }
-            return null;
-          })
-          .filter((p): p is Partial<Paragrafo> => p !== null);
-
-        this.clausulaModificada[index] = false;
-
-        Swal.fire({
-          title: "Cláusula guardada",
-          icon: "success"
-        });
+        accion();
       }
-    });
-  }
-
-  private verificarYActualizarOrdenes(estructuraContrato: EstructuraContrato) {
-    this.clausulasParagrafosService.get(`orden-clausulas?query=contrato_id:${this.contratoId}&limit=1`).subscribe({
-      next: (responseClausulas: any) => {
-        if (responseClausulas.Data.length === 0) {
-          this.crearOrdenClausulas(estructuraContrato.clausula_ids);
-        } else {
-          this.actualizarOrdenClausulas(responseClausulas.Data[0]._id, estructuraContrato.clausula_ids);
-        }
-        this.actualizarOrdenesParagrafos(estructuraContrato.paragrafos);
-      },
-      error: (error) => {
-        console.error('Error al verificar orden de cláusulas:', error);
-        this.showErrorAlert('Error al verificar orden de cláusulas');
-      }
-    });
-  }
-
-  private async actualizarOrdenesParagrafos(paragrafos: ParagrafoEstructura[]) {
-    for (const paragrafo of paragrafos) {
-      try {
-        const responseParagrafos = await this.clausulasParagrafosService.get(`orden-paragrafos?query=contrato_id%3A${this.contratoId}%3Bclausula_id%3A${paragrafo.clausula_id}&limit=1`).toPromise();
-
-        if (responseParagrafos.Data.length === 0) {
-          await this.crearOrdenParagrafos(paragrafo.clausula_id, paragrafo.paragrafo_ids);
-        } else {
-          await this.actualizarOrdenParagrafos(responseParagrafos.Data[0]._id, paragrafo.paragrafo_ids);
-        }
-      } catch (error) {
-        console.error(`Error al procesar orden de párrafos para cláusula ${paragrafo.clausula_id}:`, error);
-        this.showErrorAlert('Error al procesar orden de párrafos');
-      }
-    }
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Éxito',
-      text: 'Contrato y órdenes guardados exitosamente',
-    });
-  }
-
-  private async crearOrdenParagrafos(clausulaId: string, paragrafoIds: string[]) {
-    try {
-      const response = await this.clausulasParagrafosService.post('orden-paragrafos', {
-        contrato_id: this.contratoId,
-        clausula_id: clausulaId,
-        paragrafo_ids: paragrafoIds
-      }).toPromise();
-      console.log(`Orden de párrafos creada para cláusula ${clausulaId}:`, response);
-    } catch (error) {
-      console.error(`Error al crear orden de párrafos para cláusula ${clausulaId}:`, error);
-      this.showErrorAlert('Error al crear orden de párrafos. Por favor, intente nuevamente.');
-    }
-  }
-
-  private async actualizarOrdenParagrafos(ordenId: string, paragrafoIds: string[]) {
-    try {
-      const response = await this.clausulasParagrafosService.put(`orden-paragrafos/${ordenId}`, { paragrafo_ids: paragrafoIds }).toPromise();
-      console.log(`Orden de párrafos actualizada para orden ${ordenId}:`, response);
-    } catch (error) {
-      console.error(`Error al actualizar orden de párrafos ${ordenId}:`, error);
-      this.showErrorAlert('Error al actualizar orden de párrafos');
-    }
-  }
-
-  private crearOrdenClausulas(clausulaIds: string[]) {
-    this.clausulasParagrafosService.post('orden-clausulas', { contrato_id: this.contratoId, clausula_ids: clausulaIds }).subscribe({
-      next: (response) => console.log('Nueva orden de cláusulas creada:', response),
-      error: (error) => {
-        console.error('Error al crear nueva orden de cláusulas:', error);
-        this.showErrorAlert('Error al crear orden de cláusulas');
-      }
-    });
-  }
-
-  private actualizarOrdenClausulas(ordenId: string, clausulaIds: string[]) {
-    this.clausulasParagrafosService.put(`orden-clausulas/${ordenId}`, { clausula_ids: clausulaIds }).subscribe({
-      next: () => console.log('Orden de cláusulas actualizada'),
-      error: (error) => {
-        console.error('Error al actualizar orden de cláusulas:', error);
-        this.showErrorAlert('Error al actualizar orden de cláusulas');
-      }
-    });
-  }
-
-  private prepararEstructuraContrato(): EstructuraContrato {
-    const clausulasValue = this.form.get('clausulas')?.value;
-    const clausulasOrdenadas = clausulasValue
-      .filter((c: any) => c.id != null)
-      .sort((a: any, b: any) => {
-        const indexA = this.indices.findIndex(i => i.Id === a.index);
-        const indexB = this.indices.findIndex(i => i.Id === b.index);
-        return indexA - indexB;
-      });
-
-    const estructura = {
-      clausula_ids: clausulasOrdenadas.map((c: any) => c.id),
-      paragrafos: clausulasOrdenadas.map((c: any) => {
-        return {
-          clausula_id: c.id,
-          paragrafo_ids: c.paragrafos
-            .filter((p: any) => p._id != null)
-            .map((p: any) => p._id)
-        };
-      }).filter((p: ParagrafoEstructura) => p.paragrafo_ids.length > 0)
-    };
-    return estructura;
-  }
-
-  private showErrorAlert(message: string) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Oops...',
-      text: message,
     });
   }
 }
