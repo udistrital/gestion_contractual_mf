@@ -15,6 +15,7 @@
       <mat-form-field>
         <mat-label>Número de la Disponibilidad (CDP):</mat-label>
         <mat-select formControlName="cdp">
+          <mat-option>Ninguna Seleccionada</mat-option>
           <mat-option *ngFor="let cdp of cdps" [value]="cdp.value">
             {{cdp.viewValue}}
           </mat-option>

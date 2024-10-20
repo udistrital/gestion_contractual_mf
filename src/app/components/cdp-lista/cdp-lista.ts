@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
-import {NgSwitch} from "@angular/common";
+import {CommonModule, NgSwitch} from "@angular/common";
 
 interface CDP {
   vigencia: string;
@@ -43,7 +43,7 @@ interface CDP {
     }
   `],
   standalone: true,
-  imports: [MatExpansionModule, NgSwitch]
+  imports: [CommonModule, MatExpansionModule, NgSwitch]
 })
 export class CDPListComponent {
   @Input() cdpData: CDP[] = [];

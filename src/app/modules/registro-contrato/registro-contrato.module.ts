@@ -62,8 +62,7 @@ import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
     ParagrafoDialogComponent,
     PasoDocumentosComponent,
     PdfViewerModalComponent,
-    InViewDirective,
-    CDPListComponent
+    InViewDirective
   ],
   imports: [
     CommonModule,
@@ -92,7 +91,8 @@ import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
     MatAccordion,
     MatExpansionPanel,
     MatExpansionPanelTitle,
-    MatExpansionPanelDescription
+    MatExpansionPanelDescription,
+    CDPListComponent
   ],
   exports: [
     PasoInfoGeneralComponent,
