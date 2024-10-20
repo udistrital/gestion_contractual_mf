@@ -26,11 +26,6 @@ interface CDPData {
   id_necesidad: string;
 }
 
-interface CDPResponse {
-  [key: string]: CDPData;
-}
-
-
 @Component({
   selector: 'app-paso-info-presupuestal',
   templateUrl: './paso-info-presupuestal.component.html',
@@ -217,6 +212,7 @@ export class PasoInfoPresupuestalComponent {
         if (response.Status === 200) {
           this.selectedCDP = [...this.selectedCDP, ...response.Data];
           this.updateValorAcumulado();
+          this.removeSelectedCDPsFromList();
         } else {
           console.error('Error loading row data:', response.Message);
         }
@@ -227,6 +223,10 @@ export class PasoInfoPresupuestalComponent {
     });
   }
 
+  removeSelectedCDPsFromList() {
+    this.cdps = this.cdps.filter(cdp => !this.selectedCDP.some(selected => selected.numero_disponibilidad === cdp.value));
+  }
+
   eliminarUltimoRegistroDataCDP() {
     if(this.selectedCDP.length > 0) {
       const data = this.selectedCDP;
@@ -234,6 +234,11 @@ export class PasoInfoPresupuestalComponent {
       this.selectedCDP = [...data];
       this.updateValorAcumulado();
     }
+  }
+
+  guardarListaCDP() {
+    //Guardar en localStorage
+    localStorage.setItem('cdp', JSON.stringify(this.selectedCDP));
   }
 
   updateValorAcumulado() {

@@ -70,7 +70,7 @@
     </table>
     <div class="btn-container">
       <button *ngIf="selectedCDP.length !=0" mat-raised-button (click)="eliminarUltimoRegistroDataCDP()" color="warn">Eliminar último Registro</button>
-      <button *ngIf="selectedCDP.length !=0" mat-raised-button color="primary">Guardar</button>
+      <button *ngIf="selectedCDP.length !=0" mat-raised-button (click)="guardarListaCDP()" color="primary">Guardar</button>
     </div>
   </div>
     <div class="border">
