@@ -10,6 +10,7 @@ import { ParagrafoDialogComponent } from '../paragrafo-dialog/paragrafo-dialog.c
 })
 export class PasoClausulasParagrafosComponent {
   @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   form: FormGroup;
 

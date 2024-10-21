@@ -10,6 +10,7 @@ import { UbicacionService } from 'src/app/services/ubicacion.service';
 
 export class PasoSupervisoresComponent {
   @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   constructor(
     private _formBuilder: FormBuilder,

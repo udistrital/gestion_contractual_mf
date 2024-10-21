@@ -5,8 +5,9 @@ import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import {CdpsService} from "src/app/services/cdps.service";
 import {ParametrosService} from "src/app/services/parametros.service";
 import {environment} from "src/environments/environment";
+import Swal from "sweetalert2";
 
-export interface RowData {
+export interface CDP {
   vigencia: string;
   num_sol_adq: string;
   numero_disponibilidad: string;
@@ -14,6 +15,16 @@ export interface RowData {
   nombre_dependencia: string;
   descripcion: string;
   estado: string;
+}
+
+interface CDPData {
+  vigencia: string;
+  numero_necesidad: string;
+  estado_necesidad: string;
+  numero_disponibilidad: string;
+  estadocdp: string;
+  nombre_dependencia: string;
+  id_necesidad: string;
 }
 
 @Component({
@@ -24,6 +35,7 @@ export interface RowData {
 
 
 export class PasoInfoPresupuestalComponent {
+  @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
 
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
@@ -76,7 +88,7 @@ export class PasoInfoPresupuestalComponent {
     'estado'
   ];
 
-  dataSource: RowData[] = []; //Vacío o llenandose con datos guardados
+  selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
 
   habilitarInput = false;
 
@@ -99,10 +111,9 @@ export class PasoInfoPresupuestalComponent {
   ) { }
 
   ngOnInit() {
+    this.loadLocalCDPs(); //Cargar CDPs guardados en localStorage
     this.setupVigenciaListener();
     this.setupCdpListener();
-    // TODO: Validar datos guardados en caso de que existan
-
     this.CargarMonedas();
     this.CargarGastos();
     this.CargarOrigenRecursos();
@@ -116,11 +127,24 @@ export class PasoInfoPresupuestalComponent {
       }
     })
 
+    this.form.statusChanges.subscribe(() => {
+      this.stepCompleted.emit(this.form.valid);
+    });
+
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  loadLocalCDPs() {
+    const localCDPs = this.cdpsService.getLocalCDP();
+    if (localCDPs && localCDPs.length > 0) {
+      this.selectedCDP = localCDPs;
+      this.updateValorAcumulado();
+      this.removeSelectedCDPsFromList();
+    }
   }
 
   setupVigenciaListener() {
@@ -161,12 +185,22 @@ export class PasoInfoPresupuestalComponent {
     ).subscribe({
       next: (response: any) => {
         if (response.Status === 200) {
-          this.cdps = response.Data
-            .filter((cdp: any) => cdp.estadocdp !== 'AGOTADO')
-            .map((cdp: any) => ({
-              value: cdp.numero_necesidad,
-              viewValue: cdp.numero_necesidad
-            }));
+
+          const uniqueCDPs = new Map<string, CDPData>();
+
+          response.Data.forEach((cdp: CDPData) => {
+            if (cdp.estadocdp !== 'AGOTADO' && !uniqueCDPs.has(cdp.numero_disponibilidad)) {
+              uniqueCDPs.set(cdp.numero_disponibilidad, cdp);
+            }
+          });
+
+          this.cdps = Array.from(uniqueCDPs.values()).map(cdp => ({
+            value: cdp.numero_disponibilidad,
+            viewValue: cdp.numero_disponibilidad,
+          }));
+
+          this.sortCDPs();
+
         } else {
           console.error('Error loading CDPs:', response.Message);
         }
@@ -188,8 +222,11 @@ export class PasoInfoPresupuestalComponent {
     ).subscribe({
       next: (response: any) => {
         if (response.Status === 200) {
-          this.dataSource = [...this.dataSource, ...response.Data];
+          const newCDP = response.Data[0]; //La respuesta puede retornar varias veces el mismo CDP
+          this.selectedCDP = [...this.selectedCDP, newCDP];
           this.updateValorAcumulado();
+          this.removeSelectedCDPsFromList();
+          this.form.get('cdp')?.reset();
         } else {
           console.error('Error loading row data:', response.Message);
         }
@@ -200,17 +237,41 @@ export class PasoInfoPresupuestalComponent {
     });
   }
 
+  removeSelectedCDPsFromList() {
+    this.cdps = this.cdps.filter(cdp => !this.selectedCDP.some(selected => selected.numero_disponibilidad === cdp.value));
+  }
+
   eliminarUltimoRegistroDataCDP() {
-    if(this.dataSource.length > 0) {
-      const data = this.dataSource;
-      data.pop();
-      this.dataSource = [...data];
+    if(this.selectedCDP.length > 0) {
+      const removedCDP = this.selectedCDP.pop();
+      this.selectedCDP = [...this.selectedCDP];
       this.updateValorAcumulado();
+
+      if (removedCDP) {
+        this.cdps.push({
+          value: removedCDP.numero_disponibilidad,
+          viewValue: removedCDP.numero_disponibilidad
+        });
+        this.sortCDPs();
+      }
+      this.form.get('cdp')?.reset();
+      this.guardarListaCDP();
     }
   }
 
+  guardarListaCDP() {
+    //Guardar en localStorage
+    this.cdpsService.updateLocalCDP(this.selectedCDP);
+    Swal.fire({
+      title: 'Éxito',
+      text: 'La lista de CDPs ha sido guardada correctamente (LocalStorage)',
+      icon: 'success',
+      confirmButtonText: 'OK'
+    });
+  }
+
   updateValorAcumulado() {
-    const valorAcumulado = this.dataSource.reduce((sum, row) => {
+    const valorAcumulado = this.selectedCDP.reduce((sum, row) => {
       const valor = typeof row.valor_contratacion === 'string'
         ? parseFloat(row.valor_contratacion)
         : row.valor_contratacion || 0;
@@ -303,6 +364,24 @@ export class PasoInfoPresupuestalComponent {
     if (!allowedKeys.includes(event.key) && !pattern.test(event.key)) {
       event.preventDefault();
     }
+  }
+
+
+  guardarYContinuar() {
+    if (this.form.valid) {
+      // ... lógica de guardado
+      this.nextStep.emit();
+    } else {
+      this.form.markAllAsTouched();
+    }
+  }
+
+  sortCDPs() {
+    this.cdps.sort((a, b) => {
+      const numA = parseInt(a.value, 10);
+      const numB = parseInt(b.value, 10);
+      return numA - numB;
+    });
   }
 
 }
