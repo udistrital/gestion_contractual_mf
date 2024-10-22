@@ -1,4 +1,4 @@
-import {Component, OnInit, OnDestroy, ViewChild} from '@angular/core';
+import {Component, OnInit, OnDestroy, ViewChild, Output, EventEmitter} from '@angular/core';
 import {FormBuilder, Validators, FormGroup, ValidationErrors, AbstractControl} from '@angular/forms';
 import { ProveedoresService } from "../../../services/proveedores.service";
 import { Subject } from 'rxjs';
@@ -64,6 +64,8 @@ interface ProveedorObject{
   styleUrls: ['./paso-contratistas.component.css'],
 })
 export class PasoContratistasComponent implements OnInit, OnDestroy {
+  @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   form: FormGroup;
   tiposContratista = [

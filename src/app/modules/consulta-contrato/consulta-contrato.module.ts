@@ -8,6 +8,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {RegistroContratoModule} from "../registro-contrato/registro-contrato.module";
+import {DetalleContratoComponent} from "./detalle-contrato/detalle-contrato.component";
 
 @NgModule({
   declarations: [
@@ -22,7 +24,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     MatDatepickerModule,
     MatNativeDateModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    DetalleContratoComponent
   ]
 })
 export class ConsultaContratoModule { }

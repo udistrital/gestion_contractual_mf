@@ -14,7 +14,7 @@ const routes: Routes = [
   {
     path:"consultar",
     component: ConsultaContratoComponent
-  }
+  },
 ];
 
 @NgModule({

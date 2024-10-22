@@ -26,7 +26,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { GuardarInfoComponent } from './guardar-info/guardar-info.component';
 import { RegistroContratoComponent } from './registro-contrato.component';
-import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ParametrosService } from 'src/app/services/parametros.service';
@@ -39,6 +38,14 @@ import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.com
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {PdfViewerModule} from "ng2-pdf-viewer";
 import {EditorEnriquecidoComponent} from "../../components/editor-enriquecido/editor-enriquecido..component";
+import {InViewDirective} from "../../directives/InViewDirective";
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelDescription,
+  MatExpansionPanelTitle
+} from "@angular/material/expansion";
+import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
 
 @NgModule({
   declarations: [
@@ -54,35 +61,51 @@ import {EditorEnriquecidoComponent} from "../../components/editor-enriquecido/ed
     PasoClausulasParagrafosComponent,
     ParagrafoDialogComponent,
     PasoDocumentosComponent,
-    PdfViewerModalComponent
+    PdfViewerModalComponent,
+    InViewDirective
   ],
-    imports: [
-        CommonModule,
-        MatStepperModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatStepperModule,
-        FormsModule,
-        ReactiveFormsModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatCardModule,
-        NgFor,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatTableModule,
-        MatIconModule,
-        MatCheckboxModule,
-        HttpClientModule,
-        MatProgressSpinnerModule,
-        BrowserAnimationsModule,
-        BrowserModule,
-        MatTooltipModule,
-        PdfViewerModule,
-        EditorEnriquecidoComponent
-    ],
-  providers:[
+  imports: [
+    CommonModule,
+    MatStepperModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatStepperModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCardModule,
+    NgFor,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatTableModule,
+    MatIconModule,
+    MatCheckboxModule,
+    HttpClientModule,
+    MatProgressSpinnerModule,
+    BrowserAnimationsModule,
+    MatTooltipModule,
+    PdfViewerModule,
+    EditorEnriquecidoComponent,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelTitle,
+    MatExpansionPanelDescription,
+    CDPListComponent
+  ],
+  exports: [
+    PasoInfoGeneralComponent,
+    PasoInfoPresupuestalComponent,
+    PasoSupervisoresComponent,
+    PasoContratistasComponent,
+    PasoObligacionesComponent,
+    PasoEspecificacionesComponent,
+    PasoGarantiasComponent,
+    PasoClausulasParagrafosComponent,
+    PasoDocumentosComponent
+  ],
+  providers: [
     ParametrosService,
     UbicacionService,
     RequestManager

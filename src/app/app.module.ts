@@ -15,6 +15,7 @@ import {FileService} from "./services/FileService";
 import { UbicacionService } from './services/ubicacion.service';
 import {DocumentosService} from "./services/documentos.service";
 import {QuillModule} from "ngx-quill";
+import {InViewDirective} from "./directives/InViewDirective";
 
 @NgModule({
   declarations: [

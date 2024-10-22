@@ -1,32 +1,47 @@
-<form [formGroup]="form">
+<div appInView (inView)="onInView($event)">
+  <form [formGroup]="form">
     <div class="border">
-        <div class="title">
-            <h3>Obligaciones del Contrato</h3>
-        </div>
+      <div class="title">
+        <h3>Obligaciones del Contrato</h3>
+      </div>
 
-      <app-editor-enriquecido></app-editor-enriquecido>
+      <div class="full-width-field">
+        <div class="title-box">Justificación:</div>
+        <ng-container *ngIf="!hasSingleCDP">
+          <app-cdp-list [cdpData]="cdpData" tipo="justificacion"></app-cdp-list>
+        </ng-container>
+        <app-editor-enriquecido
+          formControlName="justificacion"
+          [placeholder]="hasSingleCDP ? 'Justificación del contrato' : 'Ingresa la justificación del contrato.'"
+        ></app-editor-enriquecido>
+      </div>
 
-        <div class="full-width-field">
-            <div class="title-box">Justificación:</div>
-            <mat-form-field appearance="fill" class="full-width">
-                <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
-            </mat-form-field>
-        </div>
-        <div class="full-width-field">
-            <div class="title-box">Objeto del Contrato:</div>
-            <mat-form-field appearance="fill" class="full-width">
-                <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
-            </mat-form-field>
-        </div>
-        <div class="full-width-field">
-            <div class="title-box">Actividades:</div>
-            <mat-form-field appearance="fill" class="full-width">
-                <textarea matInput rows="5" placeholder="Ingresa tu texto aquí"></textarea>
-            </mat-form-field>
-        </div>
-        <div class="btn-container">
-            <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-            <button mat-raised-button matStepperNext color="primary">Guardar y Continuar</button>
-        </div>
+      <div class="full-width-field">
+        <div class="title-box">Objeto del Contrato:</div>
+        <ng-container *ngIf="!hasSingleCDP">
+          <app-cdp-list [cdpData]="cdpData" tipo="descripcion"></app-cdp-list>
+        </ng-container>
+        <app-editor-enriquecido
+          formControlName="objetoContrato"
+          [placeholder]="hasSingleCDP ? 'Objeto del contrato' : 'Ingresa el objeto del contrato.'"
+        ></app-editor-enriquecido>
+      </div>
+
+      <div class="full-width-field">
+        <div class="title-box">Actividades:</div>
+        <ng-container *ngIf="!hasSingleCDP">
+          <app-cdp-list [cdpData]="cdpData" tipo="observaciones"></app-cdp-list>
+        </ng-container>
+        <app-editor-enriquecido
+          formControlName="actividades"
+          [placeholder]="hasSingleCDP ? 'Actividades relacionadas al contrato' : 'Ingresa las actividades relacionadas al contrato.'"
+        ></app-editor-enriquecido>
+      </div>
+
+      <div class="btn-container">
+        <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+        <button mat-raised-button matStepperNext color="primary" [disabled]="form.invalid">Guardar y Continuar</button>
+      </div>
     </div>
-</form>
+  </form>
+</div>

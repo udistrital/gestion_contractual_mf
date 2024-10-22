@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, EventEmitter, Output} from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { ClausulasParagrafosService } from 'src/app/services/clausulas-paragrafos.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
@@ -16,8 +16,10 @@ interface Paragrafo { _id?: string; nombre?: string; descripcion: string; predet
   templateUrl: './paso-clausulas-paragrafos.component.html',
   styleUrls: ['./paso-clausulas-paragrafos.component.css']
 })
+export class PasoClausulasParagrafosComponent {
+  @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
-export class PasoClausulasParagrafosComponent implements OnInit {
   form: FormGroup;
   indices: Indice[] = [];
   contratoId: number = 5678;

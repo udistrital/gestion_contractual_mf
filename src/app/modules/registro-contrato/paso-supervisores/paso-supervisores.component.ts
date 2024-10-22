@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, Output} from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
 
@@ -9,6 +9,8 @@ import { UbicacionService } from 'src/app/services/ubicacion.service';
 })
 
 export class PasoSupervisoresComponent {
+  @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   constructor(
     private _formBuilder: FormBuilder,

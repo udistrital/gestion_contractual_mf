@@ -1,9 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { MatTableDataSource } from '@angular/material/table';
+import { PolizasService} from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { MatTableDataSource } from '@angular/material/table';
+import {Amparo, ApiResponse} from "../../../services/polizas.interfaces";
+import Swal from "sweetalert2";
 
 @Component({
   selector: 'app-paso-garantias',
@@ -11,12 +13,21 @@ import { MatTableDataSource } from '@angular/material/table';
   styleUrls: ['./paso-garantias.component.css'],
 })
 export class PasoGarantiasComponent implements OnInit {
+  @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
+
   form: FormGroup;
   amparos: any[] = [];
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
   dataSource: MatTableDataSource<FormGroup>;
+  contratoGeneralId = '1234'; //ID Mock para pruebas
 
-  constructor(private _formBuilder: FormBuilder, private parametrosService: ParametrosService, private cdRef: ChangeDetectorRef) {
+  constructor(
+    private _formBuilder: FormBuilder,
+    private parametrosService: ParametrosService,
+    private polizasService: PolizasService,
+    private cdRef: ChangeDetectorRef
+  ) {
     this.form = this._formBuilder.group({
       filas: this._formBuilder.array([])
     });
@@ -25,7 +36,7 @@ export class PasoGarantiasComponent implements OnInit {
 
   ngOnInit() {
     this.agregarFila();
-    this.CargarAmparos();
+    this.cargarTipoAmparos();
   }
 
   get filasFormArray(): FormArray {
@@ -86,14 +97,6 @@ export class PasoGarantiasComponent implements OnInit {
     });
   }
 
-  CargarAmparos() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.AMPARO_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.amparos = Response.Data;
-      }
-    })
-  }
-
   onlyNumbersFrom1To100(event: KeyboardEvent, currentValue: string) {
     const allowedKeys = [
       'Backspace', 'Tab', 'End', 'Home', 'ArrowLeft', 'ArrowRight', 'Delete'
@@ -141,6 +144,78 @@ export class PasoGarantiasComponent implements OnInit {
     if (numValue === 0) {
       event.preventDefault();
     }
+  }
+
+  cargarTipoAmparos() {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.AMPARO_ID + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.amparos = Response.Data;
+      }
+    })
+  }
+
+  onSubmit() {
+    if (this.form.valid) {
+      const formData = this.prepareFormData();
+      this.sendDataToApi(formData);
+    } else {
+      this.markFormGroupTouched(this.form);
+    }
+  }
+
+  prepareFormData() {
+    return this.filasFormArray.controls.map(control => {
+      const formGroup = control as FormGroup;
+      if (formGroup.get('suficienciaSalarios')?.enabled) {
+        return {
+          amparo_id: formGroup.get('amparo')?.value,
+          suficiencia: formGroup.get('suficienciaSalarios')?.value,
+          descripcion: formGroup.get('descripcion')?.value,
+          contrato_general_id: this.contratoGeneralId,
+          tipo_valor_amparo_id: 1 //ID Mock para pruebas
+        };
+      } else {
+        return {
+          amparo_id: formGroup.get('amparo')?.value,
+          suficiencia: formGroup.get('suficienciaPorcentaje')?.value,
+          descripcion: formGroup.get('descripcion')?.value,
+          contrato_general_id: this.contratoGeneralId,
+          tipo_valor_amparo_id: 2 //ID Mock para pruebas
+        };
+      }
+
+    });
+  }
+
+  sendDataToApi(data: Amparo[]) {
+    this.polizasService.post(data).subscribe({
+      next: (response: ApiResponse<any>) => {
+        console.log('Amparo enviado correctamente', response);
+        Swal.fire({
+          icon: 'success',
+          title: 'Amparo enviado correctamente',
+          text: `El amparo se ha enviado correctamente. IDs: ${response.Data.map((obj: { id: any; }) => obj.id).join(', ')}`,
+        });
+      },
+      error: (error: any) => {
+        console.error('Error al enviar amparo', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al enviar amparo',
+          text: 'Ocurrió un error al enviar el amparo. Por favor, inténtelo de nuevo.',
+        });
+      }
+    });
+  }
+
+  markFormGroupTouched(formGroup: FormGroup | FormArray) {
+    Object.values(formGroup.controls).forEach(control => {
+      if (control instanceof FormGroup || control instanceof FormArray) {
+        this.markFormGroupTouched(control);
+      } else {
+        control.markAsTouched();
+      }
+    });
   }
 
 }
