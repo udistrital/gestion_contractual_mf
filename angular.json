@@ -32,8 +32,7 @@
               "path": "extra-webpack.config.js",
               "libraryName": "gestion_contractual_mf",
               "libraryTarget": "umd"
-            },
-            "deployUrl": "http://localhost:4201/"
+            }
           },
           "configurations": {
             "production": {
@@ -52,6 +51,22 @@
               "outputHashing": "none"
             },
             "development": {
+              "buildOptimizer": true,
+              "optimization": true,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": false,
+              "namedChunks": false,
+              "outputHashing": "none",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.development.ts"
+                }
+              ],
+              "deployUrl": "https://pruebasargogestioncontractual.portaloas.udistrital.edu.co/"
+            },
+            "local": {
               "buildOptimizer": false,
               "optimization": false,
               "vendorChunk": true,
@@ -59,15 +74,10 @@
               "sourceMap": true,
               "namedChunks": true,
               "outputHashing": "none",
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.development.ts"
-                }
-              ]
+              "deployUrl": "http://localhost:4201/"
             }
           },
-          "defaultConfiguration": "production"
+          "defaultConfiguration": "local"
         },
         "serve": {
           "builder": "@angular-builders/custom-webpack:dev-server",
@@ -77,9 +87,12 @@
             },
             "development": {
               "buildTarget": "gestion_contractual_mf:build:development"
+            },
+            "local": {
+              "browserTarget": "calendario-academico-mf:build:local"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "local"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
