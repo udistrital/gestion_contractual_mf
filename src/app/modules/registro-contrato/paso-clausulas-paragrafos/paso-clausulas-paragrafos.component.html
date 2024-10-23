@@ -10,7 +10,9 @@
             <mat-form-field>
               <mat-label>Cláusula</mat-label>
               <mat-select formControlName="index">
-                <!-- Opciones del select -->
+                <mat-option *ngFor="let indice of indices" [value]="indice.Id">
+                  {{indice.Nombre}}
+                </mat-option>
               </mat-select>
             </mat-form-field>
           </div>
@@ -19,25 +21,34 @@
               <mat-label>Nombre</mat-label>
               <input matInput formControlName="nombre">
             </mat-form-field>
-            <app-editor-enriquecido formControlName="descripcion" placeholder="Ingresa la descripción de la cláusula."></app-editor-enriquecido>
+            <div class="editor-container">
+              <app-editor-enriquecido formControlName="descripcion"
+                placeholder="Ingresa la descripción de la cláusula."></app-editor-enriquecido>
+              <button mat-icon-button color="warn" (click)="eliminarClausula(i)" *ngIf="clausulas.length > 1">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
           </div>
         </div>
 
         <div formArrayName="paragrafos" class="paragrafo-container">
-          <div *ngFor="let paragrafo of getParagrafos(clausula).controls; let j = index" [formGroupName]="j" class="paragrafo-item">
-            <div class="btn-container3">
-              <p>Parágrafo {{j + 1}}: {{paragrafo.get('nombre')?.value}}</p>
+          <div *ngFor="let paragrafo of getParagrafos(clausula).controls; let j = index" [formGroupName]="j"
+            class="paragrafo-item">
+            <div class="paragrafo-label">
+              <p>{{paragrafo.get('nombre')?.value}}</p>
+            </div>
+            <div class="paragrafo-content">
+              <app-editor-enriquecido formControlName="descripcion"
+                placeholder="Ingresa la descripción del parágrafo."></app-editor-enriquecido>
               <button mat-icon-button color="primary" (click)="eliminarParagrafo(i, j)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
         </div>
+        <button mat-raised-button color="primary" (click)="guardarClausula(i)">Guardar Cláusula</button>
         <div class="btn-container3">
-          <button mat-raised-button color="primary" (click)="abrirDialogoParagrafo(i)">Agregar Parágrafo</button>
-          <button mat-icon-button color="primary" (click)="eliminarClausula(i)" *ngIf="clausulas.length > 1">
-            <mat-icon>delete</mat-icon>
-          </button>
+          <button mat-raised-button color="primary" (click)="agregarParagrafo(i)">Agregar Parágrafo</button>
         </div>
       </div>
     </div>
@@ -50,6 +61,6 @@
     <button mat-raised-button color="primary">Ver
       <mat-icon>visibility</mat-icon>
     </button>
-    <button mat-raised-button matStepperNext color="primary" (click)="guardarYContinuar()" >Guardar y Continuar</button>
+    <button mat-raised-button color="primary" (click)="guardarYContinuar()">Guardar y Continuar</button>
   </div>
 </form>

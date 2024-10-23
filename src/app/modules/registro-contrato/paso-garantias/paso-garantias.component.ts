@@ -14,6 +14,7 @@ import Swal from "sweetalert2";
 })
 export class PasoGarantiasComponent implements OnInit {
   @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   form: FormGroup;
   amparos: any[] = [];

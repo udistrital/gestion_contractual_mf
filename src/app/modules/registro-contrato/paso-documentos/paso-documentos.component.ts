@@ -14,6 +14,7 @@ import {DocumentosService} from "../../../services/documentos.service";
 })
 export class PasoDocumentosComponent implements OnInit {
   @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   form: FormGroup = this.formBuilder.group({
     pdfFileName: ['', Validators.required]

@@ -16,6 +16,7 @@ interface Fila {
 
 export class PasoEspecificacionesComponent {
   @Output() nextStep = new EventEmitter<void>();
+  @Output() stepCompleted = new EventEmitter<boolean>();
 
   form: FormGroup;
 

@@ -22,6 +22,7 @@ interface Parametro {
 })
 export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   @Input() viewMode: boolean = false; //Determina si el paso es de creación o visualización
+  @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
 
   showContratoFields = false;
@@ -88,7 +89,6 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     if (this.viewMode) {
       this.formInfoGeneral.disable();
       this.loadInfoDataMid();
-
     } else {
 
       this.loadInitialData();
@@ -100,6 +100,9 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
         this.formSaved = false;
       });
     }
+    this.formInfoGeneral.statusChanges.subscribe(() => {
+      this.stepCompleted.emit(this.formInfoGeneral.valid);
+    });
   }
 
   private setuptipoCompromisoId() {

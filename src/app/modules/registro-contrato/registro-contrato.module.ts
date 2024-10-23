@@ -39,6 +39,13 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {PdfViewerModule} from "ng2-pdf-viewer";
 import {EditorEnriquecidoComponent} from "../../components/editor-enriquecido/editor-enriquecido..component";
 import {InViewDirective} from "../../directives/InViewDirective";
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelDescription,
+  MatExpansionPanelTitle
+} from "@angular/material/expansion";
+import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
 
 @NgModule({
   declarations: [
@@ -80,7 +87,12 @@ import {InViewDirective} from "../../directives/InViewDirective";
     BrowserAnimationsModule,
     MatTooltipModule,
     PdfViewerModule,
-    EditorEnriquecidoComponent
+    EditorEnriquecidoComponent,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelTitle,
+    MatExpansionPanelDescription,
+    CDPListComponent
   ],
   exports: [
     PasoInfoGeneralComponent,
