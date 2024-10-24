@@ -46,7 +46,7 @@
             </div>
           </div>
         </div>
-        <button mat-raised-button color="primary" (click)="guardarClausula(i)">Guardar Cláusula</button>
+        <button mat-raised-button color="primary" (click)="guardarClausula(i)" [disabled]="!isClausulaModificada(i)">Guardar Cláusula</button>
         <div class="btn-container3">
           <button mat-raised-button color="primary" (click)="agregarParagrafo(i)">Agregar Parágrafo</button>
         </div>
