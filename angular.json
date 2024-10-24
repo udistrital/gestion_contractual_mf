@@ -89,7 +89,7 @@
               "buildTarget": "gestion_contractual_mf:build:development"
             },
             "local": {
-              "browserTarget": "calendario-academico-mf:build:local"
+              "browserTarget": "gestion_contractual_mf:build:local"
             }
           },
           "defaultConfiguration": "local"
