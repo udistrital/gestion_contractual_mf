@@ -1,21 +1,15 @@
 import {ChangeDetectorRef, Component, EventEmitter, Output} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import {combineLatest, finalize, Observable, startWith, Subject} from 'rxjs';
+import {combineLatest, finalize, firstValueFrom, Observable, startWith, Subject} from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import {CdpsService} from "src/app/services/cdps.service";
 import {ParametrosService} from "src/app/services/parametros.service";
 import {environment} from "src/environments/environment";
 import Swal from "sweetalert2";
+import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
+import {CDP, CDPContratoCRUD} from "../../../types/types";
 
-export interface CDP {
-  vigencia: string;
-  num_sol_adq: string;
-  numero_disponibilidad: string;
-  valor_contratacion: number | string;
-  nombre_dependencia: string;
-  descripcion: string;
-  estado: string;
-}
+
 
 interface CDPData {
   vigencia: string;
@@ -39,6 +33,8 @@ export class PasoInfoPresupuestalComponent {
   @Output() nextStep = new EventEmitter<void>();
 
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
+  contratoGeneralId: number | null = null;
+
 
   form = this._formBuilder.group({
     vigencia: ['', Validators.required],
@@ -89,6 +85,7 @@ export class PasoInfoPresupuestalComponent {
   ];
 
   selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
+  cdpsContrato: CDPContratoCRUD[] = []; // Lista de CDPs asociados al contrato general
 
   habilitarInput = false;
 
@@ -107,11 +104,13 @@ export class PasoInfoPresupuestalComponent {
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
     private cdRef: ChangeDetectorRef,
-    private cdpsService: CdpsService
+    private cdpsService: CdpsService,
+    private contratoGeneralCrudService: ContratoGeneralCrudService
   ) { }
 
   ngOnInit() {
-    this.loadLocalCDPs(); //Cargar CDPs guardados en localStorage
+    this.cargarContratoGeneral();
+    this.cargarCDPs();
     this.setupVigenciaListener();
     this.setupCdpListener();
     this.CargarMonedas();
@@ -138,7 +137,54 @@ export class PasoInfoPresupuestalComponent {
     this.destroy$.complete();
   }
 
-  loadLocalCDPs() {
+
+
+  private cargarContratoGeneral() {
+    const infoGeneral = localStorage.getItem('paso-info-general');
+    if (!infoGeneral) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se ha encontrado información general del contrato',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    try {
+      const contratoGeneral = JSON.parse(infoGeneral);
+      this.contratoGeneralId = contratoGeneral.id;
+
+      if(this.contratoGeneralId){
+        this.cargarCDPsContrato(this.contratoGeneralId)
+      }
+    } catch (error) {
+      console.error('Error loading contrato general:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se ha encontrado información general del contrato',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  private cargarCDPsContrato(contratoId: number) {
+    this.contratoGeneralCrudService.getCdpContrato(contratoId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response && response.Data) {
+            this.cdpsContrato = response.Data;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading CDPs:', error);
+        }
+      });
+  }
+
+  cargarCDPs() {
     const localCDPs = this.cdpsService.getLocalCDP();
     if (localCDPs && localCDPs.length > 0) {
       this.selectedCDP = localCDPs;
@@ -241,33 +287,103 @@ export class PasoInfoPresupuestalComponent {
     this.cdps = this.cdps.filter(cdp => !this.selectedCDP.some(selected => selected.numero_disponibilidad === cdp.value));
   }
 
-  eliminarUltimoRegistroDataCDP() {
+  async eliminarUltimoRegistroDataCDP() {
     if(this.selectedCDP.length > 0) {
-      const removedCDP = this.selectedCDP.pop();
-      this.selectedCDP = [...this.selectedCDP];
-      this.updateValorAcumulado();
+      const removedCDP = this.selectedCDP.pop(); //Removemos el último CDP seleccionado
 
-      if (removedCDP) {
-        this.cdps.push({
-          value: removedCDP.numero_disponibilidad,
-          viewValue: removedCDP.numero_disponibilidad
-        });
-        this.sortCDPs();
+      if (removedCDP && this.contratoGeneralId) {
+        try {
+          const cdpContrato = this.cdpsContrato.find(
+            c => c.numero_cdp_id === parseInt(removedCDP.numero_disponibilidad)
+          )
+
+          if (cdpContrato && cdpContrato.id) {
+            // Usar firstValueFrom para la eliminación
+            await firstValueFrom(
+              this.contratoGeneralCrudService.deleteCdp(cdpContrato.id)
+            );
+          }
+
+          this.selectedCDP = [...this.selectedCDP];
+          this.updateValorAcumulado();
+
+          this.cdps.push({
+            value: removedCDP.numero_disponibilidad,
+            viewValue: removedCDP.numero_disponibilidad
+          });
+
+          this.cdpsService.updateLocalCDP(this.selectedCDP);
+
+          this.sortCDPs();
+
+          Swal.fire({
+            title: 'Éxito',
+            text: 'CDP eliminado correctamente',
+            icon: 'success',
+            confirmButtonText: 'OK'
+          });
+        } catch (error) {
+          console.error('Error deleting CDP:', error);
+          this.selectedCDP.push(removedCDP);
+
+          Swal.fire({
+            title: 'Error',
+            text: 'Hubo un error al eliminar el CDP del servidor',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        }
       }
       this.form.get('cdp')?.reset();
-      this.guardarListaCDP();
     }
   }
 
-  guardarListaCDP() {
-    //Guardar en localStorage
-    this.cdpsService.updateLocalCDP(this.selectedCDP);
-    Swal.fire({
-      title: 'Éxito',
-      text: 'La lista de CDPs ha sido guardada correctamente (LocalStorage)',
-      icon: 'success',
-      confirmButtonText: 'OK'
-    });
+  async guardarListaCDP() {
+
+    if (!this.contratoGeneralId) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se ha encontrado información general del contrato',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    try {
+      //Guardar en localStorage
+      this.cdpsService.updateLocalCDP(this.selectedCDP);
+
+      //Preparamos el guardado en el api
+      const cdpsGuardarCrud: CDPContratoCRUD[] = this.selectedCDP.map(cdp => ({
+        numero_cdp_id: parseInt(cdp.numero_disponibilidad),
+        fecha_registro: new Date(),
+        vigencia_cdp: parseInt(cdp.vigencia),
+        contrato_general_id: this.contratoGeneralId,
+      }));
+
+      const promesasGuardado = cdpsGuardarCrud.map(cdp =>
+        firstValueFrom(this.contratoGeneralCrudService.postCdp(cdp))
+      );
+
+      await Promise.all(promesasGuardado);
+
+      Swal.fire({
+        title: 'Éxito',
+        text: 'Los CDPs ha sido guardada correctamente (local y en el servidor)',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      });
+    } catch (error) {
+      console.error('Error saving CDPs:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se ha podido guardar la lista de CDPs',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+
   }
 
   updateValorAcumulado() {
