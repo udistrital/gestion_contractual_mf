@@ -33,6 +33,9 @@ export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor 
   editorForm: FormGroup;
   onChanges: any = () => {};
   onTouch: any = () => {};
+  
+  private initialValue: string = '';
+  private isInitialized: boolean = false;
 
   constructor(private fb: FormBuilder) {
     this.editorForm = this.fb.group({
@@ -44,8 +47,13 @@ export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor 
     const editorContent = this.editorForm.get('editorContent');
     if (editorContent) {
       editorContent.valueChanges.subscribe((value) => {
-        this.onChanges(value);
-        this.onTouch();
+        if (this.isInitialized && value !== this.initialValue) {
+          this.editorForm.markAsDirty();
+          this.onChanges(value);
+          this.onTouch();
+        } else {
+          this.editorForm.markAsPristine();
+        }
       });
     }
   }
@@ -61,7 +69,10 @@ export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor 
 
   writeValue(obj: any): void {
     if (obj !== undefined) {
+      this.initialValue = obj;
+      this.isInitialized = true;
       this.editorForm.patchValue({editorContent: obj}, {emitEvent: false});
+      this.editorForm.markAsPristine();
     }
   }
 

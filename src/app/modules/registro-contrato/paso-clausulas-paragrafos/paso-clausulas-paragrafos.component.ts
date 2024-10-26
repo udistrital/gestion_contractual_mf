@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Output} from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { ClausulasParagrafosService } from 'src/app/services/clausulas-paragrafos.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
@@ -22,8 +22,9 @@ export class PasoClausulasParagrafosComponent {
 
   form: FormGroup;
   indices: Indice[] = [];
-  contratoId: number = 5678;
+  contratoId: number = 4869;
   tipoContratoId: number = 1;
+  reversionSaldo: boolean = false;
   usuarioId: number = 25;
 
   constructor(
@@ -70,7 +71,7 @@ export class PasoClausulasParagrafosComponent {
   }
 
   private cargarPlantillaPorTipoContrato() {
-    this.clausulasParagrafosService.get(`plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}`).subscribe({
+    this.clausulasParagrafosService.get(`plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo}`).subscribe({
       next: (response: { Success: boolean, Data: Clausula[] }) => {
         if (response.Success && response.Data?.length > 0) {
           this.crearContratoDesdePlantilla(response.Data);
@@ -274,7 +275,6 @@ export class PasoClausulasParagrafosComponent {
         nuevoIndex,
         totalParagrafos
       ));
-      this.actualizarNombresParagrafos(clausulaIndex);
       Swal.fire({ title: "Parágrafo agregado", icon: "success" });
     });
   }
@@ -291,7 +291,6 @@ export class PasoClausulasParagrafosComponent {
       esPredeterminado ? this.actualizarOrdenParagrafo(clausulaId, paragrafoId) : this.eliminarParagrafoYOrden(clausulaId, paragrafoId);
 
       paragrafos.removeAt(paragrafoIndex);
-      this.actualizarNombresParagrafos(clausulaIndex);
 
       Swal.fire({ title: "Parágrafo eliminado", icon: "success" });
     });
@@ -328,12 +327,15 @@ export class PasoClausulasParagrafosComponent {
     });
   }
 
-  private actualizarNombresParagrafos(clausulaIndex: number) {
-    const paragrafos = this.getParagrafos(this.clausulas.at(clausulaIndex));
-    const totalParagrafos = paragrafos.length;
-    paragrafos.controls.forEach((paragrafo, index) => {
-      paragrafo.get('nombre')?.setValue(this.generarNombreParagrafo(index, totalParagrafos));
-    });
+  isClausulaModificada(index: number): boolean {
+    const clausula = this.clausulas.at(index) as FormGroup;
+    const nombreModificado = clausula.get('nombre')?.dirty ?? false;
+    const descripcionClausulaModificada = clausula.get('descripcion')?.dirty ?? false;
+    const paragrafos = this.getParagrafos(clausula);
+    const algunParagrafoModificado = paragrafos.controls.some(paragrafo =>
+      paragrafo.get('descripcion')?.dirty ?? false
+    );
+    return nombreModificado || descripcionClausulaModificada || algunParagrafoModificado;
   }
 
   guardarClausula(index: number): void {
