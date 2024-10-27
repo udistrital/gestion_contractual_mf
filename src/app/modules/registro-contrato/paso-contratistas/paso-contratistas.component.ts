@@ -1,9 +1,9 @@
-import {Component, OnInit, OnDestroy, ViewChild, Output, EventEmitter} from '@angular/core';
-import {FormBuilder, Validators, FormGroup, ValidationErrors, AbstractControl} from '@angular/forms';
+import { Component, OnInit, OnDestroy, ViewChild, Output, EventEmitter } from '@angular/core';
+import { FormBuilder, Validators, FormGroup, ValidationErrors, AbstractControl } from '@angular/forms';
 import { ProveedoresService } from "../../../services/proveedores.service";
 import { Subject } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
-import {MatStepper} from "@angular/material/stepper";
+import { takeUntil } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 export interface Proveedor {
   id_proveedor: string;
@@ -23,6 +23,7 @@ export interface Proveedor {
   tipo_persona: string;
   tipo_cuenta_bancaria: string;
   fecha_ultima_modificacion: string;
+  contratos: Contrato[];
 }
 
 export interface Representante {
@@ -43,9 +44,10 @@ export interface Representante {
 export interface DatosContratista {
   proveedor: Proveedor;
   representante?: Representante;
+  contratos: Contrato[];
 }
 
-interface ProveedorObject{
+interface ProveedorObject {
   tipo: string;
   nombre: string;
   documento: string;
@@ -56,6 +58,28 @@ interface ProveedorObject{
   representante_legal?: string;
   documento_rl?: string;
   lugar_expedicion_rl?: string;
+  contratos?: Contrato[];
+  ultimoContrato?: {
+    tipo: string;
+    estado: string;
+    numero: string;
+    vigencia: string;
+  };
+}
+
+interface TipoContrato {
+  id: string;
+  nombre: string;
+}
+
+interface EstadoContrato {
+  id: string;
+  nombre: string;
+}
+
+interface Contrato {
+  tipo_contrato: TipoContrato;
+  estado_contrato: EstadoContrato;
 }
 
 @Component({
@@ -81,6 +105,8 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     ciudad_contacto: '',
     direccion: '',
     correo: '',
+    contratos: [],
+    ultimoContrato: undefined
   };
 
   mostrarConsulta = false;
@@ -135,42 +161,50 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       this.proveedoresService.get(`contratistas?id=${documentoContratista}`).pipe(
         takeUntil(this.destroy$)
       ).subscribe({
-          next: (response: any) => {
-            this.loading = false;
-            if (response.Status === 200) {
-              this.datosContratista = response.Data;
-              this.actualizarObjetoContratista();
-              this.success = true;
-              this.form.get('contratistaData')?.setValue(this.contratistaObject);
-            } else {
-              this.errorMessage = response.Message;
-              this.resetContratista();
-            }
-          },
-          error: () => {
-            this.loading = false;
-            this.errorMessage = 'Error al buscar el contratista. Por favor, intente de nuevo.';
+        next: (response: any) => {
+          this.loading = false;
+          if (response.Status === 200) {
+            this.datosContratista = response.Data;
+            this.actualizarObjetoContratista();
+            this.success = true;
+            this.form.get('contratistaData')?.setValue(this.contratistaObject);
+          } else {
+            this.errorMessage = response.Message;
             this.resetContratista();
           }
+        },
+        error: () => {
+          this.loading = false;
+          this.errorMessage = 'Error al buscar el contratista. Por favor, intente de nuevo.';
+          this.resetContratista();
         }
+      }
       );
     }
   }
 
   private actualizarObjetoContratista(): void {
     if (!this.datosContratista) return;
-
+  
     const { proveedor, representante } = this.datosContratista;
+    const contratos = (this.datosContratista as any).contratos;
     const tipoPersona = proveedor.tipo_persona;
-
+  
     const datosComunes = {
       nombre: proveedor.nombre_completo_proveedor,
       documento: proveedor.numero_documento,
       ciudad_contacto: proveedor.ciudad_contacto,
       direccion: proveedor.direccion,
       correo: proveedor.correo,
+      contratos: contratos || [],
     };
-
+  
+    let mensajeContrato = '';
+    if (Array.isArray(contratos) && contratos.length > 0) {
+      const primerContrato = contratos[0];
+      mensajeContrato = `${primerContrato.tipo_contrato.nombre} en estado "${primerContrato.estado_contrato.nombre}"`;
+    }
+  
     if (tipoPersona === 'JURIDICA') {
       this.contratistaObject = {
         ...datosComunes,
@@ -185,6 +219,13 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
         tipo: 'Natural',
         lugar_expedicion: proveedor.ciudad_expedicion_documento,
       };
+    }
+  
+    if (mensajeContrato) {
+      this.showErrorAlert(
+        `El contratista seleccionado tiene un ${mensajeContrato} en el sistema`,
+        'Por favor verifique la información antes de continuar con el registro'
+      );
     }
   }
 
@@ -233,5 +274,13 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
   onStepLeave() {
     this.resetComponent();
+  }
+
+  private showErrorAlert(title: string, message: string) {
+    Swal.fire({
+      icon: 'warning',
+      title: title,
+      text: message,
+    });
   }
 }

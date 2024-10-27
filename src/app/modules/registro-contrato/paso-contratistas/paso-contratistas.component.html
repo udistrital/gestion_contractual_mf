@@ -39,6 +39,10 @@
                 {{contratistaObject.documento_rl}}</p>
               <p *ngIf="contratistaObject.lugar_expedicion_rl">Lugar Expedición RL:
                 {{contratistaObject.lugar_expedicion_rl}}</p>
+              <p *ngIf="contratistaObject.contratos && contratistaObject.contratos.length > 0">Tipo de Contrato:
+                {{contratistaObject.contratos[0].tipo_contrato.nombre}}</p>
+              <p *ngIf="contratistaObject.contratos && contratistaObject.contratos.length > 0">Estado del Contrato:
+                {{contratistaObject.contratos[0].estado_contrato.nombre}}</p>
             </ng-container>
           </div>
           <p *ngIf="errorMessage" class="error-message">{{errorMessage}}</p>

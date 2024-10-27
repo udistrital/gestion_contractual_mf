@@ -2,7 +2,7 @@ export const environment = {
   production: false,
   PARAMETROS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/',
   UBICACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ubicaciones_crud/v2/',
-  PROVEEDORES_SERVICE: '',
+  PROVEEDORES_SERVICE: 'http://localhost:8080/',
   CDPS_SERVICE: '',
   CLAUSULAS_PARAGRAFOS_SERVICE: '',
   GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:3117/',
