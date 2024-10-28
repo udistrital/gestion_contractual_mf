@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
 import {ApiResponse} from "../../../services/polizas.interfaces";
 import {ContratoGeneralMidService} from "../../../services/contrato-general-mid.service";
+import {EstadoContratoCRUD} from "../../../types/types";
 
 interface Parametro {
   Id: number | string;
@@ -80,6 +81,9 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   // convenio
   vigenciaConvenio: Parametro[] = [];
   convenio: Parametro[] = [];
+
+  //Estado
+  estado_id: number | null = null;
 
    ngOnChanges() {
       console.log('Step 1 changeddd');
@@ -185,6 +189,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     console.log('Loading initial data...');
     this.isLoading = true;
     Promise.all([
+      this.CargarEstado(),
       this.CargarCompromisos(),
       this.CargarmodalidadSeleccionId(),
       this.CargarregimenContratacionId(),
@@ -199,6 +204,23 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
 
   //Generales
 
+  CargarEstado() {
+    return new Promise((resolve, reject) => {
+      this.parametrosService.get('parametro?query=Id:' + environment.ESTADO_POR_SUSCRIBIR + '&limit=0').subscribe({
+        next: (Response: any) => {
+          if (Response.Status == "200") {
+            this.estado_id = Response.Data[0].Id;
+            resolve(true);
+          } else {
+            reject('Error en la respuesta del servidor');
+          }
+        },
+        error: (error) => {
+          reject(error);
+        }
+      });
+    });
+  }
   CargarCompromisos() {
     return new Promise((resolve, reject) => {
       this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_COMPROMISO_ID + '&limit=0').subscribe({
@@ -394,6 +416,8 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
       next: async (response: ApiResponse<any>) => {
         this.isLoading = false;
 
+        await this.guardarEstado(response.Data.id);
+
         await Swal.fire({
           icon: 'success',
           title: 'Datos guardados',
@@ -417,6 +441,30 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
       }
     });
 
+  }
+
+  private async guardarEstado(contratoId: number) {
+    if (this.estado_id === null) return;
+
+    const estado: EstadoContratoCRUD = {
+      contrato_general_id: contratoId,
+      estado_parametro_id: this.estado_id,
+      motivo: 'Contrato creado paso 1',
+      usuario_id: 1,
+      fecha_ejecucion_estado: new Date(),
+      fecha_creacion: new Date(),
+    };
+
+    this.contratoGeneralCrudService.postEstadoContrato(estado).subscribe({
+      next: (response: any) => {
+        console.log('Estado guardado correctamente', response);
+        return response;
+      },
+      error: (error: any) => {
+        console.error('Error al guardar estado', error);
+        throw new Error('Error al guardar estado');
+      }
+    })
   }
 
   async onInView(inView: boolean) {

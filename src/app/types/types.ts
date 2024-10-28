@@ -15,3 +15,12 @@ export interface CDP {
   descripcion: string;
   estado: string;
 }
+
+export interface EstadoContratoCRUD {
+  usuario_id: number;
+  estado_parametro_id: number;
+  motivo: string;
+  fecha_ejecucion_estado: Date;
+  contrato_general_id: number;
+  fecha_creacion: Date;
+}

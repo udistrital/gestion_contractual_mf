@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {RequestManager} from "../managers/requestManager";
 import {Observable} from "rxjs";
-import {CDPContratoCRUD} from "../types/types";
+import {CDPContratoCRUD, EstadoContratoCRUD} from "../types/types";
 
 @Injectable({
   providedIn: 'root'
@@ -38,5 +38,10 @@ export class ContratoGeneralCrudService {
   getCdpContrato(idContrato: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get('cdp/contrato/'+idContrato);
+  }
+
+  postEstadoContrato(estado: EstadoContratoCRUD): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post('estados-contrato', estado);
   }
 }
