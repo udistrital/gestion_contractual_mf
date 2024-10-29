@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, Output, EventEmitter, ENVIRONMENT_INITIALIZER } from '@angular/core';
 import { FormBuilder, Validators, FormGroup, ValidationErrors, AbstractControl } from '@angular/forms';
 import { ProveedoresService } from "../../../services/proveedores.service";
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+import { environment } from 'src/environments/environment';
 
 export interface Proveedor {
   id_proveedor: string;
@@ -166,8 +167,9 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
           if (response.Status === 200) {
             this.datosContratista = response.Data;
             this.actualizarObjetoContratista();
-            this.success = true;
-            this.form.get('contratistaData')?.setValue(this.contratistaObject);
+            if (this.success) {
+              this.form.get('contratistaData')?.setValue(this.contratistaObject);
+            }
           } else {
             this.errorMessage = response.Message;
             this.resetContratista();
@@ -178,33 +180,52 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
           this.errorMessage = 'Error al buscar el contratista. Por favor, intente de nuevo.';
           this.resetContratista();
         }
-      }
-      );
+      });
     }
   }
 
   private actualizarObjetoContratista(): void {
     if (!this.datosContratista) return;
-  
+
     const { proveedor, representante } = this.datosContratista;
     const contratos = (this.datosContratista as any).contratos;
     const tipoPersona = proveedor.tipo_persona;
-  
+
+    let contratosOrdenados: any[] = [];
+    if (Array.isArray(contratos) && contratos.length > 0) {
+      contratosOrdenados = [...contratos].sort((a, b) => {
+        if (a.vigencia === b.vigencia) {
+          return parseInt(b.numero_contrato) - parseInt(a.numero_contrato);
+        }
+        return parseInt(b.vigencia) - parseInt(a.vigencia);
+      });
+    }
+
+    if (tipoPersona === 'NATURAL' && contratosOrdenados.length > 0) {
+      const ultimoContrato = contratosOrdenados[0];
+      const estadoContrato = ultimoContrato.estado_contrato.nombre.toUpperCase();
+      const tipoContrato = ultimoContrato.tipo_contrato.nombre;
+
+      if (estadoContrato === environment.ESTADO_CONTRATO_ENEJECUCION) {
+        Swal.fire({
+          icon: 'error',
+          title: '¡¡ERROR!!',
+          text: `El contratista seleccionado tiene un ${tipoContrato} en estado "${estadoContrato}" en el sistema`,
+        });
+        this.resetContratista();
+        this.success = false;
+        return;
+      }
+    }
+
     const datosComunes = {
       nombre: proveedor.nombre_completo_proveedor,
       documento: proveedor.numero_documento,
       ciudad_contacto: proveedor.ciudad_contacto,
       direccion: proveedor.direccion,
       correo: proveedor.correo,
-      contratos: contratos || [],
     };
-  
-    let mensajeContrato = '';
-    if (Array.isArray(contratos) && contratos.length > 0) {
-      const primerContrato = contratos[0];
-      mensajeContrato = `${primerContrato.tipo_contrato.nombre} en estado "${primerContrato.estado_contrato.nombre}"`;
-    }
-  
+
     if (tipoPersona === 'JURIDICA') {
       this.contratistaObject = {
         ...datosComunes,
@@ -218,15 +239,31 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
         ...datosComunes,
         tipo: 'Natural',
         lugar_expedicion: proveedor.ciudad_expedicion_documento,
+        contratos: contratos || [],
       };
+
+      if (contratosOrdenados.length > 0) {
+        const ultimoContrato = contratosOrdenados[0];
+        const estadoContrato = ultimoContrato.estado_contrato.nombre.toUpperCase();
+        const tipoContrato = ultimoContrato.tipo_contrato.nombre;
+        const estadosPermitidos = [
+          environment.ESTADO_CONTRATO_SUSCRITO,
+          environment.ESTADO_CONTRATO_PORSUSCRIBIR,
+          environment.ESTADO_CONTRATO_LEGALIZADO
+        ];
+
+        if (estadosPermitidos.includes(estadoContrato)) {
+          const mensajeContrato = `${tipoContrato} en estado "${estadoContrato}"`;
+          Swal.fire({
+            icon: 'warning',
+            title: `El contratista seleccionado tiene un ${mensajeContrato} en el sistema`,
+            text: 'Por favor verifique la información antes de continuar con el registro',
+          });
+        }
+      }
     }
-  
-    if (mensajeContrato) {
-      this.showErrorAlert(
-        `El contratista seleccionado tiene un ${mensajeContrato} en el sistema`,
-        'Por favor verifique la información antes de continuar con el registro'
-      );
-    }
+
+    this.success = true;
   }
 
   private obtenerNombreCompleto(persona: any): string {
@@ -274,13 +311,5 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
   onStepLeave() {
     this.resetComponent();
-  }
-
-  private showErrorAlert(title: string, message: string) {
-    Swal.fire({
-      icon: 'warning',
-      title: title,
-      text: message,
-    });
   }
 }
