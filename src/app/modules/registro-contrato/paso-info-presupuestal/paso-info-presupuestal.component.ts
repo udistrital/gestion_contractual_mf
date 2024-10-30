@@ -35,6 +35,7 @@ export class PasoInfoPresupuestalComponent {
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
   contratoGeneralId: number | null = null;
 
+  firstTime = true;
 
   form = this._formBuilder.group({
     vigencia: ['', Validators.required],
@@ -109,7 +110,6 @@ export class PasoInfoPresupuestalComponent {
   ) { }
 
   ngOnInit() {
-    this.cargarContratoGeneral();
     this.cargarCDPs();
     this.setupVigenciaListener();
     this.setupCdpListener();
@@ -170,6 +170,9 @@ export class PasoInfoPresupuestalComponent {
   }
 
   private cargarCDPsContrato(contratoId: number) {
+    if (this.firstTime) {
+      return;
+    }
     this.contratoGeneralCrudService.getCdpContrato(contratoId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -354,6 +357,8 @@ export class PasoInfoPresupuestalComponent {
       //Guardar en localStorage
       this.cdpsService.updateLocalCDP(this.selectedCDP);
 
+      this.firstTime = false;
+
       //Preparamos el guardado en el api
       const cdpsGuardarCrud: CDPContratoCRUD[] = this.selectedCDP.map(cdp => ({
         numero_cdp_id: parseInt(cdp.numero_disponibilidad),
@@ -498,6 +503,14 @@ export class PasoInfoPresupuestalComponent {
       const numB = parseInt(b.value, 10);
       return numA - numB;
     });
+  }
+
+  async onInView(inView: boolean) {
+    if (inView) {
+      this.cargarContratoGeneral();
+    } else {
+      console.log('Step 1 out of view');
+    }
   }
 
 }
