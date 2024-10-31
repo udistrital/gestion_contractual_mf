@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy, ViewChild, Output, EventEmitter, ENVIRONMENT_INITIALIZER } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, Validators, FormGroup, ValidationErrors, AbstractControl } from '@angular/forms';
 import { ProveedoresService } from "../../../services/proveedores.service";
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { environment } from 'src/environments/environment';
+import { ContratistaCRUD } from 'src/app/types/types';
 
 export interface Proveedor {
   id_proveedor: string;
@@ -92,6 +94,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
+  contratoGeneralId: number | null = null;
   form: FormGroup;
   tiposContratista = [
     { value: 'clase1', viewValue: 'Contratista Único' },
@@ -119,7 +122,8 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private proveedoresService: ProveedoresService
+    private proveedoresService: ProveedoresService,
+    private contratoGeneralCrudService: ContratoGeneralCrudService
   ) {
     this.form = this.fb.group({
       claseContratista: ['', Validators.required],
@@ -129,6 +133,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.cargarContratoGeneral();
     this.form.get('claseContratista')?.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(value => {
@@ -262,7 +267,6 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
         }
       }
     }
-
     this.success = true;
   }
 
@@ -298,6 +302,76 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       }
       return null;
     };
+  }
+
+  private cargarContratoGeneral() {
+    const infoGeneral = localStorage.getItem('paso-info-general');
+    if (!infoGeneral) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se ha encontrado información general del contrato',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+    try {
+      const contratoGeneral = JSON.parse(infoGeneral);
+      this.contratoGeneralId = contratoGeneral.id;
+    } catch (error) {
+      console.error('Error loading contrato general:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se ha encontrado información general del contrato',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  guardarYContinuar(): void {
+    if (!this.form.valid || !this.datosContratista) {
+      return;
+    }
+    const datosContratista: ContratistaCRUD = {
+      numero_documento: this.datosContratista!.proveedor.numero_documento,
+      tipo_persona_id: 1,
+      contrato_general_id: this.contratoGeneralId!
+    };
+
+    this.contratoGeneralCrudService.postContratista(datosContratista)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          console.log(response.Status);
+          if (response.Status === 201) {
+            Swal.fire({
+              icon: 'success',
+              title: '¡Éxito!',
+              text: response.Message || 'El contratista ha sido guardado correctamente',
+              confirmButtonText: 'Aceptar'
+            }).then(() => {
+              this.nextStep.emit();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.Message || 'No se pudo completar el registro del contratista',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error al guardar contratista:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.Message || 'Ha ocurrido un error al guardar el contratista. Por favor, intente nuevamente.',
+            confirmButtonText: 'Aceptar'
+          });
+        }
+      });
   }
 
   resetComponent() {
