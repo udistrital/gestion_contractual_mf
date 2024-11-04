@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {RequestManager} from "../managers/requestManager";
 import {Observable} from "rxjs";
-import {CDPContratoCRUD, EstadoContratoCRUD} from "../types/types";
+import {CDPContratoCRUD, ContratistaCRUD, EstadoContratoCRUD} from "../types/types";
 
 @Injectable({
   providedIn: 'root'
@@ -43,5 +43,13 @@ export class ContratoGeneralCrudService {
   postEstadoContrato(estado: EstadoContratoCRUD): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post('estados-contrato', estado);
+  }
+
+  postContratista(contratistaData: ContratistaCRUD): Observable<any> {
+    if(!contratistaData.contrato_general_id){
+      throw new Error('No se ha especificado el contrato general asociado al contratista');
+    }
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post('contratistas/', contratistaData);
   }
 }

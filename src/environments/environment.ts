@@ -2,7 +2,7 @@ export const environment = {
   production: false,
   PARAMETROS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/',
   UBICACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ubicaciones_crud/v2/',
-  PROVEEDORES_SERVICE: '',
+  PROVEEDORES_SERVICE: 'http://localhost:8080/',
   CDPS_SERVICE: 'http://localhost:3118/',
   CLAUSULAS_PARAGRAFOS_SERVICE: '',
   GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:3117/',
@@ -42,6 +42,11 @@ export const environment = {
   AMPARO_CREC_ID: '6609',
   SUFICIENCIA_SMLV_ID: '6708',
   SUFICIENCIA_PORCENTAJE_ID: '6709',
+  
+  ESTADO_CONTRATO_ENEJECUCION: 'EN EJECUCION',
+  ESTADO_CONTRATO_SUSCRITO:'SUSCRITO',
+  ESTADO_CONTRATO_PORSUSCRIBIR: 'POR SUSCRIBIR',
+  ESTADO_CONTRATO_LEGALIZADO: 'LEGALIZADO',
 
   ESTADO_POR_SUSCRIBIR: '6773',
 };
