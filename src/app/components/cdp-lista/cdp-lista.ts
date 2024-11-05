@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
-import {CommonModule, NgSwitch} from "@angular/common";
+import { CommonModule, NgSwitch } from "@angular/common";
 
 interface CDP {
   vigencia: string;
@@ -21,8 +21,11 @@ interface CDP {
 @Component({
   selector: 'app-cdp-list',
   template: `
-    <mat-accordion>
-      <mat-expansion-panel *ngFor="let cdp of cdpData">
+    <mat-accordion [multi]="true">
+      <mat-expansion-panel
+        *ngFor="let cdp of cdpData"
+        [expanded]="true"
+      >
         <mat-expansion-panel-header>
           <mat-panel-title>
             Número de Disponibilidad: {{ cdp.numero_disponibilidad }}
