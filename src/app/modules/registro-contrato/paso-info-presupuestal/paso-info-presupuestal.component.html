@@ -62,16 +62,24 @@
                   <mat-cell *matCellDef="let element"> {{element.descripcion}} </mat-cell>
               </ng-container>
 
-            <ng-container matColumnDef="estado">
-              <mat-header-cell *matHeaderCellDef> Estado </mat-header-cell>
-              <mat-cell *matCellDef="let element"> {{element.estado}} </mat-cell>
-            </ng-container>
+              <ng-container matColumnDef="estado">
+                <mat-header-cell *matHeaderCellDef> Estado </mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.estado}} </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="acciones">
+                <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+                <mat-cell *matCellDef="let element">
+                  <button mat-icon-button color="warn" (click)="eliminarCDP(element)" matTooltip="Eliminar CDP">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </mat-cell>
+              </ng-container>
 
               <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
               <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
       </table>
       <div class="btn-container">
-        <button *ngIf="selectedCDP.length !=0" mat-raised-button (click)="eliminarUltimoRegistroDataCDP()" color="warn">Eliminar último Registro</button>
         <button *ngIf="selectedCDP.length !=0" mat-raised-button (click)="guardarListaCDP()" color="primary">Guardar</button>
       </div>
     </div>
