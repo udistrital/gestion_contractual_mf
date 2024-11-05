@@ -48,8 +48,8 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   formInfoGeneral = this.fb.group({
     tipoCompromisoId: ['', Validators.required],
     tipoContratoId: ['', Validators.required],
-    perfilContratista: [''],
-    fechaSuscripcion: [''],
+    perfilContratistaId: [''],
+    fechaSuscripcionEstudios: [''],
     aplicaPoliza: [''],
     vigenciaConvenio: [''],
     convenio: [''],
@@ -68,11 +68,11 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   modalidadSeleccion: Parametro[] = [];
   tipologiaEspecifica: Parametro[] = [];
   regimenContratacion: Parametro[] = [];
-  procedimientoId: Parametro[] = [];
+  procedimiento: Parametro[] = [];
   unidadEjecucion: Parametro[] = [];
-
   // orden-contrato
   perfilContratista: Parametro[] = [];
+
   aplicaPoliza: { value: string; viewValue: string }[] = [
     {value: '0', viewValue: 'No'},
     {value: '1', viewValue: 'Si'},
@@ -144,8 +144,8 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
         const idContratoStr = id_contrato.toString();
         const tipoContratoIdIdStr = environment.CONTRATO_PSPAG_ID.toString();
 
-        const perfilContratistaControl = this.formInfoGeneral.get('perfilContratista');
-        const fechaSuscripcionControl = this.formInfoGeneral.get('fechaSuscripcion');
+        const perfilContratistaControl = this.formInfoGeneral.get('perfilContratistaId');
+        const fechaSuscripcionControl = this.formInfoGeneral.get('fechaSuscripcionEstudios');
 
         if (idContratoStr === tipoContratoIdIdStr) {
           this.CargarPerfilContratista(id_contrato);
@@ -266,7 +266,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   CargarprocedimientoId() {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.PROCEDIMIENTO_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
-        this.procedimientoId = Response.Data;
+        this.procedimiento = Response.Data;
       }
     })
   }
@@ -289,7 +289,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
 
     const convenioFields = ['vigenciaConvenio', 'convenio', 'nombreConvenio'];
 
-    [...convenioFields, 'perfilContratista', 'aplicaPoliza', 'fechaSuscripcion'].forEach(field => {
+    [...convenioFields, 'perfilContratistaId', 'aplicaPoliza', 'fechaSuscripcionEstudios'].forEach(field => {
       const control = this.formInfoGeneral.get(field);
       if (control) {
         control.reset();
@@ -386,7 +386,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     this.modalidadSeleccion = this.createDynamicOption(data.modalidadSeleccionId);
     this.tipologiaEspecifica = this.createDynamicOption(data.tipologiaEspecificaId);
     this.regimenContratacion = this.createDynamicOption(data.regimenContratacionId);
-    this.procedimientoId = this.createDynamicOption(data.procedimientoId);
+    this.procedimiento = this.createDynamicOption(data.procedimientoId);
     this.unidadEjecucion = this.createDynamicOption(data.unidadEjecutoraId);
   }
 

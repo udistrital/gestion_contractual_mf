@@ -97,8 +97,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   contratoGeneralId: number | null = null;
   form: FormGroup;
   tiposContratista = [
-    { value: 'clase1', viewValue: 'Contratista Único' },
-    { value: 'clase2', viewValue: 'Clase 2' }
+    { value: 'clase1', viewValue: 'Contratista Único' }
   ];
   datosContratista: DatosContratista | null = null;
 

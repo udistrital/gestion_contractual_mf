@@ -35,6 +35,7 @@ export class PasoInfoPresupuestalComponent {
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
   contratoGeneralId: number | null = null;
 
+  firstTime = true;
 
   form = this._formBuilder.group({
     vigencia: ['', Validators.required],
@@ -81,7 +82,8 @@ export class PasoInfoPresupuestalComponent {
     'valor',
     'dependencia',
     'rubro',
-    'estado'
+    'estado',
+    'acciones'
   ];
 
   selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
@@ -109,7 +111,6 @@ export class PasoInfoPresupuestalComponent {
   ) { }
 
   ngOnInit() {
-    this.cargarContratoGeneral();
     this.cargarCDPs();
     this.setupVigenciaListener();
     this.setupCdpListener();
@@ -170,6 +171,9 @@ export class PasoInfoPresupuestalComponent {
   }
 
   private cargarCDPsContrato(contratoId: number) {
+    if (this.firstTime) {
+      return;
+    }
     this.contratoGeneralCrudService.getCdpContrato(contratoId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -287,57 +291,6 @@ export class PasoInfoPresupuestalComponent {
     this.cdps = this.cdps.filter(cdp => !this.selectedCDP.some(selected => selected.numero_disponibilidad === cdp.value));
   }
 
-  async eliminarUltimoRegistroDataCDP() {
-    if(this.selectedCDP.length > 0) {
-      const removedCDP = this.selectedCDP.pop(); //Removemos el último CDP seleccionado
-
-      if (removedCDP && this.contratoGeneralId) {
-        try {
-          const cdpContrato = this.cdpsContrato.find(
-            c => c.numero_cdp_id === parseInt(removedCDP.numero_disponibilidad)
-          )
-
-          if (cdpContrato && cdpContrato.id) {
-            // Usar firstValueFrom para la eliminación
-            await firstValueFrom(
-              this.contratoGeneralCrudService.deleteCdp(cdpContrato.id)
-            );
-          }
-
-          this.selectedCDP = [...this.selectedCDP];
-          this.updateValorAcumulado();
-
-          this.cdps.push({
-            value: removedCDP.numero_disponibilidad,
-            viewValue: removedCDP.numero_disponibilidad
-          });
-
-          this.cdpsService.updateLocalCDP(this.selectedCDP);
-
-          this.sortCDPs();
-
-          Swal.fire({
-            title: 'Éxito',
-            text: 'CDP eliminado correctamente',
-            icon: 'success',
-            confirmButtonText: 'OK'
-          });
-        } catch (error) {
-          console.error('Error deleting CDP:', error);
-          this.selectedCDP.push(removedCDP);
-
-          Swal.fire({
-            title: 'Error',
-            text: 'Hubo un error al eliminar el CDP del servidor',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
-        }
-      }
-      this.form.get('cdp')?.reset();
-    }
-  }
-
   async guardarListaCDP() {
 
     if (!this.contratoGeneralId) {
@@ -353,6 +306,8 @@ export class PasoInfoPresupuestalComponent {
     try {
       //Guardar en localStorage
       this.cdpsService.updateLocalCDP(this.selectedCDP);
+
+      this.firstTime = false;
 
       //Preparamos el guardado en el api
       const cdpsGuardarCrud: CDPContratoCRUD[] = this.selectedCDP.map(cdp => ({
@@ -498,6 +453,63 @@ export class PasoInfoPresupuestalComponent {
       const numB = parseInt(b.value, 10);
       return numA - numB;
     });
+  }
+
+  async eliminarCDP(cdpAEliminar: CDP) {
+    try {
+      if (this.contratoGeneralId) {
+        const cdpContrato = this.cdpsContrato.find(
+          c => c.numero_cdp_id === parseInt(cdpAEliminar.numero_disponibilidad)
+        );
+
+        if (cdpContrato && cdpContrato.id) {
+          await firstValueFrom(
+            this.contratoGeneralCrudService.deleteCdp(cdpContrato.id)
+          );
+        }
+
+        this.selectedCDP = this.selectedCDP.filter(
+          cdp => cdp.numero_disponibilidad !== cdpAEliminar.numero_disponibilidad
+        );
+
+        this.updateValorAcumulado();
+
+        this.cdps.push({
+          value: cdpAEliminar.numero_disponibilidad,
+          viewValue: cdpAEliminar.numero_disponibilidad
+        });
+
+        this.cdpsService.updateLocalCDP(this.selectedCDP);
+
+        this.sortCDPs();
+
+        await Swal.fire({
+          title: 'Éxito',
+          text: 'CDP eliminado correctamente',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting CDP:', error);
+
+      await Swal.fire({
+        title: 'Error',
+        text: 'Hubo un error al eliminar el CDP',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+
+    this.form.get('cdp')?.reset();
+  }
+
+  async onInView(inView: boolean) {
+    if (inView) {
+      this.cargarContratoGeneral();
+    } else {
+      console.log('Step 1 out of view');
+    }
   }
 
 }

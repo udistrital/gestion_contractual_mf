@@ -30,18 +30,18 @@
         </mat-form-field>
 
         <ng-container *ngIf="showContratoFields">
-          <mat-form-field *ngIf="formInfoGeneral.get('perfilContratista')?.enabled">
+          <mat-form-field *ngIf="formInfoGeneral.get('perfilContratistaId')?.enabled">
             <mat-label>Perfil del Contratista:</mat-label>
-            <mat-select formControlName="perfilContratista">
+            <mat-select formControlName="perfilContratistaId">
               <mat-option *ngFor="let perfil_contratista of perfilContratista"
                           [value]="perfil_contratista.Id">
                 {{perfil_contratista.Nombre}}
               </mat-option>
             </mat-select>
           </mat-form-field>
-          <mat-form-field *ngIf="formInfoGeneral.get('fechaSuscripcion')?.enabled">
+          <mat-form-field *ngIf="formInfoGeneral.get('fechaSuscripcionEstudios')?.enabled">
             <mat-label>Fecha Suscripción Estudios y Documentos Previos:</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="fechaSuscripcion" [max]="maxDate">
+            <input matInput [matDatepicker]="picker" formControlName="fechaSuscripcionEstudios" [max]="maxDate">
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
@@ -106,9 +106,9 @@
           </mat-select>
         </mat-form-field>
         <mat-form-field>
-          <mat-label>procedimientoId:</mat-label>
+          <mat-label>Procedimiento:</mat-label>
           <mat-select formControlName="procedimientoId">
-            <mat-option *ngFor="let procedimientoId of procedimientoId" [value]="procedimientoId.Id">
+            <mat-option *ngFor="let procedimientoId of procedimiento" [value]="procedimientoId.Id">
               {{procedimientoId.Nombre}}
             </mat-option>
           </mat-select>
