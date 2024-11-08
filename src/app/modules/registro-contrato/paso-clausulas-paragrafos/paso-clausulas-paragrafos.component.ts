@@ -8,8 +8,8 @@ import { MatStepper } from '@angular/material/stepper';
 import { NgZone } from '@angular/core';
 
 interface Indice { Id: string; Nombre: string; }
-interface Clausula { _id?: string; nombre: string; descripcion: string; predeterminado: boolean; paragrafos: Paragrafo[]; }
-interface Paragrafo { _id?: string; nombre?: string; descripcion: string; predeterminado: boolean; }
+interface Clausula { _id?: string; nombre: string; descripcion: string; predeterminado: boolean; es_editable: boolean; paragrafos: Paragrafo[];}
+interface Paragrafo { _id?: string; nombre?: string; descripcion: string; predeterminado: boolean; es_editable: boolean;}
 
 @Component({
   selector: 'app-paso-clausulas-paragrafos',
@@ -22,8 +22,8 @@ export class PasoClausulasParagrafosComponent {
 
   form: FormGroup;
   indices: Indice[] = [];
-  contratoId: number = 4869;
-  tipoContratoId: number = 1;
+  contratoId: number = 7891;
+  tipoContratoId: number = 2;
   reversionSaldo: boolean = false;
   usuarioId: number = 25;
 
@@ -155,9 +155,16 @@ export class PasoClausulasParagrafosComponent {
     const clausulaGroup = this.fb.group({
       id: [clausula._id || null],
       index: [indiceId, Validators.required],
-      nombre: [clausula.nombre, Validators.required],
-      descripcion: [clausula.descripcion, Validators.required],
+      nombre: [{
+        value: clausula.nombre,
+        disabled: !clausula.es_editable
+      }, Validators.required],
+      descripcion: [{
+        value: clausula.descripcion,
+        disabled: !clausula.es_editable
+      }, Validators.required],
       predeterminado: [clausula.predeterminado],
+      es_editable: [clausula.es_editable],
       paragrafos: this.fb.array([])
     });
 
@@ -172,12 +179,31 @@ export class PasoClausulasParagrafosComponent {
   private crearParagrafoFormGroup(paragrafo: Paragrafo, index: number, totalParagrafos: number): FormGroup {
     const paragrafoGroup = this.fb.group({
       _id: [paragrafo._id || null],
-      nombre: [this.generarNombreParagrafo(index, totalParagrafos)],
-      descripcion: [paragrafo.descripcion, Validators.required],
-      predeterminado: [paragrafo.predeterminado]
+      nombre: [{
+        value: this.generarNombreParagrafo(index, totalParagrafos),
+        disabled: !paragrafo.es_editable
+      }],
+      descripcion: [{
+        value: paragrafo.descripcion,
+        disabled: !paragrafo.es_editable
+      }, Validators.required],
+      predeterminado: [paragrafo.predeterminado],
+      es_editable: [paragrafo.es_editable]
     });
 
     return paragrafoGroup;
+  }
+
+  isClausulaEditable(index: number): boolean {
+    const clausula = this.clausulas.at(index);
+    return clausula.get('es_editable')?.value ?? false;
+  }
+
+  isParagrafoEditable(clausulaIndex: number, paragrafoIndex: number): boolean {
+    const clausula = this.clausulas.at(clausulaIndex);
+    const paragrafos = this.getParagrafos(clausula);
+    const paragrafo = paragrafos.at(paragrafoIndex);
+    return paragrafo.get('es_editable')?.value ?? false;
   }
 
   private generarNombreParagrafo(index: number, totalParagrafos: number): string {
@@ -203,7 +229,7 @@ export class PasoClausulasParagrafosComponent {
     this.confirmarAccion("¿Está seguro(a) de agregar la cláusula al contrato?", () => {
       const nuevoIndice = this.clausulas.length;
       const indiceId = this.indices[nuevoIndice]?.Nombre || '';
-      this.clausulas.push(this.crearClausulaFormGroup({ nombre: '', descripcion: '', predeterminado: false, paragrafos: [] } as Clausula, indiceId));
+      this.clausulas.push(this.crearClausulaFormGroup({ nombre: '', descripcion: '', predeterminado: false, es_editable: true, paragrafos: [] } as Clausula, indiceId));
       this.actualizarIndices();
       Swal.fire({ title: "Cláusula agregada", icon: "success" });
     });
@@ -271,7 +297,7 @@ export class PasoClausulasParagrafosComponent {
       const nuevoIndex = paragrafos.length;
       const totalParagrafos = nuevoIndex + 1;
       paragrafos.push(this.crearParagrafoFormGroup(
-        { nombre: '', descripcion: '', predeterminado: false } as Paragrafo,
+        { nombre: '', descripcion: '', predeterminado: false, es_editable: true} as Paragrafo,
         nuevoIndex,
         totalParagrafos
       ));
@@ -329,11 +355,15 @@ export class PasoClausulasParagrafosComponent {
 
   isClausulaModificada(index: number): boolean {
     const clausula = this.clausulas.at(index) as FormGroup;
+    if (!clausula.get('es_editable')?.value) {
+      return false;
+    }
+    
     const nombreModificado = clausula.get('nombre')?.dirty ?? false;
     const descripcionClausulaModificada = clausula.get('descripcion')?.dirty ?? false;
     const paragrafos = this.getParagrafos(clausula);
     const algunParagrafoModificado = paragrafos.controls.some(paragrafo =>
-      paragrafo.get('descripcion')?.dirty ?? false
+      paragrafo.get('es_editable')?.value && (paragrafo.get('descripcion')?.dirty ?? false)
     );
     return nombreModificado || descripcionClausulaModificada || algunParagrafoModificado;
   }
