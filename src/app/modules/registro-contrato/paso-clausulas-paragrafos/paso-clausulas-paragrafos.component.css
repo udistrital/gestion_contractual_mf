@@ -94,7 +94,7 @@ app-editor-enriquecido {
 }
 
 /* Ajuste para el campo de nombre de la cláusula */
-.form-grid1 > mat-form-field {
+.form-grid1>mat-form-field {
     width: 100%;
 }
 
@@ -152,4 +152,32 @@ mat-select[disabled] {
 
 .read-only-content p:last-child {
     margin-bottom: 0;
+}
+
+/* Estilos para input deshabilitado */
+.mat-mdc-form-field.mat-form-field-disabled .mdc-text-field--disabled input.mat-mdc-input-element {
+    opacity: 1 !important;
+    color: rgba(0, 0, 0, 0.87) !important;
+}
+
+/* Estilos para la etiqueta cuando está deshabilitado */
+.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-form-field-label {
+    color: rgba(0, 0, 0, 0.87) !important;
+}
+
+/* Sobrescribir los estilos de opacidad generales para campos deshabilitados */
+input:disabled,
+.mat-mdc-input-element:disabled {
+    opacity: 1 !important;
+    -webkit-text-fill-color: rgba(0, 0, 0, 0.87) !important;
+}
+
+/* Eliminar el fondo gris que aparece en campos deshabilitados */
+.mat-mdc-form-field.mat-form-field-disabled .mdc-text-field--disabled {
+    background-color: transparent !important;
+}
+
+/* Ajustar el color del borde inferior */
+.mat-mdc-form-field.mat-form-field-disabled .mdc-line-ripple::before {
+    border-bottom-color: rgba(0, 0, 0, 0.42) !important;
 }
