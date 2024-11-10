@@ -22,9 +22,10 @@ export class PasoClausulasParagrafosComponent {
 
   form: FormGroup;
   indices: Indice[] = [];
-  contratoId: number = 7891;
-  tipoContratoId: number = 2;
+  contratoId: number = 9512;
+  tipoContratoId: number = 1;
   reversionSaldo: boolean = false;
+  aplicaPoliza: boolean = true;
   usuarioId: number = 25;
 
   constructor(
@@ -71,7 +72,7 @@ export class PasoClausulasParagrafosComponent {
   }
 
   private cargarPlantillaPorTipoContrato() {
-    this.clausulasParagrafosService.get(`plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo}`).subscribe({
+    this.clausulasParagrafosService.get(`plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo};aplica_poliza:${this.aplicaPoliza}`).subscribe({
       next: (response: { Success: boolean, Data: Clausula[] }) => {
         if (response.Success && response.Data?.length > 0) {
           this.crearContratoDesdePlantilla(response.Data);
