@@ -1,12 +1,12 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild} from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
-import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
-import {ApiResponse} from "../../../services/polizas.interfaces";
-import {ContratoGeneralMidService} from "../../../services/contrato-general-mid.service";
-import {EstadoContratoCRUD} from "../../../types/types";
+import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
+import { ApiResponse } from "../../../services/polizas.interfaces";
+import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
+import { EstadoContratoCRUD } from "../../../types/types";
 
 interface Parametro {
   Id: number | string;
@@ -25,6 +25,8 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   @Input() viewMode: boolean = false; //Determina si el paso es de creación o visualización
   @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
+  @Output() tipoCompromisoChange = new EventEmitter<string>();
+  @Output() aplicaPolizaChange = new EventEmitter<string>();
 
   showContratoFields = false;
   showConvenioFields = false;
@@ -98,6 +100,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
       this.loadInitialData();
       this.setuptipoCompromisoId();
       this.setuptipoContratoId();
+      this.setupAplicaPoliza();
 
       this.initialFormValue = this.formInfoGeneral.value;
       this.formInfoGeneral.valueChanges.subscribe(() => {
@@ -112,6 +115,9 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   private setuptipoCompromisoId() {
     this.formInfoGeneral.get('tipoCompromisoId')?.valueChanges.subscribe((id_compromiso) => {
       if (id_compromiso) {
+        //Emite el evento para que el padre sepa que se seleccionó un tipo de compromiso
+        this.tipoCompromisoChange.emit(id_compromiso.toString());
+
         this.CargartipoContratoIds(id_compromiso);
         this.showFieldsBasedOnCompromiso(id_compromiso);
         if (id_compromiso) {
@@ -239,11 +245,11 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     });
   }
 
-  async showErrorAlert(message: string) {
-    await Swal.fire({
-      icon: 'error',
-      title: 'Oops...',
-      text: message,
+  setupAplicaPoliza() {
+    this.formInfoGeneral.get('aplicaPoliza')?.valueChanges.subscribe((value) => {
+      if (value) {
+        this.aplicaPolizaChange.emit(value.toString());
+      }
     });
   }
 
@@ -280,7 +286,6 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   }
 
   //Especificos
-
   showFieldsBasedOnCompromiso(id_compromiso: string) {
     const idCompromisoStr = id_compromiso.toString();
 
@@ -343,11 +348,6 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     if (!allowedKeys.includes(event.key) && !pattern.test(event.key)) {
       event.preventDefault();
     }
-  }
-
-
-  formHasUnsavedChanges(): boolean {
-    return !this.formSaved && JSON.stringify(this.initialFormValue) !== JSON.stringify(this.formInfoGeneral.value);
   }
 
   loadInfoDataMid() {
