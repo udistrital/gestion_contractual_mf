@@ -29,7 +29,8 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   isLinear = false;
   showEspecificacionesTecnicas = false;
-  stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(new Array(8).fill(false));
+  showAplicaPoliza = false;
+  stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(new Array(9).fill(false));
 
   constructor(private cdRef: ChangeDetectorRef) {}
 
@@ -41,6 +42,15 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     if (!this.showEspecificacionesTecnicas) {
       const currentSteps = this.stepsCompleted.value;
       currentSteps[6] = true;
+      this.stepsCompleted.next(currentSteps);
+    }
+  }
+
+  onAplicaPolizaChange(aplicaPoliza: string) {
+    this.showAplicaPoliza = aplicaPoliza == '1'; // 1 = Si, 0 = No
+    if(!this.showAplicaPoliza){
+      const currentSteps = this.stepsCompleted.value;
+      currentSteps[7] = true;
       this.stepsCompleted.next(currentSteps);
     }
   }

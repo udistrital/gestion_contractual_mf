@@ -26,6 +26,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
   @Output() tipoCompromisoChange = new EventEmitter<string>();
+  @Output() aplicaPolizaChange = new EventEmitter<string>();
 
   showContratoFields = false;
   showConvenioFields = false;
@@ -99,6 +100,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
       this.loadInitialData();
       this.setuptipoCompromisoId();
       this.setuptipoContratoId();
+      this.setupAplicaPoliza();
 
       this.initialFormValue = this.formInfoGeneral.value;
       this.formInfoGeneral.valueChanges.subscribe(() => {
@@ -243,11 +245,11 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     });
   }
 
-  async showErrorAlert(message: string) {
-    await Swal.fire({
-      icon: 'error',
-      title: 'Oops...',
-      text: message,
+  private setupAplicaPoliza() {
+    this.formInfoGeneral.get('aplicaPoliza')?.valueChanges.subscribe((value) => {
+      if (value) {
+        this.aplicaPolizaChange.emit(value.toString());
+      }
     });
   }
 
