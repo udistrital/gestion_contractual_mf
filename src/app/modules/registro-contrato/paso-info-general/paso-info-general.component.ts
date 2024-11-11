@@ -1,12 +1,12 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild} from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
-import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
-import {ApiResponse} from "../../../services/polizas.interfaces";
-import {ContratoGeneralMidService} from "../../../services/contrato-general-mid.service";
-import {EstadoContratoCRUD} from "../../../types/types";
+import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
+import { ApiResponse } from "../../../services/polizas.interfaces";
+import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
+import { EstadoContratoCRUD } from "../../../types/types";
 
 interface Parametro {
   Id: number | string;
@@ -245,7 +245,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     });
   }
 
-  private setupAplicaPoliza() {
+  setupAplicaPoliza() {
     this.formInfoGeneral.get('aplicaPoliza')?.valueChanges.subscribe((value) => {
       if (value) {
         this.aplicaPolizaChange.emit(value.toString());
@@ -286,7 +286,6 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   }
 
   //Especificos
-
   showFieldsBasedOnCompromiso(id_compromiso: string) {
     const idCompromisoStr = id_compromiso.toString();
 
@@ -349,11 +348,6 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     if (!allowedKeys.includes(event.key) && !pattern.test(event.key)) {
       event.preventDefault();
     }
-  }
-
-
-  formHasUnsavedChanges(): boolean {
-    return !this.formSaved && JSON.stringify(this.initialFormValue) !== JSON.stringify(this.formInfoGeneral.value);
   }
 
   loadInfoDataMid() {
