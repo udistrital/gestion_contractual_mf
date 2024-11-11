@@ -3,7 +3,12 @@
   <mat-stepper #stepper [linear]="isLinear" labelPosition="bottom">
     <mat-step [stepControl]="pasoInfoGeneral.formInfoGeneral">
       <ng-template matStepLabel>Información General</ng-template>
-      <app-paso-info-general #pasoInfoGeneral (stepCompleted)="stepCompleted(0, $event)" (nextStep)="goToNextStep()"></app-paso-info-general>
+      <app-paso-info-general
+        #pasoInfoGeneral
+        (stepCompleted)="stepCompleted(0, $event)"
+        (nextStep)="goToNextStep()"
+        (tipoCompromisoChange)="onTipoCompromisoChange($event)">
+      </app-paso-info-general>
     </mat-step>
 
     <mat-step [stepControl]="pasoInfoPresupuestal.form" [editable]="canProceedToStep(1) | async">
@@ -22,10 +27,13 @@
             <ng-template matStepLabel>Obligaciones del Contrato</ng-template>
             <app-paso-obligaciones #pasoObligaciones (stepCompleted)="stepCompleted(4, $event)" />
         </mat-step>
-        <mat-step>
-            <ng-template matStepLabel>Especificaciones Técnicas</ng-template>
-            <app-paso-especificaciones (stepCompleted)="stepCompleted(6, $event)" />
-        </mat-step>
+    <ng-container *ngIf="showEspecificacionesTecnicas">
+      <mat-step>
+        <ng-template matStepLabel>Especificaciones Técnicas</ng-template>
+        <app-paso-especificaciones (stepCompleted)="stepCompleted(5, $event)">
+        </app-paso-especificaciones>
+      </mat-step>
+    </ng-container>
         <mat-step>
             <ng-template matStepLabel>Garantías y Mecanismos de Cobertura del Riesgo</ng-template>
             <app-paso-garantias (stepCompleted)="stepCompleted(7, $event)" />

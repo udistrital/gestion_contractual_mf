@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import {Component, OnInit, ViewChild, AfterViewInit, ChangeDetectorRef} from '@angular/core';
 import { PasoContratistasComponent } from "./paso-contratistas/paso-contratistas.component";
 import { PasoInfoGeneralComponent } from "./paso-info-general/paso-info-general.component";
 import { PasoObligacionesComponent } from "./paso-obligaciones/paso-obligaciones.component";
@@ -7,6 +7,7 @@ import { MatStepper } from "@angular/material/stepper";
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import {environment} from "../../../environments/environment";
 
 @Component({
   selector: 'app-registro-contrato',
@@ -27,11 +28,22 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   @ViewChild(PasoInfoPresupuestalComponent) pasoInfoPresupuestal!: PasoInfoPresupuestalComponent;
 
   isLinear = false;
+  showEspecificacionesTecnicas = false;
   stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(new Array(8).fill(false));
 
-  constructor() {}
+  constructor(private cdRef: ChangeDetectorRef) {}
 
   ngOnInit() {}
+
+  onTipoCompromisoChange(tipoCompromisoId: string) {
+    this.showEspecificacionesTecnicas = tipoCompromisoId === environment.ORDEN_ID.toString();
+
+    if (!this.showEspecificacionesTecnicas) {
+      const currentSteps = this.stepsCompleted.value;
+      currentSteps[6] = true;
+      this.stepsCompleted.next(currentSteps);
+    }
+  }
 
   goToNextStep() {
     if (this.stepper.selected) {

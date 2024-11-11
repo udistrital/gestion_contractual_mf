@@ -25,6 +25,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   @Input() viewMode: boolean = false; //Determina si el paso es de creación o visualización
   @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
+  @Output() tipoCompromisoChange = new EventEmitter<string>();
 
   showContratoFields = false;
   showConvenioFields = false;
@@ -112,6 +113,9 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   private setuptipoCompromisoId() {
     this.formInfoGeneral.get('tipoCompromisoId')?.valueChanges.subscribe((id_compromiso) => {
       if (id_compromiso) {
+        //Emite el evento para que el padre sepa que se seleccionó un tipo de compromiso
+        this.tipoCompromisoChange.emit(id_compromiso.toString());
+
         this.CargartipoContratoIds(id_compromiso);
         this.showFieldsBasedOnCompromiso(id_compromiso);
         if (id_compromiso) {
