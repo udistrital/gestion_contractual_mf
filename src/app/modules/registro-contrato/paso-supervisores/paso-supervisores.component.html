@@ -4,17 +4,17 @@
             <h3>Información del Solicitante</h3>
         </div>
         <div class="form-grid2">
+          <mat-form-field>
+            <mat-label>Sede:</mat-label>
+            <mat-select formControlName="sede">
+              <!--<mat-option *ngFor="" [value]="value">
+            {{viewValue}}
+          </mat-option>-->
+            </mat-select>
+          </mat-form-field>
             <mat-form-field>
                 <mat-label>Dependencia:</mat-label>
                 <mat-select formControlName="dependencia">
-                    <!--<mat-option *ngFor="" [value]="value">
-                  {{viewValue}}
-                </mat-option>-->
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Sede:</mat-label>
-                <mat-select formControlName="sede">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
@@ -97,20 +97,20 @@
                     </mat-option>
                 </mat-select>
             </mat-form-field>
+          <mat-form-field>
+            <mat-label>Municipio/Ciudad:</mat-label>
+            <mat-select formControlName="municipioCiudad">
+              <mat-option *ngFor="let municipioCiudad of municipioCiudad" [value]="municipioCiudad.LugarHijoId.Id">
+                {{municipioCiudad.LugarHijoId.Nombre}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
             <mat-form-field>
                 <mat-label>Sede:</mat-label>
                 <mat-select formControlName="sede">
                     <!--<mat-option *ngFor="" [value]="value">
                   {{viewValue}}
                 </mat-option>-->
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Municipio/Ciudad:</mat-label>
-                <mat-select formControlName="municipioCiudad">
-                    <mat-option *ngFor="let municipioCiudad of municipioCiudad" [value]="municipioCiudad.LugarHijoId.Id">
-                        {{municipioCiudad.LugarHijoId.Nombre}}
-                    </mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
