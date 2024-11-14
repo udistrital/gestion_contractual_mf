@@ -17,3 +17,44 @@
     gap: 10px;
     margin-top: 15px;
 }
+
+.full-width-table {
+  width: 100%;
+  min-width: 800px;
+}
+
+.mat-elevation-z8 {
+  position: relative;
+  overflow: auto;
+}
+
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+td.mat-column-acciones {
+  width: 60px;
+  text-align: center;
+}
+
+td.mat-column-activo {
+  width: 80px;
+  text-align: center;
+}
+
+.active {
+  color: green;
+}
+
+.inactive {
+  color: red;
+}
