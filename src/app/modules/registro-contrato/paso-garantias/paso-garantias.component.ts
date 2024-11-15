@@ -39,6 +39,14 @@ export class PasoGarantiasComponent implements OnInit {
     this.cargarTipoAmparos();
   }
 
+  getAmparosDisponibles(currentIndex: number): any[] {
+    const amparosSeleccionados = this.filasFormArray.controls
+      .map((control, index) => index !== currentIndex ? control.get('amparo')?.value : null)
+      .filter(value => value !== null);
+
+    return this.amparos.filter(amparo => !amparosSeleccionados.includes(amparo.Id));
+  }
+
   get filasFormArray(): FormArray {
     return this.form.get('filas') as FormArray;
   }
@@ -62,6 +70,7 @@ export class PasoGarantiasComponent implements OnInit {
   eliminarFila(index: number) {
     this.filasFormArray.removeAt(index);
     this.actualizarDataSource();
+    this.cdRef.detectChanges();
   }
 
   actualizarDataSource() {

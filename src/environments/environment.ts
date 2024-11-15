@@ -2,9 +2,9 @@ export const environment = {
   production: false,
   PARAMETROS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/',
   UBICACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ubicaciones_crud/v2/',
-  PROVEEDORES_SERVICE: '',
-  CDPS_SERVICE: '',
-  CLAUSULAS_PARAGRAFOS_SERVICE: '',
+  PROVEEDORES_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/proveedores_mid/',
+  CDPS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/presupuesto_contractual_mid/',
+  CLAUSULAS_PARAGRAFOS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/clausulas_paragrafos_crud/',
   GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:3117/',
   GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:3001/',
   POLIZAS_CRUD_SERVICE: 'http://localhost:3117/',
@@ -42,4 +42,11 @@ export const environment = {
   AMPARO_CREC_ID: '6609',
   SUFICIENCIA_SMLV_ID: '6708',
   SUFICIENCIA_PORCENTAJE_ID: '6709',
+  
+  ESTADO_CONTRATO_ENEJECUCION: 'EN EJECUCION',
+  ESTADO_CONTRATO_SUSCRITO:'SUSCRITO',
+  ESTADO_CONTRATO_PORSUSCRIBIR: 'POR SUSCRIBIR',
+  ESTADO_CONTRATO_LEGALIZADO: 'LEGALIZADO',
+
+  ESTADO_POR_SUSCRIBIR: '6773',
 };

@@ -9,7 +9,7 @@
           <div class="clausula-select">
             <mat-form-field>
               <mat-label>Cláusula</mat-label>
-              <mat-select formControlName="index">
+              <mat-select formControlName="index" [disabled]="!isClausulaEditable(i)">
                 <mat-option *ngFor="let indice of indices" [value]="indice.Id">
                   {{indice.Nombre}}
                 </mat-option>
@@ -22,9 +22,15 @@
               <input matInput formControlName="nombre">
             </mat-form-field>
             <div class="editor-container">
-              <app-editor-enriquecido formControlName="descripcion"
-                placeholder="Ingresa la descripción de la cláusula."></app-editor-enriquecido>
-              <button mat-icon-button color="warn" (click)="eliminarClausula(i)" *ngIf="clausulas.length > 1">
+              <ng-container *ngIf="isClausulaEditable(i); else readOnlyClausula">
+                <app-editor-enriquecido formControlName="descripcion"
+                  placeholder="Ingresa la descripción de la cláusula."></app-editor-enriquecido>
+              </ng-container>
+              <ng-template #readOnlyClausula>
+                <div class="read-only-content" [innerHTML]="clausula.get('descripcion')?.value"></div>
+              </ng-template>
+              <button mat-icon-button color="warn" (click)="eliminarClausula(i)" 
+                      *ngIf="clausulas.length > 1 && isClausulaEditable(i)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -38,17 +44,29 @@
               <p>{{paragrafo.get('nombre')?.value}}</p>
             </div>
             <div class="paragrafo-content">
-              <app-editor-enriquecido formControlName="descripcion"
-                placeholder="Ingresa la descripción del parágrafo."></app-editor-enriquecido>
-              <button mat-icon-button color="primary" (click)="eliminarParagrafo(i, j)">
+              <ng-container *ngIf="isParagrafoEditable(i, j); else readOnlyParagrafo">
+                <app-editor-enriquecido formControlName="descripcion"
+                  placeholder="Ingresa la descripción del parágrafo."></app-editor-enriquecido>
+              </ng-container>
+              <ng-template #readOnlyParagrafo>
+                <div class="read-only-content" [innerHTML]="paragrafo.get('descripcion')?.value"></div>
+              </ng-template>
+              <button mat-icon-button color="primary" (click)="eliminarParagrafo(i, j)"
+                      *ngIf="isParagrafoEditable(i, j)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
         </div>
-        <button mat-raised-button color="primary" (click)="guardarClausula(i)" [disabled]="!isClausulaModificada(i)">Guardar Cláusula</button>
+        <button mat-raised-button color="primary" (click)="guardarClausula(i)" 
+                [disabled]="!isClausulaModificada(i) || !isClausulaEditable(i)">
+          Guardar Cláusula
+        </button>
         <div class="btn-container3">
-          <button mat-raised-button color="primary" (click)="agregarParagrafo(i)">Agregar Parágrafo</button>
+          <button mat-raised-button color="primary" (click)="agregarParagrafo(i)"
+                  *ngIf="isClausulaEditable(i)">
+            Agregar Parágrafo
+          </button>
         </div>
       </div>
     </div>

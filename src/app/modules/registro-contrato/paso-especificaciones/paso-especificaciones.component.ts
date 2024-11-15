@@ -2,10 +2,11 @@ import {Component, EventEmitter, Output} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 
 interface Fila {
+  id: number;
   descripcion: string;
-  cantidad: string;
-  valorUnitario: string;
-  valorTotal: string;
+  cantidad: number;
+  valorUnitario: number;
+  valorTotal: number;
 }
 
 @Component({
@@ -28,6 +29,7 @@ export class PasoEspecificacionesComponent {
 
   displayedColumns = ['item', 'descripcion', 'cantidad', 'valorUnitario', 'valorTotal'];
   dataSource: Fila[] = [];
+  currentId = 1;
 
   constructor(private _formBuilder: FormBuilder) {
 
@@ -68,6 +70,4 @@ export class PasoEspecificacionesComponent {
   actualizarDataSource() {
     this.dataSource = this.filasFormArray.controls.map(control => control.value);
   }
-
-
 }
