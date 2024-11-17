@@ -30,3 +30,13 @@ export interface ContratistaCRUD {
   tipo_persona_id: number,
   contrato_general_id: number
 }
+
+export interface SedeContratoMidResponse {
+  Id: number;
+  Nombre: string;
+}
+
+export interface DependenciaContratoMidResponse {
+  id: number;
+  nombre: string;
+}
