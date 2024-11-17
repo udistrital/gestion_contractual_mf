@@ -46,8 +46,8 @@ export class PasoSupervisoresComponent implements OnInit {
 
   form = this._formBuilder.group({
     solicitante: this._formBuilder.group({
-      sede: [null, Validators.required],  // Cambiado de '' a null
-      dependencia: [null, Validators.required],  // Cambiado de '' a null
+      sede: [null, Validators.required],
+      dependencia: [null, Validators.required],
     }),
     supervisores: this._formBuilder.array([this.crearSupervisorFormGroup()]),
     lugarEjecucion: this._formBuilder.group({
@@ -93,7 +93,7 @@ export class PasoSupervisoresComponent implements OnInit {
 
   private crearSupervisorFormGroup() {
     return this._formBuilder.group({
-      sede: [null, Validators.required],  // Cambiado de '' a null
+      sede: [null, Validators.required],
       dependencia: [null, Validators.required],
       nombre: ['', Validators.required],
       cargo: ['', Validators.required],
