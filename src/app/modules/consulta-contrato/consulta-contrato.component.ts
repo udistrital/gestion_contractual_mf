@@ -5,20 +5,23 @@ import { environment } from 'src/environments/environment';
 import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {MatSort} from "@angular/material/sort";
 import {MatTableDataSource} from "@angular/material/table";
-import {ContratoGeneralCrudService} from "../../services/contrato-general-crud.service";
 import {Router} from "@angular/router";
+import {ContratoGeneralMidService} from "../../services/contrato-general-mid.service";
+import Swal from "sweetalert2";
 
 interface ContratoGeneral {
   id: number;
   vigencia: string;
-  consecutivoElaboracion: string;
-  valorPesos: string;
-  fechaInicial: string;
-  fechaFinal: string;
-  plazoEjecucion: number;
-  observaciones: string;
-  activo: boolean;
+  tipoContratoId: string;
+  tipo_persona: string;
+  numero_contrato: string;
+  contratista: string;
+  fecha_registro: string | null;
+  fecha_aprobado: string | null;
+  estado: string;
+  documentos: number;
 }
+
 
 @Component({
   selector: 'app-consulta-contrato',
@@ -26,20 +29,19 @@ interface ContratoGeneral {
   styleUrls: ['./consulta-contrato.component.css']
 })
 export class ConsultaContratoComponent implements OnInit {
-
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   displayedColumns: string[] = [
-    'id',
     'vigencia',
-    'consecutivoElaboracion',
-    'valorPesos',
-    'fechaInicial',
-    'fechaFinal',
-    'plazoEjecucion',
-    'observaciones',
-    'activo',
+    'tipoContratoId',
+    'tipo_persona',
+    'numero_contrato',
+    'contratista',
+    'fecha_registro',
+    'fecha_aprobado',
+    'estado',
+    'documentos',
     'acciones'
   ];
 
@@ -52,7 +54,7 @@ export class ConsultaContratoComponent implements OnInit {
   constructor(
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
-    private contratoService: ContratoGeneralCrudService,
+    private contratoMidService: ContratoGeneralMidService,
     private router: Router
   ) { }
 
@@ -92,16 +94,33 @@ export class ConsultaContratoComponent implements OnInit {
       offset: this.paginaActual * this.tamanioPagina
     };
 
-    this.contratoService.getContratos(params).subscribe({
+    this.contratoMidService.getContratos(params).subscribe({
       next: (response) => {
         if (response.Success && response.Status === 200) {
-          this.dataSource.data = response.Data;
-          this.totalRegistros = response.Metadata.total;
+
+          const contratoIds = response.Data.map((contrato: ContratoGeneral) => contrato.id);
+
+          this.contratoMidService.getEstadosContratos(contratoIds).subscribe({
+            next: (estadosMap) => {
+              const contratosConEstados = response.Data.map((contrato: ContratoGeneral) => ({
+                ...contrato,
+                estadoDetalle: estadosMap[contrato.id]
+              }));
+
+              this.dataSource.data = contratosConEstados;
+              this.totalRegistros = response.Metadata.total;
+            },
+            error: (error) => {
+              console.error('Error al obtener estados:', error);
+              this.dataSource.data = response.Data;
+              this.totalRegistros = response.Metadata.total;
+            }
+          });
         }
       },
-      error: (error) => {
+      error: async (error) => {
         console.error('Error al consultar contratos:', error);
-        // Aquí podrías agregar un snackbar o mensaje de error
+        await Swal.fire('Error', 'Error al consultar contratos', 'error');
       },
       complete: () => {
         this.isLoading = false;
@@ -117,7 +136,6 @@ export class ConsultaContratoComponent implements OnInit {
     const formValues = this.form.value;
     const params: any = {};
 
-    // Solo incluimos los parámetros que tienen valor
     if (formValues.unidadEjecutora) params.unidadEjecutora = formValues.unidadEjecutora;
     if (formValues.vigencia) params.vigencia = formValues.vigencia;
     if (formValues.tipoContratoId) params.tipoContratoId = formValues.tipoContratoId;

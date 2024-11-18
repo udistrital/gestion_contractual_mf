@@ -57,20 +57,16 @@ export class ContratoGeneralCrudService {
 
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
 
-    // Construimos el query string para la URL
     let queryParams = [];
 
-    // Procesamos los parámetros de filtrado
     const filterParams = { ...params };
     delete filterParams.limit;
     delete filterParams.offset;
 
-    // Si hay parámetros de filtrado, los añadimos al query
     if (Object.keys(filterParams).length > 0) {
       queryParams.push(`query=${encodeURIComponent(JSON.stringify(filterParams))}`);
     }
 
-    // Añadimos los parámetros de paginación si existen
     if (params.limit !== undefined) {
       queryParams.push(`limit=${params.limit}`);
     }
@@ -78,10 +74,8 @@ export class ContratoGeneralCrudService {
       queryParams.push(`offset=${params.offset}`);
     }
 
-    // Construimos la URL final
     const url = `contratos-generales${queryParams.length ? '?' + queryParams.join('&') : ''}`;
 
-    // Realizamos la petición GET
     return this.requestManager.get(url);
   }
 

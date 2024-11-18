@@ -324,6 +324,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     this.parametrosService.get('parametro?query=ParametroPadreId:' + id_contrato + '&TipoParametroId:' + environment.TIPOLOGIA_ESPECIFICA_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.tipologiaEspecifica = Response.Data;
+        console.log('Tipologia Especifica:', this.tipologiaEspecifica); //TODO: Inconsistencia con mid.
       }
     })
   }
