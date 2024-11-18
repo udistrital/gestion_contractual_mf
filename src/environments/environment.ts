@@ -9,6 +9,7 @@ export const environment = {
   GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:3001/',
   POLIZAS_CRUD_SERVICE: 'http://localhost:3117/',
   GESTOR_DOCUMENTAL_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
+  ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE: 'http://localhost:3001/', 
   TIPO_COMPROMISO_ID: '111',
   TIPO_CONTRATO_ID: '112',
   PERFIL_CONTRATISTA_ID: '113',
@@ -28,7 +29,7 @@ export const environment = {
   MEDIO_PAGO_ID: '127',
   TIPO_PERSONA_ID: '132',
   ENUMERACION_CLAUSULAS_ID: '135',
-
+  
   UNIDAD_EJECUCION_ID: '7',
 
   ORDEN_ID: '6534',
