@@ -212,10 +212,10 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
 
   CargarEstado() {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('parametro?query=Id:' + environment.ESTADO_POR_SUSCRIBIR + '&limit=0').subscribe({
+      this.parametrosService.get('parametro/' + environment.ESTADO_POR_SUSCRIBIR).subscribe({
         next: (Response: any) => {
           if (Response.Status == "200") {
-            this.estado_id = Response.Data[0].Id;
+            this.estado_id = Response.Data.Id;
             resolve(true);
           } else {
             reject('Error en la respuesta del servidor');

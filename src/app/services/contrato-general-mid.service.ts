@@ -44,7 +44,6 @@ export class ContratoGeneralMidService {
     return this.requestManager.get(url);
   }
 
-
   getSedes(): Observable<SedeContratoMidResponse[]> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     return this.requestManager.get('espacios-fisicos/sedes')

@@ -4,6 +4,7 @@ import { UbicacionService } from 'src/app/services/ubicacion.service';
 import {distinctUntilChanged, filter, finalize} from 'rxjs/operators';
 import {DependenciaContratoMidResponse, SedeContratoMidResponse} from "../../../types/types";
 import {ContratoGeneralMidService} from "../../../services/contrato-general-mid.service";
+import Swal from "sweetalert2";
 
 @Component({
   selector: 'app-paso-supervisores',
@@ -20,7 +21,6 @@ export class PasoSupervisoresComponent implements OnInit {
   dependenciasPorSede: { [key: number]: DependenciaContratoMidResponse[] } = {};
   loading = false;
 
-  // Getters seguros para obtener las dependencias
   getDependenciasSolicitante(): DependenciaContratoMidResponse[] {
     const sedeId = this.form.get('solicitante.sede')?.value;
     return sedeId ? this.dependenciasPorSede[Number(sedeId)] || [] : [];
@@ -46,8 +46,8 @@ export class PasoSupervisoresComponent implements OnInit {
 
   form = this._formBuilder.group({
     solicitante: this._formBuilder.group({
-      sede: [null, Validators.required],  // Cambiado de '' a null
-      dependencia: [null, Validators.required],  // Cambiado de '' a null
+      sede: [null, Validators.required],
+      dependencia: [null, Validators.required],
     }),
     supervisores: this._formBuilder.array([this.crearSupervisorFormGroup()]),
     lugarEjecucion: this._formBuilder.group({
@@ -78,7 +78,6 @@ export class PasoSupervisoresComponent implements OnInit {
     this.setupFormListeners();
     this.CargarPais();
 
-    // Listeners existentes
     this.form.get('lugarEjecucion.pais')?.valueChanges.subscribe((id_pais) => {
       if (id_pais) {
         this.CargarDepartamento(id_pais);
@@ -94,7 +93,7 @@ export class PasoSupervisoresComponent implements OnInit {
 
   private crearSupervisorFormGroup() {
     return this._formBuilder.group({
-      sede: [null, Validators.required],  // Cambiado de '' a null
+      sede: [null, Validators.required],
       dependencia: [null, Validators.required],
       nombre: ['', Validators.required],
       cargo: ['', Validators.required],
@@ -104,7 +103,6 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   private setupFormListeners(): void {
-    // Mejorado el manejo de los cambios en sede
     this.form.get('solicitante.sede')?.valueChanges
       .pipe(
         distinctUntilChanged(),
@@ -114,7 +112,6 @@ export class PasoSupervisoresComponent implements OnInit {
         this.cargarDependencias(Number(sedeId), 'solicitante');
       });
 
-    // Similar para lugar de ejecución
     this.form.get('lugarEjecucion.sede')?.valueChanges
       .pipe(
         distinctUntilChanged(),
@@ -142,9 +139,13 @@ export class PasoSupervisoresComponent implements OnInit {
           this.sedes = sedes;
           this.cdRef.detectChanges();
         },
-        error: (error) => {
+        error: async (error) => {
           console.error('Error al cargar sedes:', error);
-          // Aquí podrías agregar manejo de errores (ej: mostrar un mensaje al usuario)
+          await Swal.fire({
+            icon: 'error',
+            title: 'Error al cargar sedes',
+            text: 'Ocurrió un error al cargar las sedes, por favor intenta más tarde.',
+          });
         }
       });
   }
@@ -164,7 +165,6 @@ export class PasoSupervisoresComponent implements OnInit {
         next: (dependencias) => {
           this.dependenciasPorSede[sedeId] = dependencias;
 
-          // Manejamos cada caso específicamente
           switch (tipo) {
             case 'supervisor':
               if (supervisorIndex !== undefined) {
@@ -184,7 +184,11 @@ export class PasoSupervisoresComponent implements OnInit {
         },
         error: (error) => {
           console.error(`Error al cargar dependencias para sede ${sedeId}:`, error);
-          // Aquí podrías agregar un manejador de errores o mostrar un mensaje al usuario
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al cargar dependencias',
+            text: 'Ocurrió un error al cargar las dependencias, por favor intenta más tarde.',
+          })
         }
       });
   }
@@ -205,7 +209,6 @@ export class PasoSupervisoresComponent implements OnInit {
     }
   }
 
-  // Métodos existentes para ubicación
   CargarPais() {
     this.ubicacionService.get('lugar?query=TipoLugarId:1&limit=0').subscribe((Response: any) => {
       if (Response.length != 0) {
