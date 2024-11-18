@@ -1,5 +1,5 @@
 <h1>Consultar Contrato</h1>
-<form [formGroup]="form">
+<form [formGroup]="form" (ngSubmit)="consultar()">
     <div class="form-grid4">
         <mat-form-field>
             <mat-label>Unidad Ejecutora</mat-label>
@@ -12,7 +12,7 @@
         <mat-form-field>
             <mat-label>Vigencia</mat-label>
             <mat-select formControlName="vigencia">
-                <mat-option *ngFor="let vigencia of vigencia" [value]="vigencia.Id">
+                <mat-option *ngFor="let vigencia of vigencia" [value]="vigencia.Nombre">
                     {{vigencia.Nombre}}
                 </mat-option>
             </mat-select>
@@ -69,8 +69,88 @@
         </mat-form-field>
     </div>
     <div class="btn-container">
-        <button mat-raised-button color="primary">Consultar</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
+        {{ isLoading ? 'Consultando...' : 'Consultar' }}
+      </button>
     </div>
-
-  <app-detalle-contrato />
 </form>
+
+<div class="mat-elevation-z8">
+  <div class="loading-shade" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <table mat-table [dataSource]="dataSource" class="full-width-table">
+    <ng-container matColumnDef="vigencia">
+      <th mat-header-cell *matHeaderCellDef>Vigencia</th>
+      <td mat-cell *matCellDef="let row">{{row.vigencia}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="tipoContratoId">
+      <th mat-header-cell *matHeaderCellDef>Tipo de Contrato</th>
+      <td mat-cell *matCellDef="let row">{{row.tipoContratoId}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="tipo_persona">
+      <th mat-header-cell *matHeaderCellDef>Tipo de Persona</th>
+      <td mat-cell *matCellDef="let row">{{row.tipo_persona}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="numero_contrato">
+      <th mat-header-cell *matHeaderCellDef>Número de Contrato</th>
+      <td mat-cell *matCellDef="let row">{{row.id}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="contratista">
+      <th mat-header-cell *matHeaderCellDef>Contratista</th>
+      <td mat-cell *matCellDef="let row">{{row.contratista}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="fecha_registro">
+      <th mat-header-cell *matHeaderCellDef>Fecha de Registro</th>
+      <td mat-cell *matCellDef="let row">
+        {{row.fecha_registro ? (row.fecha_registro | date:'dd/MM/yyyy') : 'N/A'}}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="fecha_aprobado">
+      <th mat-header-cell *matHeaderCellDef>Fecha de Aprobación</th>
+      <td mat-cell *matCellDef="let row">
+        {{row.fecha_aprobado ? (row.fecha_aprobado | date:'dd/MM/yyyy') : 'N/A'}}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="estado">
+      <th mat-header-cell *matHeaderCellDef>Estado</th>
+      <td mat-cell *matCellDef="let row">{{row.estado ? row.estado : "Sin Estado" }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="documentos">
+      <th mat-header-cell *matHeaderCellDef>Documentos</th>
+      <td mat-cell *matCellDef="let row" class="text-center">
+        <span class="documento-contador">{{row.documentos}}</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="acciones">
+      <th mat-header-cell *matHeaderCellDef>Acciones</th>
+      <td mat-cell *matCellDef="let row">
+        <button mat-icon-button color="primary" (click)="verDetalle(row)" matTooltip="Ver detalle">
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <mat-paginator
+    [length]="totalRegistros"
+    [pageSize]="tamanioPagina"
+    [pageSizeOptions]="[5, 10, 25, 100]"
+    [showFirstLastButtons]="true"
+    (page)="cambiarPagina($event)"
+    aria-label="Seleccionar página">
+  </mat-paginator>
+</div>

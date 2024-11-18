@@ -8,8 +8,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import {RegistroContratoModule} from "../registro-contrato/registro-contrato.module";
 import {DetalleContratoComponent} from "./detalle-contrato/detalle-contrato.component";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
+import {MatIcon, MatIconModule} from "@angular/material/icon";
+import {MatProgressSpinner, MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatTable, MatTableModule} from "@angular/material/table";
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {MatSortModule} from "@angular/material/sort";
 
 @NgModule({
   declarations: [
@@ -25,7 +30,23 @@ import {DetalleContratoComponent} from "./detalle-contrato/detalle-contrato.comp
     MatNativeDateModule,
     FormsModule,
     ReactiveFormsModule,
-    DetalleContratoComponent
+    DetalleContratoComponent,
+    MatPaginator,
+    MatIcon,
+    MatProgressSpinner,
+    MatTable,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    MatFormFieldModule
   ]
 })
 export class ConsultaContratoModule { }

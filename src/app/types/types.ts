@@ -40,3 +40,10 @@ export interface DependenciaContratoMidResponse {
   id: number;
   nombre: string;
 }
+
+export interface ApiResponse<T> {
+  Success: boolean;
+  Status: number;
+  Message: string;
+  Data: T;
+}
