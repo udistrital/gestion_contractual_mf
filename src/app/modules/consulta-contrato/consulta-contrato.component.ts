@@ -97,25 +97,8 @@ export class ConsultaContratoComponent implements OnInit {
     this.contratoMidService.getContratos(params).subscribe({
       next: (response) => {
         if (response.Success && response.Status === 200) {
-
-          const contratoIds = response.Data.map((contrato: ContratoGeneral) => contrato.id);
-
-          this.contratoMidService.getEstadosContratos(contratoIds).subscribe({
-            next: (estadosMap) => {
-              const contratosConEstados = response.Data.map((contrato: ContratoGeneral) => ({
-                ...contrato,
-                estadoDetalle: estadosMap[contrato.id]
-              }));
-
-              this.dataSource.data = contratosConEstados;
-              this.totalRegistros = response.Metadata.total;
-            },
-            error: (error) => {
-              console.error('Error al obtener estados:', error);
-              this.dataSource.data = response.Data;
-              this.totalRegistros = response.Metadata.total;
-            }
-          });
+          this.dataSource.data = response.Data;
+          this.totalRegistros = response.Metadata.total;
         }
       },
       error: async (error) => {
