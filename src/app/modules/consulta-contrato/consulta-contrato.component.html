@@ -81,37 +81,31 @@
   </div>
 
   <table mat-table [dataSource]="dataSource" class="full-width-table">
-    <!-- Vigencia Column -->
     <ng-container matColumnDef="vigencia">
       <th mat-header-cell *matHeaderCellDef>Vigencia</th>
       <td mat-cell *matCellDef="let row">{{row.vigencia}}</td>
     </ng-container>
 
-    <!-- Tipo Contrato Column -->
     <ng-container matColumnDef="tipoContratoId">
       <th mat-header-cell *matHeaderCellDef>Tipo de Contrato</th>
       <td mat-cell *matCellDef="let row">{{row.tipoContratoId}}</td>
     </ng-container>
 
-    <!-- Tipo Persona Column -->
     <ng-container matColumnDef="tipo_persona">
       <th mat-header-cell *matHeaderCellDef>Tipo de Persona</th>
       <td mat-cell *matCellDef="let row">{{row.tipo_persona}}</td>
     </ng-container>
 
-    <!-- Numero Contrato Column -->
     <ng-container matColumnDef="numero_contrato">
       <th mat-header-cell *matHeaderCellDef>Número de Contrato</th>
       <td mat-cell *matCellDef="let row">{{row.id}}</td>
     </ng-container>
 
-    <!-- Contratista Column -->
     <ng-container matColumnDef="contratista">
       <th mat-header-cell *matHeaderCellDef>Contratista</th>
       <td mat-cell *matCellDef="let row">{{row.contratista}}</td>
     </ng-container>
 
-    <!-- Fecha Registro Column -->
     <ng-container matColumnDef="fecha_registro">
       <th mat-header-cell *matHeaderCellDef>Fecha de Registro</th>
       <td mat-cell *matCellDef="let row">
@@ -119,7 +113,6 @@
       </td>
     </ng-container>
 
-    <!-- Fecha Aprobado Column -->
     <ng-container matColumnDef="fecha_aprobado">
       <th mat-header-cell *matHeaderCellDef>Fecha de Aprobación</th>
       <td mat-cell *matCellDef="let row">
@@ -127,13 +120,11 @@
       </td>
     </ng-container>
 
-    <!-- Estado Column -->
     <ng-container matColumnDef="estado">
       <th mat-header-cell *matHeaderCellDef>Estado</th>
       <td mat-cell *matCellDef="let row">{{row.estado ? row.estado : "Sin Estado" }}</td>
     </ng-container>
 
-    <!-- Documentos Column -->
     <ng-container matColumnDef="documentos">
       <th mat-header-cell *matHeaderCellDef>Documentos</th>
       <td mat-cell *matCellDef="let row" class="text-center">
@@ -141,7 +132,6 @@
       </td>
     </ng-container>
 
-    <!-- Acciones Column -->
     <ng-container matColumnDef="acciones">
       <th mat-header-cell *matHeaderCellDef>Acciones</th>
       <td mat-cell *matCellDef="let row">
