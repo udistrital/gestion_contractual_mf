@@ -12,7 +12,7 @@
         <mat-form-field>
             <mat-label>Vigencia</mat-label>
             <mat-select formControlName="vigencia">
-                <mat-option *ngFor="let vigencia of vigencia" [value]="vigencia.Id">
+                <mat-option *ngFor="let vigencia of vigencia" [value]="vigencia.Nombre">
                     {{vigencia.Nombre}}
                 </mat-option>
             </mat-select>
@@ -130,7 +130,7 @@
     <!-- Estado Column -->
     <ng-container matColumnDef="estado">
       <th mat-header-cell *matHeaderCellDef>Estado</th>
-      <td mat-cell *matCellDef="let row">{{row.estado}}</td>
+      <td mat-cell *matCellDef="let row">{{row.estado ? row.estado : "Sin Estado" }}</td>
     </ng-container>
 
     <!-- Documentos Column -->
