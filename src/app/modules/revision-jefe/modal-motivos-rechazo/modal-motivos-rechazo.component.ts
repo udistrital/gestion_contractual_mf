@@ -60,7 +60,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
       estado_parametro_id: environment.ESTADO_CONTRATO.DECLINADO,
       motivo: this.formObservaciones.get('observaciones')?.value,
       fecha_ejecucion_estado: new Date(),
-      contrato_general_id: 1, //Id del contrato
+      contrato_general_id: 1,
       fecha_creacion: new Date()
     };
     return estado;

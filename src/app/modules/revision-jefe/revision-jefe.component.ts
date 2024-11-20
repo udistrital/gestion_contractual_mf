@@ -63,9 +63,9 @@ export class RevisionJefeComponent {
     const estado: EstadoContratoCRUD = {
       usuario_id: this.usuarioId,
       estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
-      motivo: 'N/A',
+      motivo: ' ',
       fecha_ejecucion_estado: new Date(),
-      contrato_general_id: 1, //Id del contrato
+      contrato_general_id: 1,
       fecha_creacion: new Date()
     };
     return estado;
