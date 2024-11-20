@@ -16,6 +16,7 @@ import { UbicacionService } from './services/ubicacion.service';
 import {DocumentosService} from "./services/documentos.service";
 import {QuillModule} from "ngx-quill";
 import {InViewDirective} from "./directives/InViewDirective";
+import { RevisionJefeModule } from './modules/revision-jefe/revision-jefe.module';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import {InViewDirective} from "./directives/InViewDirective";
   imports: [
     RegistroContratoModule,
     ConsultaContratoModule,
+    RevisionJefeModule,
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
