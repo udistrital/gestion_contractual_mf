@@ -3,16 +3,12 @@
     justify-content: flex-end;
     align-items: flex-end;
     gap: 10px;
-    margin-top: 15px;
+    margin: 15px 0;
 }
 
 .full-width-field {
     width: 100%;
     margin-top: 10px;
-}
-
-.full-width {
-    width: 100%;
 }
 
 .title-box {
@@ -23,22 +19,18 @@
     border-radius: 4px;
 }
 
-.form-grid2 {
-    display: grid;
-    grid-template-columns: minmax(100px, 3%) minmax(0, 97%);
-    padding: 2%;
-}
-
 .form-grid1 {
-    padding: 2%;
-    gap: 20px;
+    padding: 0 2%;
 }
 
-mat-table mat-cell,
-mat-table mat-header-cell {
-    border: 1px solid gray;
+/* .mat-column-item, .mat-column-acciones {
+    flex: 0 0 10%;
+} */
+
+.edit-icon {
+    color: rgb(100, 21, 21) !important;
 }
 
-mat-table {
-    padding-bottom: 2%;
+.delete-icon {
+    color: gray !important;
 }

@@ -16,19 +16,31 @@
 }
 
 .container-title {
-  margin: 50px 0 5px 0;
+  margin: 5px 0;
+  text-align: center;
   padding: 8px;
   background-color: #731514;
   border-radius: 5px;
   color: white;
 }
 
-form, mat-form-field {
-  width: 100%;
+form {
+  display: flex;
+  flex-direction: column;
 }
 
-textarea {
-  resize: none;
+.form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.descripcion-field {
+  flex: 3;
+}
+
+.cantidad-field, .valor-unitario-field, .valor-total-field {
+  flex: 1;
 }
 
 mat-dialog-actions {

@@ -21,6 +21,7 @@ import { PasoEspecificacionesComponent } from './paso-especificaciones/paso-espe
 import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos/paso-clausulas-paragrafos.component';
 import { PasoDocumentosComponent } from './paso-documentos/paso-documentos.component';
 
+import {MatMenuModule} from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from "@angular/material/checkbox";
@@ -46,6 +47,7 @@ import {
   MatExpansionPanelTitle
 } from "@angular/material/expansion";
 import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
+import { ModalEspecificacionComponent } from './paso-especificaciones/modal-especificacion/modal-especificacion.component';
 
 @NgModule({
   declarations: [
@@ -58,6 +60,7 @@ import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
     PasoObligacionesComponent,
     GuardarInfoComponent,
     PasoEspecificacionesComponent,
+    ModalEspecificacionComponent,
     PasoClausulasParagrafosComponent,
     ParagrafoDialogComponent,
     PasoDocumentosComponent,
@@ -88,6 +91,7 @@ import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
     MatTooltipModule,
     PdfViewerModule,
     EditorEnriquecidoComponent,
+    MatMenuModule,
     MatAccordion,
     MatExpansionPanel,
     MatExpansionPanelTitle,
