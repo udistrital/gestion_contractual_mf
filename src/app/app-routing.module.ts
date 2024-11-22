@@ -5,7 +5,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { APP_BASE_HREF } from '@angular/common';
 import { RegistroContratoComponent } from './modules/registro-contrato/registro-contrato.component';
 import { ConsultaContratoComponent } from './modules/consulta-contrato/consulta-contrato.component';
-import { RevisionJefeComponent } from './modules/revision-jefe/revision-jefe.component';
+import { RevisionContratoComponent } from './modules/revision-contrato/revision-contrato.component';
 
 const routes: Routes = [
   {
@@ -18,7 +18,7 @@ const routes: Routes = [
   },
   {
     path:"",
-    component: RevisionJefeComponent
+    component: RevisionContratoComponent
   },
 ];
 

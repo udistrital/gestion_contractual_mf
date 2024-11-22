@@ -37,7 +37,9 @@
               ></app-pdf-visualizador>
             </div>
           </div>
-          <div *ngIf="selectedTab === 1">Documentos publicos y privados del contratante</div>
+          <div *ngIf="selectedTab === 1">
+            Documentos publicos y privados del contratante
+          </div>
           <mat-dialog-actions align="center">
             <div class="actions-footer">
               <div class="footer-buttons">
@@ -55,7 +57,15 @@
                   color="primary"
                   (click)="openModalEnviar()"
                 >
-                  Aprobar y Enviar a Ordenador
+                  <ng-container [ngSwitch]="rol">
+                    <span *ngSwitchCase="'JEFE CONTRATACION'"
+                      >Aprobar y Enviar a Ordenador</span
+                    >
+                    <span *ngSwitchCase="'ORDENADOR'"
+                      >Firmar y Enviar a Contratista</span
+                    >
+                    <span *ngSwitchDefault>Aprobar y Enviar</span>
+                  </ng-container>
                 </button>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RevisionJefeComponent } from './revision-jefe.component';
+import { RevisionContratoComponent } from './revision-contrato.component';
 import { ModalMotivosRechazoComponent } from './modal-motivos-rechazo/modal-motivos-rechazo.component';
 import { PdfVisualizadorComponent } from './pdf-visualizador/pdf-visualizador.component';
 import { MatCardModule } from '@angular/material/card';
@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [
-    RevisionJefeComponent,
+    RevisionContratoComponent,
     ModalMotivosRechazoComponent,
     PdfVisualizadorComponent
   ],
@@ -29,4 +29,4 @@ import { MatButtonModule } from '@angular/material/button';
     PdfViewerModule
   ]
 })
-export class RevisionJefeModule { }
+export class RevisionContratoModule { }
