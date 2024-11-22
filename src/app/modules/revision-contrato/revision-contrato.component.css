@@ -1,0 +1,58 @@
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.tab-buttons {
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-button {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: transparent;
+  text-align: center;
+  width: 100%;
+  cursor: pointer;
+}
+
+.content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.sidebar {
+  flex: 1 1 25%;
+}
+
+.main-content {
+  flex: 1 1 70%;
+}
+
+.pdf-container {
+  border: 1px solid #ebdddd;
+}
+
+.actions-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.footer-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.selected {
+  background-color: #ffd7ce !important;
+  color: #731514 !important;
+  border: 1px solid #731514 !important;
+  font-weight: 600;
+}

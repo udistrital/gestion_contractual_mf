@@ -50,4 +50,9 @@ export const environment = {
   ESTADO_CONTRATO_LEGALIZADO: 'LEGALIZADO',
 
   ESTADO_POR_SUSCRIBIR: '6773',
+
+  ESTADO_CONTRATO: {
+    SUSCRITO: 6774,
+    DECLINADO: 6775
+  },
 };

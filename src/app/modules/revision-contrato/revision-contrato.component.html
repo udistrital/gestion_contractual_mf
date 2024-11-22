@@ -1,0 +1,77 @@
+<div class="container">
+  <p>Gestión Contractual / <b>Contratos</b></p>
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title><b>Documentos</b></mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="actions">
+        <button mat-button color="primary">
+          Descargar Todo <mat-icon> insert_drive_file</mat-icon>
+        </button>
+      </div>
+      <div class="content">
+        <div class="sidebar">
+          <div class="tab-buttons">
+            <button
+              class="tab-button"
+              [ngClass]="selectedTab === 0 ? 'selected' : ''"
+              (click)="selectTab(0)"
+            >
+              Minuta
+            </button>
+            <button
+              class="tab-button"
+              [ngClass]="selectedTab === 1 ? 'selected' : ''"
+              (click)="selectTab(1)"
+            >
+              Documentos
+            </button>
+          </div>
+        </div>
+        <div class="main-content">
+          <div *ngIf="selectedTab === 0">
+            <div class="pdf-container">
+              <app-pdf-visualizador
+                [base64Document]="documento"
+              ></app-pdf-visualizador>
+            </div>
+          </div>
+          <div *ngIf="selectedTab === 1">
+            Documentos publicos y privados del contratante
+          </div>
+          <mat-dialog-actions align="center">
+            <div class="actions-footer">
+              <div class="footer-buttons">
+                <button
+                  class="footer-button"
+                  mat-raised-button
+                  color="primary"
+                  (click)="openModalRechazo()"
+                >
+                  Rechazar Contrato
+                </button>
+                <button
+                  class="footer-button"
+                  mat-raised-button
+                  color="primary"
+                  (click)="openModalEnviar()"
+                >
+                  <ng-container [ngSwitch]="rol">
+                    <span *ngSwitchCase="'JEFE CONTRATACION'"
+                      >Aprobar y Enviar a Ordenador</span
+                    >
+                    <span *ngSwitchCase="'ORDENADOR'"
+                      >Firmar y Enviar a Contratista</span
+                    >
+                    <span *ngSwitchDefault>Aprobar y Enviar</span>
+                  </ng-container>
+                </button>
+              </div>
+            </div>
+          </mat-dialog-actions>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
