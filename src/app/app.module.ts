@@ -17,6 +17,7 @@ import {DocumentosService} from "./services/documentos.service";
 import {QuillModule} from "ngx-quill";
 import {InViewDirective} from "./directives/InViewDirective";
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
+import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { OrdenadoresSupervisoresContratacionMidService } from './services/ordena
   imports: [
     RegistroContratoModule,
     ConsultaContratoModule,
+    RevisionContratoModule,
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
