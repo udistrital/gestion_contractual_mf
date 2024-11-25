@@ -1,0 +1,42 @@
+<mat-card class="container-principal">
+  <button mat-icon-button class="close-button" [mat-dialog-close]>
+    <mat-icon color="primary" class="btn">close</mat-icon>
+  </button>
+
+  <h2>{{this.data && this.data.especificacion ? "Editar" : "Añadir"}} Especificación</h2>
+  <h4 class="container-title">ESPECIFICACIÓN TÉCNICA</h4>
+
+  <form [formGroup]="formEspecificacion">
+    <div class="form-row">
+      <mat-form-field class="descripcion-field">
+        <mat-label>Descripción especificación técnica</mat-label>
+        <input matInput formControlName="descripcion" />
+      </mat-form-field>
+      <mat-form-field class="cantidad-field">
+        <mat-label>Cantidad</mat-label>
+        <input matInput formControlName="cantidad" />
+      </mat-form-field>
+    </div>
+    <div class="form-row">
+      <mat-form-field class="valor-unitario-field">
+        <mat-label>Valor Unitario</mat-label>
+        <input type="number" matInput formControlName="valorUnitario" />
+      </mat-form-field>
+      <mat-form-field class="valor-total-field">
+        <mat-label>Valor Total</mat-label>
+        <input type="number" matInput formControlName="valorTotal" />
+      </mat-form-field>
+    </div>
+  </form>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-raised-button
+      color="primary"
+      id="btn-rechazar"
+      (click)="guardarEspecificacion()"
+    >
+      Guardar y Cerrar
+    </button>
+  </mat-dialog-actions>
+</mat-card>

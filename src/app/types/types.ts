@@ -47,3 +47,10 @@ export interface ApiResponse<T> {
   Message: string;
   Data: T;
 }
+
+export interface Especificacion {
+  descripcion: string;
+  cantidad: number;
+  valorUnitario: number;
+  valorTotal: number;
+}
