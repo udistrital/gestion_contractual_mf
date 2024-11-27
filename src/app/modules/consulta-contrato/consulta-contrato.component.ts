@@ -8,6 +8,7 @@ import {MatTableDataSource} from "@angular/material/table";
 import {Router} from "@angular/router";
 import {ContratoGeneralMidService} from "../../services/contrato-general-mid.service";
 import Swal from "sweetalert2";
+import { ContentObserver } from '@angular/cdk/observers';
 
 interface ContratoGeneral {
   id: number;
@@ -59,9 +60,9 @@ export class ConsultaContratoComponent implements OnInit {
   ) { }
 
   form = this._formBuilder.group({
-    unidadEjecutora: [''],
+    unidadEjecucion: [''],
     vigencia: [''],
-    tipoContratoId: [''],
+    tipoContratos: [''],
     tipoPersona: [''],
     numeroElaboracion: [''],
     numeroContrato: [''],
@@ -71,13 +72,27 @@ export class ConsultaContratoComponent implements OnInit {
     fechaHasta: [''],
   });
 
+  unidadEjecucion: any[] = [];
   vigencia: any[] = [];
+  tipoContratos: any[] = [];
   tipoPersona: any[] = [];
+  numeroElaboracion: any[] = [];
+  numeroContrato: any[] = [];
+  contratista: any[] = [];
+  estado: any[] = [];
+  fechaDesde: any[] = [];
+  fechaHasta: any[] = [];
 
   ngOnInit(): void {
+    this.CargarunidadEjecutoraId();
     this.CargarVigencia();
+    this.CargartipoContratoIds();
     this.CargarTipoPersona();
-    this.consultar();
+
+    this.form.valueChanges.subscribe(() => {
+      this.paginaActual = 0;
+      this.consultar();
+    });
   }
 
   cambiarPagina(event: PageEvent) {
@@ -87,6 +102,7 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   consultar() {
+    console.log("Se llama la función");
     this.isLoading = true;
     const params = {
       ...this.prepararParametros(),
@@ -119,9 +135,9 @@ export class ConsultaContratoComponent implements OnInit {
     const formValues = this.form.value;
     const params: any = {};
 
-    if (formValues.unidadEjecutora) params.unidadEjecutora = formValues.unidadEjecutora;
+    if (formValues.unidadEjecucion) params.unidadEjecucion = formValues.unidadEjecucion;
     if (formValues.vigencia) params.vigencia = formValues.vigencia;
-    if (formValues.tipoContratoId) params.tipoContratoId = formValues.tipoContratoId;
+    if (formValues.tipoContratos) params.tipoContratos = formValues.tipoContratos;
     if (formValues.tipoPersona) params.tipoPersona = formValues.tipoPersona;
     if (formValues.numeroElaboracion) params.numeroElaboracion = formValues.numeroElaboracion;
     if (formValues.numeroContrato) params.numeroContrato = formValues.numeroContrato;
@@ -133,10 +149,26 @@ export class ConsultaContratoComponent implements OnInit {
     return params;
   }
 
+  CargarunidadEjecutoraId() {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.UNIDAD_EJECUCION_ID + ',Id__in:166|180|181&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.unidadEjecucion = Response.Data;
+      }
+    })
+  }
+
   CargarVigencia() {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.VIGENCIA_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.vigencia = Response.Data;
+      }
+    })
+  }
+
+  CargartipoContratoIds() {
+    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_CONTRATO_ID + '&limit=0').subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.tipoContratos = Response.Data;
       }
     })
   }
@@ -148,4 +180,7 @@ export class ConsultaContratoComponent implements OnInit {
       }
     })
   }
+
+  
+
 }

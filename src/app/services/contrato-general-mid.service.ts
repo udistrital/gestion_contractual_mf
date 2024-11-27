@@ -40,6 +40,7 @@ export class ContratoGeneralMidService {
     }
 
     const url = `contratos-generales${queryParams.length ? '?' + queryParams.join('&') : ''}`;
+    console.log(url);
 
     return this.requestManager.get(url);
   }

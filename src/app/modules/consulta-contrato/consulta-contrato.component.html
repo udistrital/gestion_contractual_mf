@@ -3,10 +3,10 @@
     <div class="form-grid4">
         <mat-form-field>
             <mat-label>Unidad Ejecutora</mat-label>
-            <mat-select formControlName="unidadEjecutora">
-                <!--<mat-option *ngFor="" [value]="">
-                    {{}}
-                </mat-option>-->
+            <mat-select formControlName="unidadEjecucion">
+              <mat-option *ngFor="let unidad_ejecucion of unidadEjecucion" [value]="unidad_ejecucion.Id">
+                {{unidad_ejecucion.Nombre}}
+              </mat-option>
             </mat-select>
         </mat-form-field>
         <mat-form-field>
@@ -19,10 +19,10 @@
         </mat-form-field>
         <mat-form-field>
             <mat-label>Tipo de Contrato</mat-label>
-            <mat-select formControlName="tipoContratoId">
-                <!--<mat-option *ngFor="" [value]="">
-                    {{}}
-                </mat-option>-->
+            <mat-select formControlName="tipoContratos">
+                <mat-option *ngFor="let contrato of tipoContratos" [value]="contrato.Id">
+              {{contrato.Nombre}}
+            </mat-option>
             </mat-select>
         </mat-form-field>
         <mat-form-field>
