@@ -23,9 +23,9 @@
     padding: 0 2%;
 }
 
-/* .mat-column-item, .mat-column-acciones {
+.mat-column-item, .mat-column-acciones {
     flex: 0 0 10%;
-} */
+}
 
 .edit-icon {
     color: rgb(100, 21, 21) !important;

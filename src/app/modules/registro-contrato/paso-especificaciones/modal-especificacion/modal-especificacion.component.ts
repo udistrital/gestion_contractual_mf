@@ -27,6 +27,7 @@ export class ModalEspecificacionComponent implements OnInit {
 
   iniciarFormEspecificacion() {
     this.formEspecificacion = this.fb.group({
+      id: [null],
       descripcion: ['', Validators.required],
       cantidad: [0, Validators.required],
       valorUnitario: [0, Validators.required],

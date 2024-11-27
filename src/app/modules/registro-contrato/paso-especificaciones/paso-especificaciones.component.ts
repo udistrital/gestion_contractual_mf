@@ -2,7 +2,8 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalEspecificacionComponent } from './modal-especificacion/modal-especificacion.component';
-import { Especificacion } from 'src/app/types/types';
+import { EspecificacionTecnica } from 'src/app/types/types';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 
 @Component({
   selector: 'app-paso-especificaciones',
@@ -13,7 +14,6 @@ export class PasoEspecificacionesComponent {
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
-  especificacionEditarIndex: number | null = null;
   displayedColumns = [
     'item',
     'descripcion',
@@ -22,72 +22,172 @@ export class PasoEspecificacionesComponent {
     'valorTotal',
     'acciones',
   ];
-  dataSource: Especificacion[] = [
-    {
-      descripcion: 'Producto A',
-      cantidad: 5,
-      valorUnitario: 100,
-      valorTotal: 500,
-    },
-  ];
+  editando: boolean = false;
+  especificaciones: EspecificacionTecnica[] = [];
 
-  constructor(public dialog: MatDialog, private alertService: AlertService) {}
+  constructor(
+    public dialog: MatDialog,
+    private alertService: AlertService,
+    private contratoGeneralCrudService: ContratoGeneralCrudService
+  ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.getEspecificaciones();
+  }
 
-  editarEspecificacion(index: number) {
-    this.especificacionEditarIndex = index;
-    const especificacion = this.dataSource[index];
-    this.openModalEspecificacion(especificacion);
+  private handleError(message: string, error: any, callback?: () => void) {
+    console.error(message, error);
+    this.alertService.showErrorAlert(message);
+    if (callback) callback();
+  }
+
+  getDataResponse(data: any): EspecificacionTecnica {
+    const { id, descripcion, cantidad, valorUnitario, valorTotal } = data;
+    return {
+      id,
+      descripcion,
+      cantidad,
+      valorUnitario,
+      valorTotal,
+    };
   }
 
   preguntarConfirmacionEliminacion(index: number) {
     this.alertService
       .showConfirmAlert('¿Está seguro(a) de eliminar la especificación?')
       .then((confirmado: any) => {
-        if (!confirmado.value) {
-          return;
+        if (confirmado.value) {
+          this.eliminarEspecificacion(index);
         }
-        this.eliminarEspecificacion(index);
+      });
+  }
+
+  getEspecificaciones() {
+    this.contratoGeneralCrudService.getEspecificacionesTecnicas().subscribe({
+      next: (response: { Success: boolean; Data: EspecificacionTecnica[] }) => {
+        if (response.Success && response.Data.length > 0) {
+          this.especificaciones = response.Data;
+        } else {
+          this.alertService.showErrorAlert(
+            'No se pudo obtener la lista de especificaciones técnicas'
+          );
+        }
+      },
+      error: (error) =>
+        this.handleError('Error al obtener especificaciones técnicas', error),
+    });
+  }
+
+  crearEspecificacion(especificacion: EspecificacionTecnica) {
+    const { id, ...especificacionSinId } = especificacion;
+    this.contratoGeneralCrudService
+      .postEspecificacionTecnica({
+        ...especificacionSinId,
+        contratoGeneralId: 1,
+      })
+      .subscribe({
+        next: (response: { Success: boolean; Data: EspecificacionTecnica }) => {
+          if (response.Success && response.Data.id) {
+            const nuevaEspecificacion = this.getDataResponse(response.Data);
+            this.especificaciones = [
+              ...this.especificaciones,
+              nuevaEspecificacion,
+            ];
+            this.alertService.showSuccessAlert(
+              'La actividad fue creada exitosamente',
+              'ACTIVIDAD CREADA'
+            );
+          } else {
+            this.alertService.showErrorAlert(
+              'No se pudo crear la especificación técnica'
+            );
+          }
+        },
+        error: (error) =>
+          this.handleError('Error al crear la especificación técnica', error),
+      });
+  }
+
+  actualizarEspecificacion(especificacion: EspecificacionTecnica) {
+    const { id, ...especificacionSinId } = especificacion;
+    this.contratoGeneralCrudService
+      .putEspecificacionTecnica(especificacion.id, especificacionSinId)
+      .subscribe({
+        next: (response: { Success: boolean; Data: EspecificacionTecnica }) => {
+          if (response.Success && response.Data.id) {
+            const nuevaEspecificacion = this.getDataResponse(response.Data);
+            const index = this.especificaciones.findIndex(
+              (element) => element.id === especificacion.id
+            );
+            if (index !== -1) {
+              this.especificaciones[index] = nuevaEspecificacion;
+            }
+            this.especificaciones = [...this.especificaciones];
+            this.alertService.showSuccessAlert(
+              'La actividad fue actualizada exitosamente',
+              'ACTIVIDAD ACTUALIZADA'
+            );
+          } else {
+            this.alertService.showErrorAlert(
+              'No se pudo actualizar la especificación técnica'
+            );
+          }
+        },
+        error: (error) =>
+          this.handleError(
+            'Error al actualizar la especificación técnica',
+            error
+          ),
       });
   }
 
   eliminarEspecificacion(index: number) {
-    this.dataSource.splice(index, 1);
-    this.dataSource = [...this.dataSource];
-
-    this.alertService.showSuccessAlert(
-      'La actividad fue eliminada exitosamente',
-      'ACTIVIDAD ELIMINADA'
-    );
-
-    // this.contratoGeneralCrudService
-    //   .postEstadoContrato(planEstado)
-    //   .subscribe((res: any) => {
-    //     this.alertService.showSuccessAlert(
-    //       'El contrato fue enviado al ordenador',
-    //       'CONTRATO ENVIADO'
-    //     );
-    //   });
+    const especificacion = this.especificaciones[index];
+    this.contratoGeneralCrudService
+      .deleteEspecificacionTecnica(especificacion.id)
+      .subscribe({
+        next: (response: {
+          Success: boolean;
+          Data: EspecificacionTecnica[];
+        }) => {
+          if (response.Success && response.Data) {
+            this.especificaciones.splice(index, 1);
+            this.especificaciones = [...this.especificaciones];
+            this.alertService.showSuccessAlert(
+              'La actividad fue eliminada exitosamente',
+              'ACTIVIDAD ELIMINADA'
+            );
+          } else {
+            this.alertService.showErrorAlert(
+              'No se pudo eliminar la especificación técnica'
+            );
+          }
+        },
+        error: (error) =>
+          this.handleError('Error al eliminar especificación técnica', error),
+      });
   }
 
-  openModalEspecificacion(especificacion?: Especificacion): void {
+  asignarEdicionEspecificacion(index: number) {
+    this.editando = true;
+    const especificacion = this.especificaciones[index];
+    this.openModalEspecificacion(especificacion);
+  }
+
+  openModalEspecificacion(especificacion?: EspecificacionTecnica): void {
     const dialog = this.dialog.open(ModalEspecificacionComponent, {
       width: '70vw',
       data: { especificacion },
     });
 
-    dialog.afterClosed().subscribe((especificacion) => {
+    dialog.afterClosed().subscribe((especificacion: EspecificacionTecnica) => {
       if (especificacion) {
-        if (this.especificacionEditarIndex !== null) {
-          // Si estamos editando, actualizamos la especificación
-          this.dataSource[this.especificacionEditarIndex] = especificacion;
+        if (this.editando) {
+          this.actualizarEspecificacion(especificacion);
         } else {
-          // Si estamos añadiendo, agregamos la nueva especificación
-          this.dataSource.push(especificacion);
+          this.crearEspecificacion(especificacion);
         }
-        this.dataSource = [...this.dataSource]; // Forzamos la actualización de la tabla
-        this.especificacionEditarIndex = null; // Restablecemos el índice de edición
+        this.editando = false;
       }
     });
   }
