@@ -24,6 +24,7 @@ export class PasoEspecificacionesComponent {
   ];
   editando: boolean = false;
   especificaciones: EspecificacionTecnica[] = [];
+  idContrato = 1;
 
   constructor(
     public dialog: MatDialog,
@@ -63,19 +64,22 @@ export class PasoEspecificacionesComponent {
   }
 
   getEspecificaciones() {
-    this.contratoGeneralCrudService.getEspecificacionesTecnicas().subscribe({
-      next: (response: { Success: boolean; Data: EspecificacionTecnica[] }) => {
-        if (response.Success && response.Data.length > 0) {
-          this.especificaciones = response.Data;
-        } else {
-          this.alertService.showErrorAlert(
-            'No se pudo obtener la lista de especificaciones técnicas'
-          );
-        }
-      },
-      error: (error) =>
-        this.handleError('Error al obtener especificaciones técnicas', error),
-    });
+    this.contratoGeneralCrudService
+      .getEspecificacionesTecnicas(this.idContrato)
+      .subscribe({
+        next: (response: {
+          Success: boolean;
+          Data: EspecificacionTecnica[];
+        }) => {
+          if (response.Success && response.Data.length > 0) {
+            this.especificaciones = response.Data.map((element) =>
+              this.getDataResponse(element)
+            );
+          }
+        },
+        error: (error) =>
+          this.handleError('Error al obtener especificaciones técnicas', error),
+      });
   }
 
   crearEspecificacion(especificacion: EspecificacionTecnica) {
@@ -83,7 +87,7 @@ export class PasoEspecificacionesComponent {
     this.contratoGeneralCrudService
       .postEspecificacionTecnica({
         ...especificacionSinId,
-        contratoGeneralId: 1,
+        contratoGeneralId: this.idContrato,
       })
       .subscribe({
         next: (response: { Success: boolean; Data: EspecificacionTecnica }) => {

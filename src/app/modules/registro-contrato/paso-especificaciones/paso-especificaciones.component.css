@@ -1,36 +1,37 @@
 .btn-container {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    gap: 10px;
-    margin: 15px 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+  margin: 15px 0;
 }
 
 .full-width-field {
-    width: 100%;
-    margin-top: 10px;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .title-box {
-    background-color: rgb(100, 21, 21);
-    color: white;
-    padding: 8px;
-    margin-bottom: 8px;
-    border-radius: 4px;
+  background-color: rgb(100, 21, 21);
+  color: white;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
 }
 
 .form-grid1 {
-    padding: 0 2%;
+  padding: 0 2%;
 }
 
-.mat-column-item, .mat-column-acciones {
-    flex: 0 0 10%;
+.mat-column-item,
+.mat-column-acciones {
+  flex: 0 0 10%;
 }
 
 .edit-icon {
-    color: rgb(100, 21, 21) !important;
+  color: rgb(100, 21, 21) !important;
 }
 
 .delete-icon {
-    color: gray !important;
+  color: gray !important;
 }

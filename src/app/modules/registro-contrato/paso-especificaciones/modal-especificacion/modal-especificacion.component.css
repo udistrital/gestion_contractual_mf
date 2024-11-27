@@ -39,7 +39,9 @@ form {
   flex: 3;
 }
 
-.cantidad-field, .valor-unitario-field, .valor-total-field {
+.cantidad-field,
+.valor-unitario-field,
+.valor-total-field {
   flex: 1;
 }
 

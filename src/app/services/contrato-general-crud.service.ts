@@ -45,9 +45,9 @@ export class ContratoGeneralCrudService {
     return this.requestManager.post('estados-contrato', estado);
   }
 
-  getEspecificacionesTecnicas(): Observable<any> {
+  getEspecificacionesTecnicas(idContrato: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get('especificaciones-tecnicas/');
+    return this.requestManager.get(`especificaciones-tecnicas?query={"activo":true, "contratoGeneralId":"${idContrato}"}`);
   }
 
   postEspecificacionTecnica(especificacion: any): Observable<any> {
