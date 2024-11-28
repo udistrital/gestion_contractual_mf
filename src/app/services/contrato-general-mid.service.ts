@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import {RequestManager} from "../managers/requestManager";
-import {Observable} from "rxjs";
-import { DependenciaContratoMidResponse, SedeContratoMidResponse} from "../types/types";
-import {map} from "rxjs/operators";
+import { RequestManager } from "../managers/requestManager";
+import { Observable } from "rxjs";
+import { DependenciaContratoMidResponse, SedeContratoMidResponse } from "../types/types";
+import { map } from "rxjs/operators";
 
 @Injectable({
   providedIn: 'root'
@@ -29,7 +29,7 @@ export class ContratoGeneralMidService {
     delete filterParams.offset;
 
     if (Object.keys(filterParams).length > 0) {
-      queryParams.push(`query=${encodeURIComponent(JSON.stringify(filterParams))}`);
+      queryParams.push(`queryFilter=${encodeURIComponent(Object.entries(filterParams).map(([key, value]) => `"${key}":${value}`).join(','))}`);
     }
 
     if (params.limit !== undefined) {

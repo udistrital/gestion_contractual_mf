@@ -62,7 +62,7 @@ export class ConsultaContratoComponent implements OnInit {
   form = this._formBuilder.group({
     unidadEjecucion: [''],
     vigencia: [''],
-    tipoContratos: [''],
+    tipoContratoId: [''],
     tipoPersona: [''],
     numeroElaboracion: [''],
     numeroContrato: [''],
@@ -74,7 +74,7 @@ export class ConsultaContratoComponent implements OnInit {
 
   unidadEjecucion: any[] = [];
   vigencia: any[] = [];
-  tipoContratos: any[] = [];
+  tipoContratoId: any[] = [];
   tipoPersona: any[] = [];
   numeroElaboracion: any[] = [];
   numeroContrato: any[] = [];
@@ -88,11 +88,7 @@ export class ConsultaContratoComponent implements OnInit {
     this.CargarVigencia();
     this.CargartipoContratoIds();
     this.CargarTipoPersona();
-
-    this.form.valueChanges.subscribe(() => {
-      this.paginaActual = 0;
-      this.consultar();
-    });
+    this.consultar();
   }
 
   cambiarPagina(event: PageEvent) {
@@ -137,7 +133,7 @@ export class ConsultaContratoComponent implements OnInit {
 
     if (formValues.unidadEjecucion) params.unidadEjecucion = formValues.unidadEjecucion;
     if (formValues.vigencia) params.vigencia = formValues.vigencia;
-    if (formValues.tipoContratos) params.tipoContratos = formValues.tipoContratos;
+    if (formValues.tipoContratoId) params.tipoContratoId = formValues.tipoContratoId;
     if (formValues.tipoPersona) params.tipoPersona = formValues.tipoPersona;
     if (formValues.numeroElaboracion) params.numeroElaboracion = formValues.numeroElaboracion;
     if (formValues.numeroContrato) params.numeroContrato = formValues.numeroContrato;
@@ -168,7 +164,7 @@ export class ConsultaContratoComponent implements OnInit {
   CargartipoContratoIds() {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_CONTRATO_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
-        this.tipoContratos = Response.Data;
+        this.tipoContratoId = Response.Data;
       }
     })
   }
