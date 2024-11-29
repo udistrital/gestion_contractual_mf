@@ -28,6 +28,7 @@ export const environment = {
   MEDIO_PAGO_ID: '127',
   TIPO_PERSONA_ID: '132',
   ENUMERACION_CLAUSULAS_ID: '135',
+  TIPO_ESTADO_ID: '137',
 
   UNIDAD_EJECUCION_ID: '7',
 

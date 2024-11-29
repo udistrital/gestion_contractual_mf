@@ -28,9 +28,33 @@ export class ContratoGeneralMidService {
     delete filterParams.limit;
     delete filterParams.offset;
 
+    // Función para aplanar objetos anidados
+    const flattenObject = (obj: any, prefix: string = ''): any => {
+      let items: any = {};
+      for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const newKey = prefix ? `${prefix}.${key}` : key;
+          if (typeof obj[key] === 'object' && obj[key] !== null) {
+            Object.assign(items, flattenObject(obj[key], newKey));
+          } else {
+            items[newKey] = obj[key];
+          }
+        }
+      }
+      return items;
+    };
+
     if (Object.keys(filterParams).length > 0) {
-      queryParams.push(`queryFilter=${encodeURIComponent(Object.entries(filterParams).map(([key, value]) => `"${key}":${value}`).join(','))}`);
+      const flatParams = flattenObject(filterParams);
+      queryParams.push(
+        `queryFilter=${encodeURIComponent(
+          Object.entries(flatParams)
+            .map(([key, value]) => `"${key}":${JSON.stringify(value)}`)
+            .join(',')
+        )}`
+      );
     }
+
 
     if (params.limit !== undefined) {
       queryParams.push(`limit=${params.limit}`);
