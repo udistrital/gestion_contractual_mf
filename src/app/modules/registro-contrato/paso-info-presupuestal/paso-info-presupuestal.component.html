@@ -100,15 +100,10 @@
                   <mat-label>Valor de Contrato en Pesos:</mat-label>
                   <input matInput formControlName="valorContrato" (keydown)="onlyNumbers($event)">
               </mat-form-field>
-              <mat-checkbox (change)="toggleInputOrdenador()">Ordenador Encargado</mat-checkbox>
             <div>
               <mat-checkbox>Reversar saldos</mat-checkbox>
               <p>Asegúrate de escoger la opción correcta, ya que esta acción no se puede deshacer.</p>
             </div>
-              <mat-form-field *ngIf="habilitarInput">
-                  <mat-label>Resolución:</mat-label>
-                  <input matInput formControlName="resolucion">
-              </mat-form-field>
               <mat-form-field>
                   <mat-label>Ordenador Gasto:</mat-label>
                   <mat-select formControlName="ordenadorGasto">
