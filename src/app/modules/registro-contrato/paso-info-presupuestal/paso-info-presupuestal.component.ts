@@ -1,6 +1,6 @@
 import {ChangeDetectorRef, Component, EventEmitter, Output} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import {combineLatest, finalize, firstValueFrom, Observable, startWith, Subject} from 'rxjs';
+import { finalize, firstValueFrom, Subject} from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import {CdpsService} from "src/app/services/cdps.service";
 import {ParametrosService} from "src/app/services/parametros.service";
@@ -8,8 +8,6 @@ import {environment} from "src/environments/environment";
 import Swal from "sweetalert2";
 import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
 import {CDP, CDPContratoCRUD} from "../../../types/types";
-
-
 
 interface CDPData {
   vigencia: string;
@@ -56,7 +54,6 @@ export class PasoInfoPresupuestalComponent {
   });
 
   monedas: any[] = [];
-  resoluciones: any[] = [];
   ordenadores: any[] = [];
   gastos: any[] = [];
   origen_recursos: any[] = [];
@@ -88,13 +85,6 @@ export class PasoInfoPresupuestalComponent {
 
   selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
   cdpsContrato: CDPContratoCRUD[] = []; // Lista de CDPs asociados al contrato general
-
-  habilitarInput = false;
-
-  toggleInputOrdenador() {
-    this.habilitarInput = !this.habilitarInput;
-  }
-
 
   checked = true;
 
