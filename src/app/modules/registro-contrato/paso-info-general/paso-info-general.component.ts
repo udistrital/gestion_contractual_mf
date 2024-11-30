@@ -4,9 +4,9 @@ import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
-import { ApiResponse } from "../../../services/polizas.interfaces";
+import { ApiResponse } from "src/app/types/polizas";
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
-import { EstadoContratoCRUD } from "../../../types/types";
+import { EstadoContratoCRUD } from "src/app/types/types";
 
 interface Parametro {
   Id: number | string;

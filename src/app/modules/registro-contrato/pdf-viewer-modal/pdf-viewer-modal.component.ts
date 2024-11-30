@@ -1,6 +1,6 @@
 import {Component, ElementRef, Inject, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
-import {FileService} from "../../../services/FileService";
+import {FileService} from "src/app/services/file.service";
 
 @Component({
   selector: 'app-pdf-viewer-modal',

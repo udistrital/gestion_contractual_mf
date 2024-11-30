@@ -1,44 +1,31 @@
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, RouterStateSnapshot } from '@angular/router';
+import { CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { inject } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class AuthGuard implements CanActivate {
+export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+  const alertService = inject(AlertService);
+  const menuInfo = localStorage.getItem('menu');
+  const menuPermisos = menuInfo ? JSON.parse(atob(menuInfo)) : null;
+  const fullUrl = window.location.href;
+  const url = new URL(fullUrl);
+  const path = url.pathname;
 
-  constructor(
-    private popUpManager: AlertService,
-  ) {}
+  // Obtener parámetros de la ruta
+  const params = route.params;
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    const menuInfo = localStorage.getItem('menu');
-    const menuPermisos = menuInfo ? JSON.parse(atob(menuInfo)) : null;
-    const fullUrl = window.location.href;
-    const url = new URL(fullUrl);
-    const path = url.pathname;
-
-    // Obtener parámetros de la ruta
-    const params = route.params;
-
-    if (menuPermisos != null) {
-      // Pasar tanto la URL como los parámetros a la función de verificación
-      if (checkUrlExists(menuPermisos, path, params)) {
-        return true;
-      }
+  if (menuPermisos != null) {
+    // Pasar tanto la URL como los parámetros a la función de verificación
+    if (checkUrlExists(menuPermisos, path, params)) {
+      return true;
     }
-
-    this.popUpManager.showErrorAlert(('ERROR.rol_insuficiente_titulo'));
-    return false;
   }
 
-  canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    return this.canActivate(route, state);
-  }
-}
+  alertService.showErrorAlert("No tiene permisos para realizar esta acción", "Acceso prohibido");
+  return false;
+};
 
 // Recorrer el menú para verificar si la URL y los parámetros existen
-function checkUrlExists(menuItems: any, targetUrl: string, params: any) {
+function checkUrlExists(menuItems: any, targetUrl: string, params: any): boolean {
   return menuItems.some((item: any) => {
     // Verificar la URL y los parámetros
     if (item.Url === targetUrl && checkParams(item.Params, params)) {

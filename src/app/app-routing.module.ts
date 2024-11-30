@@ -6,22 +6,22 @@ import { APP_BASE_HREF } from '@angular/common';
 import { RegistroContratoComponent } from './modules/registro-contrato/registro-contrato.component';
 import { ConsultaContratoComponent } from './modules/consulta-contrato/consulta-contrato.component';
 import { RevisionContratoComponent } from './modules/revision-contrato/revision-contrato.component';
-import { AuthGuard } from 'src/_guards/auth.guard';
+import { authGuard } from 'src/_guards/auth.guard';
 
 const routes: Routes = [
   {
     path: 'registrar',
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
     component: RegistroContratoComponent,
   },
   {
     path: 'consultar',
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
     component: ConsultaContratoComponent,
   },
   {
     path: 'revisar',
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
     component: RevisionContratoComponent,
   },
 ];
