@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, EventEmitter, Output} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import { finalize, firstValueFrom, Subject} from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
@@ -26,7 +26,7 @@ interface CDPData {
 })
 
 
-export class PasoInfoPresupuestalComponent {
+export class PasoInfoPresupuestalComponent implements OnInit {
   @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
 
@@ -146,12 +146,38 @@ export class PasoInfoPresupuestalComponent {
 
 
   private loadSavedData(): void {
+    console.log('Loading saved data...');
     try {
       const savedForm = localStorage.getItem('paso-info-presupuestal');
       if (savedForm) {
         const parsedForm = JSON.parse(savedForm);
         this.formId = parsedForm.id;
-        this.form.patchValue(parsedForm);
+
+        const formValues = {
+          ordenadorGasto: parsedForm.ordenadorId,
+          tipoGasto: parsedForm.tipoGastoId,
+          origenPresupuesto: parsedForm.origenPresupuestosId,
+          temaGasto: parsedForm.temaGastoInversionId,
+          medioPago: parsedForm.medioPagoId,
+          tipoMoneda: parsedForm.tipoMonedaId,
+          valorContrato: parsedForm.valorPesos,
+          origenRecurso: parsedForm.origenRecursosId,
+        };
+
+        console.log('Loading values into form:', formValues);
+        this.form.patchValue(formValues);
+
+        this.contratoGeneralId = parsedForm.id;
+
+        if (this.contratoGeneralId) {
+          this.cargarCDPsContrato(this.contratoGeneralId)
+        }
+      }
+
+      const infoGeneral = localStorage.getItem('paso-info-general');
+      if (infoGeneral) {
+        const contratoData = JSON.parse(infoGeneral);
+        this.contratoGeneralId = contratoData.id;
       }
     } catch (error) {
       console.error('Error loading saved data:', error);
@@ -160,10 +186,6 @@ export class PasoInfoPresupuestalComponent {
   }
 
   async guardarYContinuar() {
-    console.log('Form validity:', this.form.valid);
-    console.log('Form errors:', this.form.errors);
-    console.log('Form touched:', this.form.touched);
-    console.log('Form values:', this.form.value);
 
     if (!this.form.valid) {
       this.form.markAllAsTouched();
@@ -178,7 +200,10 @@ export class PasoInfoPresupuestalComponent {
         tipoGastoId: this.form.get('tipoGasto')?.value,
         origenPresupuestosId: this.form.get('origenPresupuesto')?.value,
         temaGastoInversionId: this.form.get('temaGasto')?.value,
-        medioPagoId: this.form.get('medioPago')?.value
+        medioPagoId: this.form.get('medioPago')?.value,
+        tipoMonedaId: this.form.get('tipoMoneda')?.value,
+        valorPesos: this.form.get('valorContrato')?.value,
+        origenRecursosId: this.form.get('origenRecurso')?.value,
       };
 
       // Obtener el ID del contrato del localStorage
@@ -222,36 +247,6 @@ export class PasoInfoPresupuestalComponent {
     } finally {
       this.isLoading = false;
       this.cdRef.detectChanges();
-    }
-  }
-
-  private cargarContratoGeneral() {
-    const infoGeneral = localStorage.getItem('paso-info-general');
-    if (!infoGeneral) {
-      Swal.fire({
-        title: 'Error',
-        text: 'No se ha encontrado información general del contrato. PIP',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
-      return;
-    }
-
-    try {
-      const contratoGeneral = JSON.parse(infoGeneral);
-      this.contratoGeneralId = contratoGeneral.id;
-
-      if(this.contratoGeneralId){
-        this.cargarCDPsContrato(this.contratoGeneralId)
-      }
-    } catch (error) {
-      console.error('Error loading contrato general:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'No se ha encontrado información general del contrato. PIP2',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
     }
   }
 
@@ -581,9 +576,9 @@ export class PasoInfoPresupuestalComponent {
 
   async onInView(inView: boolean) {
     if (inView) {
-      this.cargarContratoGeneral();
+      this.loadSavedData();
     } else {
-      console.log('Step 1 out of view');
+      console.log('Paso Info Presupuestal - out of view');
     }
   }
 
