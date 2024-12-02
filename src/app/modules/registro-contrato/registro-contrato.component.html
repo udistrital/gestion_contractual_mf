@@ -1,6 +1,7 @@
 <h1>Registrar Contrato</h1>
 <div class="border">
   <mat-stepper #stepper [linear]="isLinear" labelPosition="bottom">
+
     <mat-step [stepControl]="pasoInfoGeneral.formInfoGeneral">
       <ng-template matStepLabel>Información General</ng-template>
       <app-paso-info-general
@@ -14,7 +15,11 @@
 
     <mat-step [stepControl]="pasoInfoPresupuestal.form" [editable]="canProceedToStep(1) | async">
       <ng-template matStepLabel>Información Presupuestal</ng-template>
-      <app-paso-info-presupuestal #pasoInfoPresupuestal (stepCompleted)="stepCompleted(1, $event)"></app-paso-info-presupuestal>
+      <app-paso-info-presupuestal
+        #pasoInfoPresupuestal
+        (stepCompleted)="stepCompleted(1, $event)"
+      (nextStep)="goToNextStep()">
+      </app-paso-info-presupuestal>
     </mat-step>
     <mat-step>
         <ng-template matStepLabel>Información Solicitante y Supervisor</ng-template>
