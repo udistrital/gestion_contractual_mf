@@ -4,8 +4,8 @@ import { ModalMotivosRechazoComponent } from './modal-motivos-rechazo/modal-moti
 import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
-import { base64 } from 'src/assets/base64';
-import { EstadoContratoCRUD } from 'src/app/types/types';
+import { EstadoContratoCRUD, DocumentoContrato } from 'src/app/types/types';
+import { DocumentosService } from 'src/app/services/documentos.service';
 
 @Component({
   selector: 'app-revision-contrato',
@@ -21,14 +21,20 @@ export class RevisionContratoComponent {
   constructor(
     public dialog: MatDialog,
     private alertService: AlertService,
-    private contratoGeneralCrudService: ContratoGeneralCrudService
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private documentosService: DocumentosService
   ) {}
 
   ngOnInit(): void {
-    // Asigna el Base64 a la variable, incluyendo el prefijo del tipo de archivo.
-    this.documento = documento();
+    this.getDocumentoContrato();
     this.usuarioId = 1;
     this.rol = 'ORDENADOR'; // JEFE CONTRATACION Y ORDENADOR
+  }
+
+  private handleError(message: string, error: any, callback?: () => void) {
+    console.error(message, error);
+    this.alertService.showErrorAlert(message);
+    if (callback) callback();
   }
 
   openModalRechazo(): void {
@@ -86,8 +92,27 @@ export class RevisionContratoComponent {
   selectTab(index: number) {
     this.selectedTab = index;
   }
-}
 
-export function documento() {
-  return base64;
+  getDocumentoContrato() {
+    this.contratoGeneralCrudService.getDocumentoContrato(12).subscribe({
+      next: (response: { Success: boolean; Data: DocumentoContrato[] }) => {
+        if (response.Success && response.Data.length > 0) {
+          this.getDocumentoGestorDocumental(response.Data[0].documento_enlace);
+        }
+      },
+      error: (error) =>
+        this.handleError('Error al obtener documento de contrato', error),
+    });
+  }
+
+  getDocumentoGestorDocumental(documento_enlace: string) {
+    this.documentosService.getDocumento(documento_enlace).subscribe({
+      next: (response: any) => {
+        if (response.file) {
+          this.documento = response.file;
+        }
+      },
+      error: (error) => this.handleError('Error al obtener documento', error),
+    });
+  }
 }

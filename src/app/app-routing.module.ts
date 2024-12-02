@@ -21,7 +21,7 @@ const routes: Routes = [
   },
   {
     path: 'revisar',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     component: RevisionContratoComponent,
   },
 ];
