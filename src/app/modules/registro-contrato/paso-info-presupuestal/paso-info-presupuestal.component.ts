@@ -1,6 +1,6 @@
-import {ChangeDetectorRef, Component, EventEmitter, Output} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import {combineLatest, finalize, firstValueFrom, Observable, startWith, Subject} from 'rxjs';
+import { finalize, firstValueFrom, Subject} from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import {CdpsService} from "src/app/services/cdps.service";
 import {ParametrosService} from "src/app/services/parametros.service";
@@ -8,8 +8,6 @@ import {environment} from "src/environments/environment";
 import Swal from "sweetalert2";
 import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
 import {CDP, CDPContratoCRUD} from "../../../types/types";
-
-
 
 interface CDPData {
   vigencia: string;
@@ -28,7 +26,7 @@ interface CDPData {
 })
 
 
-export class PasoInfoPresupuestalComponent {
+export class PasoInfoPresupuestalComponent implements OnInit {
   @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
 
@@ -38,12 +36,11 @@ export class PasoInfoPresupuestalComponent {
   firstTime = true;
 
   form = this._formBuilder.group({
-    vigencia: ['', Validators.required],
-    cdp: ['', Validators.required],
-    valorAcumulado: [{value: 0, disabled: true}, Validators.required],
+    vigencia: [''],
+    cdp: [''],
+    valorAcumulado: [{value: 0, disabled: true}],
     tipoMoneda: ['', Validators.required],
     valorContrato: ['', Validators.required],
-    resolucion: [''],
     ordenadorGasto: ['', Validators.required],
     nombreOrdenador: ['', Validators.required],
     tipoGasto: ['', Validators.required],
@@ -51,13 +48,11 @@ export class PasoInfoPresupuestalComponent {
     origenPresupuesto: ['', Validators.required],
     temaGasto: ['', Validators.required],
     monedaExtranjera: ['', Validators.required],
-    tasaCambio: ['', Validators.required],
+    tasaCambio: [''],
     medioPago: ['', Validators.required],
   });
 
   monedas: any[] = [];
-  resoluciones: any[] = [];
-  ordenadores: any[] = [];
   gastos: any[] = [];
   origen_recursos: any[] = [];
   origen_presupuestos: any[] = [];
@@ -89,18 +84,28 @@ export class PasoInfoPresupuestalComponent {
   selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
   cdpsContrato: CDPContratoCRUD[] = []; // Lista de CDPs asociados al contrato general
 
-  habilitarInput = false;
-
-  toggleInputOrdenador() {
-    this.habilitarInput = !this.habilitarInput;
-  }
-
-
   checked = true;
 
   private destroy$ = new Subject<void>();
 
   isLoading = false;
+
+  ordenadores: any[] = [
+    {
+      Id: 1,
+      Nombre: "Director Financiero"
+    },
+    {
+      Id: 2,
+      Nombre: "Director Administrativo"
+    },
+    {
+      Id: 3,
+      Nombre: "Director General"
+    }
+  ];
+
+  private formId: number | null = null;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -120,6 +125,7 @@ export class PasoInfoPresupuestalComponent {
     this.CargarOrigenPresupuesto();
     this.CargarTemaGasto();
     this.CargarMediosPago();
+    this.loadSavedData();
 
     this.form.get('tipoMoneda')?.valueChanges.subscribe((id_moneda) => {
       if(id_moneda){
@@ -139,34 +145,108 @@ export class PasoInfoPresupuestalComponent {
   }
 
 
+  private loadSavedData(): void {
+    console.log('Loading saved data...');
+    try {
+      const savedForm = localStorage.getItem('paso-info-presupuestal');
+      if (savedForm) {
+        const parsedForm = JSON.parse(savedForm);
+        this.formId = parsedForm.id;
 
-  private cargarContratoGeneral() {
-    const infoGeneral = localStorage.getItem('paso-info-general');
-    if (!infoGeneral) {
-      Swal.fire({
-        title: 'Error',
-        text: 'No se ha encontrado información general del contrato',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
+        const formValues = {
+          ordenadorGasto: parsedForm.ordenadorId,
+          tipoGasto: parsedForm.tipoGastoId,
+          origenPresupuesto: parsedForm.origenPresupuestosId,
+          temaGasto: parsedForm.temaGastoInversionId,
+          medioPago: parsedForm.medioPagoId,
+          tipoMoneda: parsedForm.tipoMonedaId,
+          valorContrato: parsedForm.valorPesos,
+          origenRecurso: parsedForm.origenRecursosId,
+        };
+
+        console.log('Loading values into form:', formValues);
+        this.form.patchValue(formValues);
+
+        this.contratoGeneralId = parsedForm.id;
+
+        if (this.contratoGeneralId) {
+          this.cargarCDPsContrato(this.contratoGeneralId)
+        }
+      }
+
+      const infoGeneral = localStorage.getItem('paso-info-general');
+      if (infoGeneral) {
+        const contratoData = JSON.parse(infoGeneral);
+        this.contratoGeneralId = contratoData.id;
+      }
+    } catch (error) {
+      console.error('Error loading saved data:', error);
+      localStorage.removeItem('paso-info-presupuestal');
+    }
+  }
+
+  async guardarYContinuar() {
+
+    if (!this.form.valid) {
+      this.form.markAllAsTouched();
       return;
     }
 
     try {
-      const contratoGeneral = JSON.parse(infoGeneral);
-      this.contratoGeneralId = contratoGeneral.id;
+      this.isLoading = true;
 
-      if(this.contratoGeneralId){
-        this.cargarCDPsContrato(this.contratoGeneralId)
+      const formData = {
+        ordenadorId: this.form.get('ordenadorGasto')?.value,
+        tipoGastoId: this.form.get('tipoGasto')?.value,
+        origenPresupuestosId: this.form.get('origenPresupuesto')?.value,
+        temaGastoInversionId: this.form.get('temaGasto')?.value,
+        medioPagoId: this.form.get('medioPago')?.value,
+        tipoMonedaId: this.form.get('tipoMoneda')?.value,
+        valorPesos: this.form.get('valorContrato')?.value,
+        origenRecursosId: this.form.get('origenRecurso')?.value,
+      };
+
+      // Obtener el ID del contrato del localStorage
+      const infoGeneral = localStorage.getItem('paso-info-general');
+      if (!infoGeneral) {
+        throw new Error('No se ha encontrado información general del contrato');
       }
-    } catch (error) {
-      console.error('Error loading contrato general:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'No se ha encontrado información general del contrato',
-        icon: 'error',
-        confirmButtonText: 'OK'
+
+      const contratoData = JSON.parse(infoGeneral);
+      const contratoId = contratoData.id;
+
+      if (!contratoId) {
+        throw new Error('No se ha encontrado el ID del contrato');
+      }
+
+      // Actualizar en el backend
+      const response = await firstValueFrom(
+        this.contratoGeneralCrudService.put(contratoId, formData)
+      );
+
+      // Guardar en localStorage
+      localStorage.setItem('paso-info-presupuestal', JSON.stringify({
+        ...formData,
+        id: contratoId
+      }));
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Datos guardados',
+        text: 'La información presupuestal se ha guardado correctamente'
       });
+
+      this.nextStep.emit();
+    } catch (error) {
+      console.error('Error saving data:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al guardar',
+        text: 'Ocurrió un error al guardar la información presupuestal'
+      });
+    } finally {
+      this.isLoading = false;
+      this.cdRef.detectChanges();
     }
   }
 
@@ -296,7 +376,7 @@ export class PasoInfoPresupuestalComponent {
     if (!this.contratoGeneralId) {
       Swal.fire({
         title: 'Error',
-        text: 'No se ha encontrado información general del contrato',
+        text: 'No se ha encontrado información general del contrato. PIP3',
         icon: 'error',
         confirmButtonText: 'OK'
       });
@@ -437,16 +517,6 @@ export class PasoInfoPresupuestalComponent {
     }
   }
 
-
-  guardarYContinuar() {
-    if (this.form.valid) {
-      // ... lógica de guardado
-      this.nextStep.emit();
-    } else {
-      this.form.markAllAsTouched();
-    }
-  }
-
   sortCDPs() {
     this.cdps.sort((a, b) => {
       const numA = parseInt(a.value, 10);
@@ -506,9 +576,9 @@ export class PasoInfoPresupuestalComponent {
 
   async onInView(inView: boolean) {
     if (inView) {
-      this.cargarContratoGeneral();
+      this.loadSavedData();
     } else {
-      console.log('Step 1 out of view');
+      console.log('Paso Info Presupuestal - out of view');
     }
   }
 

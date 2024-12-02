@@ -111,4 +111,16 @@ export class RequestManager {
       catchError((error) => this.errManager.handleError(error)),
     );
   }
+
+  /**
+   * Perform a PATCH http request
+   * @param endpoint service's end-point
+   * @param element data to send as JSON, With the id to UPDATE
+   * @returns Observable<any>
+   */
+  patch(endpoint: any, element: any) {
+    return this.http.patch<any>(`${this.path}${endpoint}`, element, this.httpOptions).pipe(
+      catchError((error) => this.errManager.handleError(error)),
+    );
+  }
 };
