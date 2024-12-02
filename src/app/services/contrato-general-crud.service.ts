@@ -46,6 +46,26 @@ export class ContratoGeneralCrudService {
     return this.requestManager.post('estados-contrato', estado);
   }
 
+  getEspecificacionesTecnicas(idContrato: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`especificaciones-tecnicas?query={"activo":true, "contratoGeneralId":"${idContrato}"}`);
+  }
+
+  postEspecificacionTecnica(especificacion: any): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post('especificaciones-tecnicas', especificacion);
+  }
+
+  putEspecificacionTecnica(id: number, especificacion: any): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.put('especificaciones-tecnicas/'+id, especificacion);
+  }
+
+  deleteEspecificacionTecnica(id: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.delete('especificaciones-tecnicas', id);
+  }
+
   postContratista(contratistaData: ContratistaCRUD): Observable<any> {
     if(!contratistaData.contrato_general_id){
       throw new Error('No se ha especificado el contrato general asociado al contratista');

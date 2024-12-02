@@ -8,7 +8,7 @@ import Swal from 'sweetalert2/dist/sweetalert2';
 export class AlertService {
   constructor() {}
 
-  showAlert(title: string, text: string) {
+  showAlert(text: string, title: string | null = null) {
     Swal.fire({
       icon: 'info',
       title: title,
