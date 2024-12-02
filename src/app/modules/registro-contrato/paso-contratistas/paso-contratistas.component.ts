@@ -303,15 +303,10 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     };
   }
 
-  private cargarContratoGeneral() {
+  private async cargarContratoGeneral() {
     const infoGeneral = localStorage.getItem('paso-info-general');
     if (!infoGeneral) {
-      Swal.fire({
-        title: 'Error',
-        text: 'No se ha encontrado información general del contrato',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
+      console.error('Paso Contratistas: No se ha encontrado información general del contrato');
       return;
     }
     try {
@@ -319,9 +314,9 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       this.contratoGeneralId = contratoGeneral.id;
     } catch (error) {
       console.error('Error loading contrato general:', error);
-      Swal.fire({
+      await Swal.fire({
         title: 'Error',
-        text: 'No se ha encontrado información general del contrato',
+        text: 'No se ha encontrado información general del contrato. PC2',
         icon: 'error',
         confirmButtonText: 'OK'
       });

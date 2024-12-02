@@ -135,7 +135,7 @@ export class PasoInfoPresupuestalComponent {
     if (!infoGeneral) {
       Swal.fire({
         title: 'Error',
-        text: 'No se ha encontrado información general del contrato',
+        text: 'No se ha encontrado información general del contrato. PIP',
         icon: 'error',
         confirmButtonText: 'OK'
       });
@@ -153,7 +153,7 @@ export class PasoInfoPresupuestalComponent {
       console.error('Error loading contrato general:', error);
       Swal.fire({
         title: 'Error',
-        text: 'No se ha encontrado información general del contrato',
+        text: 'No se ha encontrado información general del contrato. PIP2',
         icon: 'error',
         confirmButtonText: 'OK'
       });
@@ -286,7 +286,7 @@ export class PasoInfoPresupuestalComponent {
     if (!this.contratoGeneralId) {
       Swal.fire({
         title: 'Error',
-        text: 'No se ha encontrado información general del contrato',
+        text: 'No se ha encontrado información general del contrato. PIP3',
         icon: 'error',
         confirmButtonText: 'OK'
       });
