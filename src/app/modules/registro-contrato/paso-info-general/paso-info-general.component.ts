@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
 import { ApiResponse } from "../../../services/polizas.interfaces";
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
-import { EstadoContratoCRUD } from "../../../types/types";
+import {EstadoContratoCRUD} from "../../../types/types";
 
 interface Parametro {
   Id: number | string;
@@ -21,7 +21,7 @@ interface Parametro {
   templateUrl: './paso-info-general.component.html',
   styleUrls: ['./paso-info-general.component.css'],
 })
-export class PasoInfoGeneralComponent implements OnInit, OnChanges {
+export class PasoInfoGeneralComponent implements OnInit {
   @Input() viewMode: boolean = false; //Determina si el paso es de creación o visualización
   @Output() stepCompleted = new EventEmitter<boolean>();
   @Output() nextStep = new EventEmitter<void>();
@@ -86,10 +86,6 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
 
   //Estado
   estado_id: number | null = null;
-
-   ngOnChanges() {
-      console.log('Step 1 changeddd');
-   }
 
   ngOnInit(): void {
     if (this.viewMode) {
@@ -472,7 +468,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     if (inView) {
       this.loadSavedData();
     } else {
-      console.log('Step 1 out of view');
+      console.log('Step Info General - out of view');
     }
   }
 

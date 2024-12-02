@@ -12,6 +12,7 @@ export class ContratoGeneralCrudService {
   constructor(private requestManager: RequestManager) {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
   }
+
   post(contrato_general_parcial: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post('contratos-generales', contrato_general_parcial);
@@ -73,6 +74,11 @@ export class ContratoGeneralCrudService {
     return this.requestManager.post('contratistas/', contratistaData);
   }
 
+  postDocumentoContrato(documento: any): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post('documentos-contratos', documento);
+  }
+
   getContratos(params: any): Observable<any> {
 
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
@@ -99,4 +105,23 @@ export class ContratoGeneralCrudService {
     return this.requestManager.get(url);
   }
 
+  postSolicitante(contrato_general_parcial: any): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post('solicitantes', contrato_general_parcial);
+  }
+
+  patchSolicitante(id: number, contrato_general_parcial: any): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.patch('solicitantes/'+id, contrato_general_parcial);
+  }
+
+  postLugarEjecucion(contrato_general_parcial: any): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post('lugares-ejecucion', contrato_general_parcial);
+  }
+
+  patchLugarEjecucion(id: number, contrato_general_parcial: any): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.patch('lugares-ejecucion/'+id, contrato_general_parcial);
+  }
 }

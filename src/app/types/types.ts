@@ -56,3 +56,10 @@ export interface EspecificacionTecnica {
   valorTotal: number;
   contratoGeneralId?: number;
 }
+
+export interface DocumentoContrato {
+  tipo_documento_id: string;
+  documento_id: number;
+  documento_enlace: string;
+  contrato_general_id: number;
+}
