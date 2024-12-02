@@ -41,7 +41,7 @@ export class AlertService {
       icon: 'error',
       title: 'Error',
       text: text,
-      confirmButtonText: 'Aceptar',
+      confirmButtonText: 'OK',
       customClass: {
         confirmButton: 'alertaConfirmarBoton',
         cancelButton: 'alertaCancelarBoton',

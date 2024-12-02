@@ -54,3 +54,10 @@ export interface Especificacion {
   valorUnitario: number;
   valorTotal: number;
 }
+
+export interface DocumentoContrato {
+  tipo_documento_id: string;
+  documento_id: number;
+  documento_enlace: string;
+  contrato_general_id: number;
+}

@@ -674,9 +674,15 @@ export class PasoClausulasParagrafosComponent {
   openPdfViewer(): void {        
     const pdfBlob = this.base64ToBlob(base64, 'application/pdf');
     this.dialog.open(PdfViewerModalComponent, {
-      width: '80%',
-      height: '80%',
-      data: { file: pdfBlob }
+      width: '70vw',
+      data: { 
+        file: pdfBlob, 
+        documento: {
+          nombre: `MINUTA ${this.contratoId} - ${this.tipoContratoId}`, 
+          descripcion: "",
+          contrato_general_id: 1
+        }
+      }
     });
   }
 }
