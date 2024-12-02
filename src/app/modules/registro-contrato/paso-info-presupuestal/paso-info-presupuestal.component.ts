@@ -36,12 +36,11 @@ export class PasoInfoPresupuestalComponent {
   firstTime = true;
 
   form = this._formBuilder.group({
-    vigencia: ['', Validators.required],
-    cdp: ['', Validators.required],
-    valorAcumulado: [{value: 0, disabled: true}, Validators.required],
+    vigencia: [''],
+    cdp: [''],
+    valorAcumulado: [{value: 0, disabled: true}],
     tipoMoneda: ['', Validators.required],
     valorContrato: ['', Validators.required],
-    resolucion: [''],
     ordenadorGasto: ['', Validators.required],
     nombreOrdenador: ['', Validators.required],
     tipoGasto: ['', Validators.required],
@@ -49,12 +48,11 @@ export class PasoInfoPresupuestalComponent {
     origenPresupuesto: ['', Validators.required],
     temaGasto: ['', Validators.required],
     monedaExtranjera: ['', Validators.required],
-    tasaCambio: ['', Validators.required],
+    tasaCambio: [''],
     medioPago: ['', Validators.required],
   });
 
   monedas: any[] = [];
-  ordenadores: any[] = [];
   gastos: any[] = [];
   origen_recursos: any[] = [];
   origen_presupuestos: any[] = [];
@@ -92,6 +90,23 @@ export class PasoInfoPresupuestalComponent {
 
   isLoading = false;
 
+  ordenadores: any[] = [
+    {
+      Id: 1,
+      Nombre: "Director Financiero"
+    },
+    {
+      Id: 2,
+      Nombre: "Director Administrativo"
+    },
+    {
+      Id: 3,
+      Nombre: "Director General"
+    }
+  ];
+
+  private formId: number | null = null;
+
   constructor(
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
@@ -110,6 +125,7 @@ export class PasoInfoPresupuestalComponent {
     this.CargarOrigenPresupuesto();
     this.CargarTemaGasto();
     this.CargarMediosPago();
+    this.loadSavedData();
 
     this.form.get('tipoMoneda')?.valueChanges.subscribe((id_moneda) => {
       if(id_moneda){
@@ -129,6 +145,85 @@ export class PasoInfoPresupuestalComponent {
   }
 
 
+  private loadSavedData(): void {
+    try {
+      const savedForm = localStorage.getItem('paso-info-presupuestal');
+      if (savedForm) {
+        const parsedForm = JSON.parse(savedForm);
+        this.formId = parsedForm.id;
+        this.form.patchValue(parsedForm);
+      }
+    } catch (error) {
+      console.error('Error loading saved data:', error);
+      localStorage.removeItem('paso-info-presupuestal');
+    }
+  }
+
+  async guardarYContinuar() {
+    console.log('Form validity:', this.form.valid);
+    console.log('Form errors:', this.form.errors);
+    console.log('Form touched:', this.form.touched);
+    console.log('Form values:', this.form.value);
+
+    if (!this.form.valid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    try {
+      this.isLoading = true;
+
+      const formData = {
+        ordenadorId: this.form.get('ordenadorGasto')?.value,
+        tipoGastoId: this.form.get('tipoGasto')?.value,
+        origenPresupuestosId: this.form.get('origenPresupuesto')?.value,
+        temaGastoInversionId: this.form.get('temaGasto')?.value,
+        medioPagoId: this.form.get('medioPago')?.value
+      };
+
+      // Obtener el ID del contrato del localStorage
+      const infoGeneral = localStorage.getItem('paso-info-general');
+      if (!infoGeneral) {
+        throw new Error('No se ha encontrado información general del contrato');
+      }
+
+      const contratoData = JSON.parse(infoGeneral);
+      const contratoId = contratoData.id;
+
+      if (!contratoId) {
+        throw new Error('No se ha encontrado el ID del contrato');
+      }
+
+      // Actualizar en el backend
+      const response = await firstValueFrom(
+        this.contratoGeneralCrudService.put(contratoId, formData)
+      );
+
+      // Guardar en localStorage
+      localStorage.setItem('paso-info-presupuestal', JSON.stringify({
+        ...formData,
+        id: contratoId
+      }));
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Datos guardados',
+        text: 'La información presupuestal se ha guardado correctamente'
+      });
+
+      this.nextStep.emit();
+    } catch (error) {
+      console.error('Error saving data:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al guardar',
+        text: 'Ocurrió un error al guardar la información presupuestal'
+      });
+    } finally {
+      this.isLoading = false;
+      this.cdRef.detectChanges();
+    }
+  }
 
   private cargarContratoGeneral() {
     const infoGeneral = localStorage.getItem('paso-info-general');
@@ -424,16 +519,6 @@ export class PasoInfoPresupuestalComponent {
 
     if (!allowedKeys.includes(event.key) && !pattern.test(event.key)) {
       event.preventDefault();
-    }
-  }
-
-
-  guardarYContinuar() {
-    if (this.form.valid) {
-      // ... lógica de guardado
-      this.nextStep.emit();
-    } else {
-      this.form.markAllAsTouched();
     }
   }
 
