@@ -56,4 +56,7 @@ export const environment = {
     SUSCRITO: 6774,
     DECLINADO: 6775
   },
+
+  TIPO_DOCUMENTO_ID_PARAMETROS: "1",
+  TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL: 1
 };

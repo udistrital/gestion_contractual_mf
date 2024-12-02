@@ -48,9 +48,18 @@ export interface ApiResponse<T> {
   Data: T;
 }
 
-export interface Especificacion {
+export interface EspecificacionTecnica {
+  id: number;
   descripcion: string;
   cantidad: number;
   valorUnitario: number;
   valorTotal: number;
+  contratoGeneralId?: number;
+}
+
+export interface DocumentoContrato {
+  tipo_documento_id: string;
+  documento_id: number;
+  documento_enlace: string;
+  contrato_general_id: number;
 }

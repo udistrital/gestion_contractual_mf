@@ -3,7 +3,10 @@
     <mat-icon color="primary" class="btn">close</mat-icon>
   </button>
 
-  <h2>{{this.data && this.data.especificacion ? "Editar" : "Añadir"}} Especificación</h2>
+  <h2>
+    {{ this.data && this.data.especificacion ? "Editar" : "Añadir" }}
+    Especificación
+  </h2>
   <h4 class="container-title">ESPECIFICACIÓN TÉCNICA</h4>
 
   <form [formGroup]="formEspecificacion">
@@ -14,17 +17,35 @@
       </mat-form-field>
       <mat-form-field class="cantidad-field">
         <mat-label>Cantidad</mat-label>
-        <input matInput formControlName="cantidad" />
+        <input
+          type="number"
+          matInput
+          formControlName="cantidad"
+          step="1"
+          (input)="validarInput($event, 'cantidad')"
+        />
       </mat-form-field>
     </div>
     <div class="form-row">
       <mat-form-field class="valor-unitario-field">
         <mat-label>Valor Unitario</mat-label>
-        <input type="number" matInput formControlName="valorUnitario" />
+        <input
+          type="number"
+          matInput
+          formControlName="valorUnitario"
+          step="0.01"
+          (input)="validarInput($event, 'valorUnitario')"
+        />
       </mat-form-field>
       <mat-form-field class="valor-total-field">
         <mat-label>Valor Total</mat-label>
-        <input type="number" matInput formControlName="valorTotal" />
+        <input
+          type="number"
+          matInput
+          formControlName="valorTotal"
+          step="0.01"
+          (input)="validarInput($event, 'valorTotal')"
+        />
       </mat-form-field>
     </div>
   </form>
@@ -35,6 +56,7 @@
       color="primary"
       id="btn-rechazar"
       (click)="guardarEspecificacion()"
+      [disabled]="!guardarHabilitado || !formEspecificacion.valid"
     >
       Guardar y Cerrar
     </button>

@@ -1,3 +1,4 @@
+<div appInView (inView)="onInView($event)">
 <form [formGroup]="form">
   <!-- Información del Solicitante -->
   <div class="border" formGroupName="solicitante">
@@ -29,6 +30,15 @@
           Este campo es requerido
         </mat-error>
       </mat-form-field>
+    </div>
+    <div class="btn-container">
+      <button mat-raised-button color="primary"
+              (click)="guardarSolicitante()"
+              [disabled]="form.get('solicitante')?.invalid || loading">
+        <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+        <span>Guardar Solicitante</span>
+      </button>
+      <mat-icon class="success-icon" *ngIf="solicitanteSaved">check_circle</mat-icon>
     </div>
   </div>
 
@@ -121,7 +131,6 @@
     <div class="title">
       <h3>Lugar de Ejecución</h3>
     </div>
-
     <div class="form-grid3">
       <mat-form-field>
         <mat-label>País:</mat-label>
@@ -190,15 +199,26 @@
         </mat-error>
       </mat-form-field>
     </div>
+    <div class="btn-container">
+      <button mat-raised-button color="primary"
+              (click)="guardarLugarEjecucion()"
+              [disabled]="form.get('lugarEjecucion')?.invalid || loading">
+        <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+        <span>Guardar Lugar de Ejecución</span>
+      </button>
+      <mat-icon class="success-icon" *ngIf="lugarEjecucionSaved">check_circle</mat-icon>
+    </div>
   </div>
 
   <!-- Botones de navegación -->
   <div class="btn-container">
     <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-    <button mat-raised-button matStepperNext color="primary"
-            [disabled]="form.invalid || loading">
+    <button mat-raised-button color="primary"
+            (click)="guardarYContinuar()"
+            [disabled]="!solicitanteSaved || !lugarEjecucionSaved || loading">
       <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
       <span>Guardar y Continuar</span>
     </button>
   </div>
 </form>
+</div>
