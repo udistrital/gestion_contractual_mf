@@ -6,7 +6,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FileService } from '../../../services/FileService';
+import {FileService} from "src/app/services/file.service";
 import { DocumentosService } from 'src/app/services/documentos.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { base64 } from 'src/assets/base64';
