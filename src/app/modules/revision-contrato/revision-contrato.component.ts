@@ -14,8 +14,9 @@ import { DocumentosService } from 'src/app/services/documentos.service';
 })
 export class RevisionContratoComponent {
   selectedTab: number = 0;
-  documento: string = '';
-  usuarioId: any;
+  tabs: string[] = ['Minuta', 'Documentos'];
+  documentos = { minuta: '', documentos_precontractuales: '' };
+  usuarioId: number = 1;
   rol: string = '';
 
   constructor(
@@ -26,8 +27,7 @@ export class RevisionContratoComponent {
   ) {}
 
   ngOnInit(): void {
-    this.getDocumentoContrato();
-    this.usuarioId = 1;
+    this.getDocumentosContrato();
     this.rol = 'ORDENADOR'; // JEFE CONTRATACION Y ORDENADOR
   }
 
@@ -44,6 +44,17 @@ export class RevisionContratoComponent {
     });
   }
 
+  getAccionBotonEnviar(): string {
+    switch (this.rol) {
+      case 'JEFE CONTRATACION':
+        return 'Aprobar y Enviar a Ordenador';
+      case 'ORDENADOR':
+        return 'Firmar y Enviar a Contratista';
+      default:
+        return 'Aprobar y Enviar';
+    }
+  }
+
   getMensajeConfirmacion(): string {
     switch (this.rol) {
       case 'JEFE CONTRATACION':
@@ -55,20 +66,27 @@ export class RevisionContratoComponent {
     }
   }
 
-  openModalEnviar(): void {
+  openMensajeConfirmacion(): void {
     const mensaje = this.getMensajeConfirmacion();
     this.alertService.showConfirmAlert(mensaje).then((confirmado: any) => {
-      if (!confirmado.value) {
-        return;
+      if (confirmado.value) {
+        this.aprobarContrato();
       }
-      this.aprobarContrato();
     });
   }
 
   aprobarContrato() {
-    const planEstado: EstadoContratoCRUD = this.construirObjetoEstadoContrato();
+    const estadoContrato: EstadoContratoCRUD = {
+      usuario_id: this.usuarioId,
+      estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
+      motivo: ' ',
+      fecha_ejecucion_estado: new Date(),
+      contrato_general_id: 1,
+      fecha_creacion: new Date(),
+    };
+
     this.contratoGeneralCrudService
-      .postEstadoContrato(planEstado)
+      .postEstadoContrato(estadoContrato)
       .subscribe((res: any) => {
         this.alertService.showSuccessAlert(
           'El contrato fue enviado al ordenador',
@@ -77,39 +95,36 @@ export class RevisionContratoComponent {
       });
   }
 
-  construirObjetoEstadoContrato() {
-    const estado: EstadoContratoCRUD = {
-      usuario_id: this.usuarioId,
-      estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
-      motivo: ' ',
-      fecha_ejecucion_estado: new Date(),
-      contrato_general_id: 1,
-      fecha_creacion: new Date(),
-    };
-    return estado;
-  }
-
   selectTab(index: number) {
     this.selectedTab = index;
   }
 
-  getDocumentoContrato() {
+  getDocumentosContrato() {
     this.contratoGeneralCrudService.getDocumentoContrato(12).subscribe({
       next: (response: { Success: boolean; Data: DocumentoContrato[] }) => {
         if (response.Success && response.Data.length > 0) {
-          this.getDocumentoGestorDocumental(response.Data[0].documento_enlace);
+          response.Data.map((documento) =>
+            this.getDocumentoGestorDocumental(documento)
+          );
         }
       },
-      error: (error) =>
-        this.handleError('Error al obtener documento de contrato', error),
+      error: (error) => this.handleError('Error al obtener documentos', error),
     });
   }
 
-  getDocumentoGestorDocumental(documento_enlace: string) {
-    this.documentosService.getDocumento(documento_enlace).subscribe({
+  getDocumentoGestorDocumental(documento: DocumentoContrato) {
+    this.documentosService.getDocumento(documento.documento_enlace).subscribe({
       next: (response: any) => {
         if (response.file) {
-          this.documento = response.file;
+          const tipoDocumento = documento.tipo_documento_id;
+          const tiposDocumentos = environment.TIPO_DOCUMENTO_ID_PARAMETROS;
+          if (tipoDocumento == tiposDocumentos.MINUTA) {
+            this.documentos.minuta = response.file;
+          } else if (
+            tipoDocumento == tiposDocumentos.DOCUMENTOS_PRECONTRACTUALES
+          ) {
+            this.documentos.documentos_precontractuales = response.file;
+          }
         }
       },
       error: (error) => this.handleError('Error al obtener documento', error),

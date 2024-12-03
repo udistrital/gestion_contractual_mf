@@ -1,74 +1,58 @@
 <div class="container">
   <p>Gestión Contractual / <b>Contratos</b></p>
   <mat-card>
+
     <mat-card-header>
       <mat-card-title><b>Documentos</b></mat-card-title>
     </mat-card-header>
+    
     <mat-card-content>
       <div class="actions">
         <button mat-button color="primary">
           Descargar Todo <mat-icon> insert_drive_file</mat-icon>
         </button>
       </div>
+
       <div class="content">
-        <div class="sidebar">
-          <div class="tab-buttons">
+        <div class="tab-buttons">
+          <ng-container *ngFor="let tab of tabs; let i = index">
             <button
               class="tab-button"
-              [ngClass]="selectedTab === 0 ? 'selected' : ''"
-              (click)="selectTab(0)"
+              [ngClass]="{ selected: selectedTab === i }"
+              (click)="selectTab(i)"
             >
-              Minuta
+              {{ tab }}
             </button>
-            <button
-              class="tab-button"
-              [ngClass]="selectedTab === 1 ? 'selected' : ''"
-              (click)="selectTab(1)"
-            >
-              Documentos
-            </button>
-          </div>
+          </ng-container>
         </div>
+
         <div class="main-content">
-          <div *ngIf="selectedTab === 0">
-            <div class="pdf-container">
-              <app-pdf-visualizador
-                [base64Document]="documento"
-              ></app-pdf-visualizador>
-            </div>
+          <div class="pdf-container" *ngIf="selectedTab === 0">
+            <app-pdf-visualizador
+              [base64Document]="documentos.minuta"
+            ></app-pdf-visualizador>
           </div>
-          <div *ngIf="selectedTab === 1">
-            Documentos publicos y privados del contratante
+          <div class="pdf-container" *ngIf="selectedTab === 1">
+            <app-pdf-visualizador
+              [base64Document]="documentos.documentos_precontractuales"
+            ></app-pdf-visualizador>
           </div>
-          <mat-dialog-actions align="center">
-            <div class="actions-footer">
-              <div class="footer-buttons">
-                <button
-                  class="footer-button"
-                  mat-raised-button
-                  color="primary"
-                  (click)="openModalRechazo()"
-                >
-                  Rechazar Contrato
-                </button>
-                <button
-                  class="footer-button"
-                  mat-raised-button
-                  color="primary"
-                  (click)="openModalEnviar()"
-                >
-                  <ng-container [ngSwitch]="rol">
-                    <span *ngSwitchCase="'JEFE CONTRATACION'"
-                      >Aprobar y Enviar a Ordenador</span
-                    >
-                    <span *ngSwitchCase="'ORDENADOR'"
-                      >Firmar y Enviar a Contratista</span
-                    >
-                    <span *ngSwitchDefault>Aprobar y Enviar</span>
-                  </ng-container>
-                </button>
-              </div>
-            </div>
+
+          <mat-dialog-actions class="footer-buttons" align="center">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="openModalRechazo()"
+            >
+              Rechazar Contrato
+            </button>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="openMensajeConfirmacion()"
+            >
+              {{ getAccionBotonEnviar() }}
+            </button>
           </mat-dialog-actions>
         </div>
       </div>

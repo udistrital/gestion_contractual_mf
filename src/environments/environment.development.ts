@@ -55,6 +55,24 @@ export const environment = {
     DECLINADO: 6775
   },
 
-  TIPO_DOCUMENTO_ID_PARAMETROS: "1",
-  TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL: 1
+  ESTADOS_INTERNOS: {
+    BORRADOR: 6799,
+    EN_REVISION_JEFE: 6800,
+    EN_FIRMA_ORDENADOR: 6801,
+    EN_FIRMA_CONTRATISTA: 6802,
+    Rechazado: 6803,
+    Aprobado: 6804
+  },
+
+  TIPO_DOCUMENTO_ID_PARAMETROS: {
+    MINUTA: 6805,
+    DOCUMENTOS_PRECONTRACTUALES: 6716
+  },
+  TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL: {
+    PLANTILLAS_XLSX: 183,	// Plantillas para cargue masivo
+    MINUTAS: 174,	// Documentos de minutas
+    ACTAS_DE_INICIO: 175,	//Documentos de actas de inicio
+    POLIZAS: 176, // Documentos de pólizas y actas de aprobación de pólizas
+    DOCUMENTOS_PRECONTRACTUALES: 177 //Documentos precontractuales
+  }
 };
