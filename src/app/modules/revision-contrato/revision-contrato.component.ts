@@ -6,6 +6,7 @@ import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { EstadoContratoCRUD, DocumentoContrato } from 'src/app/types/types';
 import { DocumentosService } from 'src/app/services/documentos.service';
+import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
 
 @Component({
   selector: 'app-revision-contrato',
@@ -23,12 +24,20 @@ export class RevisionContratoComponent {
     public dialog: MatDialog,
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
-    private documentosService: DocumentosService
+    private documentosService: DocumentosService,
+    private autenticationService: ImplicitAutenticationService
   ) {}
 
   ngOnInit(): void {
+    this.getRole();
     this.getDocumentosContrato();
     this.rol = 'ORDENADOR'; // JEFE CONTRATACION Y ORDENADOR
+  }
+
+  getRole() {
+    this.autenticationService.getRole().then((rol: any) => {
+      console.log('ROLLLLL: ', rol);
+    });
   }
 
   private handleError(message: string, error: any, callback?: () => void) {
