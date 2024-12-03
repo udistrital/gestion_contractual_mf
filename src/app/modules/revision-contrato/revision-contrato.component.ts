@@ -28,7 +28,7 @@ export class RevisionContratoComponent {
 
   ngOnInit(): void {
     this.getDocumentosContrato();
-    this.rol = 'ORDENADOR'; // JEFE CONTRATACION Y ORDENADOR
+    this.rol = 'ORDENADOR_DEL_GASTO'; // JEFE CONTRATACION Y ORDENADOR_DEL_GASTO
   }
 
   private handleError(message: string, error: any, callback?: () => void) {
@@ -48,7 +48,7 @@ export class RevisionContratoComponent {
     switch (this.rol) {
       case 'JEFE CONTRATACION':
         return 'Aprobar y Enviar a Ordenador';
-      case 'ORDENADOR':
+      case 'ORDENADOR_DEL_GASTO':
         return 'Firmar y Enviar a Contratista';
       default:
         return 'Aprobar y Enviar';
@@ -59,7 +59,7 @@ export class RevisionContratoComponent {
     switch (this.rol) {
       case 'JEFE CONTRATACION':
         return '¿Está seguro(a) de aprobar y enviar contrato a ordenador?';
-      case 'ORDENADOR':
+      case 'ORDENADOR_DEL_GASTO':
         return '¿Está seguro(a) de firmar y enviar contrato a contratista?';
       default:
         return '¿Está seguro(a) de aprobar y enviar contrato?';
