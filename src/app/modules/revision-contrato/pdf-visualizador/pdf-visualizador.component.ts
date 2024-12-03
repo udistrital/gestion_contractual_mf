@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
 
 @Component({
   selector: 'app-pdf-visualizador',
@@ -13,8 +13,15 @@ export class PdfVisualizadorComponent implements OnInit {
   pdfSrc: Uint8Array | undefined;
 
   @Input() base64Document: string = '';
+  
   ngOnInit() {
     this.loadPdfFromBase64(this.base64Document);
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['base64Document'] && changes['base64Document'].currentValue) {
+      this.loadPdfFromBase64(changes['base64Document'].currentValue);
+    }
   }
 
   loadPdfFromBase64(base64: string) {

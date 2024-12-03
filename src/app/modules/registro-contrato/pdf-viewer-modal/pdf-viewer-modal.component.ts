@@ -58,7 +58,7 @@ export class PdfViewerModalComponent implements OnInit {
     const { nombre, descripcion } = this.data.documento;
     const data = [
       {
-        IdTipoDocumento: environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL,
+        IdTipoDocumento: environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.MINUTAS,
         nombre,
         descripcion,
         metadatos: {},
@@ -84,7 +84,7 @@ export class PdfViewerModalComponent implements OnInit {
     const { Id: documento_id, Enlace: documento_enlace } = documento;
     const { contrato_general_id } = this.data.documento;
     const documentoContrato: DocumentoContrato = {
-      tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS,
+      tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
       documento_id,
       documento_enlace,
       contrato_general_id,

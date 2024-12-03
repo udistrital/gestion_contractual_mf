@@ -58,7 +58,7 @@ export interface EspecificacionTecnica {
 }
 
 export interface DocumentoContrato {
-  tipo_documento_id: string;
+  tipo_documento_id: number;
   documento_id: number;
   documento_enlace: string;
   contrato_general_id: number;
