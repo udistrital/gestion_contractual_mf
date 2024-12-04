@@ -1,0 +1,25 @@
+<mat-card class="container-principal">
+  <button mat-icon-button class="close-button" [mat-dialog-close]>
+    <mat-icon color="primary" class="btn">close</mat-icon>
+  </button>
+  
+  <h4 class="container-title">OBSERVACIONES</h4>
+
+  <form [formGroup]="formObservaciones">
+    <mat-form-field>
+      <mat-label>Motivos de rechazo</mat-label>
+      <textarea matInput rows="3" formControlName="observaciones"></textarea>
+    </mat-form-field>
+  </form>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-raised-button
+      color="primary"
+      id="btn-rechazar"
+      (click)="preguntarConfirmacionRechazo()"
+    >
+      Rechazar
+    </button>
+  </mat-dialog-actions>
+</mat-card>

@@ -1,0 +1,36 @@
+.container-principal {
+  padding: 20px 25px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.close-button {
+  padding: 0;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container-title {
+  margin: 50px 0 5px 0;
+  padding: 8px;
+  background-color: #731514;
+  border-radius: 5px;
+  color: white;
+}
+
+form, mat-form-field {
+  width: 100%;
+}
+
+textarea {
+  resize: none;
+}
+
+mat-dialog-actions {
+  padding: 0;
+}

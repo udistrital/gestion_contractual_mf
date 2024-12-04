@@ -47,3 +47,19 @@ export interface ApiResponse<T> {
   Message: string;
   Data: T;
 }
+
+export interface EspecificacionTecnica {
+  id: number;
+  descripcion: string;
+  cantidad: number;
+  valorUnitario: number;
+  valorTotal: number;
+  contratoGeneralId?: number;
+}
+
+export interface DocumentoContrato {
+  tipo_documento_id: number;
+  documento_id: number;
+  documento_enlace: string;
+  contrato_general_id: number;
+}

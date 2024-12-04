@@ -1,0 +1,61 @@
+<div class="container">
+  <p>Gestión Contractual / <b>Contratos</b></p>
+  <mat-card>
+
+    <mat-card-header>
+      <mat-card-title><b>Documentos</b></mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="actions">
+        <button mat-button color="primary">
+          Descargar Todo <mat-icon> insert_drive_file</mat-icon>
+        </button>
+      </div>
+
+      <div class="content">
+        <div class="tab-buttons">
+          <ng-container *ngFor="let tab of tabs; let i = index">
+            <button
+              class="tab-button"
+              [ngClass]="{ selected: selectedTab === i }"
+              (click)="selectTab(i)"
+            >
+              {{ tab }}
+            </button>
+          </ng-container>
+        </div>
+
+        <div class="main-content">
+          <div class="pdf-container" *ngIf="selectedTab === 0">
+            <app-pdf-visualizador
+              [base64Document]="documentos.minuta"
+            ></app-pdf-visualizador>
+          </div>
+          <div class="pdf-container" *ngIf="selectedTab === 1">
+            <app-pdf-visualizador
+              [base64Document]="documentos.documentos_precontractuales"
+            ></app-pdf-visualizador>
+          </div>
+
+          <mat-dialog-actions class="footer-buttons" align="center">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="openModalRechazo()"
+            >
+              Rechazar Contrato
+            </button>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="openMensajeConfirmacion()"
+            >
+              {{ getAccionBotonEnviar() }}
+            </button>
+          </mat-dialog-actions>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

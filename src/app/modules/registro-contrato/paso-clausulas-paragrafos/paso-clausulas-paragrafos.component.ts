@@ -1,4 +1,6 @@
 import { Component, EventEmitter, Output } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { ClausulasParagrafosService } from 'src/app/services/clausulas-paragrafos.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
@@ -6,6 +8,7 @@ import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { MatStepper } from '@angular/material/stepper';
 import { NgZone } from '@angular/core';
+import { base64 } from "src/assets/base64";
 
 interface Indice { Id: string; Nombre: string; }
 interface Clausula { _id?: string; nombre: string; descripcion: string; predeterminado: boolean; es_editable: boolean; paragrafos: Paragrafo[];}
@@ -30,6 +33,7 @@ export class PasoClausulasParagrafosComponent {
 
   constructor(
     private fb: FormBuilder,
+    private dialog: MatDialog,
     private clausulasParagrafosService: ClausulasParagrafosService,
     private parametrosService: ParametrosService,
     private stepper: MatStepper,
@@ -647,6 +651,37 @@ export class PasoClausulasParagrafosComponent {
     }).then((result) => {
       if (result.isConfirmed) {
         accion();
+      }
+    });
+  }
+
+  // Función para convertir una cadena Base64 en un Blob
+  base64ToBlob(base64: string, contentType: string): Blob {
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+      const slice = byteCharacters.slice(offset, offset + 512);
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+    return new Blob(byteArrays, { type: contentType });
+  }
+
+  openPdfViewer(): void {        
+    const pdfBlob = this.base64ToBlob(base64, 'application/pdf');
+    this.dialog.open(PdfViewerModalComponent, {
+      width: '70vw',
+      data: { 
+        file: pdfBlob, 
+        documento: {
+          nombre: `MINUTA ${this.contratoId} - ${this.tipoContratoId}`, 
+          descripcion: "",
+          contrato_general_id: 1
+        }
       }
     });
   }

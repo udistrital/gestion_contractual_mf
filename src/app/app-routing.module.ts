@@ -5,15 +5,24 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { APP_BASE_HREF } from '@angular/common';
 import { RegistroContratoComponent } from './modules/registro-contrato/registro-contrato.component';
 import { ConsultaContratoComponent } from './modules/consulta-contrato/consulta-contrato.component';
+import { RevisionContratoComponent } from './modules/revision-contrato/revision-contrato.component';
+import { authGuard } from 'src/_guards/auth.guard';
 
 const routes: Routes = [
   {
-    path:"registrar",
-    component: RegistroContratoComponent
+    path: 'registrar',
+    canActivate: [authGuard],
+    component: RegistroContratoComponent,
   },
   {
-    path:"consultar",
-    component: ConsultaContratoComponent
+    path: 'consultar',
+    canActivate: [authGuard],
+    component: ConsultaContratoComponent,
+  },
+  {
+    path: 'revisar',
+    // canActivate: [authGuard],
+    component: RevisionContratoComponent,
   },
 ];
 
@@ -27,4 +36,4 @@ const routes: Routes = [
     provideHttpClient(withFetch()),
   ],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

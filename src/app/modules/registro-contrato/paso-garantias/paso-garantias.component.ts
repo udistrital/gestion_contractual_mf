@@ -4,7 +4,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { PolizasService} from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import {Amparo, ApiResponse} from "../../../services/polizas.interfaces";
+import {Amparo, ApiResponse} from "src/app/types/polizas";
 import Swal from "sweetalert2";
 
 @Component({

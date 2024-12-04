@@ -11,20 +11,20 @@ import { MatIconModule } from '@angular/material/icon';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
-import {FileService} from "./services/FileService";
+import { FileService } from './services/file.service';
 import { UbicacionService } from './services/ubicacion.service';
-import {DocumentosService} from "./services/documentos.service";
-import {QuillModule} from "ngx-quill";
-import {InViewDirective} from "./directives/InViewDirective";
+import { DocumentosService } from './services/documentos.service';
+import { QuillModule } from 'ngx-quill';
+import { InViewDirective } from './directives/InViewDirective';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
+import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-  ],
+  declarations: [AppComponent],
   imports: [
     RegistroContratoModule,
     ConsultaContratoModule,
+    RevisionContratoModule,
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
@@ -32,7 +32,7 @@ import { OrdenadoresSupervisoresContratacionMidService } from './services/ordena
     MatIconModule,
     HttpClientModule,
     MatSnackBarModule,
-    QuillModule.forRoot()
+    QuillModule.forRoot(),
   ],
   providers: [
     ParametrosService,
@@ -41,10 +41,7 @@ import { OrdenadoresSupervisoresContratacionMidService } from './services/ordena
     FileService,
     DocumentosService,
     OrdenadoresSupervisoresContratacionMidService,
-
   ],
-  bootstrap: [
-    AppComponent
-  ]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
