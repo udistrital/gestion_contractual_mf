@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import {RequestManager} from "../managers/requestManager";
-import {Observable} from "rxjs";
-import { DependenciaContratoMidResponse, SedeContratoMidResponse} from "../types/types";
-import {map} from "rxjs/operators";
+import { RequestManager } from "../managers/requestManager";
+import { Observable } from "rxjs";
+import { DependenciaContratoMidResponse, SedeContratoMidResponse } from "../types/types";
+import { map } from "rxjs/operators";
 
 @Injectable({
   providedIn: 'root'
@@ -28,9 +28,33 @@ export class ContratoGeneralMidService {
     delete filterParams.limit;
     delete filterParams.offset;
 
+    // Función para aplanar objetos anidados
+    const flattenObject = (obj: any, prefix: string = ''): any => {
+      let items: any = {};
+      for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const newKey = prefix ? `${prefix}.${key}` : key;
+          if (typeof obj[key] === 'object' && obj[key] !== null) {
+            Object.assign(items, flattenObject(obj[key], newKey));
+          } else {
+            items[newKey] = obj[key];
+          }
+        }
+      }
+      return items;
+    };
+
     if (Object.keys(filterParams).length > 0) {
-      queryParams.push(`query=${encodeURIComponent(JSON.stringify(filterParams))}`);
+      const flatParams = flattenObject(filterParams);
+      queryParams.push(
+        `queryFilter=${encodeURIComponent(
+          Object.entries(flatParams)
+            .map(([key, value]) => `"${key}":${JSON.stringify(value)}`)
+            .join(',')
+        )}`
+      );
     }
+
 
     if (params.limit !== undefined) {
       queryParams.push(`limit=${params.limit}`);
@@ -40,6 +64,7 @@ export class ContratoGeneralMidService {
     }
 
     const url = `contratos-generales${queryParams.length ? '?' + queryParams.join('&') : ''}`;
+    console.log(url);
 
     return this.requestManager.get(url);
   }
