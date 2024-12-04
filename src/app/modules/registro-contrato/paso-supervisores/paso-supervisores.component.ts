@@ -378,10 +378,16 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   CargarDepartamento(id_pais: string) {
-    this.ubicacionService.get('relacion_lugares?query=LugarPadreId:' + id_pais + '&limit=0').subscribe((Response: any) => {
-      if (Response.length != 0) {
-        this.departamento = Response;
-      }
+    console.log('Cargando departamentos para país:', id_pais);
+    this.ubicacionService.get('relacion_lugares?query=LugarPadreId:' + id_pais + '&limit=0').subscribe({
+      next: (Response: any) => {
+        console.log('Respuesta departamentos:', Response);
+        if (Response.length != 0) {
+          this.departamento = Response;
+          this.cdRef.detectChanges();
+        }
+      },
+      error: (error) => console.error('Error cargando departamentos:', error)
     });
   }
 

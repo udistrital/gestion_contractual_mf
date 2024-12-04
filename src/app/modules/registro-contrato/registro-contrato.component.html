@@ -18,12 +18,14 @@
       <app-paso-info-presupuestal
         #pasoInfoPresupuestal
         (stepCompleted)="stepCompleted(1, $event)"
-      (nextStep)="goToNextStep()">
-      </app-paso-info-presupuestal>
+        (nextStep)="goToNextStep()" />
     </mat-step>
-    <mat-step>
+    <mat-step [stepControl]="pasoSupervisores.form" [editable]="canProceedToStep(2) | async">
         <ng-template matStepLabel>Información Solicitante y Supervisor</ng-template>
-        <app-paso-supervisores (stepCompleted)="stepCompleted(2, $event)" />
+        <app-paso-supervisores
+          #pasoSupervisores
+          (stepCompleted)="stepCompleted(2, $event)"
+          (nextStep)="goToNextStep()" />
     </mat-step>
     <mat-step>
         <ng-template matStepLabel>Información Contratista</ng-template>

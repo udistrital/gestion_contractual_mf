@@ -25,6 +25,7 @@
     "@angular/platform-browser-dynamic": "^17.3.10",
     "@angular/router": "^17.3.10",
     "ng2-pdf-viewer": "^10.3.0",
+    "ngx-mat-select-search": "^7.0.9",
     "ngx-quill": "^25.3.2",
     "quill": "^2.0.2",
     "rxjs": "~7.8.0",

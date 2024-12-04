@@ -18,6 +18,7 @@ import { QuillModule } from 'ngx-quill';
 import { InViewDirective } from './directives/InViewDirective';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
 import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
+import {NgxMatSelectSearchModule} from "ngx-mat-select-search";
 
 @NgModule({
   declarations: [AppComponent],

@@ -48,6 +48,7 @@ import {
 } from "@angular/material/expansion";
 import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
 import { ModalEspecificacionComponent } from './paso-especificaciones/modal-especificacion/modal-especificacion.component';
+import {SearchableSelectComponent} from "../../components/searchable-select/searchable-select.component";
 
 @NgModule({
   declarations: [
@@ -67,37 +68,38 @@ import { ModalEspecificacionComponent } from './paso-especificaciones/modal-espe
     PdfViewerModalComponent,
     InViewDirective
   ],
-  imports: [
-    CommonModule,
-    MatStepperModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatStepperModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCardModule,
-    NgFor,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatTableModule,
-    MatIconModule,
-    MatCheckboxModule,
-    HttpClientModule,
-    MatProgressSpinnerModule,
-    BrowserAnimationsModule,
-    MatTooltipModule,
-    PdfViewerModule,
-    EditorEnriquecidoComponent,
-    MatMenuModule,
-    MatAccordion,
-    MatExpansionPanel,
-    MatExpansionPanelTitle,
-    MatExpansionPanelDescription,
-    CDPListComponent
-  ],
+    imports: [
+        CommonModule,
+        MatStepperModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatStepperModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatCardModule,
+        NgFor,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatTableModule,
+        MatIconModule,
+        MatCheckboxModule,
+        HttpClientModule,
+        MatProgressSpinnerModule,
+        BrowserAnimationsModule,
+        MatTooltipModule,
+        PdfViewerModule,
+        EditorEnriquecidoComponent,
+        MatMenuModule,
+        MatAccordion,
+        MatExpansionPanel,
+        MatExpansionPanelTitle,
+        MatExpansionPanelDescription,
+        CDPListComponent,
+        SearchableSelectComponent
+    ],
   exports: [
     PasoInfoGeneralComponent,
     PasoInfoPresupuestalComponent,
