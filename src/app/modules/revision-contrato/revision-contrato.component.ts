@@ -18,6 +18,7 @@ export class RevisionContratoComponent {
   documentos = { minuta: '', documentos_precontractuales: '' };
   usuarioId: number = 1;
   rol: string = '';
+  contrato_general_id: number = 1;
 
   constructor(
     public dialog: MatDialog,
@@ -81,7 +82,7 @@ export class RevisionContratoComponent {
       estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
       motivo: ' ',
       fecha_ejecucion_estado: new Date(),
-      contrato_general_id: 1,
+      contrato_general_id: this.contrato_general_id,
       fecha_creacion: new Date(),
     };
 
@@ -100,16 +101,19 @@ export class RevisionContratoComponent {
   }
 
   getDocumentosContrato() {
-    this.contratoGeneralCrudService.getDocumentoContrato(12).subscribe({
-      next: (response: { Success: boolean; Data: DocumentoContrato[] }) => {
-        if (response.Success && response.Data.length > 0) {
-          response.Data.map((documento) =>
-            this.getDocumentoGestorDocumental(documento)
-          );
-        }
-      },
-      error: (error) => this.handleError('Error al obtener documentos', error),
-    });
+    this.contratoGeneralCrudService
+      .getDocumentoContrato(this.contrato_general_id)
+      .subscribe({
+        next: (response: { Success: boolean; Data: DocumentoContrato[] }) => {
+          if (response.Success && response.Data.length > 0) {
+            response.Data.map((documento) =>
+              this.getDocumentoGestorDocumental(documento)
+            );
+          }
+        },
+        error: (error) =>
+          this.handleError('Error al obtener documentos', error),
+      });
   }
 
   getDocumentoGestorDocumental(documento: DocumentoContrato) {

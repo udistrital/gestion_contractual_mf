@@ -9,7 +9,6 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {FileService} from "src/app/services/file.service";
 import { DocumentosService } from 'src/app/services/documentos.service';
 import { AlertService } from 'src/app/services/alert.service';
-import { base64 } from 'src/assets/base64';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { DocumentoContrato } from 'src/app/types/types';
 import { environment } from 'src/environments/environment';
@@ -55,7 +54,7 @@ export class PdfViewerModalComponent implements OnInit {
 
   // Guardar el documento del contrato (pdf) en gestor_documental_mid
   guardarDocumentoGestorDocumental() {
-    const { nombre, descripcion } = this.data.documento;
+    const { base64, nombre, descripcion } = this.data.documento;
     const data = [
       {
         IdTipoDocumento: environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.MINUTAS,
