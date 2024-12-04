@@ -4,8 +4,8 @@ import { MatTableDataSource } from '@angular/material/table';
 import { PolizasService} from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import {Amparo, ApiResponse} from "src/app/types/polizas";
 import Swal from "sweetalert2";
+import {AmparoResponse, ApiResponse} from "../../../types/types";
 
 @Component({
   selector: 'app-paso-garantias',
@@ -196,7 +196,7 @@ export class PasoGarantiasComponent implements OnInit {
     });
   }
 
-  sendDataToApi(data: Amparo[]) {
+  sendDataToApi(data: AmparoResponse[]) {
     this.polizasService.post(data).subscribe({
       next: (response: ApiResponse<any>) => {
         console.log('Amparo enviado correctamente', response);

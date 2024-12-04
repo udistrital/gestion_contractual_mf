@@ -19,6 +19,7 @@ export interface CDP {
 export interface EstadoContratoCRUD {
   usuario_id: number;
   estado_parametro_id: number;
+  estado_interno_parametro_id: number;
   motivo: string;
   fecha_ejecucion_estado: Date;
   contrato_general_id: number;
@@ -62,4 +63,18 @@ export interface DocumentoContrato {
   documento_id: number;
   documento_enlace: string;
   contrato_general_id: number;
+}
+
+export interface ParametroResponse {
+  Id: number | string;
+  Nombre: string;
+  Descripcion?: string;
+  CodigoAbreviacion?: string;
+  Activo?: boolean;
+}
+
+export interface AmparoResponse {
+  suficiencia: number;
+  amparo_id: number;
+  descripcion: string;
 }

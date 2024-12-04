@@ -4,17 +4,11 @@ import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
-import { ApiResponse } from "src/app/types/polizas";
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
-import { EstadoContratoCRUD } from "src/app/types/types";
-
-interface Parametro {
-  Id: number | string;
-  Nombre: string;
-  Descripcion?: string;
-  CodigoAbreviacion?: string;
-  Activo?: boolean;
-}
+import {ApiResponse, EstadoContratoCRUD, ParametroResponse} from "src/app/types/types";
+import {Observable} from "rxjs";
+import {filter, map} from "rxjs/operators";
+import {HttpResponse} from "@angular/common/http";
 
 @Component({
   selector: 'app-paso-info-general',
@@ -65,15 +59,15 @@ export class PasoInfoGeneralComponent implements OnInit {
   });
 
   //Parametros (Opciones)
-  tipoCompromisos: Parametro[] = [];
-  tipoContratos: Parametro[] = [];
-  modalidadSeleccion: Parametro[] = [];
-  tipologiaEspecifica: Parametro[] = [];
-  regimenContratacion: Parametro[] = [];
-  procedimiento: Parametro[] = [];
-  unidadEjecucion: Parametro[] = [];
+  tipoCompromisos: ParametroResponse[] = [];
+  tipoContratos: ParametroResponse[] = [];
+  modalidadSeleccion: ParametroResponse[] = [];
+  tipologiaEspecifica: ParametroResponse[] = [];
+  regimenContratacion: ParametroResponse[] = [];
+  procedimiento: ParametroResponse[] = [];
+  unidadEjecucion: ParametroResponse[] = [];
   // orden-contrato
-  perfilContratista: Parametro[] = [];
+  perfilContratista: ParametroResponse[] = [];
 
   aplicaPoliza: { value: string; viewValue: string }[] = [
     {value: '0', viewValue: 'No'},
@@ -81,11 +75,12 @@ export class PasoInfoGeneralComponent implements OnInit {
   ];
 
   // convenio
-  vigenciaConvenio: Parametro[] = [];
-  convenio: Parametro[] = [];
+  vigenciaConvenio: ParametroResponse[] = [];
+  convenio: ParametroResponse[] = [];
 
   //Estado
   estado_id: number | null = null;
+  estado_interno_id: number | null = null;
 
   ngOnInit(): void {
     if (this.viewMode) {
@@ -192,6 +187,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.isLoading = true;
     Promise.all([
       this.CargarEstado(),
+      this.CargarEstadoInterno(),
       this.CargarCompromisos(),
       this.CargarmodalidadSeleccionId(),
       this.CargarregimenContratacionId(),
@@ -208,7 +204,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   CargarEstado() {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('parametro/' + environment.ESTADO_POR_SUSCRIBIR).subscribe({
+      this.parametrosService.get('parametro/' + environment.ESTADO_CONTRATO.POR_SUSCRIBIR).subscribe({
         next: (Response: any) => {
           if (Response.Status == "200") {
             this.estado_id = Response.Data.Id;
@@ -223,6 +219,26 @@ export class PasoInfoGeneralComponent implements OnInit {
       });
     });
   }
+
+  CargarEstadoInterno() {
+    return new Promise((resolve, reject) => {
+      this.parametrosService.get('parametro/' + environment.ESTADOS_INTERNOS.BORRADOR).subscribe({
+        next: (Response: any) => {
+          if (Response.Status == "200") {
+            this.estado_interno_id = Response.Data.Id;
+            resolve(true);
+          } else {
+            reject('Error en la respuesta del servidor');
+          }
+        },
+        error: (error) => {
+          reject(error);
+        }
+      });
+    });
+  }
+
+
   CargarCompromisos() {
     return new Promise((resolve, reject) => {
       this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_COMPROMISO_ID + '&limit=0').subscribe({
@@ -387,7 +403,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.unidadEjecucion = this.createDynamicOption(data.unidadEjecutoraId);
   }
 
-  createDynamicOption(value: string | number): Parametro[] {
+  createDynamicOption(value: string | number): ParametroResponse[] {
     if (value === null || value === undefined) return [];
     return [{ Id: value, Nombre: value.toString() }];
   }
@@ -441,11 +457,12 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   private async guardarEstado(contratoId: number) {
-    if (this.estado_id === null) return;
+    if (this.estado_id === null || this.estado_interno_id === null) return;
 
     const estado: EstadoContratoCRUD = {
       contrato_general_id: contratoId,
       estado_parametro_id: this.estado_id,
+      estado_interno_parametro_id: this.estado_interno_id,
       motivo: 'Contrato creado paso 1',
       usuario_id: 1,
       fecha_ejecucion_estado: new Date(),

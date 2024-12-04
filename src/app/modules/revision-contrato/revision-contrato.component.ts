@@ -79,6 +79,7 @@ export class RevisionContratoComponent {
     const estadoContrato: EstadoContratoCRUD = {
       usuario_id: this.usuarioId,
       estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
+      estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR,
       motivo: ' ',
       fecha_ejecucion_estado: new Date(),
       contrato_general_id: 1,
