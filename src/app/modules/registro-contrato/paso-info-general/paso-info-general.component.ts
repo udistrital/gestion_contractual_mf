@@ -6,9 +6,6 @@ import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
 import {ApiResponse, EstadoContratoCRUD, ParametroResponse} from "src/app/types/types";
-import {Observable} from "rxjs";
-import {filter, map} from "rxjs/operators";
-import {HttpResponse} from "@angular/common/http";
 
 @Component({
   selector: 'app-paso-info-general',
