@@ -61,8 +61,8 @@ export const environment = {
     EN_REVISION_JEFE: 6800,
     EN_FIRMA_ORDENADOR: 6801,
     EN_FIRMA_CONTRATISTA: 6802,
-    Rechazado: 6803,
-    Aprobado: 6804
+    RECHAZADO: 6803,
+    APROBADO: 6804
   },
 
   TIPO_DOCUMENTO_ID_PARAMETROS: {

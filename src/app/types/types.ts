@@ -19,6 +19,7 @@ export interface CDP {
 export interface EstadoContratoCRUD {
   usuario_id: number;
   estado_parametro_id: number;
+  estado_interno_parametro_id: number;
   motivo: string;
   fecha_ejecucion_estado: Date;
   contrato_general_id: number;
