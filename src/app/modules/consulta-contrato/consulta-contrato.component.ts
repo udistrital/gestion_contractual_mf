@@ -89,6 +89,28 @@ export class ConsultaContratoComponent implements OnInit {
     this.CargartipoContratoIds();
     this.CargarTipoPersona();
     this.CargarEstado();
+    this.form.get('fechaDesde')?.valueChanges.subscribe(value => {
+      if (value) {
+        const fechaHasta = this.form.get('fechaHasta')?.value;
+        if (fechaHasta && new Date(value) > new Date(fechaHasta)) {
+          this.form.patchValue({
+            fechaDesde: fechaHasta
+          });
+        }
+      }
+    });
+
+    this.form.get('fechaHasta')?.valueChanges.subscribe(value => {
+      if (value) {
+        const fechaDesde = this.form.get('fechaDesde')?.value;
+        if (fechaDesde && new Date(value) < new Date(fechaDesde)) {
+          this.form.patchValue({
+            fechaHasta: fechaDesde
+          });
+        }
+      }
+    });
+
     this.consultar();
   }
 
@@ -124,13 +146,25 @@ export class ConsultaContratoComponent implements OnInit {
     });
   }
 
+  limpiarFiltros() {
+    this.form.reset();
+    this.paginaActual = 0;
+    if (this.paginator) {
+      this.paginator.firstPage();
+    }
+    this.consultar();
+  }
+
   verDetalle(contrato: ContratoGeneral) {
     this.router.navigate(['/detalle', contrato.id]);
   }
 
   private prepararParametros() {
     const formValues = this.form.value;
-    const params: any = {};
+    const params: any = {
+      limit: this.tamanioPagina,
+      offset: this.paginaActual * this.tamanioPagina
+    };
 
     if (formValues.unidadEjecucion) params.unidadEjecucion = formValues.unidadEjecucion;
     if (formValues.vigencia) params.vigencia = formValues.vigencia;
@@ -149,10 +183,20 @@ export class ConsultaContratoComponent implements OnInit {
       params.estados = params.estados || {};
       params.estados.estado_parametro_id = formValues.estado;
     }
-    if (formValues.fechaDesde) params.fechaDesde = formValues.fechaDesde;
-    if (formValues.fechaHasta) params.fechaHasta = formValues.fechaHasta;
 
-    console.log(params);
+    if (formValues.fechaDesde || formValues.fechaHasta) {
+      params.fechaCreacion = {
+        start: formValues.fechaDesde ? new Date(formValues.fechaDesde).toISOString().split('T')[0] : null,
+        end: formValues.fechaHasta ? new Date(formValues.fechaHasta).toISOString().split('T')[0] : null
+      };
+
+      if (!params.fechaCreacion.start) delete params.fechaCreacion.start;
+      if (!params.fechaCreacion.end) delete params.fechaCreacion.end;
+
+      if (Object.keys(params.fechaCreacion).length === 0) {
+        delete params.fechaCreacion;
+      }
+    }
 
     return params;
   }

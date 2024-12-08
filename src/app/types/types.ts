@@ -27,6 +27,7 @@ export interface EstadoContratoCRUD {
 }
 
 export interface ContratistaCRUD {
+  id?: string;
   numero_documento: string,
   tipo_persona_id: number,
   contrato_general_id: number

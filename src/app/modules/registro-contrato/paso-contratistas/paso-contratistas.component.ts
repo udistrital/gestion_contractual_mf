@@ -85,6 +85,16 @@ interface Contrato {
   estado_contrato: EstadoContrato;
 }
 
+interface ContratistaResponse {
+  id: string;
+  numero_documento: string;
+  tipo_persona_id: number;
+  activo: boolean;
+  fecha_creacion: string;
+  fecha_modificacion: string | null;
+  contrato_general_id: number;
+}
+
 @Component({
   selector: 'app-paso-contratistas',
   templateUrl: './paso-contratistas.component.html',
@@ -94,7 +104,9 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
+  private contratistaId: string | null = null;
   contratoGeneralId: number | null = null;
+
   form: FormGroup;
   tiposContratista = [
     { value: 'clase1', viewValue: 'Contratista Único' }
@@ -133,6 +145,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.cargarContratoGeneral();
+    this.cargarContratistaExistente();
     this.form.get('claseContratista')?.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(value => {
@@ -323,26 +336,61 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     }
   }
 
+  private async cargarContratistaExistente() {
+    if (!this.contratoGeneralId) return;
+
+    this.loading = true;
+    this.contratoGeneralCrudService.getContratista(this.contratoGeneralId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: ContratistaResponse) => {
+          if (response) {
+            this.contratistaId = response.id;
+
+            this.form.patchValue({
+              claseContratista: 'clase1',
+              documentoContratista: response.numero_documento
+            });
+            this.buscarContratista();
+          }
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar contratista:', error);
+          this.loading = false;
+        }
+      });
+  }
+
+
   guardarYContinuar(): void {
     if (!this.form.valid || !this.datosContratista) {
       return;
     }
+
     const datosContratista: ContratistaCRUD = {
-      numero_documento: this.datosContratista!.proveedor.numero_documento,
+      numero_documento: this.datosContratista.proveedor.numero_documento,
       tipo_persona_id: 1,
       contrato_general_id: this.contratoGeneralId!
     };
 
-    this.contratoGeneralCrudService.postContratista(datosContratista)
-      .pipe(takeUntil(this.destroy$))
+    if (this.contratistaId) {
+      datosContratista.id = this.contratistaId;
+    }
+
+    const request$ = this.contratistaId
+      ? this.contratoGeneralCrudService.putContratista(datosContratista)
+      : this.contratoGeneralCrudService.postContratista(datosContratista);
+
+    request$.pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          console.log(response.Status);
-          if (response.Status === 201) {
+          const successStatus = this.contratistaId ? 200 : 201;
+          if (response.Status === successStatus) {
             Swal.fire({
               icon: 'success',
               title: '¡Éxito!',
-              text: response.Message || 'El contratista ha sido guardado correctamente',
+              text: response.Message || `El contratista ha sido ${this.contratistaId ? 'actualizado' : 'guardado'} correctamente`,
               confirmButtonText: 'Aceptar'
             }).then(() => {
               this.nextStep.emit();
@@ -351,17 +399,17 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: response.Message || 'No se pudo completar el registro del contratista',
+              text: response.Message || `No se pudo ${this.contratistaId ? 'actualizar' : 'completar el registro del'} contratista`,
               confirmButtonText: 'Aceptar'
             });
           }
         },
         error: (error) => {
-          console.error('Error al guardar contratista:', error);
+          console.error(`Error al ${this.contratistaId ? 'actualizar' : 'guardar'} contratista:`, error);
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: error.Message || 'Ha ocurrido un error al guardar el contratista. Por favor, intente nuevamente.',
+            text: error.Message || `Ha ocurrido un error al ${this.contratistaId ? 'actualizar' : 'guardar'} el contratista. Por favor, intente nuevamente.`,
             confirmButtonText: 'Aceptar'
           });
         }
@@ -375,6 +423,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.success = false;
     this.loading = false;
+    this.contratistaId = null;
   }
 
   onStepLeave() {
