@@ -18,7 +18,6 @@ import { QuillModule } from 'ngx-quill';
 import { InViewDirective } from './directives/InViewDirective';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
 import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
-import { HistorialObservacionesModule } from './modules/historial-observaciones/historial-observaciones.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -26,7 +25,6 @@ import { HistorialObservacionesModule } from './modules/historial-observaciones/
     RegistroContratoModule,
     ConsultaContratoModule,
     RevisionContratoModule,
-    HistorialObservacionesModule,
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,

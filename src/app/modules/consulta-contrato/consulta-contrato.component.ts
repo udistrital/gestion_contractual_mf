@@ -9,6 +9,8 @@ import { Router } from "@angular/router";
 import { ContratoGeneralMidService } from "../../services/contrato-general-mid.service";
 import Swal from "sweetalert2";
 import { RolService } from 'src/app/services/rol.service';
+import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
+import { MatDialog } from '@angular/material/dialog';
 
 interface ContratoGeneral {
   id: number;
@@ -54,6 +56,7 @@ export class ConsultaContratoComponent implements OnInit {
   accionesPermitidas: string[] = [];
 
   constructor(
+    public dialog: MatDialog,
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
     private contratoMidService: ContratoGeneralMidService,
@@ -98,9 +101,15 @@ export class ConsultaContratoComponent implements OnInit {
 
   definirAccionesPorRol(roles: string[]) {
     const accionesPorRol: { [key: string]: string[] } = {
-      'CONTRATISTA': ['Ver Contrato', 'Editar Contrato', 'Revisar Contrato', 'Enviar Aprobación Jefe OC'],
-      'JEFE_DEPENDENCIA': ['Revisar Contrato'],
-      'ORDENADOR_DEL_GASTO': ['Revisar Contrato'],
+      CONTRATISTA: [
+        'Motivo de rechazo',
+        'Ver Contrato', 
+        'Editar Contrato', 
+        'Revisar Contrato', 
+        'Enviar Aprobación Jefe OC',
+      ],
+      JEFE_DEPENDENCIA: ['Revisar Contrato'],
+      ORDENADOR_DEL_GASTO: ['Revisar Contrato'],
     };
 
     // Usar un conjunto para evitar duplicados
@@ -116,6 +125,7 @@ export class ConsultaContratoComponent implements OnInit {
 
   getIconoAccion(accion: string): string {
     const iconos: { [key: string]: string } = {
+      'Motivo de rechazo': 'info',
       'Ver Contrato': 'visibility',
       'Editar Contrato': 'edit',
       'Revisar Contrato': 'assignment',
@@ -126,6 +136,9 @@ export class ConsultaContratoComponent implements OnInit {
 
   realizarAccion(accion: string) {
     switch (accion) {
+      case 'Motivo de rechazo':
+        this.openModalObservaciones();
+        break;
       case 'Ver Contrato':
         this.router.navigate(['/registrar']);
         break;
@@ -141,6 +154,14 @@ export class ConsultaContratoComponent implements OnInit {
       default:
         break;
     }
+  }
+
+  openModalObservaciones(): void {
+    this.dialog.open(ModalObservacionesComponent, {
+      width: '70vw',
+      height: '35vw',
+      data: {},
+    });
   }
 
   cambiarPagina(event: PageEvent) {

@@ -9,22 +9,28 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import {DetalleContratoComponent} from "./detalle-contrato/detalle-contrato.component";
-import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
-import {MatIcon, MatIconModule} from "@angular/material/icon";
-import {MatProgressSpinner, MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-import {MatTable, MatTableModule} from "@angular/material/table";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {MatSortModule} from "@angular/material/sort";
+import { DetalleContratoComponent } from './detalle-contrato/detalle-contrato.component';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatDialogActions, MatDialogModule } from '@angular/material/dialog';
+import {
+  MatProgressSpinner,
+  MatProgressSpinnerModule,
+} from '@angular/material/progress-spinner';
+import { MatTable, MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSortModule } from '@angular/material/sort';
+import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
 
 @NgModule({
-  declarations: [
-    ConsultaContratoComponent
-  ],
+  declarations: [ConsultaContratoComponent, ModalObservacionesComponent],
   imports: [
     CommonModule,
     MatMenuModule,
     MatFormFieldModule,
+    MatCardModule,
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
@@ -41,14 +47,16 @@ import {MatSortModule} from "@angular/material/sort";
     MatPaginatorModule,
     MatSortModule,
     MatInputModule,
-    MatButtonModule,
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatDividerModule,
     MatTooltipModule,
-    MatFormFieldModule
-  ]
+    MatFormFieldModule,
+    MatDialogModule,
+    MatDialogActions,
+  ],
 })
-export class ConsultaContratoModule { }
+export class ConsultaContratoModule {}
