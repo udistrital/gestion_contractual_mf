@@ -1,0 +1,68 @@
+.container-principal {
+  padding: 20px 25px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.close-button {
+  padding: 0;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container-title {
+  margin: 50px 0 5px 0;
+  padding: 8px;
+  background-color: #731514;
+  border-radius: 5px;
+  color: white;
+}
+
+.observacion {
+  margin: 10px;
+}
+
+.example-card {
+  max-width: 500px;
+}
+
+.motivo p {
+  margin: 0;
+}
+
+.nombre-rechaza span {
+  font-size: 16px;
+  color: #731514;
+}
+
+.fecha-rechazo {
+  font-size: 12px;
+  color: gray;
+}
+
+.example-header-image {
+  color: white;
+  background-color: #731514;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+mat-card-footer {
+  padding: 10px 16px;
+}
+
+mat-card-footer p {
+  font-size: 12px;
+  color: gray;
+  margin: 0;
+}
+
+.enviado {
+  margin: 10px 0;
+}
