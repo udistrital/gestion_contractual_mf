@@ -15,10 +15,9 @@ import { FileService } from './services/file.service';
 import { UbicacionService } from './services/ubicacion.service';
 import { DocumentosService } from './services/documentos.service';
 import { QuillModule } from 'ngx-quill';
-import { InViewDirective } from './directives/InViewDirective';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
 import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
-import {NgxMatSelectSearchModule} from "ngx-mat-select-search";
+import { HistorialObservacionesModule } from './modules/historial-observaciones/historial-observaciones.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -26,6 +25,7 @@ import {NgxMatSelectSearchModule} from "ngx-mat-select-search";
     RegistroContratoModule,
     ConsultaContratoModule,
     RevisionContratoModule,
+    HistorialObservacionesModule,
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,

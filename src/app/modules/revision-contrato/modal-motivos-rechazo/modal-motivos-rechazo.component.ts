@@ -58,7 +58,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
     const estado: EstadoContratoCRUD = {
       usuario_id: this.infoModal.usuarioId,
       estado_parametro_id: environment.ESTADO_CONTRATO.DECLINADO,
-      estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR,
+      estado_interno_parametro_id: environment.ESTADOS_INTERNOS.RECHAZADO,
       motivo: this.formObservaciones.get('observaciones')?.value,
       fecha_ejecucion_estado: new Date(),
       contrato_general_id: 1,

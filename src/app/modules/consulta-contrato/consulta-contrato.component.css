@@ -60,3 +60,7 @@ td.mat-column-activo {
 .inactive {
   color: red;
 }
+
+.icon {
+  color: rgb(100, 21, 21) !important;
+}

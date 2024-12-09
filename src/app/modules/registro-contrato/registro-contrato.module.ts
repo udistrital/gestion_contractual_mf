@@ -21,7 +21,7 @@ import { PasoEspecificacionesComponent } from './paso-especificaciones/paso-espe
 import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos/paso-clausulas-paragrafos.component';
 import { PasoDocumentosComponent } from './paso-documentos/paso-documentos.component';
 
-import {MatMenuModule} from '@angular/material/menu';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from "@angular/material/checkbox";
