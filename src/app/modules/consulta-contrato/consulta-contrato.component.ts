@@ -8,7 +8,7 @@ import { MatTableDataSource } from "@angular/material/table";
 import { Router } from "@angular/router";
 import { ContratoGeneralMidService } from "../../services/contrato-general-mid.service";
 import Swal from "sweetalert2";
-import { ContentObserver } from '@angular/cdk/observers';
+import { RolService } from 'src/app/services/rol.service';
 
 interface ContratoGeneral {
   id: number;
@@ -22,7 +22,6 @@ interface ContratoGeneral {
   estado: string;
   documentos: number;
 }
-
 
 @Component({
   selector: 'app-consulta-contrato',
@@ -51,11 +50,14 @@ export class ConsultaContratoComponent implements OnInit {
   totalRegistros = 0;
   tamanioPagina = 10;
   paginaActual = 0;
+  roles: string[] = [];
+  accionesPermitidas: string[] = [];
 
   constructor(
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
     private contratoMidService: ContratoGeneralMidService,
+    private rolService: RolService,
     private router: Router
   ) { }
 
@@ -84,12 +86,61 @@ export class ConsultaContratoComponent implements OnInit {
   fechaHasta: any[] = [];
 
   ngOnInit(): void {
+    this.roles = this.rolService.getRol();
+    this.definirAccionesPorRol(this.roles)
     this.CargarunidadEjecutoraId();
     this.CargarVigencia();
     this.CargartipoContratoIds();
     this.CargarTipoPersona();
     this.CargarEstado();
     this.consultar();
+  }
+
+  definirAccionesPorRol(roles: string[]) {
+    const accionesPorRol: { [key: string]: string[] } = {
+      'CONTRATISTA': ['Ver Contrato', 'Editar Contrato', 'Revisar Contrato', 'Enviar Aprobación Jefe OC'],
+      'JEFE_DEPENDENCIA': ['Revisar Contrato'],
+      'ORDENADOR_DEL_GASTO': ['Revisar Contrato'],
+    };
+
+    // Usar un conjunto para evitar duplicados
+    const accionesSet = new Set<string>();
+    roles.forEach(rol => {
+      const acciones = accionesPorRol[rol];
+      if (acciones) {
+        acciones.forEach(accion => accionesSet.add(accion));
+      }
+    });
+    this.accionesPermitidas = Array.from(accionesSet);
+  }
+
+  getIconoAccion(accion: string): string {
+    const iconos: { [key: string]: string } = {
+      'Ver Contrato': 'visibility',
+      'Editar Contrato': 'edit',
+      'Revisar Contrato': 'assignment',
+      'Enviar Aprobación Jefe OC': 'send'
+    };
+    return iconos[accion] || 'help'; // Devuelve 'help' si no se encuentra un ícono
+  }
+
+  realizarAccion(accion: string) {
+    switch (accion) {
+      case 'Ver Contrato':
+        this.router.navigate(['/registrar']);
+        break;
+      case 'Editar Contrato':
+        this.router.navigate(['/registrar']);
+        break;
+      case 'Revisar Contrato':
+        this.router.navigate(['/revisar']);
+        break;
+      case 'Enviar Aprobación Jefe OC':
+        console.log("Enviar Aprobación Jefe OC");
+        break;
+      default:
+        break;
+    }
   }
 
   cambiarPagina(event: PageEvent) {
@@ -124,9 +175,9 @@ export class ConsultaContratoComponent implements OnInit {
     });
   }
 
-  verDetalle(contrato: ContratoGeneral) {
-    this.router.navigate(['/detalle', contrato.id]);
-  }
+  // verDetalle(contrato: ContratoGeneral) {
+  //   this.router.navigate(['/detalle', contrato.id]);
+  // }
 
   private prepararParametros() {
     const formValues = this.form.value;

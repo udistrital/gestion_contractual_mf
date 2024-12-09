@@ -6,6 +6,7 @@ import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { EstadoContratoCRUD, DocumentoContrato } from 'src/app/types/types';
 import { DocumentosService } from 'src/app/services/documentos.service';
+import { RolService } from 'src/app/services/rol.service';
 
 @Component({
   selector: 'app-revision-contrato',
@@ -13,22 +14,24 @@ import { DocumentosService } from 'src/app/services/documentos.service';
   styleUrls: ['./revision-contrato.component.css'],
 })
 export class RevisionContratoComponent {
+  isLoading = false;
   selectedTab: number = 0;
   tabs: string[] = ['Minuta', 'Documentos'];
   documentos = { minuta: '', documentos_precontractuales: '' };
   usuarioId: number = 1;
-  rol: string = '';
+  roles: string[] = [];
 
   constructor(
     public dialog: MatDialog,
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
-    private documentosService: DocumentosService
+    private documentosService: DocumentosService,
+    private rolService: RolService
   ) {}
 
   ngOnInit(): void {
+    this.roles = this.rolService.getRol();
     this.getDocumentosContrato();
-    this.rol = 'ORDENADOR_DEL_GASTO'; // JEFE CONTRATACION Y ORDENADOR_DEL_GASTO
   }
 
   private handleError(message: string, error: any, callback?: () => void) {
@@ -45,24 +48,38 @@ export class RevisionContratoComponent {
   }
 
   getAccionBotonEnviar(): string {
-    switch (this.rol) {
-      case 'JEFE CONTRATACION':
-        return 'Aprobar y Enviar a Ordenador';
-      case 'ORDENADOR_DEL_GASTO':
-        return 'Firmar y Enviar a Contratista';
-      default:
-        return 'Aprobar y Enviar';
+    if (this.roles.includes('JEFE_DEPENDENCIA')) {
+      return 'Aprobar y Enviar a Ordenador';
+    } else if (this.roles.includes('ORDENADOR_DEL_GASTO')) {
+      return 'Firmar y Enviar a Contratista';
+    } else if (this.roles.includes('CONTRATISTA')) {
+      return 'Firmar y Enviar';
+    } else {
+      return '';
     }
   }
 
   getMensajeConfirmacion(): string {
-    switch (this.rol) {
-      case 'JEFE CONTRATACION':
-        return '¿Está seguro(a) de aprobar y enviar contrato a ordenador?';
-      case 'ORDENADOR_DEL_GASTO':
-        return '¿Está seguro(a) de firmar y enviar contrato a contratista?';
-      default:
-        return '¿Está seguro(a) de aprobar y enviar contrato?';
+    if (this.roles.includes('JEFE_DEPENDENCIA')) {
+      return '¿Está seguro(a) de aprobar y enviar contrato a ordenador?';
+    } else if (this.roles.includes('ORDENADOR_DEL_GASTO')) {
+      return '¿Está seguro(a) de firmar y enviar contrato a contratista?';
+    } else if (this.roles.includes('CONTRATISTA')) {
+      return '¿Está seguro(a) de firmar y enviar contrato?';
+    } else {
+      return '¿Está seguro(a) de realizar esta acción?';
+    }
+  }
+
+  getMensajeEnvado(): string {
+    if (this.roles.includes('JEFE_DEPENDENCIA')) {
+      return 'El contrato fue enviado al ordenador';
+    } else if (this.roles.includes('ORDENADOR_DEL_GASTO')) {
+      return 'El contrato fue enviado al contratista';
+    } else if (this.roles.includes('CONTRATISTA')) {
+      return 'El contrato fue enviado exitosamente';
+    } else {
+      return 'El contrato fue enviado';
     }
   }
 
@@ -79,6 +96,7 @@ export class RevisionContratoComponent {
     const estadoContrato: EstadoContratoCRUD = {
       usuario_id: this.usuarioId,
       estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
+      estado_interno_parametro_id: environment.ESTADOS_INTERNOS.APROBADO,
       motivo: ' ',
       fecha_ejecucion_estado: new Date(),
       contrato_general_id: 1,
@@ -89,7 +107,7 @@ export class RevisionContratoComponent {
       .postEstadoContrato(estadoContrato)
       .subscribe((res: any) => {
         this.alertService.showSuccessAlert(
-          'El contrato fue enviado al ordenador',
+          this.getMensajeEnvado(),
           'CONTRATO ENVIADO'
         );
       });
@@ -100,6 +118,7 @@ export class RevisionContratoComponent {
   }
 
   getDocumentosContrato() {
+    this.isLoading = true;
     this.contratoGeneralCrudService.getDocumentoContrato(12).subscribe({
       next: (response: { Success: boolean; Data: DocumentoContrato[] }) => {
         if (response.Success && response.Data.length > 0) {
@@ -128,6 +147,7 @@ export class RevisionContratoComponent {
         }
       },
       error: (error) => this.handleError('Error al obtener documento', error),
+      complete: () => (this.isLoading = false),
     });
   }
 }

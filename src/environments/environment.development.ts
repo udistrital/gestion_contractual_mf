@@ -45,7 +45,7 @@ export const environment = {
   SUFICIENCIA_PORCENTAJE_ID: '6709',
 
   ESTADO_CONTRATO_ENEJECUCION: 'EN EJECUCION',
-  ESTADO_CONTRATO_SUSCRITO:'SUSCRITO',
+  ESTADO_CONTRATO_SUSCRITO: 'SUSCRITO',
   ESTADO_CONTRATO_PORSUSCRIBIR: 'POR SUSCRIBIR',
   ESTADO_CONTRATO_LEGALIZADO: 'LEGALIZADO',
 
@@ -53,7 +53,7 @@ export const environment = {
 
   ESTADO_CONTRATO: {
     SUSCRITO: 6774,
-    DECLINADO: 6775
+    DECLINADO: 6775,
   },
 
   ESTADOS_INTERNOS: {
@@ -61,19 +61,19 @@ export const environment = {
     EN_REVISION_JEFE: 6800,
     EN_FIRMA_ORDENADOR: 6801,
     EN_FIRMA_CONTRATISTA: 6802,
-    Rechazado: 6803,
-    Aprobado: 6804
+    RECHAZADO: 6803,
+    APROBADO: 6804,
   },
 
   TIPO_DOCUMENTO_ID_PARAMETROS: {
     MINUTA: 6805,
-    DOCUMENTOS_PRECONTRACTUALES: 6716
+    DOCUMENTOS_PRECONTRACTUALES: 6716,
   },
   TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL: {
-    PLANTILLAS_XLSX: 183,	// Plantillas para cargue masivo
-    MINUTAS: 174,	// Documentos de minutas
-    ACTAS_DE_INICIO: 175,	//Documentos de actas de inicio
-    POLIZAS: 176, // Documentos de pólizas y actas de aprobación de pólizas
-    DOCUMENTOS_PRECONTRACTUALES: 177 //Documentos precontractuales
-  }
+    PLANTILLAS_XLSX: 183,
+    MINUTAS: 174,
+    ACTAS_DE_INICIO: 175,
+    POLIZAS: 176,
+    DOCUMENTOS_PRECONTRACTUALES: 177,
+  },
 };
