@@ -16,7 +16,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
   formObservaciones!: FormGroup;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public infoModal: any,
+    @Inject(MAT_DIALOG_DATA) public dataModal: any,
     public dialogRef: MatDialogRef<ModalMotivosRechazoComponent>,
     public dialog: MatDialog,
     private alertService: AlertService,
@@ -26,7 +26,6 @@ export class ModalMotivosRechazoComponent implements OnInit {
 
   ngOnInit() {
     this.iniciarFormObservaciones();
-    console.log(this.infoModal);
   }
 
   iniciarFormObservaciones() {
@@ -56,12 +55,13 @@ export class ModalMotivosRechazoComponent implements OnInit {
 
   construirObjetoEstadoContrato() {
     const estado: EstadoContratoCRUD = {
-      usuario_id: this.infoModal.usuarioId,
+      contrato_general_id: 1,
+      usuario_id: this.dataModal.usuarioId,
+      usuario_rol: "",
       estado_parametro_id: environment.ESTADO_CONTRATO.DECLINADO,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.RECHAZADO,
       motivo: this.formObservaciones.get('observaciones')?.value,
       fecha_ejecucion_estado: new Date(),
-      contrato_general_id: 1,
       fecha_creacion: new Date()
     };
     return estado;

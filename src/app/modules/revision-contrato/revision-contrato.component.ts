@@ -7,6 +7,7 @@ import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-cr
 import { EstadoContratoCRUD, DocumentoContrato } from 'src/app/types/types';
 import { DocumentosService } from 'src/app/services/documentos.service';
 import { RolService } from 'src/app/services/rol.service';
+import { UserService } from 'src/app/services/user.service';
 
 @Component({
   selector: 'app-revision-contrato',
@@ -18,7 +19,7 @@ export class RevisionContratoComponent {
   selectedTab: number = 0;
   tabs: string[] = ['Minuta', 'Documentos'];
   documentos = { minuta: '', documentos_precontractuales: '' };
-  usuarioId: number = 1;
+  usuarioId: number = 0;
   roles: string[] = [];
 
   constructor(
@@ -26,11 +27,15 @@ export class RevisionContratoComponent {
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private documentosService: DocumentosService,
-    private rolService: RolService
+    private rolService: RolService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
     this.roles = this.rolService.getRol();
+    this.userService.getPersonaId().then((usuarioId) => {
+      this.usuarioId = usuarioId;
+    });
     this.getDocumentosContrato();
   }
 
@@ -94,12 +99,13 @@ export class RevisionContratoComponent {
 
   aprobarContrato() {
     const estadoContrato: EstadoContratoCRUD = {
+      contrato_general_id: 1,
       usuario_id: this.usuarioId,
+      usuario_rol: '',
       estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.APROBADO,
       motivo: ' ',
       fecha_ejecucion_estado: new Date(),
-      contrato_general_id: 1,
       fecha_creacion: new Date(),
     };
 
