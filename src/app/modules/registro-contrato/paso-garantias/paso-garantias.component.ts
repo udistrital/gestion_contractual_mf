@@ -4,8 +4,9 @@ import { MatTableDataSource } from '@angular/material/table';
 import { PolizasService} from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import {Amparo, ApiResponse} from "src/app/types/polizas";
+import { finalize, firstValueFrom } from 'rxjs';
 import Swal from "sweetalert2";
+import {AmparoResponse, ApiResponse} from "../../../types/types";
 
 @Component({
   selector: 'app-paso-garantias',
@@ -20,7 +21,9 @@ export class PasoGarantiasComponent implements OnInit {
   amparos: any[] = [];
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
   dataSource: MatTableDataSource<FormGroup>;
-  contratoGeneralId = '1234'; //ID Mock para pruebas
+  contratoGeneralId: number | null = null;
+  formId: number | null = null;
+  isLoading = false;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -35,16 +38,115 @@ export class PasoGarantiasComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.agregarFila();
     this.cargarTipoAmparos();
+    this.loadSavedData();
+    this.form.statusChanges.subscribe(() => {
+      this.stepCompleted.emit(this.form.valid);
+    });
   }
 
-  getAmparosDisponibles(currentIndex: number): any[] {
-    const amparosSeleccionados = this.filasFormArray.controls
-      .map((control, index) => index !== currentIndex ? control.get('amparo')?.value : null)
-      .filter(value => value !== null);
+  private async loadSavedData(): Promise<void> {
+    console.log('Loading saved data...');
+    try {
+      // Cargar ID del contrato
+      const infoGeneral = localStorage.getItem('paso-info-general');
+      if (infoGeneral) {
+        const contratoData = JSON.parse(infoGeneral);
+        this.contratoGeneralId = contratoData.id;
 
-    return this.amparos.filter(amparo => !amparosSeleccionados.includes(amparo.Id));
+        if (this.contratoGeneralId) {
+
+          const response = await firstValueFrom(this.polizasService.getAmparos(this.contratoGeneralId));
+
+          if (response.Status === "200" && response.Data && response.Data.length > 0) {
+
+            while (this.filasFormArray.length !== 0) {
+              this.filasFormArray.removeAt(0);
+            }
+
+            response.Data.forEach((amparo: any) => {
+              const filaFormGroup = this.crearFilaFormGroup();
+              filaFormGroup.patchValue({
+                amparo: amparo.amparo_id,
+                suficienciaPorcentaje: amparo.tipo_valor_amparo_id === 2 ? amparo.suficiencia : '',
+                suficienciaSalarios: amparo.tipo_valor_amparo_id === 1 ? amparo.suficiencia : '',
+                descripcion: amparo.descripcion
+              });
+
+              this.configurarAmparoListener(filaFormGroup);
+              this.filasFormArray.push(filaFormGroup);
+            });
+
+            this.formId = this.contratoGeneralId;
+            this.actualizarDataSource();
+          } else {
+            this.agregarFila();
+          }
+        }
+      }
+
+      const savedForm = localStorage.getItem('paso-garantias');
+      if (savedForm) {
+        const parsedForm = JSON.parse(savedForm);
+        this.formId = parsedForm.id;
+      }
+    } catch (error) {
+      console.error('Error loading saved data:', error);
+      localStorage.removeItem('paso-garantias');
+      this.agregarFila();
+    }
+  }
+
+  async guardarYContinuar() {
+    if (!this.form.valid) {
+      this.markFormGroupTouched(this.form);
+      return;
+    }
+
+    try {
+      this.isLoading = true;
+      const formData = this.prepareFormData();
+
+      if (!this.contratoGeneralId) {
+        throw new Error('No se ha encontrado información del contrato');
+      }
+
+      let response;
+
+      if (this.formId) {
+        response = await firstValueFrom(
+          this.polizasService.putAmparos(this.contratoGeneralId, formData)
+        );
+      } else {
+        response = await firstValueFrom(
+          this.polizasService.postAmparos(formData)
+        );
+      }
+
+
+      localStorage.setItem('paso-garantias', JSON.stringify({
+        ...formData,
+        id: this.contratoGeneralId
+      }));
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Datos guardados',
+        text: 'La información de garantías se ha guardado correctamente'
+      });
+
+      this.nextStep.emit();
+    } catch (error) {
+      console.error('Error saving data:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al guardar',
+        text: 'Ocurrió un error al guardar la información de garantías'
+      });
+    } finally {
+      this.isLoading = false;
+      this.cdRef.detectChanges();
+    }
   }
 
   get filasFormArray(): FormArray {
@@ -172,32 +274,8 @@ export class PasoGarantiasComponent implements OnInit {
     }
   }
 
-  prepareFormData() {
-    return this.filasFormArray.controls.map(control => {
-      const formGroup = control as FormGroup;
-      if (formGroup.get('suficienciaSalarios')?.enabled) {
-        return {
-          amparo_id: formGroup.get('amparo')?.value,
-          suficiencia: formGroup.get('suficienciaSalarios')?.value,
-          descripcion: formGroup.get('descripcion')?.value,
-          contrato_general_id: this.contratoGeneralId,
-          tipo_valor_amparo_id: 1 //ID Mock para pruebas
-        };
-      } else {
-        return {
-          amparo_id: formGroup.get('amparo')?.value,
-          suficiencia: formGroup.get('suficienciaPorcentaje')?.value,
-          descripcion: formGroup.get('descripcion')?.value,
-          contrato_general_id: this.contratoGeneralId,
-          tipo_valor_amparo_id: 2 //ID Mock para pruebas
-        };
-      }
-
-    });
-  }
-
-  sendDataToApi(data: Amparo[]) {
-    this.polizasService.post(data).subscribe({
+  sendDataToApi(data: AmparoResponse[]) {
+    this.polizasService.postAmparos(data).subscribe({
       next: (response: ApiResponse<any>) => {
         console.log('Amparo enviado correctamente', response);
         Swal.fire({
@@ -227,4 +305,33 @@ export class PasoGarantiasComponent implements OnInit {
     });
   }
 
+  prepareFormData() {
+    return this.filasFormArray.controls.map(control => {
+      const formGroup = control as FormGroup;
+      return {
+        amparo_id: formGroup.get('amparo')?.value,
+        suficiencia: formGroup.get('suficienciaSalarios')?.enabled ?
+          formGroup.get('suficienciaSalarios')?.value :
+          formGroup.get('suficienciaPorcentaje')?.value,
+        descripcion: formGroup.get('descripcion')?.value,
+        contrato_general_id: this.contratoGeneralId,
+        tipo_valor_amparo_id: formGroup.get('suficienciaSalarios')?.enabled ? 1 : 2
+      };
+    });
+  }
+
+  getAmparosDisponibles(currentIndex: number): any[] {
+    const amparosSeleccionados = this.filasFormArray.controls
+      .map((control, index) => index !== currentIndex ? control.get('amparo')?.value : null)
+      .filter(value => value !== null);
+    return this.amparos.filter((amparo: any) => !amparosSeleccionados.includes(amparo.Id));
+  }
+
+  async onInView(inView: boolean) {
+    if (inView) {
+      await this.loadSavedData();
+    } else {
+      console.log('Paso Garantías - out of view');
+    }
+  }
 }

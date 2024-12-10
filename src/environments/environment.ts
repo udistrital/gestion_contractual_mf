@@ -6,8 +6,8 @@ export const environment = {
   CDPS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/presupuesto_contractual_mid/',
   CLAUSULAS_PARAGRAFOS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/clausulas_paragrafos_crud/',
   GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:3117/',
-  GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:3001/',
-  POLIZAS_CRUD_SERVICE: 'http://localhost:3117/',
+  GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:3119/',
+  POLIZAS_CRUD_SERVICE: 'http://localhost:3119/',
   GESTOR_DOCUMENTAL_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
   ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE: 'http://localhost:3001/',
   TIPO_COMPROMISO_ID: '111',
@@ -50,11 +50,10 @@ export const environment = {
   ESTADO_CONTRATO_PORSUSCRIBIR: 'POR SUSCRIBIR',
   ESTADO_CONTRATO_LEGALIZADO: 'LEGALIZADO',
 
-  ESTADO_POR_SUSCRIBIR: '6773',
-
   ESTADO_CONTRATO: {
     SUSCRITO: 6774,
     DECLINADO: 6775,
+    POR_SUSCRIBIR: 6773,
   },
 
   ESTADOS_INTERNOS: {

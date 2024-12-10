@@ -19,6 +19,8 @@ export class RevisionContratoComponent {
   tabs: string[] = ['Minuta', 'Documentos'];
   documentos = { minuta: '', documentos_precontractuales: '' };
   usuarioId: number = 1;
+  rol: string = '';
+  contrato_general_id: number = 1;
   roles: string[] = [];
 
   constructor(
@@ -99,7 +101,7 @@ export class RevisionContratoComponent {
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.APROBADO,
       motivo: ' ',
       fecha_ejecucion_estado: new Date(),
-      contrato_general_id: 1,
+      contrato_general_id: this.contrato_general_id,
       fecha_creacion: new Date(),
     };
 
@@ -119,7 +121,7 @@ export class RevisionContratoComponent {
 
   getDocumentosContrato() {
     this.isLoading = true;
-    this.contratoGeneralCrudService.getDocumentoContrato(12).subscribe({
+    this.contratoGeneralCrudService.getDocumentoContrato(this.contrato_general_id).subscribe({
       next: (response: { Success: boolean; Data: DocumentoContrato[] }) => {
         if (response.Success && response.Data.length > 0) {
           response.Data.map((documento) =>

@@ -132,52 +132,33 @@
       <h3>Lugar de Ejecución</h3>
     </div>
     <div class="form-grid3">
-      <mat-form-field>
-        <mat-label>País:</mat-label>
-        <mat-select formControlName="pais">
-          <mat-option *ngFor="let pais of pais" [value]="pais.Id">
-            {{pais.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.pais')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Departamento:</mat-label>
-        <mat-select formControlName="departamento">
-          <mat-option *ngFor="let departamento of departamento"
-                      [value]="departamento.LugarHijoId.Id">
-            {{departamento.LugarHijoId.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.departamento')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Municipio/Ciudad:</mat-label>
-        <mat-select formControlName="municipioCiudad">
-          <mat-option *ngFor="let municipio of municipioCiudad"
-                      [value]="municipio.LugarHijoId.Id">
-            {{municipio.LugarHijoId.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.municipioCiudad')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Sede:</mat-label>
-        <mat-select formControlName="sede">
-          <mat-option *ngFor="let sede of sedes" [value]="sede.Id">
-            {{sede.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.sede')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
+      <app-searchable-select
+        label="País"
+        [items]="pais"
+        [control]="form.get('lugarEjecucion.pais')"
+        [required]="true">
+      </app-searchable-select>
+
+      <app-searchable-select
+        label="Departamento"
+        [items]="departamento"
+        [control]="form.get('lugarEjecucion.departamento')"
+        [required]="true">
+      </app-searchable-select>
+
+      <app-searchable-select
+        label="Municipio/Ciudad"
+        [items]="municipioCiudad"
+        [control]="form.get('lugarEjecucion.municipioCiudad')"
+        [required]="true">
+      </app-searchable-select>
+
+      <app-searchable-select
+        label="Sede"
+        [items]="sedes"
+        [control]="form.get('lugarEjecucion.sede')"
+        [required]="true">
+      </app-searchable-select>
       <mat-form-field>
         <mat-label>Dependencia:</mat-label>
         <mat-select formControlName="dependencia"

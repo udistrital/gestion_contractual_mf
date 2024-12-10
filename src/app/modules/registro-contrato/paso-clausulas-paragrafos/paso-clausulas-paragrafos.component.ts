@@ -678,6 +678,7 @@ export class PasoClausulasParagrafosComponent {
       data: { 
         file: pdfBlob, 
         documento: {
+          base64,
           nombre: `MINUTA ${this.contratoId} - ${this.tipoContratoId}`, 
           descripcion: "",
           contrato_general_id: 1
