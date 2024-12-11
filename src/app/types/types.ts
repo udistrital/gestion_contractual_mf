@@ -1,3 +1,15 @@
+export interface ContratoGeneral {
+  id: number;
+  vigencia: string;
+  tipoContratoId: string;
+  // tipo_persona: string;
+  // numero_contrato: string;
+  contratista: any;
+  fechaCreacion: string | null;
+  // fecha_aprobado: string | null;
+  estados: any;
+}
+
 export interface CDPContratoCRUD {
   id?: number;
   numero_cdp_id: number;
@@ -23,8 +35,6 @@ export interface EstadoContratoCRUD {
   estado_parametro_id: number;
   estado_interno_parametro_id: number;
   motivo: string;
-  fecha_ejecucion_estado: Date;
-  fecha_creacion: Date;
 }
 
 export interface ContratistaCRUD {

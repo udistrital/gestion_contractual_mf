@@ -1,11 +1,10 @@
 <div class="container">
   <p>Gestión Contractual / <b>Contratos</b></p>
   <mat-card>
-
     <mat-card-header>
       <mat-card-title><b>Documentos</b></mat-card-title>
     </mat-card-header>
-    
+
     <mat-card-content>
       <div class="actions">
         <button mat-button color="primary">
@@ -43,23 +42,24 @@
               [base64Document]="documentos.documentos_precontractuales"
             ></app-pdf-visualizador>
           </div>
-
-          <mat-dialog-actions class="footer-buttons" align="center">
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="openModalRechazo()"
-            >
-              Rechazar Contrato
-            </button>
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="openMensajeConfirmacion()"
-            >
-              {{ getAccionBotonEnviar() }}
-            </button>
-          </mat-dialog-actions>
+          <ng-container *ngIf="mostrarBotones">
+            <mat-dialog-actions class="footer-buttons" align="center">
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="openModalRechazo()"
+              >
+                Rechazar Contrato
+              </button>
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="openMensajeConfirmacion()"
+              >
+                {{ mensaje.accion }}
+              </button>
+            </mat-dialog-actions>
+          </ng-container>
         </div>
       </div>
     </mat-card-content>

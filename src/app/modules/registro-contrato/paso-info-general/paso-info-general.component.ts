@@ -208,7 +208,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   CargarEstado() {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('parametro/' + environment.ESTADO_POR_SUSCRIBIR).subscribe({
+      this.parametrosService.get('parametro/' + environment.ESTADOS_GENERALES.POR_SUSCRIBIR).subscribe({
         next: (Response: any) => {
           if (Response.Status == "200") {
             this.estado_id = Response.Data.Id;
@@ -450,8 +450,6 @@ export class PasoInfoGeneralComponent implements OnInit {
       estado_parametro_id: this.estado_id,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR,
       motivo: 'Contrato creado paso 1',
-      fecha_ejecucion_estado: new Date(),
-      fecha_creacion: new Date(),
     };
 
     this.contratoGeneralCrudService.postEstadoContrato(estado).subscribe({

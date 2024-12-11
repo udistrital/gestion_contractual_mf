@@ -46,24 +46,25 @@ export class ModalMotivosRechazoComponent implements OnInit {
   }
 
   rechazarContrato() {
-    const contratoEstado: EstadoContratoCRUD = this.construirObjetoEstadoContrato();
-    this.contratoGeneralCrudService.postEstadoContrato(contratoEstado).subscribe((res:any) => {
-      this.alertService.showSuccessAlert('El contrato fue rechazado', 'CONTRATO RECHAZADO');
-      this.dialogRef.close();
-    });
-  }
-
-  construirObjetoEstadoContrato() {
     const estado: EstadoContratoCRUD = {
       contrato_general_id: 1,
-      usuario_id: this.dataModal.usuarioId,
-      usuario_rol: "",
-      estado_parametro_id: environment.ESTADO_CONTRATO.DECLINADO,
+      usuario_id: this.dataModal.usuario_id,
+      usuario_rol: this.dataModal.rol,
+      estado_parametro_id: environment.ESTADOS_GENERALES.POR_SUSCRIBIR,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.RECHAZADO,
       motivo: this.formObservaciones.get('observaciones')?.value,
-      fecha_ejecucion_estado: new Date(),
-      fecha_creacion: new Date()
     };
-    return estado;
+    console.log(estado);
+    
+
+    // this.contratoGeneralCrudService
+    //   .postEstadoContrato(estado)
+    //   .subscribe((res: any) => {
+    //     this.alertService.showSuccessAlert(
+    //       'El contrato fue rechazado',
+    //       'CONTRATO RECHAZADO'
+    //     );
+    //     this.dialogRef.close();
+    //   });
   }
 }

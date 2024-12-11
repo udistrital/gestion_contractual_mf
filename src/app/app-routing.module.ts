@@ -20,7 +20,7 @@ const routes: Routes = [
     component: ConsultaContratoComponent,
   },
   {
-    path: 'revisar',
+    path: ':idContrato/documentos',
     // canActivate: [authGuard],
     component: RevisionContratoComponent,
   },
