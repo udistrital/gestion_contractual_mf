@@ -47,24 +47,23 @@ export class ModalMotivosRechazoComponent implements OnInit {
 
   rechazarContrato() {
     const estado: EstadoContratoCRUD = {
-      contrato_general_id: 1,
+      contrato_general_id: this.dataModal.contrato_general_id,
       usuario_id: this.dataModal.usuario_id,
       usuario_rol: this.dataModal.rol,
       estado_parametro_id: environment.ESTADOS_GENERALES.POR_SUSCRIBIR,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.RECHAZADO,
       motivo: this.formObservaciones.get('observaciones')?.value,
     };
-    console.log(estado);
-    
-
-    // this.contratoGeneralCrudService
-    //   .postEstadoContrato(estado)
-    //   .subscribe((res: any) => {
-    //     this.alertService.showSuccessAlert(
-    //       'El contrato fue rechazado',
-    //       'CONTRATO RECHAZADO'
-    //     );
-    //     this.dialogRef.close();
-    //   });
+    this.contratoGeneralCrudService
+      .postEstadoContrato(estado)
+      .subscribe((res: any) => {
+        if (res.id) {
+          this.alertService.showSuccessAlert(
+            'El contrato fue rechazado',
+            'CONTRATO RECHAZADO'
+          );
+        }
+        this.dialogRef.close();
+      });
   }
 }
