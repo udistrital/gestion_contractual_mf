@@ -12,26 +12,27 @@ export const accionesPorRolYEstado: {
     ],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
       'Ver Contrato',
-      'Motivo de rechazo',
+      'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
       'Ver Contrato',
-      'Motivo de rechazo',
+      'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: [
       'Ver Contrato',
-      'Motivo de rechazo',
+      'Ver Historial',
+    ],
+    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: [
+      'Ver Contrato',
+      'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: [
       'Editar Contrato',
       'Enviar Aprobación Jefe OC',
-      'Motivo de rechazo',
+      'Ver Historial',
       'Declinar',
     ],
-    [environment.ESTADOS_INTERNOS.DECLINADO]: [
-      'Ver Contrato',
-      'Motivo de rechazo',
-    ],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Contrato', 'Ver Historial'],
   },
   JEFE_DEPENDENCIA: {
     //JEFE OFICINA CONTRATACION
@@ -39,6 +40,7 @@ export const accionesPorRolYEstado: {
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
   },
@@ -48,6 +50,7 @@ export const accionesPorRolYEstado: {
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Revisar Contrato'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
   },
@@ -57,6 +60,7 @@ export const accionesPorRolYEstado: {
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Revisar Contrato'],
+    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
   },

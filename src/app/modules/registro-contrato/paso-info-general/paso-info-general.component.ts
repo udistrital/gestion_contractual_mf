@@ -446,7 +446,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     const estado: EstadoContratoCRUD = {
       contrato_general_id: contratoId,
       usuario_id: 1,
-      usuario_rol: "",
+      usuario_rol: "ABOGADO",
       estado_parametro_id: this.estado_id,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR,
       motivo: 'Contrato creado paso 1',

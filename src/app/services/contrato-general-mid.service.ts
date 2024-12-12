@@ -19,11 +19,9 @@ export class ContratoGeneralMidService {
   }
 
   getContratos(params: any): Observable<any> {
-
     this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
 
     let queryParams = [];
-
     const filterParams = { ...params };
     delete filterParams.limit;
     delete filterParams.offset;
@@ -55,7 +53,6 @@ export class ContratoGeneralMidService {
       );
     }
 
-
     if (params.limit !== undefined) {
       queryParams.push(`limit=${params.limit}`);
     }
@@ -64,8 +61,6 @@ export class ContratoGeneralMidService {
     }
 
     const url = `contratos-generales${queryParams.length ? '?' + queryParams.join('&') : ''}`;
-    console.log(url);
-
     return this.requestManager.get(url);
   }
 
@@ -93,5 +88,12 @@ export class ContratoGeneralMidService {
           return [];
         })
       );
+  }
+
+  getEstados(idContrato: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
+    return this.requestManager.get(
+      `estados?queryFilter="contrato_general_id":${idContrato}&sortBy=fecha_creacion&orderBy=DESC`
+    );
   }
 }

@@ -103,7 +103,7 @@ export class ConsultaContratoComponent implements OnInit {
       'Ver Contrato': 'visibility',
       'Editar Contrato': 'edit',
       'Enviar Aprobación Jefe OC': 'send',
-      'Motivo de rechazo': 'info',
+      'Ver Historial': 'info',
       Declinar: 'cancel',
       'Revisar Contrato': 'find_in_page',
       'Ver Documentos': 'my_library_books',
@@ -112,7 +112,6 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   realizarAccion(contrato: ContratoGeneral, accion: string) {
-    console.log(contrato);
     switch (accion) {
       case 'Ver Contrato':
         this.router.navigate(['/registrar']);
@@ -123,8 +122,8 @@ export class ConsultaContratoComponent implements OnInit {
       case 'Enviar Aprobación Jefe OC':
         console.log('Enviar Aprobación Jefe OC');
         break;
-      case 'Motivo de rechazo':
-        this.openModalObservaciones();
+      case 'Ver Historial':
+        this.openModalObservaciones(contrato.id);
         break;
       case 'Declinar':
         console.log('Declinar');
@@ -138,11 +137,12 @@ export class ConsultaContratoComponent implements OnInit {
     }
   }
 
-  openModalObservaciones(): void {
+  openModalObservaciones(idContrato: number): void {
     this.dialog.open(ModalObservacionesComponent, {
       width: '70vw',
-      height: '35vw',
-      data: {},
+      maxHeight: '35vw',
+      // height: '35vw',
+      data: { idContrato },
     });
   }
 
