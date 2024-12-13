@@ -7,6 +7,7 @@ import { ContratoGeneralCrudService } from "../../../services/contrato-general-c
 import { ApiResponse } from "src/app/types/polizas";
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
 import { EstadoContratoCRUD } from "src/app/types/types";
+import { RolService } from "src/app/services/rol.service";
 
 interface Parametro {
   Id: number | string;
@@ -28,6 +29,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   @Output() tipoCompromisoChange = new EventEmitter<string>();
   @Output() aplicaPolizaChange = new EventEmitter<string>();
 
+  roles: string[] = [];
   showContratoFields = false;
   showConvenioFields = false;
   isLoading = false;
@@ -40,6 +42,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
+    private rolService: RolService,
     private parametrosService: ParametrosService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
@@ -88,6 +91,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   estado_id: number | null = null;
 
   ngOnInit(): void {
+    this.roles = this.rolService.getRol();
     if (this.viewMode) {
       this.formInfoGeneral.disable();
       this.loadInfoDataMid();
@@ -443,13 +447,14 @@ export class PasoInfoGeneralComponent implements OnInit {
   private async guardarEstado(contratoId: number) {
     if (this.estado_id === null) return;
 
+    const rol = this.roles.find(item => item.includes("ABOGADO")) || "ABOGADO";
     const estado: EstadoContratoCRUD = {
       contrato_general_id: contratoId,
       usuario_id: 1,
-      usuario_rol: "",
+      usuario_rol: rol,
       estado_parametro_id: this.estado_id,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR,
-      motivo: 'Contrato creado paso 1',
+      motivo: ' ',
     };
 
     this.contratoGeneralCrudService.postEstadoContrato(estado).subscribe({
