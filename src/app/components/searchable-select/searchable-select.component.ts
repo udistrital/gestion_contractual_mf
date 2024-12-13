@@ -6,6 +6,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatSelectModule } from "@angular/material/select";
 import { NgxMatSelectSearchModule } from "ngx-mat-select-search";
 import { AsyncPipe, NgForOf, NgIf } from "@angular/common";
+import {ParametroResponse} from "../../types/types";
 
 interface SimpleItem {
   Id: number;
@@ -24,7 +25,7 @@ interface DependenciaItem {
   nombre: string;
 }
 
-type ItemType = SimpleItem | NestedItem | DependenciaItem;
+type ItemType = SimpleItem | NestedItem | DependenciaItem | ParametroResponse;
 
 @Component({
   selector: 'app-searchable-select',
@@ -36,12 +37,13 @@ type ItemType = SimpleItem | NestedItem | DependenciaItem;
           <ngx-mat-select-search
             [formControl]="searchCtrl"
             [placeholderLabel]="'Buscar ' + label.toLowerCase()"
-            [noEntriesFoundLabel]="'No se encontraron resultados'">
+            [noEntriesFoundLabel]="'No se encontraron resultados'"
+            [showToggleAllCheckbox]="false"
+            [hideClearSearchButton]="false">
           </ngx-mat-select-search>
         </mat-option>
 
-        <mat-option *ngFor="let item of filteredItems$ | async"
-                    [value]="getValue(item)">
+        <mat-option *ngFor="let item of items" [value]="getValue(item)">
           {{getDisplayName(item)}}
         </mat-option>
       </mat-select>
@@ -51,7 +53,18 @@ type ItemType = SimpleItem | NestedItem | DependenciaItem;
     </mat-form-field>
   `,
   styles: [`
-    .w-100 { width: 100%; }
+    .w-100 {
+      width: 100%;
+    }
+    ::ng-deep .mat-mdc-select-search-input {
+      padding: 8px !important;
+    }
+    ::ng-deep .mat-mdc-select-search-inner {
+      margin-bottom: 0 !important;
+    }
+    ::ng-deep .mat-mdc-select-panel {
+      min-width: fit-content !important;
+    }
   `],
   standalone: true,
   imports: [
@@ -60,7 +73,6 @@ type ItemType = SimpleItem | NestedItem | DependenciaItem;
     NgxMatSelectSearchModule,
     NgForOf,
     ReactiveFormsModule,
-    AsyncPipe,
     NgIf
   ],
 })
@@ -72,10 +84,12 @@ export class SearchableSelectComponent implements OnInit, OnDestroy {
   private _items: ItemType[] = [];
   @Input() set items(value: ItemType[]) {
     this._items = value || [];
-    this.filterItems(this.searchCtrl.value);
+    if (this.searchCtrl) {
+      this.updateFilteredItems();
+    }
   }
   get items(): ItemType[] {
-    return this._items;
+    return this._filteredItems;
   }
 
   @Input() set control(value: AbstractControl | null) {
@@ -87,42 +101,39 @@ export class SearchableSelectComponent implements OnInit, OnDestroy {
 
   controlValue: FormControl = new FormControl();
   searchCtrl = new FormControl('');
-  filteredItems$!: Observable<ItemType[]>;
-
+  private _filteredItems: ItemType[] = [];
   private destroy$ = new Subject<void>();
-  private lastFilter = '';
 
   ngOnInit() {
-    this.filteredItems$ = this.searchCtrl.valueChanges.pipe(
-      startWith(''),
-      map(search => this.filterItems(search)),
-      takeUntil(this.destroy$)
-    );
+    this.searchCtrl.valueChanges
+      .pipe(
+        startWith(''),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.updateFilteredItems();
+      });
   }
 
   private subscribeToValueChanges() {
     this.controlValue.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.filterItems(this.lastFilter);
+        this.updateFilteredItems();
       });
   }
 
-  private filterItems(search: string | null): ItemType[] {
-    this.lastFilter = search || '';
-    if (!search || !this.items) {
-      return this.items || [];
-    }
-
-    const searchTerm = search.toLowerCase();
-    return this.items.filter(item => {
+  private updateFilteredItems() {
+    const search = this.searchCtrl.value?.toLowerCase() || '';
+    this._filteredItems = this._items.filter(item => {
       if (!item) return false;
+      if (!search) return true;
       const nombre = this.getDisplayName(item);
-      return nombre.toLowerCase().includes(searchTerm);
+      return nombre.toLowerCase().includes(search);
     });
   }
 
-  getValue(item: ItemType): number {
+  getValue(item: ItemType): string | number {
     if (this.isNestedItem(item)) {
       return item.LugarHijoId.Id;
     } else if (this.isDependenciaItem(item)) {
