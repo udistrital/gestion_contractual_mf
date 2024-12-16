@@ -18,8 +18,6 @@ export class RolService {
     ];
     const rolesObtenidos: any = await this.autenticationService.getRole();
     this.roles = rolesValidos.filter((rol) => rolesObtenidos.includes(rol));
-    console.log("ROLES: ", this.roles);
-    
   }
 
   getRol(): string[] {

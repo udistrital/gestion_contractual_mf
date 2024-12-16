@@ -7,6 +7,8 @@ import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-cr
 import { EstadoContratoCRUD, DocumentoContrato } from 'src/app/types/types';
 import { DocumentosService } from 'src/app/services/documentos.service';
 import { RolService } from 'src/app/services/rol.service';
+import { UserService } from 'src/app/services/user.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-revision-contrato',
@@ -18,21 +20,58 @@ export class RevisionContratoComponent {
   selectedTab: number = 0;
   tabs: string[] = ['Minuta', 'Documentos'];
   documentos = { minuta: '', documentos_precontractuales: '' };
-  usuarioId: number = 1;
-  rol: string = '';
-  contrato_general_id: number = 1;
+  contrato_general_id = 0;
+  usuario_id: number = 0;
   roles: string[] = [];
+  estadoInterno: number = 6802;
+  mostrarBotones: boolean = false;
+  mensaje: any;
+
+  // Configuración de mensajes por rol y estado
+  private readonly textos: any = {
+    JEFE_DEPENDENCIA: {
+      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: {
+        accion: 'Aprobar y Enviar a Ordenador',
+        confirmacion:
+          '¿Está seguro(a) de aprobar y enviar contrato a ordenador?',
+        enviado: 'El contrato fue enviado al ordenador',
+      },
+    },
+    ORDENADOR_DEL_GASTO: {
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: {
+        accion: 'Firmar y Enviar a Contratista',
+        confirmacion:
+          '¿Está seguro(a) de firmar y enviar contrato a contratista?',
+        enviado: 'El contrato fue enviado al contratista',
+      },
+    },
+    CONTRATISTA: {
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: {
+        accion: 'Firmar y Enviar',
+        confirmacion: '¿Está seguro(a) de firmar y enviar contrato?',
+        enviado: 'El contrato fue enviado exitosamente',
+      },
+    },
+  };
 
   constructor(
     public dialog: MatDialog,
+    private route: ActivatedRoute,
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private documentosService: DocumentosService,
-    private rolService: RolService
+    private rolService: RolService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
     this.roles = this.rolService.getRol();
+    this.userService.getPersonaId().then((usuario_id) => {
+      this.usuario_id = usuario_id;
+    });
+    const id = this.route.snapshot.paramMap.get('idContrato');
+    this.contrato_general_id = id ? Number(id) : 0;
+    this.getMensajes();
     this.getDocumentosContrato();
   }
 
@@ -42,95 +81,145 @@ export class RevisionContratoComponent {
     if (callback) callback();
   }
 
-  openModalRechazo(): void {
-    this.dialog.open(ModalMotivosRechazoComponent, {
-      width: '70vw',
-      data: { usuarioId: this.usuarioId },
-    });
+  selectTab(index: number) {
+    this.selectedTab = index;
   }
 
-  getAccionBotonEnviar(): string {
-    if (this.roles.includes('JEFE_DEPENDENCIA')) {
-      return 'Aprobar y Enviar a Ordenador';
-    } else if (this.roles.includes('ORDENADOR_DEL_GASTO')) {
-      return 'Firmar y Enviar a Contratista';
-    } else if (this.roles.includes('CONTRATISTA')) {
-      return 'Firmar y Enviar';
-    } else {
-      return '';
-    }
-  }
-
-  getMensajeConfirmacion(): string {
-    if (this.roles.includes('JEFE_DEPENDENCIA')) {
-      return '¿Está seguro(a) de aprobar y enviar contrato a ordenador?';
-    } else if (this.roles.includes('ORDENADOR_DEL_GASTO')) {
-      return '¿Está seguro(a) de firmar y enviar contrato a contratista?';
-    } else if (this.roles.includes('CONTRATISTA')) {
-      return '¿Está seguro(a) de firmar y enviar contrato?';
-    } else {
-      return '¿Está seguro(a) de realizar esta acción?';
-    }
-  }
-
-  getMensajeEnvado(): string {
-    if (this.roles.includes('JEFE_DEPENDENCIA')) {
-      return 'El contrato fue enviado al ordenador';
-    } else if (this.roles.includes('ORDENADOR_DEL_GASTO')) {
-      return 'El contrato fue enviado al contratista';
-    } else if (this.roles.includes('CONTRATISTA')) {
-      return 'El contrato fue enviado exitosamente';
-    } else {
-      return 'El contrato fue enviado';
+  private getMensajes() {
+    for (const role of this.roles) {
+      if (this.textos[role]?.[this.estadoInterno]) {
+        this.mensaje = this.textos[role][this.estadoInterno];
+        this.mostrarBotones = true;
+      }
     }
   }
 
   openMensajeConfirmacion(): void {
-    const mensaje = this.getMensajeConfirmacion();
-    this.alertService.showConfirmAlert(mensaje).then((confirmado: any) => {
-      if (confirmado.value) {
-        this.aprobarContrato();
-      }
+    this.alertService
+      .showConfirmAlert(this.mensaje.confirmacion)
+      .then((confirmado: any) => {
+        if (confirmado.value) {
+          this.aprobarContrato();
+        }
+      });
+  }
+
+  getRolPorEstado(): string {
+    const rolesPorEstado = {
+      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: 'JEFE_DEPENDENCIA',
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: 'ORDENADOR_DEL_GASTO',
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: 'CONTRATISTA',
+    };
+    const rolEsperado = rolesPorEstado[this.estadoInterno];
+    return this.roles.includes(rolEsperado) ? rolEsperado : '';
+  }
+
+  openModalRechazo(): void {
+    const rol = this.getRolPorEstado();
+    this.dialog.open(ModalMotivosRechazoComponent, {
+      width: '70vw',
+      data: {
+        usuario_id: this.usuario_id,
+        rol,
+        contrato_general_id: this.contrato_general_id,
+      },
     });
   }
 
-  aprobarContrato() {
-    const estadoContrato: EstadoContratoCRUD = {
-      usuario_id: this.usuarioId,
-      estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
-      estado_interno_parametro_id: environment.ESTADOS_INTERNOS.APROBADO,
-      motivo: ' ',
-      fecha_ejecucion_estado: new Date(),
-      contrato_general_id: this.contrato_general_id,
-      fecha_creacion: new Date(),
+  getEstadosAutomaticosPorEstado(): number[] {
+    const rolesPorEstado = {
+      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
+        environment.ESTADOS_INTERNOS.APROBADO_JEFE, //Estado automático
+        environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR,
+      ],
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
+        environment.ESTADOS_INTERNOS.FIRMADO_ORDENADOR, //Estado automático
+        environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA,
+      ],
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: [
+        environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA, //Estado automático
+      ],
     };
+    return rolesPorEstado[this.estadoInterno];
+  }
 
+  aprobarContrato() {
+    let estados: any[] = this.getEstadosAutomaticosPorEstado();
+    const rol = this.getRolPorEstado();
+    if (rol != '' && estados.length > 0) {
+      const estado = estados[0];
+      const estado_parametro_id = environment.ESTADOS_GENERALES.SUSCRITO;
+      let estadoContrato: EstadoContratoCRUD = {
+        contrato_general_id: this.contrato_general_id,
+        usuario_id: this.usuario_id,
+        usuario_rol: rol,
+        estado_parametro_id,
+        estado_interno_parametro_id: estado,
+        motivo: ' ',
+      };
+      if (estado == environment.ESTADOS_INTERNOS.APROBADO_JEFE) {
+        estadoContrato.estado_parametro_id =
+          environment.ESTADOS_GENERALES.POR_SUSCRIBIR;
+      }
+
+      if (estados.length > 1) {
+        this.crearEstadoAdicionalContrato(estadoContrato, estados[1]);
+      } else {
+        this.crearEstadoContrato(estadoContrato);
+      }
+    }
+  }
+
+  crearEstadoAdicionalContrato(
+    estadoContrato: EstadoContratoCRUD,
+    estado: number
+  ) {
+    this.contratoGeneralCrudService
+      .postEstadoContrato(estadoContrato)
+      .subscribe({
+        next: (response: any) => {
+          if (response.id) {
+            estadoContrato.estado_parametro_id =
+              environment.ESTADOS_GENERALES.SUSCRITO;
+            estadoContrato.estado_interno_parametro_id = estado;
+            this.crearEstadoContrato(estadoContrato);
+          }
+        },
+        error: (error) =>
+          this.handleError('Error al crear estado automático', error),
+      });
+  }
+
+  crearEstadoContrato(estadoContrato: EstadoContratoCRUD) {
     this.contratoGeneralCrudService
       .postEstadoContrato(estadoContrato)
       .subscribe((res: any) => {
         this.alertService.showSuccessAlert(
-          this.getMensajeEnvado(),
+          this.mensaje.enviado,
           'CONTRATO ENVIADO'
         );
       });
   }
 
-  selectTab(index: number) {
-    this.selectedTab = index;
-  }
-
   getDocumentosContrato() {
     this.isLoading = true;
-    this.contratoGeneralCrudService.getDocumentoContrato(this.contrato_general_id).subscribe({
-      next: (response: { Success: boolean; Data: DocumentoContrato[] }) => {
-        if (response.Success && response.Data.length > 0) {
-          response.Data.map((documento) =>
-            this.getDocumentoGestorDocumental(documento)
-          );
-        }
-      },
-      error: (error) => this.handleError('Error al obtener documentos', error),
-    });
+    this.contratoGeneralCrudService
+      .getDocumentoContrato(this.contrato_general_id)
+      .subscribe({
+        next: (response: { Success: boolean; Data: DocumentoContrato[] }) => {
+          if (response.Success && response.Data.length > 0) {
+            response.Data.map((documento) =>
+              this.getDocumentoGestorDocumental(documento)
+            );
+          } else {
+            this.isLoading = false;
+          }
+        },
+        error: (error) => {
+          this.handleError('Error al obtener documentos', error),
+            (this.isLoading = false);
+        },
+      });
   }
 
   getDocumentoGestorDocumental(documento: DocumentoContrato) {
