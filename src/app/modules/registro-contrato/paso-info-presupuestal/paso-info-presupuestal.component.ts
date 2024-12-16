@@ -8,6 +8,7 @@ import {environment} from "src/environments/environment";
 import Swal from "sweetalert2";
 import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
 import {CDP, CDPContratoCRUD} from "../../../types/types";
+import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
 
 interface CDPData {
   vigencia: string;
@@ -90,20 +91,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   isLoading = false;
 
-  ordenadores: any[] = [
-    {
-      Id: 1,
-      Nombre: "Director Financiero"
-    },
-    {
-      Id: 2,
-      Nombre: "Director Administrativo"
-    },
-    {
-      Id: 3,
-      Nombre: "Director General"
-    }
-  ];
+  ordenadores: any[] = [];
+  nombreOrdenador: any[] = [];
 
   private formId: number | null = null;
 
@@ -112,7 +101,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     private parametrosService: ParametrosService,
     private cdRef: ChangeDetectorRef,
     private cdpsService: CdpsService,
-    private contratoGeneralCrudService: ContratoGeneralCrudService
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService
   ) { }
 
   ngOnInit() {
@@ -125,6 +115,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     this.CargarOrigenPresupuesto();
     this.CargarTemaGasto();
     this.CargarMediosPago();
+    this.CargarRolOrdenadores();
     this.loadSavedData();
 
     this.form.get('tipoMoneda')?.valueChanges.subscribe((id_moneda) => {
@@ -133,10 +124,16 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       }
     })
 
+    this.form.get('ordenadorGasto')?.valueChanges.subscribe((rol) => {
+      if(rol){
+        console.log("Si se llama a la función con el rol" + Number(rol));
+        this.CargarOrdenadorActuales(Number(rol));
+      }
+    })
+
     this.form.statusChanges.subscribe(() => {
       this.stepCompleted.emit(this.form.valid);
     });
-
   }
 
   ngOnDestroy() {
@@ -476,6 +473,23 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.MEDIO_PAGO_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
         this.medios_pago = Response.Data;
+      }
+    })
+  }
+
+  CargarRolOrdenadores(){
+    this.ordenadoresSupervisoresMidService.getRolOrdenadores().subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        this.ordenadores = Response.Data;
+      }
+    })
+  }
+
+  CargarOrdenadorActuales(rol: number){
+    this.ordenadoresSupervisoresMidService.getOrdenadorActuales(rol).subscribe((Response: any) => {
+      if (Response.Status == "200") {
+        console.log(Response.Data.nombre_ordenador);
+        this.form.get('nombreOrdenador')?.setValue(Response.Data.nombre_ordenador);
       }
     })
   }

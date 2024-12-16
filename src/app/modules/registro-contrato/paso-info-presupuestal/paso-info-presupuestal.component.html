@@ -99,8 +99,8 @@
         <mat-form-field>
           <mat-label>Ordenador Gasto:</mat-label>
           <mat-select formControlName="ordenadorGasto">
-            <mat-option *ngFor="let ordenador of ordenadores" [value]="ordenador.Id">
-              {{ordenador.Nombre}}
+            <mat-option *ngFor="let ordenador of ordenadores" [value]="ordenador.id">
+              {{ordenador.rol}}
             </mat-option>
           </mat-select>
         </mat-form-field>
