@@ -38,6 +38,7 @@ export interface EstadoContratoCRUD {
 }
 
 export interface ContratistaCRUD {
+  id?: string;
   numero_documento: string,
   tipo_persona_id: number,
   contrato_general_id: number
@@ -74,4 +75,18 @@ export interface DocumentoContrato {
   documento_id: number;
   documento_enlace: string;
   contrato_general_id: number;
+}
+
+export interface ParametroResponse {
+  Id: number | string;
+  Nombre: string;
+  Descripcion?: string;
+  CodigoAbreviacion?: string;
+  Activo?: boolean;
+}
+
+export interface AmparoResponse {
+  suficiencia: number;
+  amparo_id: number;
+  descripcion: string;
 }
