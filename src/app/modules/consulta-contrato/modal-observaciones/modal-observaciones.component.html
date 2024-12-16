@@ -5,87 +5,32 @@
 
   <h4 class="container-title">HISTORIAL DE OBSERVACIONES</h4>
 
-  <mat-card class="observacion" appearance="outlined">
-    <mat-card-header>
-      <div mat-card-avatar class="example-header-image">PP</div>
-      <mat-card-title class="nombre-rechaza"
-        >Pepito Perez <span>(Jefe OCI)</span></mat-card-title
-      >
-      <mat-card-subtitle class="fecha-rechazo"
-        >Fecha: 31/01/2024</mat-card-subtitle
-      >
-    </mat-card-header>
-    <mat-card-content class="motivo">
-      <p>
-        El contrato cubre adecuadamente los puntos esenciales relacionados con
-        las obligaciones y derechos de las partes involucradas. No obstante, se
-        recomienda detallar con mayor precisión los plazos de entrega de los
-        productos o servicios en la cláusula 3, para evitar posibles
-        malentendidos futuros.
-      </p>
-    </mat-card-content>
-    <mat-card-footer>
-      <mat-divider></mat-divider>
-      <div class="enviado">
-        <p>Enviado por: Pepito Perez (Auditor Experto)</p>
-        <p>Fecha: 01/01/2024</p>
-      </div>
-    </mat-card-footer>
-  </mat-card>
+  <div class="loading-shade" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+  </div>
 
-  <mat-card class="observacion" appearance="outlined">
-    <mat-card-header>
-      <div mat-card-avatar class="example-header-image">LG</div>
-      <mat-card-title class="nombre-rechaza"
-        >Laura García <span>(Jefe OCI)</span></mat-card-title
-      >
-      <mat-card-subtitle class="fecha-rechazo"
-        >Fecha: 15/11/2024</mat-card-subtitle
-      >
-    </mat-card-header>
-    <mat-card-content class="motivo">
-      <p>
-        Se detecta que la cláusula de penalizaciones por incumplimiento no está
-        mencionada o está incompleta, lo cual podría generar incertidumbres o
-        conflictos en el futuro. Se sugiere agregar una sección que detalle las
-        penalizaciones por retrasos en el pago (por ejemplo, un 2% del total
-        adeudado por cada mes de retraso).
-      </p>
-    </mat-card-content>
-    <mat-card-footer>
-      <mat-divider></mat-divider>
-      <div class="enviado">
-        <p>Enviado por: Andrés López (Auditor Experto)</p>
-        <p>Fecha: 20/11/2024</p>
-      </div>
-    </mat-card-footer>
-  </mat-card>
+  <ng-container *ngFor="let estado of estados">
+    <mat-card class="observacion" appearance="outlined">
 
-  <mat-card class="observacion" appearance="outlined">
-    <mat-card-header>
-      <div mat-card-avatar class="example-header-image">CR</div>
-      <mat-card-title class="nombre-rechaza"
-        >Carlos Ramírez <span>(Jefe OCI)</span></mat-card-title
-      >
-      <mat-card-subtitle class="fecha-rechazo"
-        >Fecha: 28/11/2024</mat-card-subtitle
-      >
-    </mat-card-header>
-    <mat-card-content class="motivo">
-      <p>
-        El contrato cumple con las leyes y regulaciones aplicables de la Ley
-        General de Contratación Pública (Ley No. 1234/2018), sin embargo, se
-        recomienda confirmar que se ajuste a las últimas modificaciones legales
-        relacionadas con los pagos electrónicos, según lo establecido en la
-        normativa reciente de la Ley de Pagos Digitales (Ley No. 4567/2023).
-      </p>
-    </mat-card-content>
-    <mat-card-footer>
-      <mat-divider></mat-divider>
-      <div class="enviado">
-        <p>Enviado por: Mariana Díaz (Auditor Experto)</p>
-        <p>Fecha: 05/12/2024</p>
-      </div>
-    </mat-card-footer>
-  </mat-card>
+      <mat-card-header>
+        <div mat-card-avatar class="example-header-image">
+          {{ obtenerIniciales(estado.nombre_usuario) }}
+        </div>
+        <mat-card-title class="nombre-rechaza">
+          {{ estado.nombre_usuario }} <span>({{ estado.usuario_rol }})</span>
+        </mat-card-title>
+        <mat-card-subtitle class="fecha-rechazo">
+          Fecha: {{estado.fecha_creacion ? (estado.fecha_creacion | date:'dd/MM/yyyy') : 'N/A'}}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content class="motivo">{{ estado.motivo }}</mat-card-content>
+
+      <mat-card-footer>
+        <mat-divider></mat-divider>
+        <p class="estados">{{estado.estado_parametro_id}} - {{estado.estado_interno_parametro_id}}</p>
+      </mat-card-footer>
+
+    </mat-card>
+  </ng-container>
 </mat-card>
