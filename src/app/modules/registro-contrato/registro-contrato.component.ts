@@ -27,7 +27,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   @ViewChild(PasoObligacionesComponent) pasoObligaciones!: PasoObligacionesComponent;
   @ViewChild(PasoInfoPresupuestalComponent) pasoInfoPresupuestal!: PasoInfoPresupuestalComponent;
 
-  isLinear = true;
+  isLinear = false;
   showEspecificacionesTecnicas = false;
   showAplicaPoliza = false;
   stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(new Array(9).fill(false));

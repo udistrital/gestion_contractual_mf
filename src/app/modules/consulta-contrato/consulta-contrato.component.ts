@@ -13,11 +13,33 @@ import { ModalObservacionesComponent } from './modal-observaciones/modal-observa
 import { MatDialog } from '@angular/material/dialog';
 import { ContratoGeneral } from 'src/app/types/types';
 import { accionesPorRolYEstado } from './estados_acciones';
+import { MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS } from '@angular/material-moment-adapter';
+import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+
+export const FORMATO_LOCAL_FECHA = {
+  parse: {
+    dateInput: 'YYYY-MM-DD',
+  },
+  display: {
+    dateInput: 'YYYY-MM-DD',
+    monthYearLabel: 'MMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
 
 @Component({
   selector: 'app-consulta-contrato',
   templateUrl: './consulta-contrato.component.html',
   styleUrls: ['./consulta-contrato.component.css'],
+  providers: [
+    {
+      provide: DateAdapter,
+      useClass: MomentDateAdapter,
+      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS]
+    },
+    { provide: MAT_DATE_FORMATS, useValue: FORMATO_LOCAL_FECHA }
+  ]
 })
 export class ConsultaContratoComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -81,6 +103,28 @@ export class ConsultaContratoComponent implements OnInit {
     this.CargartipoContratoIds();
     this.CargarTipoPersona();
     this.CargarEstado();
+    this.form.get('fechaDesde')?.valueChanges.subscribe(value => {
+      if (value) {
+        const fechaHasta = this.form.get('fechaHasta')?.value;
+        if (fechaHasta && new Date(value) > new Date(fechaHasta)) {
+          this.form.patchValue({
+            fechaDesde: fechaHasta
+          });
+        }
+      }
+    });
+
+    this.form.get('fechaHasta')?.valueChanges.subscribe(value => {
+      if (value) {
+        const fechaDesde = this.form.get('fechaDesde')?.value;
+        if (fechaDesde && new Date(value) < new Date(fechaDesde)) {
+          this.form.patchValue({
+            fechaHasta: fechaDesde
+          });
+        }
+      }
+    });
+
     this.consultar();
   }
 
@@ -149,10 +193,18 @@ export class ConsultaContratoComponent implements OnInit {
   cambiarPagina(event: PageEvent) {
     this.paginaActual = event.pageIndex;
     this.tamanioPagina = event.pageSize;
-    this.consultar();
+    this.consultar(false);
   }
 
-  consultar() {
+
+  consultar(resetPage: boolean = true) {
+    if (resetPage) {
+      if (this.paginator) {
+        this.paginator.firstPage();
+      }
+      this.paginaActual = 0;
+    }
+
     this.isLoading = true;
     const params = {
       ...this.prepararParametros(),
@@ -177,13 +229,26 @@ export class ConsultaContratoComponent implements OnInit {
     });
   }
 
-  // verDetalle(contrato: ContratoGeneral) {
-  //   this.router.navigate(['/detalle', contrato.id]);
-  // }
+
+  limpiarFiltros() {
+    this.form.reset();
+    this.paginaActual = 0;
+    if (this.paginator) {
+      this.paginator.firstPage();
+    }
+    this.consultar();
+  }
+
+  verDetalle(contrato: ContratoGeneral) {
+    this.router.navigate(['/detalle', contrato.id]);
+  }
 
   private prepararParametros() {
     const formValues = this.form.value;
-    const params: any = {};
+    const params: any = {
+      limit: this.tamanioPagina,
+      offset: this.paginaActual * this.tamanioPagina
+    };
 
     if (formValues.unidadEjecucion)
       params.unidadEjecucion = formValues.unidadEjecucion;
@@ -205,8 +270,17 @@ export class ConsultaContratoComponent implements OnInit {
       params.estados = params.estados || {};
       params.estados.estado_parametro_id = formValues.estado;
     }
-    if (formValues.fechaDesde) params.fechaDesde = formValues.fechaDesde;
-    if (formValues.fechaHasta) params.fechaHasta = formValues.fechaHasta;
+    if (formValues.fechaDesde || formValues.fechaHasta) {
+      params.fechaCreacion = {};
+
+      if (formValues.fechaDesde) {
+        params.fechaCreacion.start = new Date(formValues.fechaDesde).toISOString().split('T')[0];
+      }
+
+      if (formValues.fechaHasta) {
+        params.fechaCreacion.end = new Date(formValues.fechaHasta).toISOString().split('T')[0];
+      }
+    }
     return params;
   }
 

@@ -12,14 +12,18 @@
         <h3>Información General</h3>
       </div>
       <div class="form-grid2">
-        <mat-form-field>
-          <mat-label>Tipo de Compromiso:</mat-label>
-          <mat-select formControlName="tipoCompromisoId">
-            <mat-option *ngFor="let compromiso of tipoCompromisos" [value]="compromiso.Id">
-              {{compromiso.Nombre}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <app-searchable-select
+          label="Tipo de Compromiso"
+          [items]="tipoCompromisos"
+          [control]="formInfoGeneral.get('tipoCompromisoId')"
+          [required]="true">
+        </app-searchable-select>
+        <app-searchable-select
+          label="Tipo de Contrato"
+          [items]="tipoContratos"
+          [control]="formInfoGeneral.get('tipoContratoId')"
+          [required]="true">
+        </app-searchable-select>
         <mat-form-field>
           <mat-label>Tipo de Contrato:</mat-label>
           <mat-select formControlName="tipoContratoId">

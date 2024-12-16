@@ -72,6 +72,9 @@
     <button mat-raised-button color="primary" type="button" [disabled]="isLoading" (click)="consultar()">
       {{ isLoading ? 'Consultando...' : 'Consultar' }}
     </button>
+    <button mat-raised-button color="warn" type="button" [disabled]="isLoading" (click)="limpiarFiltros()" class="ml-2">
+      Limpiar filtros
+    </button>
   </div>
 </form>
 
@@ -83,46 +86,46 @@
   <table mat-table [dataSource]="dataSource" class="full-width-table">
     <ng-container matColumnDef="vigencia">
       <th mat-header-cell *matHeaderCellDef>Vigencia</th>
-      <td mat-cell *matCellDef="let row">{{row.vigencia}}</td>
+      <td mat-cell *matCellDef="let row">{{row.vigencia ?? 'N/A'}}</td>
     </ng-container>
 
     <ng-container matColumnDef="tipoContratoId">
       <th mat-header-cell *matHeaderCellDef>Tipo de Contrato</th>
-      <td mat-cell *matCellDef="let row">{{row.tipoContratoId}}</td>
+      <td mat-cell *matCellDef="let row">{{row.tipoContratoId ?? 'N/A'}}</td>
     </ng-container>
 
     <ng-container matColumnDef="tipo_persona">
       <th mat-header-cell *matHeaderCellDef>Tipo de Persona</th>
-      <td mat-cell *matCellDef="let row">{{row.contratista.tipo_persona_id}}</td>
+      <td mat-cell *matCellDef="let row">{{row.contratista?.tipo_persona_id ?? 'N/A'}}</td>
     </ng-container>
 
     <ng-container matColumnDef="numero_contrato">
       <th mat-header-cell *matHeaderCellDef>Número de Contrato</th>
-      <td mat-cell *matCellDef="let row">{{row.id}}</td>
+      <td mat-cell *matCellDef="let row">{{row.id ?? 'N/A'}}</td>
     </ng-container>
 
     <ng-container matColumnDef="contratista">
       <th mat-header-cell *matHeaderCellDef>Contratista</th>
-      <td mat-cell *matCellDef="let row">{{row.contratista.nombre}}</td>
+      <td mat-cell *matCellDef="let row">{{row.contratista?.nombre ?? 'N/A'}}</td>
     </ng-container>
 
     <ng-container matColumnDef="fecha_registro">
       <th mat-header-cell *matHeaderCellDef>Fecha de Registro</th>
       <td mat-cell *matCellDef="let row">
-        {{row.fechaCreacion ? (row.fechaCreacion | date:'dd/MM/yyyy') : 'N/A'}}
+        {{row.fechaCreacion ? (row.fechaCreacion | date:'yyyy-MM-dd') : 'N/A'}}
       </td>
     </ng-container>
 
     <ng-container matColumnDef="fecha_aprobado">
       <th mat-header-cell *matHeaderCellDef>Fecha de Aprobación</th>
       <td mat-cell *matCellDef="let row">
-        {{row.fecha_aprobado ? (row.fecha_aprobado | date:'dd/MM/yyyy') : 'N/A'}}
+        {{row.fecha_aprobado ? (row.fecha_aprobado | date:'yyyy-MM-dd') : 'N/A'}}
       </td>
     </ng-container>
 
     <ng-container matColumnDef="estado">
       <th mat-header-cell *matHeaderCellDef>Estado</th>
-      <td mat-cell *matCellDef="let row">{{row.estados.estado_parametro_id ? row.estados.estado_parametro_id : "Sin Estado" }}</td>
+      <td mat-cell *matCellDef="let row">{{row.estados?.estado_parametro_id ?? 'N/A'}}</td>
     </ng-container>
 
     <ng-container matColumnDef="acciones">
