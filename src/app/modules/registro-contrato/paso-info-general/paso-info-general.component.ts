@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { ParametrosService } from 'src/app/services/parametros.service';
+import {ParametrosService, sortParametros} from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
@@ -241,7 +241,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_COMPROMISO_ID + '&limit=0').subscribe({
         next: (Response: any) => {
           if (Response.Status == "200") {
-            this.tipoCompromisos = Response.Data;
+            this.tipoCompromisos = sortParametros(Response.Data);
             resolve(true);
           } else {
             reject('Error en la respuesta del servidor');
@@ -391,13 +391,13 @@ export class PasoInfoGeneralComponent implements OnInit {
   updateFormAndSelects(data: any) {
     this.formInfoGeneral.patchValue(data);
 
-    this.tipoCompromisos = this.createDynamicOption(data.tipoCompromisoId);
-    this.tipoContratos = this.createDynamicOption(data.tipoContratoId);
-    this.modalidadSeleccion = this.createDynamicOption(data.modalidadSeleccionId);
-    this.tipologiaEspecifica = this.createDynamicOption(data.tipologiaEspecificaId);
-    this.regimenContratacion = this.createDynamicOption(data.regimenContratacionId);
-    this.procedimiento = this.createDynamicOption(data.procedimientoId);
-    this.unidadEjecucion = this.createDynamicOption(data.unidadEjecutoraId);
+    this.tipoCompromisos = sortParametros(this.createDynamicOption(data.tipoCompromisoId));
+    this.tipoContratos = sortParametros(this.createDynamicOption(data.tipoContratoId));
+    this.modalidadSeleccion = sortParametros(this.createDynamicOption(data.modalidadSeleccionId));
+    this.tipologiaEspecifica = sortParametros(this.createDynamicOption(data.tipologiaEspecificaId));
+    this.regimenContratacion = sortParametros(this.createDynamicOption(data.regimenContratacionId));
+    this.procedimiento = sortParametros(this.createDynamicOption(data.procedimientoId));
+    this.unidadEjecucion = sortParametros(this.createDynamicOption(data.unidadEjecutoraId));
   }
 
   createDynamicOption(value: string | number): ParametroResponse[] {

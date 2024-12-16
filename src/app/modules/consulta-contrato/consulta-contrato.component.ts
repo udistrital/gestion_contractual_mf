@@ -9,6 +9,8 @@ import { Router } from "@angular/router";
 import { ContratoGeneralMidService } from "../../services/contrato-general-mid.service";
 import Swal from "sweetalert2";
 import { RolService } from 'src/app/services/rol.service';
+import { MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS } from '@angular/material-moment-adapter';
+import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 
 interface ContratoGeneral {
   id: number;
@@ -23,10 +25,30 @@ interface ContratoGeneral {
   documentos: number;
 }
 
+export const FORMATO_LOCAL_FECHA = {
+  parse: {
+    dateInput: 'YYYY-MM-DD',
+  },
+  display: {
+    dateInput: 'YYYY-MM-DD',
+    monthYearLabel: 'MMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
+
 @Component({
   selector: 'app-consulta-contrato',
   templateUrl: './consulta-contrato.component.html',
-  styleUrls: ['./consulta-contrato.component.css']
+  styleUrls: ['./consulta-contrato.component.css'],
+  providers: [
+    {
+      provide: DateAdapter,
+      useClass: MomentDateAdapter,
+      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS]
+    },
+    { provide: MAT_DATE_FORMATS, useValue: FORMATO_LOCAL_FECHA }
+  ]
 })
 export class ConsultaContratoComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -168,11 +190,18 @@ export class ConsultaContratoComponent implements OnInit {
   cambiarPagina(event: PageEvent) {
     this.paginaActual = event.pageIndex;
     this.tamanioPagina = event.pageSize;
-    this.consultar();
+    this.consultar(false);
   }
 
-  consultar() {
-    console.log("Se llama la función");
+  consultar(resetPage: boolean = true) {
+
+    if (resetPage) {
+      if (this.paginator) {
+        this.paginator.firstPage();
+      }
+      this.paginaActual = 0;
+    }
+
     this.isLoading = true;
     const params = {
       ...this.prepararParametros(),
@@ -237,22 +266,19 @@ export class ConsultaContratoComponent implements OnInit {
     }
 
     if (formValues.fechaDesde || formValues.fechaHasta) {
-      params.fechaCreacion = {
-        start: formValues.fechaDesde ? new Date(formValues.fechaDesde).toISOString().split('T')[0] : null,
-        end: formValues.fechaHasta ? new Date(formValues.fechaHasta).toISOString().split('T')[0] : null
-      };
+      params.fechaCreacion = {};
 
-      if (!params.fechaCreacion.start) delete params.fechaCreacion.start;
-      if (!params.fechaCreacion.end) delete params.fechaCreacion.end;
+      if (formValues.fechaDesde) {
+        params.fechaCreacion.start = new Date(formValues.fechaDesde).toISOString().split('T')[0];
+      }
 
-      if (Object.keys(params.fechaCreacion).length === 0) {
-        delete params.fechaCreacion;
+      if (formValues.fechaHasta) {
+        params.fechaCreacion.end = new Date(formValues.fechaHasta).toISOString().split('T')[0];
       }
     }
 
     return params;
   }
-
 
   CargarunidadEjecutoraId() {
   }

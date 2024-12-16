@@ -29,6 +29,9 @@ importers:
       '@angular/material':
         specifier: ^17.3.10
         version: 17.3.10(fziyzy25gol2o7xzraihs72xsu)
+      '@angular/material-moment-adapter':
+        specifier: ^17.3.10
+        version: 17.3.10(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))(@angular/material@17.3.10(fziyzy25gol2o7xzraihs72xsu))(moment@2.30.1)
       '@angular/platform-browser':
         specifier: ^17.3.10
         version: 17.3.12(@angular/animations@17.3.12(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@17.3.12(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))
@@ -38,6 +41,9 @@ importers:
       '@angular/router':
         specifier: ^17.3.10
         version: 17.3.12(@angular/common@17.3.12(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@17.3.12(@angular/animations@17.3.12(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@17.3.12(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1)
+      moment:
+        specifier: ^2.30.1
+        version: 2.30.1
       ng2-pdf-viewer:
         specifier: ^10.3.0
         version: 10.3.1(encoding@0.1.13)
@@ -247,6 +253,13 @@ packages:
       '@angular/core': 17.3.12
       '@angular/platform-browser': 17.3.12
       rxjs: ^6.5.3 || ^7.4.0
+
+  '@angular/material-moment-adapter@17.3.10':
+    resolution: {integrity: sha512-R68ssdGMSmVIfpOGaB9vjW5lBh6zH9GboBuaIAqizC/ZAzdEgpmT7qdr3PBCmRPTLTx8Yx9K3rhgRekO79ympw==}
+    peerDependencies:
+      '@angular/core': ^17.0.0 || ^18.0.0
+      '@angular/material': 17.3.10
+      moment: ^2.18.1
 
   '@angular/material@17.3.10':
     resolution: {integrity: sha512-hHMQES0tQPH5JW33W+mpBPuM8ybsloDTqFPuRV8cboDjosAWfJhzAKF3ozICpNlUrs62La/2Wu/756GcQrxebg==}
@@ -3142,6 +3155,9 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  moment@2.30.1:
+    resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
+
   mrmime@2.0.0:
     resolution: {integrity: sha512-eu38+hdgojoyq63s+yTpN4XMBdt5l8HhMhc4VKLO9KM5caLIBvUm4thi7fFaxyTmCKeNnXZ5pAlBwCUnhA09uw==}
     engines: {node: '>=10'}
@@ -4646,6 +4662,13 @@ snapshots:
       '@angular/core': 17.3.12(rxjs@7.8.1)(zone.js@0.14.10)
       '@angular/platform-browser': 17.3.12(@angular/animations@17.3.12(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@17.3.12(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))
       rxjs: 7.8.1
+      tslib: 2.7.0
+
+  '@angular/material-moment-adapter@17.3.10(@angular/core@17.3.12(rxjs@7.8.1)(zone.js@0.14.10))(@angular/material@17.3.10(fziyzy25gol2o7xzraihs72xsu))(moment@2.30.1)':
+    dependencies:
+      '@angular/core': 17.3.12(rxjs@7.8.1)(zone.js@0.14.10)
+      '@angular/material': 17.3.10(fziyzy25gol2o7xzraihs72xsu)
+      moment: 2.30.1
       tslib: 2.7.0
 
   '@angular/material@17.3.10(fziyzy25gol2o7xzraihs72xsu)':
@@ -8297,6 +8320,8 @@ snapshots:
       minimist: 1.2.8
 
   mkdirp@1.0.4: {}
+
+  moment@2.30.1: {}
 
   mrmime@2.0.0: {}
 
