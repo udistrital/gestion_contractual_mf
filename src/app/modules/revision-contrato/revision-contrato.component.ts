@@ -29,7 +29,15 @@ export class RevisionContratoComponent {
 
   // Configuración de mensajes por rol y estado
   private readonly textos: any = {
-    JEFE_DEPENDENCIA: {
+    JEFE_CONTRATACION_RECTOR: {
+      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: {
+        accion: 'Aprobar y Enviar a Ordenador',
+        confirmacion:
+          '¿Está seguro(a) de aprobar y enviar contrato a ordenador?',
+        enviado: 'El contrato fue enviado al ordenador',
+      },
+    },
+    JEFE_CONTRATACION_IDEXUD: {
       [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: {
         accion: 'Aprobar y Enviar a Ordenador',
         confirmacion:
@@ -45,7 +53,7 @@ export class RevisionContratoComponent {
         enviado: 'El contrato fue enviado al contratista',
       },
     },
-    CONTRATISTA: {
+    PROVEEDOR: {
       [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: {
         accion: 'Firmar y Enviar',
         confirmacion: '¿Está seguro(a) de firmar y enviar contrato?',
@@ -106,12 +114,20 @@ export class RevisionContratoComponent {
 
   getRolPorEstado(): string {
     const rolesPorEstado = {
-      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: 'JEFE_DEPENDENCIA',
-      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: 'ORDENADOR_DEL_GASTO',
-      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: 'CONTRATISTA',
+      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
+        'JEFE_CONTRATACION_RECTOR',
+        'JEFE_CONTRATACION_IDEXUD',
+      ],
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
+        'ORDENADOR_DEL_GASTO',
+      ],
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['PROVEEDOR'],
     };
-    const rolEsperado = rolesPorEstado[this.estadoInterno];
-    return this.roles.includes(rolEsperado) ? rolEsperado : '';
+    const rolesEsperados = rolesPorEstado[this.estadoInterno] || [];
+    const rolEncontrado = rolesEsperados.find((rol) =>
+      this.roles.includes(rol)
+    );
+    return rolEncontrado || '';
   }
 
   openModalRechazo(): void {

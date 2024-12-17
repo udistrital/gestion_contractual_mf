@@ -3,8 +3,28 @@ import { environment } from 'src/environments/environment';
 export const accionesPorRolYEstado: {
   [rol: string]: { [estado: string]: string[] };
 } = {
-  CONTRATISTA: {
-    //ABOGADO
+  JEFE_CONTRATACION_RECTOR: {
+    //JEFE_CONTRATACION_RECTOR
+    [environment.ESTADOS_INTERNOS.BORRADOR]: [],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
+  },
+  JEFE_CONTRATACION_IDEXUD: {
+    //JEFE_CONTRATACION_RECTOR
+    [environment.ESTADOS_INTERNOS.BORRADOR]: [],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
+  },
+  ABOGADO_CONTRATACION_RECTOR: {
+    //ABOGADO_CONTRATACION_RECTOR
     [environment.ESTADOS_INTERNOS.BORRADOR]: [
       'Editar Contrato',
       'Enviar Aprobación Jefe OC',
@@ -34,15 +54,36 @@ export const accionesPorRolYEstado: {
     ],
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Contrato', 'Ver Historial'],
   },
-  JEFE_DEPENDENCIA: {
-    //JEFE OFICINA CONTRATACION
-    [environment.ESTADOS_INTERNOS.BORRADOR]: [],
-    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
-    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
+  ABOGADO_CONTRATACION_IDEXUD: {
+    //ABOGADO_CONTRATACION_IDEXUD
+    [environment.ESTADOS_INTERNOS.BORRADOR]: [
+      'Editar Contrato',
+      'Enviar Aprobación Jefe OC',
+      'Declinar',
+    ],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
+      'Ver Contrato',
+      'Ver Historial',
+    ],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
+      'Ver Contrato',
+      'Ver Historial',
+    ],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: [
+      'Ver Contrato',
+      'Ver Historial',
+    ],
+    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: [
+      'Ver Contrato',
+      'Ver Historial',
+    ],
+    [environment.ESTADOS_INTERNOS.RECHAZADO]: [
+      'Editar Contrato',
+      'Enviar Aprobación Jefe OC',
+      'Ver Historial',
+      'Declinar',
+    ],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Contrato', 'Ver Historial'],
   },
   ORDENADOR_DEL_GASTO: {
     //ORDENADOR DEL GASTO
@@ -64,4 +105,5 @@ export const accionesPorRolYEstado: {
     [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
   },
+  ADMIN_ARGO: {},
 };
