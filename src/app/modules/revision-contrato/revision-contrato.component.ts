@@ -23,7 +23,7 @@ export class RevisionContratoComponent {
   contrato_general_id = 0;
   usuario_id: number = 0;
   roles: string[] = [];
-  estadoInterno: number = 6802;
+  estadoInterno: number = 0;
   mostrarBotones: boolean = false;
   mensaje: any;
 
@@ -74,12 +74,9 @@ export class RevisionContratoComponent {
 
   ngOnInit(): void {
     this.roles = this.rolService.getRol();
-    this.userService.getPersonaId().then((usuario_id) => {
-      this.usuario_id = usuario_id;
-    });
-    const id = this.route.snapshot.paramMap.get('idContrato');
-    this.contrato_general_id = id ? Number(id) : 0;
-    this.getMensajes();
+    this.getIdContratoUrl();
+    this.getIdUsuario();
+    this.getEstadoActual();
     this.getDocumentosContrato();
   }
 
@@ -93,6 +90,35 @@ export class RevisionContratoComponent {
     this.selectedTab = index;
   }
 
+  getIdContratoUrl() {
+    const id = this.route.snapshot.paramMap.get('idContrato');
+    this.contrato_general_id = id ? Number(id) : 0;
+  }
+
+  getIdUsuario() {
+    this.userService.getPersonaId().then((usuario_id) => {
+      this.usuario_id = usuario_id;
+    });
+  }
+
+  getEstadoActual() {
+    this.contratoGeneralCrudService
+      .getEstadoActual(this.contrato_general_id)
+      .subscribe({
+        next: (res: EstadoContratoCRUD) => {
+          if (res.estado_interno_parametro_id) {
+            this.estadoInterno = res.estado_interno_parametro_id;
+            this.getMensajes();
+          }
+        },
+        error: (error) =>
+          this.handleError(
+            'Error al obtener el estado actual del contrato',
+            error
+          ),
+      });
+  }
+
   private getMensajes() {
     for (const role of this.roles) {
       if (this.textos[role]?.[this.estadoInterno]) {
@@ -100,121 +126,6 @@ export class RevisionContratoComponent {
         this.mostrarBotones = true;
       }
     }
-  }
-
-  openMensajeConfirmacion(): void {
-    this.alertService
-      .showConfirmAlert(this.mensaje.confirmacion)
-      .then((confirmado: any) => {
-        if (confirmado.value) {
-          this.aprobarContrato();
-        }
-      });
-  }
-
-  getRolPorEstado(): string {
-    const rolesPorEstado = {
-      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
-        'JEFE_CONTRATACION_RECTOR',
-        'JEFE_CONTRATACION_IDEXUD',
-      ],
-      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
-        'ORDENADOR_DEL_GASTO',
-      ],
-      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['PROVEEDOR'],
-    };
-    const rolesEsperados = rolesPorEstado[this.estadoInterno] || [];
-    const rolEncontrado = rolesEsperados.find((rol) =>
-      this.roles.includes(rol)
-    );
-    return rolEncontrado || '';
-  }
-
-  openModalRechazo(): void {
-    const rol = this.getRolPorEstado();
-    this.dialog.open(ModalMotivosRechazoComponent, {
-      width: '70vw',
-      data: {
-        usuario_id: this.usuario_id,
-        rol,
-        contrato_general_id: this.contrato_general_id,
-      },
-    });
-  }
-
-  getEstadosAutomaticosPorEstado(): number[] {
-    const rolesPorEstado = {
-      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
-        environment.ESTADOS_INTERNOS.APROBADO_JEFE, //Estado automático
-        environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR,
-      ],
-      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
-        environment.ESTADOS_INTERNOS.FIRMADO_ORDENADOR, //Estado automático
-        environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA,
-      ],
-      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: [
-        environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA, //Estado automático
-      ],
-    };
-    return rolesPorEstado[this.estadoInterno];
-  }
-
-  aprobarContrato() {
-    let estados: any[] = this.getEstadosAutomaticosPorEstado();
-    const rol = this.getRolPorEstado();
-    if (rol != '' && estados.length > 0) {
-      const estado = estados[0];
-      const estado_parametro_id = environment.ESTADOS_GENERALES.SUSCRITO;
-      let estadoContrato: EstadoContratoCRUD = {
-        contrato_general_id: this.contrato_general_id,
-        usuario_id: this.usuario_id,
-        usuario_rol: rol,
-        estado_parametro_id,
-        estado_interno_parametro_id: estado,
-        motivo: ' ',
-      };
-      if (estado == environment.ESTADOS_INTERNOS.APROBADO_JEFE) {
-        estadoContrato.estado_parametro_id =
-          environment.ESTADOS_GENERALES.POR_SUSCRIBIR;
-      }
-
-      if (estados.length > 1) {
-        this.crearEstadoAdicionalContrato(estadoContrato, estados[1]);
-      } else {
-        this.crearEstadoContrato(estadoContrato);
-      }
-    }
-  }
-
-  crearEstadoAdicionalContrato(
-    estadoContrato: EstadoContratoCRUD,
-    estado: number
-  ) {
-    this.contratoGeneralCrudService
-      .postEstadoContrato(estadoContrato)
-      .subscribe({
-        next: (response: any) => {
-          if (response.id) {
-            estadoContrato.estado_parametro_id =
-              environment.ESTADOS_GENERALES.SUSCRITO;
-            estadoContrato.estado_interno_parametro_id = estado;
-            this.crearEstadoContrato(estadoContrato);
-          }
-        },
-        error: (error) =>
-          this.handleError('Error al crear estado automático', error),
-      });
-  }
-
-  crearEstadoContrato(estadoContrato: EstadoContratoCRUD) {
-    this.contratoGeneralCrudService
-      .postEstadoContrato(estadoContrato)
-      .subscribe((res: any) => {
-        this.alertService.showSuccessAlert(
-          this.mensaje.enviado,
-          'CONTRATO ENVIADO'
-        );
-      });
   }
 
   getDocumentosContrato() {
@@ -256,5 +167,117 @@ export class RevisionContratoComponent {
       error: (error) => this.handleError('Error al obtener documento', error),
       complete: () => (this.isLoading = false),
     });
+  }
+
+  getRolPorEstado(): string {
+    const rolesPorEstado = {
+      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
+        'JEFE_CONTRATACION_RECTOR',
+        'JEFE_CONTRATACION_IDEXUD',
+      ],
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
+        'ORDENADOR_DEL_GASTO',
+      ],
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['PROVEEDOR'],
+    };
+    const rolesEsperados = rolesPorEstado[this.estadoInterno] || [];
+    const rolEncontrado = rolesEsperados.find((rol) =>
+      this.roles.includes(rol)
+    );
+    return rolEncontrado || '';
+  }
+
+  openMensajeConfirmacion(): void {
+    this.alertService
+      .showConfirmAlert(this.mensaje.confirmacion)
+      .then((confirmado: any) => {
+        if (confirmado.value) {
+          this.aprobarContrato();
+        }
+      });
+  }
+
+  openModalRechazo(): void {
+    const rol = this.getRolPorEstado();
+    this.dialog.open(ModalMotivosRechazoComponent, {
+      width: '70vw',
+      data: {
+        usuario_id: this.usuario_id,
+        rol,
+        contrato_general_id: this.contrato_general_id,
+      },
+    });
+  }
+
+  getEstadosAutomaticosPorEstado(): number[] {
+    const rolesPorEstado = {
+      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
+        environment.ESTADOS_INTERNOS.APROBADO_JEFE, //Estado automático
+        environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR,
+      ],
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
+        environment.ESTADOS_INTERNOS.FIRMADO_ORDENADOR, //Estado automático
+        environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA,
+      ],
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: [
+        environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA, //Estado automático
+        environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS,
+      ],
+    };
+    return rolesPorEstado[this.estadoInterno];
+  }
+
+  aprobarContrato() {
+    let estados: any[] = this.getEstadosAutomaticosPorEstado();
+    const rol = this.getRolPorEstado();
+    if (rol != '' && estados.length > 0) {
+      const estado = estados[0];
+      const estado_parametro_id = environment.ESTADOS_GENERALES.SUSCRITO;
+      let estadoContrato: EstadoContratoCRUD = {
+        contrato_general_id: this.contrato_general_id,
+        usuario_id: this.usuario_id,
+        usuario_rol: rol,
+        estado_parametro_id,
+        estado_interno_parametro_id: estado,
+        motivo: ' ',
+      };
+      if (estado == environment.ESTADOS_INTERNOS.APROBADO_JEFE) {
+        estadoContrato.estado_parametro_id =
+          environment.ESTADOS_GENERALES.POR_SUSCRIBIR;
+      }
+      this.crearEstadoAutomaticoContrato(estadoContrato, estados[1]);
+    }
+  }
+
+  crearEstadoAutomaticoContrato(
+    estadoContrato: EstadoContratoCRUD,
+    estado: number
+  ) {
+    this.contratoGeneralCrudService
+      .postEstadoContrato(estadoContrato)
+      .subscribe({
+        next: (response: any) => {
+          if (response.id) {
+            estadoContrato.estado_parametro_id =
+              environment.ESTADOS_GENERALES.SUSCRITO;
+            estadoContrato.estado_interno_parametro_id = estado;
+            this.crearEstadoContrato(estadoContrato);
+          }
+        },
+        error: (error) =>
+          this.handleError('Error al crear estado automático', error),
+      });
+  }
+
+  crearEstadoContrato(estadoContrato: EstadoContratoCRUD) {
+    this.contratoGeneralCrudService
+      .postEstadoContrato(estadoContrato)
+      .subscribe((res: any) => {
+        this.alertService.showSuccessAlert(
+          this.mensaje.enviado,
+          'CONTRATO ENVIADO'
+        );
+        this.mostrarBotones = false;
+      });
   }
 }

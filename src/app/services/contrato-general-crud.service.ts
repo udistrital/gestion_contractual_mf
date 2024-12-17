@@ -41,6 +41,11 @@ export class ContratoGeneralCrudService {
     return this.requestManager.get('cdp/contrato/'+idContrato);
   }
 
+  getEstadoActual(idContrato: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`estados-contrato/contrato/${idContrato}/actual`);
+  }
+
   postEstadoContrato(estado: EstadoContratoCRUD): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post('estados-contrato', estado);

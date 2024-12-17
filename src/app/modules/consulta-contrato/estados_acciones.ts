@@ -3,26 +3,6 @@ import { environment } from 'src/environments/environment';
 export const accionesPorRolYEstado: {
   [rol: string]: { [estado: string]: string[] };
 } = {
-  JEFE_CONTRATACION_RECTOR: {
-    //JEFE_CONTRATACION_RECTOR
-    [environment.ESTADOS_INTERNOS.BORRADOR]: [],
-    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
-    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
-  },
-  JEFE_CONTRATACION_IDEXUD: {
-    //JEFE_CONTRATACION_RECTOR
-    [environment.ESTADOS_INTERNOS.BORRADOR]: [],
-    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
-    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
-  },
   ABOGADO_CONTRATACION_RECTOR: {
     //ABOGADO_CONTRATACION_RECTOR
     [environment.ESTADOS_INTERNOS.BORRADOR]: [
@@ -42,10 +22,7 @@ export const accionesPorRolYEstado: {
       'Ver Contrato',
       'Ver Historial',
     ],
-    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: [
-      'Ver Contrato',
-      'Ver Historial',
-    ],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Contrato'],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: [
       'Editar Contrato',
       'Enviar Aprobación Jefe OC',
@@ -73,10 +50,7 @@ export const accionesPorRolYEstado: {
       'Ver Contrato',
       'Ver Historial',
     ],
-    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: [
-      'Ver Contrato',
-      'Ver Historial',
-    ],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Contrato'],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: [
       'Editar Contrato',
       'Enviar Aprobación Jefe OC',
@@ -85,13 +59,33 @@ export const accionesPorRolYEstado: {
     ],
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Contrato', 'Ver Historial'],
   },
+  JEFE_CONTRATACION_RECTOR: {
+    //JEFE_CONTRATACION_RECTOR
+    [environment.ESTADOS_INTERNOS.BORRADOR]: [],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
+  },
+  JEFE_CONTRATACION_IDEXUD: {
+    //JEFE_CONTRATACION_RECTOR
+    [environment.ESTADOS_INTERNOS.BORRADOR]: [],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
+  },
   ORDENADOR_DEL_GASTO: {
     //ORDENADOR DEL GASTO
     [environment.ESTADOS_INTERNOS.BORRADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Revisar Contrato'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
-    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
   },
@@ -101,7 +95,7 @@ export const accionesPorRolYEstado: {
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Revisar Contrato'],
-    [environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
   },
