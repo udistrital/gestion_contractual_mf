@@ -78,15 +78,13 @@
           </mat-form-field>
         </ng-container>
 
-        <mat-form-field>
-          <mat-label>Modalidad de Selección:</mat-label>
-          <mat-select formControlName="modalidadSeleccionId">
-            <mat-option *ngFor="let modalidad_seleccion of modalidadSeleccion"
-                        [value]="modalidad_seleccion.Id">
-              {{modalidad_seleccion.Nombre}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <app-searchable-select
+          label="Modalidad de Selección"
+          [items]="modalidadSeleccion"
+          [control]="formInfoGeneral.get('modalidadSeleccionId')"
+          [required]="true">
+        </app-searchable-select>
+
         <mat-form-field>
           <mat-label>Tipología Espécifica (CGR):</mat-label>
           <mat-select formControlName="tipologiaEspecificaId">
@@ -96,15 +94,14 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field>
-          <mat-label>Régimen de Contratación:</mat-label>
-          <mat-select formControlName="regimenContratacionId">
-            <mat-option *ngFor="let regimen_contratacion of regimenContratacion"
-                        [value]="regimen_contratacion.Id">
-              {{regimen_contratacion.Nombre}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+
+        <app-searchable-select
+          label="Régimen de Contratación"
+          [items]="regimenContratacion"
+          [control]="formInfoGeneral.get('regimenContratacionId')"
+          [required]="true">
+        </app-searchable-select>
+
         <mat-form-field>
           <mat-label>Procedimiento:</mat-label>
           <mat-select formControlName="procedimientoId">

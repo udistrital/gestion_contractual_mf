@@ -265,7 +265,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarmodalidadSeleccionId() {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.MODALIDAD_SELECCION_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
-        this.modalidadSeleccion = Response.Data;
+        this.modalidadSeleccion = sortParametros(Response.Data);
       }
     })
   }
@@ -273,7 +273,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarregimenContratacionId() {
     this.parametrosService.get('parametro?query=TipoParametroId:' + environment.REGIMEN_CONTRATACION_ID + '&limit=0').subscribe((Response: any) => {
       if (Response.Status == "200") {
-        this.regimenContratacion = Response.Data;
+        this.regimenContratacion = sortParametros(Response.Data);
       }
     })
   }
