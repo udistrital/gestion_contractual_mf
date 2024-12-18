@@ -147,4 +147,9 @@ export class ContratoGeneralCrudService {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.patch('lugares-ejecucion/'+id, contrato_general_parcial);
   }
+
+  postOrdenadorContrato(contrato_general_parcial: any): Observable<any>{
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post('ordenador-contrato', contrato_general_parcial);
+  }
 }
