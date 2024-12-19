@@ -12,7 +12,7 @@ import { RolService } from 'src/app/services/rol.service';
 import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ContratoGeneral } from 'src/app/types/types';
-import { accionesPorRolYEstado } from './estados_acciones';
+import { accionesPorRolYEstado } from './roles_estados';
 import {
   MomentDateAdapter,
   MAT_MOMENT_DATE_ADAPTER_OPTIONS,

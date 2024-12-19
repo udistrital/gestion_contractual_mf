@@ -13,6 +13,11 @@ export class ContratoGeneralCrudService {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
   }
 
+  get(idContrato: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`contratos-generales/${idContrato}`);
+  }
+
   post(contrato_general_parcial: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post('contratos-generales', contrato_general_parcial);
@@ -44,6 +49,11 @@ export class ContratoGeneralCrudService {
   getEstadoActual(idContrato: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get(`estados-contrato/contrato/${idContrato}/actual`);
+  }
+
+  getEstados(idContrato: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`estados-contrato/contrato/${idContrato}`);
   }
 
   postEstadoContrato(estado: EstadoContratoCRUD): Observable<any> {
