@@ -1,20 +1,7 @@
-::ng-deep .mat-horizontal-stepper-header-container {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-::ng-deep .mat-horizontal-stepper-header {
-    flex-basis: 25%;
-    flex-grow: 0;
-    max-width: 25%;
-}
-
-::ng-deep .mat-step-header .mat-step-icon-content {
-    display: flex;
-}
-
-::ng-deep .mat-step-text-label {
-    text-align: center;
+@media (min-width: 992px) {
+  ::ng-deep .mat-step-text-label {
     white-space: normal;
     overflow: visible;
+    font-size: 10pt;
+  }
 }

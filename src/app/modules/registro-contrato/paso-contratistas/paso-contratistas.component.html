@@ -1,60 +1,115 @@
+<div class="d-flex align-items-center fondo-acento-50 mb-4">
+  <div>
+    <mat-icon>assignment_ind</mat-icon>
+  </div>
+  <div class="mx-3">
+    <h2>Información Contratista</h2>
+    Datos del contratista
+  </div>
+</div>
+
 <form [formGroup]="form">
   <div class="border">
-    <div class="title">
-      <h3>Información Contratista</h3>
-    </div>
     <div class="form-grid3">
-      <mat-form-field>
+      <mat-form-field appearance="outline">
         <mat-label>Clase Contratista:</mat-label>
+        <mat-icon matPrefix>business</mat-icon>
+        <!-- Icono para clase contratista -->
         <mat-select formControlName="claseContratista">
-          <mat-option *ngFor="let tipo of tiposContratista" [value]="tipo.value">
-            {{tipo.viewValue}}
+          <mat-option
+            *ngFor="let tipo of tiposContratista"
+            [value]="tipo.value"
+          >
+            {{ tipo.viewValue }}
           </mat-option>
         </mat-select>
       </mat-form-field>
     </div>
+
     <ng-container *ngIf="mostrarConsulta">
       <div class="centered-container">
         <div class="centered-content">
-          <h3>Consulta de Contratista</h3>
-          <mat-form-field>
+          <h3 class="mb-2">Consulta de Contratista</h3>
+          <mat-form-field appearance="outline">
             <mat-label>Digite el documento del contratista</mat-label>
-            <input matInput formControlName="documentoContratista" (keyup.enter)="buscarContratista()">
+            <mat-icon matPrefix>search</mat-icon>
+            <!-- Icono para búsqueda -->
+            <input
+              matInput
+              formControlName="documentoContratista"
+              (keyup.enter)="buscarContratista()"
+            />
           </mat-form-field>
-          <button mat-raised-button color="primary" (click)="buscarContratista()" [disabled]="loading">Buscar</button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="buscarContratista()"
+            [disabled]="loading"
+          >
+            <mat-icon>search</mat-icon>
+            <!-- Icono de búsqueda en el botón -->
+            Buscar
+          </button>
           <div *ngIf="success">
             <h3>Información del Contratista</h3>
             <ng-container *ngIf="datosContratista">
-              <p>Tipo Persona: {{contratistaObject.tipo}}</p>
-              <p>Nombre: {{contratistaObject.nombre}}</p>
-              <p>Documento: {{contratistaObject.documento}}</p>
-              <p *ngIf="contratistaObject.lugar_expedicion">Lugar de Expedición Documento:
-                {{contratistaObject.lugar_expedicion}}</p>
-              <p>Ciudad de Contacto: {{contratistaObject.ciudad_contacto}}</p>
-              <p>Dirección: {{contratistaObject.direccion}}</p>
-              <p>Correo: {{contratistaObject.correo}}</p>
-              <p *ngIf="contratistaObject.representante_legal">Representante Legal:
-                {{contratistaObject.representante_legal}}</p>
-              <p *ngIf="contratistaObject.documento_rl">Documento Representante Legal:
-                {{contratistaObject.documento_rl}}</p>
-              <p *ngIf="contratistaObject.lugar_expedicion_rl">Lugar Expedición RL:
-                {{contratistaObject.lugar_expedicion_rl}}</p>
+              <p>Tipo Persona: {{ contratistaObject.tipo }}</p>
+              <p>Nombre: {{ contratistaObject.nombre }}</p>
+              <p>Documento: {{ contratistaObject.documento }}</p>
+              <p *ngIf="contratistaObject.lugar_expedicion">
+                Lugar de Expedición Documento:
+                {{ contratistaObject.lugar_expedicion }}
+              </p>
+              <p>Ciudad de Contacto: {{ contratistaObject.ciudad_contacto }}</p>
+              <p>Dirección: {{ contratistaObject.direccion }}</p>
+              <p>Correo: {{ contratistaObject.correo }}</p>
+              <p *ngIf="contratistaObject.representante_legal">
+                Representante Legal: {{ contratistaObject.representante_legal }}
+              </p>
+              <p *ngIf="contratistaObject.documento_rl">
+                Documento Representante Legal:
+                {{ contratistaObject.documento_rl }}
+              </p>
+              <p *ngIf="contratistaObject.lugar_expedicion_rl">
+                Lugar Expedición RL: {{ contratistaObject.lugar_expedicion_rl }}
+              </p>
             </ng-container>
           </div>
-          <p *ngIf="errorMessage" class="error-message">{{errorMessage}}</p>
+          <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
         </div>
       </div>
     </ng-container>
   </div>
+
   <div class="btn-container">
-    <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-    <button mat-raised-button color="primary" [disabled]="!form.valid" (click)="guardarYContinuar()">Guardar y Continuar</button>
+    <button
+      mat-stroked-button
+      style="border: 1px solid var(--md-primary-500)"
+      color="primary"
+      matStepperPrevious
+    >
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="!form.valid"
+      (click)="guardarYContinuar()"
+    >
+      <mat-icon>save</mat-icon>
+      <!-- Icono para el botón Guardar y Continuar -->
+      Guardar y Continuar
+    </button>
   </div>
 </form>
 
 <div *ngIf="loading" class="loading-overlay">
   <div class="spinner-container">
-    <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+    <mat-progress-spinner
+      mode="indeterminate"
+      diameter="50"
+    ></mat-progress-spinner>
     <p>Buscando contratista...</p>
   </div>
 </div>
