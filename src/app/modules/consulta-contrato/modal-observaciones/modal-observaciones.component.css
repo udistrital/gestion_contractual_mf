@@ -23,26 +23,17 @@
   color: white;
 }
 
+.loading-shade {
+  padding: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .observacion {
   margin: 10px;
-}
-
-.example-card {
-  max-width: 500px;
-}
-
-.motivo p {
-  margin: 0;
-}
-
-.nombre-rechaza span {
-  font-size: 16px;
-  color: #731514;
-}
-
-.fecha-rechazo {
-  font-size: 12px;
-  color: gray;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .example-header-image {
@@ -53,16 +44,35 @@
   align-items: center;
 }
 
+.nombre-rechaza {
+  font-size: 16px;
+  font-weight: 600;
+  color: #393939;
+}
+
+.nombre-rechaza span {
+  font-size: 14px;
+  color: #731514;
+  font-weight: normal;
+}
+
+.fecha-rechazo {
+  font-size: 12px;
+  margin-top: 2.5px;
+  color: gray;
+}
+
+.motivo {
+  font-size: 14px;
+  color: #424242;
+}
+
 mat-card-footer {
   padding: 10px 16px;
 }
 
-mat-card-footer p {
+.estados {
+  margin: 10px 0;
   font-size: 12px;
   color: gray;
-  margin: 0;
-}
-
-.enviado {
-  margin: 10px 0;
 }

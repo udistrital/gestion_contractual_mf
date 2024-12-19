@@ -6,7 +6,6 @@ import { APP_BASE_HREF } from '@angular/common';
 import { RegistroContratoComponent } from './modules/registro-contrato/registro-contrato.component';
 import { ConsultaContratoComponent } from './modules/consulta-contrato/consulta-contrato.component';
 import { RevisionContratoComponent } from './modules/revision-contrato/revision-contrato.component';
-import { HistorialObservacionesComponent } from './modules/historial-observaciones/historial-observaciones.component';
 import { authGuard } from 'src/_guards/auth.guard';
 
 const routes: Routes = [
@@ -21,14 +20,9 @@ const routes: Routes = [
     component: ConsultaContratoComponent,
   },
   {
-    path: 'revisar',
+    path: ':idContrato/documentos',
     // canActivate: [authGuard],
     component: RevisionContratoComponent,
-  },
-  {
-    path: 'historial-observaciones',
-    // canActivate: [authGuard],
-    component: HistorialObservacionesComponent,
   },
 ];
 

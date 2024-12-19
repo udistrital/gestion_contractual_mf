@@ -11,15 +11,16 @@ export class RolService {
 
   async cargarRol() {
     const rolesValidos = [
-      'CONTRATISTA',
-      'JEFE_DEPENDENCIA',
-      'ABOGADO',
+      'JEFE_CONTRATACION_RECTOR',
+      'JEFE_CONTRATACION_IDEXUD',
+      'ABOGADO_CONTRATACION_RECTOR',
+      'ABOGADO_CONTRATACION_IDEXUD',
       'ORDENADOR_DEL_GASTO',
+      'PROVEEDOR',
+      'ADMIN_ARGO',
     ];
     const rolesObtenidos: any = await this.autenticationService.getRole();
     this.roles = rolesValidos.filter((rol) => rolesObtenidos.includes(rol));
-    console.log("ROLES: ", this.roles);
-    
   }
 
   getRol(): string[] {

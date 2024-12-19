@@ -2,28 +2,26 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import { MatPaginator, PageEvent } from "@angular/material/paginator";
-import { MatSort } from "@angular/material/sort";
-import { MatTableDataSource } from "@angular/material/table";
-import { Router } from "@angular/router";
-import { ContratoGeneralMidService } from "../../services/contrato-general-mid.service";
-import Swal from "sweetalert2";
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { Router } from '@angular/router';
+import { ContratoGeneralMidService } from '../../services/contrato-general-mid.service';
+import Swal from 'sweetalert2';
 import { RolService } from 'src/app/services/rol.service';
-import { MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS } from '@angular/material-moment-adapter';
-import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
-
-interface ContratoGeneral {
-  id: number;
-  vigencia: string;
-  tipoContratoId: string;
-  tipo_persona: string;
-  numero_contrato: string;
-  contratista: string;
-  fecha_registro: string | null;
-  fecha_aprobado: string | null;
-  estado: string;
-  documentos: number;
-}
+import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ContratoGeneral } from 'src/app/types/types';
+import { accionesPorRolYEstado } from './estados_acciones';
+import {
+  MomentDateAdapter,
+  MAT_MOMENT_DATE_ADAPTER_OPTIONS,
+} from '@angular/material-moment-adapter';
+import {
+  DateAdapter,
+  MAT_DATE_FORMATS,
+  MAT_DATE_LOCALE,
+} from '@angular/material/core';
 
 export const FORMATO_LOCAL_FECHA = {
   parse: {
@@ -45,15 +43,31 @@ export const FORMATO_LOCAL_FECHA = {
     {
       provide: DateAdapter,
       useClass: MomentDateAdapter,
-      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS]
+      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
     },
-    { provide: MAT_DATE_FORMATS, useValue: FORMATO_LOCAL_FECHA }
-  ]
+    { provide: MAT_DATE_FORMATS, useValue: FORMATO_LOCAL_FECHA },
+  ],
 })
 export class ConsultaContratoComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
+  dataSource = new MatTableDataSource<ContratoGeneral>();
+  isLoading = false;
+  totalRegistros = 0;
+  tamanioPagina = 10;
+  paginaActual = 0;
+  roles: string[] = [];
+  unidadEjecucion: any[] = [];
+  vigencia: any[] = [];
+  tipoContratoId: any[] = [];
+  tipoPersona: any[] = [];
+  numeroElaboracion: any[] = [];
+  numeroContrato: any[] = [];
+  contratista: any[] = [];
+  estado: any[] = [];
+  fechaDesde: any[] = [];
+  fechaHasta: any[] = [];
   displayedColumns: string[] = [
     'vigencia',
     'tipoContratoId',
@@ -63,25 +77,17 @@ export class ConsultaContratoComponent implements OnInit {
     'fecha_registro',
     'fecha_aprobado',
     'estado',
-    'documentos',
-    'acciones'
+    'acciones',
   ];
 
-  dataSource = new MatTableDataSource<ContratoGeneral>();
-  isLoading = false;
-  totalRegistros = 0;
-  tamanioPagina = 10;
-  paginaActual = 0;
-  roles: string[] = [];
-  accionesPermitidas: string[] = [];
-
   constructor(
+    public dialog: MatDialog,
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
     private contratoMidService: ContratoGeneralMidService,
     private rolService: RolService,
     private router: Router
-  ) { }
+  ) {}
 
   form = this._formBuilder.group({
     unidadEjecucion: [''],
@@ -96,79 +102,65 @@ export class ConsultaContratoComponent implements OnInit {
     fechaHasta: [''],
   });
 
-  unidadEjecucion: any[] = [];
-  vigencia: any[] = [];
-  tipoContratoId: any[] = [];
-  tipoPersona: any[] = [];
-  numeroElaboracion: any[] = [];
-  numeroContrato: any[] = [];
-  contratista: any[] = [];
-  estado: any[] = [];
-  fechaDesde: any[] = [];
-  fechaHasta: any[] = [];
-
   ngOnInit(): void {
     this.roles = this.rolService.getRol();
-    this.definirAccionesPorRol(this.roles)
     this.CargarunidadEjecutoraId();
     this.CargarVigencia();
     this.CargartipoContratoIds();
     this.CargarTipoPersona();
     this.CargarEstado();
-    this.form.get('fechaDesde')?.valueChanges.subscribe(value => {
+    this.form.get('fechaDesde')?.valueChanges.subscribe((value) => {
       if (value) {
         const fechaHasta = this.form.get('fechaHasta')?.value;
         if (fechaHasta && new Date(value) > new Date(fechaHasta)) {
           this.form.patchValue({
-            fechaDesde: fechaHasta
+            fechaDesde: fechaHasta,
           });
         }
       }
     });
 
-    this.form.get('fechaHasta')?.valueChanges.subscribe(value => {
+    this.form.get('fechaHasta')?.valueChanges.subscribe((value) => {
       if (value) {
         const fechaDesde = this.form.get('fechaDesde')?.value;
         if (fechaDesde && new Date(value) < new Date(fechaDesde)) {
           this.form.patchValue({
-            fechaHasta: fechaDesde
+            fechaHasta: fechaDesde,
           });
         }
       }
     });
-
     this.consultar();
   }
 
-  definirAccionesPorRol(roles: string[]) {
-    const accionesPorRol: { [key: string]: string[] } = {
-      'CONTRATISTA': ['Ver Contrato', 'Editar Contrato', 'Revisar Contrato', 'Enviar Aprobación Jefe OC'],
-      'JEFE_DEPENDENCIA': ['Revisar Contrato'],
-      'ORDENADOR_DEL_GASTO': ['Revisar Contrato'],
-    };
+  getAccionesPorRolYEstado(contrato: ContratoGeneral) {
+    const estado = contrato.estados.estado_interno_parametro_id;
 
     // Usar un conjunto para evitar duplicados
     const accionesSet = new Set<string>();
-    roles.forEach(rol => {
-      const acciones = accionesPorRol[rol];
+    this.roles.forEach((rol) => {
+      const acciones = accionesPorRolYEstado[rol]?.[estado];
       if (acciones) {
-        acciones.forEach(accion => accionesSet.add(accion));
+        acciones.forEach((accion: any) => accionesSet.add(accion));
       }
     });
-    this.accionesPermitidas = Array.from(accionesSet);
+    return Array.from(accionesSet);
   }
 
   getIconoAccion(accion: string): string {
     const iconos: { [key: string]: string } = {
       'Ver Contrato': 'visibility',
       'Editar Contrato': 'edit',
-      'Revisar Contrato': 'assignment',
-      'Enviar Aprobación Jefe OC': 'send'
+      'Enviar Aprobación Jefe OC': 'send',
+      'Ver Historial': 'info',
+      Declinar: 'cancel',
+      'Revisar Contrato': 'find_in_page',
+      'Ver Documentos': 'my_library_books',
     };
     return iconos[accion] || 'help'; // Devuelve 'help' si no se encuentra un ícono
   }
 
-  realizarAccion(accion: string) {
+  realizarAccion(contrato: ContratoGeneral, accion: string) {
     switch (accion) {
       case 'Ver Contrato':
         this.router.navigate(['/registrar']);
@@ -176,15 +168,30 @@ export class ConsultaContratoComponent implements OnInit {
       case 'Editar Contrato':
         this.router.navigate(['/registrar']);
         break;
-      case 'Revisar Contrato':
-        this.router.navigate(['/revisar']);
-        break;
       case 'Enviar Aprobación Jefe OC':
-        console.log("Enviar Aprobación Jefe OC");
+        console.log('Enviar Aprobación Jefe OC');
+        break;
+      case 'Ver Historial':
+        this.openModalObservaciones(contrato.id);
+        break;
+      case 'Declinar':
+        console.log('Declinar');
+        break;
+      case 'Revisar Contrato':
+      case 'Ver Documentos':
+        this.router.navigate([`/${contrato.id}/documentos`]);
         break;
       default:
         break;
     }
+  }
+
+  openModalObservaciones(idContrato: number): void {
+    this.dialog.open(ModalObservacionesComponent, {
+      width: '70vw',
+      maxHeight: '35vw',
+      data: { idContrato },
+    });
   }
 
   cambiarPagina(event: PageEvent) {
@@ -194,7 +201,6 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   consultar(resetPage: boolean = true) {
-
     if (resetPage) {
       if (this.paginator) {
         this.paginator.firstPage();
@@ -206,7 +212,7 @@ export class ConsultaContratoComponent implements OnInit {
     const params = {
       ...this.prepararParametros(),
       limit: this.tamanioPagina,
-      offset: this.paginaActual * this.tamanioPagina
+      offset: this.paginaActual * this.tamanioPagina,
     };
 
     this.contratoMidService.getContratos(params).subscribe({
@@ -222,10 +228,9 @@ export class ConsultaContratoComponent implements OnInit {
       },
       complete: () => {
         this.isLoading = false;
-      }
+      },
     });
   }
-
 
   limpiarFiltros() {
     this.form.reset();
@@ -244,12 +249,14 @@ export class ConsultaContratoComponent implements OnInit {
     const formValues = this.form.value;
     const params: any = {
       limit: this.tamanioPagina,
-      offset: this.paginaActual * this.tamanioPagina
+      offset: this.paginaActual * this.tamanioPagina,
     };
 
-    if (formValues.unidadEjecucion) params.unidadEjecucion = formValues.unidadEjecucion;
+    if (formValues.unidadEjecucion)
+      params.unidadEjecucion = formValues.unidadEjecucion;
     if (formValues.vigencia) params.vigencia = formValues.vigencia;
-    if (formValues.tipoContratoId) params.tipoContratoId = formValues.tipoContratoId;
+    if (formValues.tipoContratoId)
+      params.tipoContratoId = formValues.tipoContratoId;
     if (formValues.tipoPersona) {
       params.contratista = params.contratista || {};
       params.contratista.tipo_persona_id = formValues.tipoPersona;
@@ -258,61 +265,86 @@ export class ConsultaContratoComponent implements OnInit {
       params.contratista = params.contratista || {};
       params.contratista.numero_documento = formValues.contratista;
     }
-    if (formValues.numeroElaboracion) params.numeroElaboracion = formValues.numeroElaboracion;
+    if (formValues.numeroElaboracion)
+      params.numeroElaboracion = formValues.numeroElaboracion;
     if (formValues.numeroContrato) params.id = formValues.numeroContrato;
     if (formValues.estado) {
       params.estados = params.estados || {};
       params.estados.estado_parametro_id = formValues.estado;
     }
-
     if (formValues.fechaDesde || formValues.fechaHasta) {
       params.fechaCreacion = {};
 
       if (formValues.fechaDesde) {
-        params.fechaCreacion.start = new Date(formValues.fechaDesde).toISOString().split('T')[0];
+        params.fechaCreacion.start = new Date(formValues.fechaDesde)
+          .toISOString()
+          .split('T')[0];
       }
 
       if (formValues.fechaHasta) {
-        params.fechaCreacion.end = new Date(formValues.fechaHasta).toISOString().split('T')[0];
+        params.fechaCreacion.end = new Date(formValues.fechaHasta)
+          .toISOString()
+          .split('T')[0];
       }
     }
-
     return params;
   }
 
-  CargarunidadEjecutoraId() {
-  }
+  CargarunidadEjecutoraId() {}
 
   CargarVigencia() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.VIGENCIA_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.vigencia = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=TipoParametroId:' +
+          environment.VIGENCIA_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.vigencia = Response.Data;
+        }
+      });
   }
 
   CargartipoContratoIds() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_CONTRATO_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.tipoContratoId = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=TipoParametroId:' +
+          environment.TIPO_CONTRATO_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.tipoContratoId = Response.Data;
+        }
+      });
   }
 
   CargarTipoPersona() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_PERSONA_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.tipoPersona = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=TipoParametroId:' +
+          environment.TIPO_PERSONA_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.tipoPersona = Response.Data;
+        }
+      });
   }
 
   CargarEstado() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_ESTADO_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.estado = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=TipoParametroId:' +
+          environment.TIPO_ESTADO_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.estado = Response.Data;
+        }
+      });
   }
-
 }

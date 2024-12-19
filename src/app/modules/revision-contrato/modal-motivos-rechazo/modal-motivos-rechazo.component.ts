@@ -16,7 +16,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
   formObservaciones!: FormGroup;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public infoModal: any,
+    @Inject(MAT_DIALOG_DATA) public dataModal: any,
     public dialogRef: MatDialogRef<ModalMotivosRechazoComponent>,
     public dialog: MatDialog,
     private alertService: AlertService,
@@ -26,7 +26,6 @@ export class ModalMotivosRechazoComponent implements OnInit {
 
   ngOnInit() {
     this.iniciarFormObservaciones();
-    console.log(this.infoModal);
   }
 
   iniciarFormObservaciones() {
@@ -47,23 +46,24 @@ export class ModalMotivosRechazoComponent implements OnInit {
   }
 
   rechazarContrato() {
-    const contratoEstado: EstadoContratoCRUD = this.construirObjetoEstadoContrato();
-    this.contratoGeneralCrudService.postEstadoContrato(contratoEstado).subscribe((res:any) => {
-      this.alertService.showSuccessAlert('El contrato fue rechazado', 'CONTRATO RECHAZADO');
-      this.dialogRef.close();
-    });
-  }
-
-  construirObjetoEstadoContrato() {
     const estado: EstadoContratoCRUD = {
-      usuario_id: this.infoModal.usuarioId,
-      estado_parametro_id: environment.ESTADO_CONTRATO.DECLINADO,
+      contrato_general_id: this.dataModal.contrato_general_id,
+      usuario_id: this.dataModal.usuario_id,
+      usuario_rol: this.dataModal.rol,
+      estado_parametro_id: environment.ESTADOS_GENERALES.POR_SUSCRIBIR,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.RECHAZADO,
       motivo: this.formObservaciones.get('observaciones')?.value,
-      contrato_general_id: 1,
-      fecha_creacion: new Date(),
-      usuario_rol: this.infoModal.rol
     };
-    return estado;
+    this.contratoGeneralCrudService
+      .postEstadoContrato(estado)
+      .subscribe((res: any) => {
+        if (res.id) {
+          this.alertService.showSuccessAlert(
+            'El contrato fue rechazado',
+            'CONTRATO RECHAZADO'
+          );
+        }
+        this.dialogRef.close();
+      });
   }
 }
