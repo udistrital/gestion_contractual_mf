@@ -60,9 +60,9 @@ export class ModalMotivosRechazoComponent implements OnInit {
       estado_parametro_id: environment.ESTADO_CONTRATO.DECLINADO,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.RECHAZADO,
       motivo: this.formObservaciones.get('observaciones')?.value,
-      fecha_ejecucion_estado: new Date(),
       contrato_general_id: 1,
-      fecha_creacion: new Date()
+      fecha_creacion: new Date(),
+      usuario_rol: this.infoModal.rol
     };
     return estado;
   }

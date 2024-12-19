@@ -21,9 +21,9 @@ export interface EstadoContratoCRUD {
   estado_parametro_id: number;
   estado_interno_parametro_id: number;
   motivo: string;
-  fecha_ejecucion_estado: Date;
   contrato_general_id: number;
   fecha_creacion: Date;
+  usuario_rol: string;
 }
 
 export interface ContratistaCRUD {

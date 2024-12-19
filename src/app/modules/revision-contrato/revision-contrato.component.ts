@@ -100,9 +100,9 @@ export class RevisionContratoComponent {
       estado_parametro_id: environment.ESTADO_CONTRATO.SUSCRITO,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.APROBADO,
       motivo: ' ',
-      fecha_ejecucion_estado: new Date(),
       contrato_general_id: this.contrato_general_id,
       fecha_creacion: new Date(),
+      usuario_rol: this.rol,
     };
 
     this.contratoGeneralCrudService
