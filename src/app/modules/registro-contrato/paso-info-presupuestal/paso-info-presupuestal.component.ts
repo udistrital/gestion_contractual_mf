@@ -16,6 +16,7 @@ import { ContratoGeneralCrudService } from '../../../services/contrato-general-c
 import { CDP, CDPContratoCRUD } from '../../../types/types';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
 import { cdpConstructorTabla } from './paso-info-presupuestal.utilidades';
+import { AlertService } from 'src/app/services/alert.service';
 
 interface CDPData {
   vigencia: string;
@@ -101,6 +102,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   constructor(
     private _formBuilder: FormBuilder,
+    private alertService: AlertService,
     private parametrosService: ParametrosService,
     private cdRef: ChangeDetectorRef,
     private cdpsService: CdpsService,
@@ -231,20 +233,18 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         })
       );
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Datos guardados',
-        text: 'La información presupuestal se ha guardado correctamente',
-      });
+      await this.alertService.showSuccessAlert(
+        'La información presupuestal se ha guardado correctamente',
+        'Datos guardados'
+      );
 
       this.nextStep.emit();
     } catch (error) {
       console.error('Error saving data:', error);
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error al guardar',
-        text: 'Ocurrió un error al guardar la información presupuestal',
-      });
+      await this.alertService.showErrorAlert(
+        'Ocurrió un error al guardar la información presupuestal',
+        'Error al guardar'
+      );
     } finally {
       this.isLoading = false;
       this.cdRef.detectChanges();
@@ -394,12 +394,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   async guardarListaCDP() {
     if (!this.contratoGeneralId) {
-      Swal.fire({
-        title: 'Error',
-        text: 'No se ha encontrado información general del contrato. PIP3',
-        icon: 'error',
-        confirmButtonText: 'OK',
-      });
+      this.alertService.showErrorAlert(
+        'No se ha encontrado información general del contrato. PIP3'
+      );
       return;
     }
 
@@ -425,20 +422,13 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
       await Promise.all(promesasGuardado);
 
-      Swal.fire({
-        title: 'Éxito',
-        text: 'Los CDPs ha sido guardada correctamente (local y en el servidor)',
-        icon: 'success',
-        confirmButtonText: 'OK',
-      });
+      this.alertService.showSuccessAlert(
+        'Los CDPs ha sido guardada correctamente (local y en el servidor)'
+      );
     } catch (error) {
-      console.error('Error saving CDPs:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'No se ha podido guardar la lista de CDPs',
-        icon: 'error',
-        confirmButtonText: 'OK',
-      });
+      this.alertService.showErrorAlert(
+        'No se ha podido guardar la lista de CDPs'
+      );
     }
   }
 
@@ -643,22 +633,12 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
         this.sortCDPs();
 
-        await Swal.fire({
-          title: 'Éxito',
-          text: 'CDP eliminado correctamente',
-          icon: 'success',
-          confirmButtonText: 'OK',
-        });
+        await this.alertService.showSuccessAlert('CDP eliminado correctamente');
       }
     } catch (error) {
-      console.error('Error deleting CDP:', error);
-
-      await Swal.fire({
-        title: 'Error',
-        text: 'Hubo un error al eliminar el CDP',
-        icon: 'error',
-        confirmButtonText: 'OK',
-      });
+      await this.alertService.showErrorAlert(
+        'Hubo un error al eliminar el CDP'
+      );
     }
 
     this.form.get('cdp')?.reset();

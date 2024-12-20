@@ -22,14 +22,14 @@ export class HttpErrorManager {
       errorResponse = {
         status: error.status,
         message: 'Error de red o del cliente',
-        details: error.error.message
+        details: error.error.message,
       };
       console.error('Error del cliente:', error.error.message);
     } else {
       errorResponse = {
         status: error.status,
         message: this.getErrorMessage(error),
-        details: error.error
+        details: error.error,
       };
       console.error(`Error del backend ${error.status}:`, error.error);
     }
@@ -66,8 +66,8 @@ export class HttpErrorManager {
         text: message,
         confirmButtonText: 'Cerrar',
         customClass: {
-          container: `status-${error.status}`
-        }
+          container: `status-${error.status}`,
+        },
       });
     });
   }
