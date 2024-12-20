@@ -47,77 +47,52 @@
           <div *ngIf="isLoading" class="spinner-container">
             <mat-spinner diameter="50"></mat-spinner>
           </div>
-          <table
-            mat-table
-            [dataSource]="selectedCDP"
-            *ngIf="selectedCDP.length != 0 && !isLoading"
-          >
-            <ng-container matColumnDef="vigencia">
-              <mat-header-cell *matHeaderCellDef> Vigencia </mat-header-cell>
-              <mat-cell *matCellDef="let element">
-                {{ element.vigencia }}
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="solicitudNecesidad">
-              <mat-header-cell *matHeaderCellDef>
-                Solicitud de Necesidad
-              </mat-header-cell>
-              <mat-cell *matCellDef="let element">
-                {{ element.num_sol_adq }}
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="numeroCDP">
-              <mat-header-cell *matHeaderCellDef>
-                Número de Disponibilidad
-              </mat-header-cell>
-              <mat-cell *matCellDef="let element">
-                {{ element.numero_disponibilidad }}
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="valor">
-              <mat-header-cell *matHeaderCellDef>
-                Valor $ (En Pesos)
-              </mat-header-cell>
-              <mat-cell *matCellDef="let element">
-                {{ element.valor_contratacion }}
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="dependencia">
-              <mat-header-cell *matHeaderCellDef> Dependencia </mat-header-cell>
-              <mat-cell *matCellDef="let element">
-                {{ element.nombre_dependencia }}
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="rubro">
-              <mat-header-cell *matHeaderCellDef> Rubro </mat-header-cell>
-              <mat-cell *matCellDef="let element">
-                {{ element.descripcion }}
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="estado">
-              <mat-header-cell *matHeaderCellDef> Estado </mat-header-cell>
-              <mat-cell *matCellDef="let element">
-                {{ element.estado }}
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="acciones">
-              <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
-              <mat-cell *matCellDef="let element">
-                <button
-                  mat-icon-button
-                  color="warn"
-                  (click)="eliminarCDP(element)"
-                  matTooltip="Eliminar CDP"
+
+          <div class="table-container rounded-table table-scroll">
+            <table
+              mat-table
+              [dataSource]="selectedCDP"
+              *ngIf="selectedCDP.length != 0 && !isLoading"
+              class="custom-table"
+            >
+              <ng-container
+                *ngFor="let columna of cdpConstructorTabla"
+                [matColumnDef]="columna.columnDef"
+              >
+                <th mat-header-cell *matHeaderCellDef>
+                  <b>{{ columna.header }}</b>
+                </th>
+
+                <td
+                  mat-cell
+                  *matCellDef="let element; let i = index"
+                  [ngClass]="{ 'even-row': i % 2 === 0 }"
                 >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </mat-cell>
-            </ng-container>
-            <mat-header-row
-              *matHeaderRowDef="displayedColumns"
-            ></mat-header-row>
-            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-          </table>
+                  <ng-container
+                    *ngIf="columna.columnDef as colDef"
+                    [ngSwitch]="colDef"
+                  >
+                    <div *ngSwitchCase="'acciones'">
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        (click)="eliminarCDP(element)"
+                        matTooltip="Eliminar CDP"
+                      >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+
+                    <span *ngSwitchDefault>{{ columna.cell(element) }}</span>
+                  </ng-container>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="tablaCdpColumnas"></tr>
+              <tr mat-row *matRowDef="let row; columns: tablaCdpColumnas"></tr>
+            </table>
+          </div>
+
           <div class="btn-container">
             <button
               *ngIf="selectedCDP.length != 0"
