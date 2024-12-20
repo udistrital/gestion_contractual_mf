@@ -1,24 +1,24 @@
 .btn-container {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    gap: 10px;
-    margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 15px;
 }
 
 .full-width-field {
-    width: 100%;
-    margin-top: 10px;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .full-width {
-    width: 100%;
+  width: 100%;
 }
 
 .title-box {
-    background-color: rgb(100, 21, 21);
-    color: white;
-    padding: 8px;
-    margin-bottom: 8px;
-    border-radius: 4px;
+  background-color: var(--md-primary-500);
+  color: white;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
 }

@@ -1,67 +1,128 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="d-flex align-items-center fondo-acento-50 mb-4 mt-lg">
+    <div>
+      <mat-icon>shield</mat-icon>
+    </div>
+    <div class="mx-3">
+      <h2>Garantías y Mecanismos de Cobertura del Riesgo</h2>
+      Garantías y Mecanismos de Cobertura del Riesgo
+    </div>
+  </div>
   <div class="border">
     <div class="title">
       <h3>Garantías y Mecanismos de Cobertura del Riesgo</h3>
     </div>
     <div class="form-grid1">
       <table mat-table [dataSource]="dataSource" class="mat-elevation-z4">
-                <ng-container matColumnDef="id">
-                    <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
-                    <mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</mat-cell>
-                </ng-container>
-                <ng-container matColumnDef="amparo">
-                  <mat-header-cell *matHeaderCellDef> AMPARO </mat-header-cell>
-                  <mat-cell *matCellDef="let filaFormGroup; let i = index">
-                    <mat-form-field>
-                      <mat-select [formControl]="filaFormGroup.get('amparo')">
-                        <mat-option *ngFor="let amparo of getAmparosDisponibles(i)" [value]="amparo.Id">
-                          {{amparo.Nombre}}
-                        </mat-option>
-                      </mat-select>
-                    </mat-form-field>
-                  </mat-cell>
-                </ng-container>
-                <ng-container matColumnDef="suficiencia">
-                    <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
-                    <mat-cell *matCellDef="let filaFormGroup">
-                        <mat-form-field *ngIf="filaFormGroup.get('suficienciaPorcentaje').enabled">
-                            <input matInput [formControl]="filaFormGroup.get('suficienciaPorcentaje')"
-                            placeholder="Porcentaje (%) -> 10%"
-                            (keydown)="onlyNumbersFrom1To100($event, filaFormGroup.get('suficienciaPorcentaje').value)"/>
-                        </mat-form-field>
-                        <mat-form-field *ngIf="filaFormGroup.get('suficienciaSalarios').enabled">
-                            <input matInput [formControl]="filaFormGroup.get('suficienciaSalarios')"
-                            placeholder="Cantidad de SMLV"
-                            (keydown)="onlyPositiveIntegers($event, filaFormGroup.get('suficienciaSalarios').value)"/>
-                        </mat-form-field>
-                    </mat-cell>
-                </ng-container>
-                <ng-container matColumnDef="descripcion">
-                    <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
-                    <mat-cell *matCellDef="let filaFormGroup">
-                        <mat-form-field>
-                            <input matInput [formControl]="filaFormGroup.get('descripcion')" placeholder="Descripción"/>
-                        </mat-form-field>
-                    </mat-cell>
-                </ng-container>
-                <ng-container matColumnDef="acciones">
-                    <mat-header-cell *matHeaderCellDef> ACCIONES </mat-header-cell>
-                    <mat-cell *matCellDef="let element; let i = index">
-                        <button mat-icon-button (click)="eliminarFila(i)">
-                            <mat-icon>delete</mat-icon>
-                        </button>
-                    </mat-cell>
-                </ng-container>
-                <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-                <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+        <ng-container matColumnDef="id">
+          <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
+          <mat-cell *matCellDef="let element; let i = index">{{
+            i + 1
+          }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="amparo">
+          <mat-header-cell *matHeaderCellDef> AMPARO </mat-header-cell>
+          <mat-cell *matCellDef="let filaFormGroup; let i = index">
+            <mat-form-field>
+              <mat-select [formControl]="filaFormGroup.get('amparo')">
+                <mat-option
+                  *ngFor="let amparo of getAmparosDisponibles(i)"
+                  [value]="amparo.Id"
+                >
+                  {{ amparo.Nombre }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="suficiencia">
+          <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
+          <mat-cell *matCellDef="let filaFormGroup">
+            <mat-form-field
+              *ngIf="filaFormGroup.get('suficienciaPorcentaje').enabled"
+            >
+              <input
+                matInput
+                [formControl]="filaFormGroup.get('suficienciaPorcentaje')"
+                placeholder="Porcentaje (%) -> 10%"
+                (keydown)="
+                  onlyNumbersFrom1To100(
+                    $event,
+                    filaFormGroup.get('suficienciaPorcentaje').value
+                  )
+                "
+              />
+            </mat-form-field>
+            <mat-form-field
+              *ngIf="filaFormGroup.get('suficienciaSalarios').enabled"
+            >
+              <input
+                matInput
+                [formControl]="filaFormGroup.get('suficienciaSalarios')"
+                placeholder="Cantidad de SMLV"
+                (keydown)="
+                  onlyPositiveIntegers(
+                    $event,
+                    filaFormGroup.get('suficienciaSalarios').value
+                  )
+                "
+              />
+            </mat-form-field>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="descripcion">
+          <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
+          <mat-cell *matCellDef="let filaFormGroup">
+            <mat-form-field>
+              <input
+                matInput
+                [formControl]="filaFormGroup.get('descripcion')"
+                placeholder="Descripción"
+              />
+            </mat-form-field>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="acciones">
+          <mat-header-cell *matHeaderCellDef> ACCIONES </mat-header-cell>
+          <mat-cell *matCellDef="let element; let i = index">
+            <button mat-icon-button (click)="eliminarFila(i)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
       </table>
       <div class="btn-container">
-        <button mat-raised-button color="primary" type="button" (click)="agregarFila()">Agregar Registro</button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="agregarFila()"
+        >
+          Agregar Registro
+        </button>
       </div>
     </div>
   </div>
   <div class="btn-container">
-    <button mat-raised-button type="button" matStepperPrevious color="primary">Atrás</button>
-    <button mat-raised-button type="submit" color="primary" [disabled]="!form.valid">Guardar y Continuar</button>
+    <button
+      mat-stroked-button
+      style="border: 1px solid var(--md-primary-500)"
+      color="primary"
+      matStepperPrevious
+    >
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <button
+      mat-raised-button
+      type="submit"
+      color="primary"
+      [disabled]="!form.valid"
+    >
+      <mat-icon>save</mat-icon>
+      Guardar y Continuar
+    </button>
   </div>
 </form>
