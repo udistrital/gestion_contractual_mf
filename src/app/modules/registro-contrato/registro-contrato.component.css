@@ -4,4 +4,8 @@
     overflow: visible;
     font-size: 10pt;
   }
+
+  .mt-lg {
+    margin-top: 10px;
+  }
 }
