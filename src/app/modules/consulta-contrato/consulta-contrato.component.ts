@@ -13,8 +13,15 @@ import { ModalObservacionesComponent } from './modal-observaciones/modal-observa
 import { MatDialog } from '@angular/material/dialog';
 import { ContratoGeneral } from 'src/app/types/types';
 import { accionesPorRolYEstado } from './estados_acciones';
-import { MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS } from '@angular/material-moment-adapter';
-import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import {
+  MomentDateAdapter,
+  MAT_MOMENT_DATE_ADAPTER_OPTIONS,
+} from '@angular/material-moment-adapter';
+import {
+  DateAdapter,
+  MAT_DATE_FORMATS,
+  MAT_DATE_LOCALE,
+} from '@angular/material/core';
 
 export const FORMATO_LOCAL_FECHA = {
   parse: {
@@ -36,10 +43,10 @@ export const FORMATO_LOCAL_FECHA = {
     {
       provide: DateAdapter,
       useClass: MomentDateAdapter,
-      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS]
+      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
     },
-    { provide: MAT_DATE_FORMATS, useValue: FORMATO_LOCAL_FECHA }
-  ]
+    { provide: MAT_DATE_FORMATS, useValue: FORMATO_LOCAL_FECHA },
+  ],
 })
 export class ConsultaContratoComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -51,7 +58,6 @@ export class ConsultaContratoComponent implements OnInit {
   tamanioPagina = 10;
   paginaActual = 0;
   roles: string[] = [];
-  // accionesPermitidas: string[] = ['Enviar Aprobación Jefe OC'];
   unidadEjecucion: any[] = [];
   vigencia: any[] = [];
   tipoContratoId: any[] = [];
@@ -103,28 +109,27 @@ export class ConsultaContratoComponent implements OnInit {
     this.CargartipoContratoIds();
     this.CargarTipoPersona();
     this.CargarEstado();
-    this.form.get('fechaDesde')?.valueChanges.subscribe(value => {
+    this.form.get('fechaDesde')?.valueChanges.subscribe((value) => {
       if (value) {
         const fechaHasta = this.form.get('fechaHasta')?.value;
         if (fechaHasta && new Date(value) > new Date(fechaHasta)) {
           this.form.patchValue({
-            fechaDesde: fechaHasta
+            fechaDesde: fechaHasta,
           });
         }
       }
     });
 
-    this.form.get('fechaHasta')?.valueChanges.subscribe(value => {
+    this.form.get('fechaHasta')?.valueChanges.subscribe((value) => {
       if (value) {
         const fechaDesde = this.form.get('fechaDesde')?.value;
         if (fechaDesde && new Date(value) < new Date(fechaDesde)) {
           this.form.patchValue({
-            fechaHasta: fechaDesde
+            fechaHasta: fechaDesde,
           });
         }
       }
     });
-
     this.consultar();
   }
 
@@ -185,7 +190,6 @@ export class ConsultaContratoComponent implements OnInit {
     this.dialog.open(ModalObservacionesComponent, {
       width: '70vw',
       maxHeight: '35vw',
-      // height: '35vw',
       data: { idContrato },
     });
   }
@@ -195,7 +199,6 @@ export class ConsultaContratoComponent implements OnInit {
     this.tamanioPagina = event.pageSize;
     this.consultar(false);
   }
-
 
   consultar(resetPage: boolean = true) {
     if (resetPage) {
@@ -229,7 +232,6 @@ export class ConsultaContratoComponent implements OnInit {
     });
   }
 
-
   limpiarFiltros() {
     this.form.reset();
     this.paginaActual = 0;
@@ -247,7 +249,7 @@ export class ConsultaContratoComponent implements OnInit {
     const formValues = this.form.value;
     const params: any = {
       limit: this.tamanioPagina,
-      offset: this.paginaActual * this.tamanioPagina
+      offset: this.paginaActual * this.tamanioPagina,
     };
 
     if (formValues.unidadEjecucion)
@@ -274,11 +276,15 @@ export class ConsultaContratoComponent implements OnInit {
       params.fechaCreacion = {};
 
       if (formValues.fechaDesde) {
-        params.fechaCreacion.start = new Date(formValues.fechaDesde).toISOString().split('T')[0];
+        params.fechaCreacion.start = new Date(formValues.fechaDesde)
+          .toISOString()
+          .split('T')[0];
       }
 
       if (formValues.fechaHasta) {
-        params.fechaCreacion.end = new Date(formValues.fechaHasta).toISOString().split('T')[0];
+        params.fechaCreacion.end = new Date(formValues.fechaHasta)
+          .toISOString()
+          .split('T')[0];
       }
     }
     return params;
