@@ -45,3 +45,46 @@ mat-table {
   margin-bottom: 8px;
   border-radius: 4px;
 }
+
+.even-row {
+  background-color: #f4f4f4;
+}
+
+.mat-column-vigencia {
+  text-align: center;
+  font-size: 9.5pt;
+}
+
+.mat-column-solicitudNecesidad {
+  font-size: 9.5pt;
+}
+
+.mat-column-numeroCDP {
+  font-size: 9.5pt;
+}
+
+.mat-column-valor {
+  font-size: 9.5pt;
+}
+
+.mat-column-dependencia {
+  font-size: 9.5pt;
+}
+
+.mat-column-rubro {
+  font-size: 9.5pt;
+}
+
+.mat-column-estado {
+  font-size: 9.5pt;
+}
+
+.mat-column-acciones {
+  text-align: center;
+  font-size: 9.5pt;
+}
+
+::ng-deep .mat-cell {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
