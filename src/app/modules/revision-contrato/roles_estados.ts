@@ -23,7 +23,7 @@ const textos = {
   ),
   ORDENADOR_IDEXUD_EN_REVISION: generarEstado(
     'Enviar a Contratista',
-    '¿Está seguro(a) de enviar contrato a contratista?',
+    '¿Está seguro(a) de enviar el contrato al contratista?',
     'El contrato fue enviado al contratista'
   ),
   ORDENADOR_IDEXUD_EN_FIRMA: generarEstado(
