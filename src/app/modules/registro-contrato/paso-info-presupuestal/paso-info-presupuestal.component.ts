@@ -28,6 +28,16 @@ interface CDPData {
   id_necesidad: string;
 }
 
+interface OrdenadorContratoData {
+  tercero_id: number;
+  ordenador_argo_id: number;
+  ordenador_sikarca_id: number;
+  resolucion: string;
+  documento_identidad: string;
+  cargo_id: number;
+  contrato_general_id: number;
+}
+
 @Component({
   selector: 'app-paso-info-presupuestal',
   templateUrl: './paso-info-presupuestal.component.html',
@@ -195,15 +205,22 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     try {
       this.isLoading = true;
 
+      // Datos para la información presupuestal
       const formData = {
-        ordenadorId: this.form.get('ordenadorGasto')?.value,
-        tipoGastoId: this.form.get('tipoGasto')?.value,
-        origenPresupuestosId: this.form.get('origenPresupuesto')?.value,
-        temaGastoInversionId: this.form.get('temaGasto')?.value,
-        medioPagoId: this.form.get('medioPago')?.value,
+        vigencia: this.form.get('vigencia')?.value,
+        cdp: this.form.get('cdp')?.value,
+        valorAcumulado: this.form.get('valorAcumulado')?.value,
         tipoMonedaId: this.form.get('tipoMoneda')?.value,
-        valorPesos: this.form.get('valorContrato')?.value,
-        origenRecursosId: this.form.get('origenRecurso')?.value,
+        valorContrato: this.form.get('valorContrato')?.value,
+        ordenadorGastoId: this.form.get('ordenadorGasto')?.value,
+        nombreOrdenador: this.form.get('nombreOrdenador')?.value,
+        tipoGastoId: this.form.get('tipoGasto')?.value,
+        origenRecursoId: this.form.get('origenRecurso')?.value,
+        origenPresupuestoId: this.form.get('origenPresupuesto')?.value,
+        temaGastoId: this.form.get('temaGasto')?.value,
+        monedaExtranjeraId: this.form.get('monedaExtranjera')?.value,
+        tasaCambio: this.form.get('tasaCambio')?.value,
+        medioPagoId: this.form.get('medioPago')?.value,
       };
 
       // Obtener el ID del contrato del localStorage
@@ -219,7 +236,23 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         throw new Error('No se ha encontrado el ID del contrato');
       }
 
-      // Actualizar en el backend
+      // Preparar datos para el POST de OrdenadorContrato
+      const ordenadorContratoData: OrdenadorContratoData = {
+        tercero_id: 0, // no se obtiene en este paso
+        ordenador_argo_id: formData.ordenadorGastoId ? Number(formData.ordenadorGastoId) : 0, // ??
+        ordenador_sikarca_id: formData.ordenadorGastoId ? Number(formData.ordenadorGastoId) : 0, // ??
+        resolucion: '', // no se obtiene en este paso
+        documento_identidad: '', // no se obtiene en este paso
+        cargo_id: formData.ordenadorGastoId ? Number(formData.ordenadorGastoId) : 0, 
+        contrato_general_id: contratoId,
+      };
+
+      // Realizar el POST al endpoint de OrdenadorContrato
+      const ordenadorContratoResponse = await firstValueFrom(
+        this.contratoGeneralCrudService.postOrdenadorContrato(ordenadorContratoData)
+      );
+
+      // Actualizar en el backend la información presupuestal
       const response = await firstValueFrom(
         this.contratoGeneralCrudService.put(contratoId, formData)
       );
