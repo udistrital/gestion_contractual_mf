@@ -43,7 +43,6 @@ export class RevisionContratoComponent {
 
   ngOnInit(): void {
     this.roles = this.rolService.getRol();
-    this.roles = ['ORDENADOR_DEL_GASTO']; //CAMBIAR X
     this.getIdContratoUrl();
     this.getUnidadEjecutora();
     this.getEstadosContrato();
@@ -73,7 +72,6 @@ export class RevisionContratoComponent {
       [environment.UNIDADES_EJECUTORAS.IDEXUD]: 'IDEXUD',
     };
     this.unidad_ejecutora = unidades[this.unidad_ejecutora_id] || '';
-    this.unidad_ejecutora = 'IDEXUD'; //CAMBIAR X
   }
 
   getUnidadEjecutora() {
