@@ -4,7 +4,7 @@ import { ModalMotivosRechazoComponent } from './modal-motivos-rechazo/modal-moti
 import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
-import { EstadoContratoCRUD, DocumentoContrato } from 'src/app/types/types';
+import { EstadoContrato, DocumentoContrato } from 'src/app/types/types';
 import { DocumentosService } from 'src/app/services/documentos.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
@@ -123,7 +123,7 @@ export class RevisionContratoComponent {
     this.contratoGeneralCrudService
       .getEstadoActual(this.contrato_general_id)
       .subscribe({
-        next: (res: EstadoContratoCRUD) => {
+        next: (res: EstadoContrato) => {
           if (res.estado_interno_parametro_id) {
             this.estadoInternoActual = res.estado_interno_parametro_id;
             this.getMensajes();
@@ -199,6 +199,9 @@ export class RevisionContratoComponent {
         'JEFE_CONTRATACION_RECTOR',
         'JEFE_CONTRATACION_IDEXUD',
       ],
+      [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: [
+        'ORDENADOR_DEL_GASTO',
+      ],
       [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
         'ORDENADOR_DEL_GASTO',
       ],
@@ -240,7 +243,7 @@ export class RevisionContratoComponent {
     if (rol != '' && estados?.length > 0) {
       const estado = estados[0];
       const estado_parametro_id = environment.ESTADOS_GENERALES.SUSCRITO;
-      let estadoContrato: EstadoContratoCRUD = {
+      let estadoContrato: EstadoContrato = {
         contrato_general_id: this.contrato_general_id,
         usuario_id: this.usuario_id,
         usuario_rol: rol,
@@ -261,7 +264,7 @@ export class RevisionContratoComponent {
   }
 
   crearEstadoAutomaticoContrato(
-    estadoContrato: EstadoContratoCRUD,
+    estadoContrato: EstadoContrato,
     estado: number
   ) {
     this.contratoGeneralCrudService
@@ -280,7 +283,7 @@ export class RevisionContratoComponent {
       });
   }
 
-  crearEstadoContrato(estadoContrato: EstadoContratoCRUD) {
+  crearEstadoContrato(estadoContrato: EstadoContrato) {
     this.contratoGeneralCrudService
       .postEstadoContrato(estadoContrato)
       .subscribe((res: any) => {

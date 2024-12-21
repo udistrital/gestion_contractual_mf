@@ -5,7 +5,7 @@ import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
-import { ApiResponse, EstadoContratoCRUD, ParametroResponse } from "src/app/types/types";
+import { ApiResponse, EstadoContrato, ParametroResponse } from "src/app/types/types";
 import { RolService } from "src/app/services/rol.service";
 
 interface Parametro {
@@ -469,7 +469,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     if (this.estado_id === null || this.estado_interno_id === null) return;
 
     const rol = this.roles.find(item => item.includes("ABOGADO")) || "ABOGADO";
-    const estado: EstadoContratoCRUD = {
+    const estado: EstadoContrato = {
       contrato_general_id: contratoId,
       usuario_id: 1,
       usuario_rol: rol,
