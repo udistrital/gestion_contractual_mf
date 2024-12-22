@@ -41,7 +41,6 @@ type ItemType = SimpleItem | NestedItem | DependenciaItem | ParametroResponse;
       <mat-select
         [formControl]="controlValue"
         [required]="required"
-        [disabled]="disabled"
       >
         <mat-option>
           <ngx-mat-select-search
@@ -91,10 +90,18 @@ type ItemType = SimpleItem | NestedItem | DependenciaItem | ParametroResponse;
   ],
 })
 export class SearchableSelectComponent implements OnInit, OnDestroy {
+
   @Input() label: string = '';
   @Input() icon: string = '';
   @Input() required: boolean = false;
-  @Input() disabled: boolean = false;
+
+  @Input() set disabled(value: boolean) {
+    if (value) {
+      this.controlValue.disable({emitEvent: false});
+    } else {
+      this.controlValue.enable({emitEvent: false});
+    }
+  }
 
   private _items: ItemType[] = [];
   @Input() set items(value: ItemType[]) {
@@ -110,11 +117,18 @@ export class SearchableSelectComponent implements OnInit, OnDestroy {
   @Input() set control(value: AbstractControl | null) {
     if (value) {
       this.controlValue = value as FormControl;
+      if (this.disabled) {
+        this.controlValue.disable({emitEvent: false});
+      }
       this.subscribeToValueChanges();
     }
   }
 
-  controlValue: FormControl = new FormControl();
+  controlValue: FormControl = new FormControl({
+    value: null,
+    disabled: this.disabled
+  });
+
   searchCtrl = new FormControl('');
   private _filteredItems: ItemType[] = [];
   private destroy$ = new Subject<void>();
