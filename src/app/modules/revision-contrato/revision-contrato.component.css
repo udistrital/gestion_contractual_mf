@@ -38,12 +38,20 @@
 }
 
 .pdf-container {
+  height: 550px;
   border: 1px solid #ccc;
+}
+
+.loading-shade {
+  height: 550px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .footer-buttons {
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 16px;
 }

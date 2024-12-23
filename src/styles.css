@@ -1,11 +1,12 @@
-@import 'quill/dist/quill.core.css';
-@import 'quill/dist/quill.snow.css';
+@import "quill/dist/quill.core.css";
+@import "quill/dist/quill.snow.css";
 
 /* SweetAlert2 */
 .swal2-popup.status-400 {
   background-color: #fff3cd;
 }
-.swal2-popup.status-401, .swal2-popup.status-403 {
+.swal2-popup.status-401,
+.swal2-popup.status-403 {
   background-color: #f8d7da;
 }
 .swal2-popup.status-404 {

@@ -14,37 +14,54 @@ export class AlertService {
       title: title,
       text: text,
       confirmButtonText: 'Aceptar',
+      customClass: {
+        confirmButton: 'alertaConfirmarBoton',
+        cancelButton: 'alertaCancelarBoton',
+        icon: 'alertaIconoWarn',
+      },
     });
   }
 
-  showSuccessAlert(text: string, title: string | null = null) {
+  showSuccessAlert(text: string, title: string = 'Operación exitosa') {
     Swal.fire({
       icon: 'success',
       title: title,
       text: text,
       confirmButtonText: 'Aceptar',
+      customClass: {
+        confirmButton: 'alertaConfirmarBoton',
+        cancelButton: 'alertaCancelarBoton',
+        icon: 'alertaIconoSuccess',
+      },
     });
   }
 
-  showErrorAlert(text: string, title: string | null = null) {
+  showErrorAlert(text: string, title: string = 'Error') {
     Swal.fire({
       icon: 'error',
       title: title,
       text: text,
       confirmButtonText: 'Aceptar',
+      customClass: {
+        confirmButton: 'alertaConfirmarBoton',
+        cancelButton: 'alertaCancelarBoton',
+      },
     });
   }
 
-  showConfirmAlert(text: string, title: string | null = null): Promise<any> {
+  showConfirmAlert(text: string, title: string = 'Atención'): Promise<any> {
     return Swal.fire({
-      icon: 'warning',
       title: title,
       text: text,
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Aceptar',
       cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Aceptar',
+      customClass: {
+        confirmButton: 'alertaConfirmarBoton',
+        cancelButton: 'alertaCancelarBoton',
+        icon: 'alertaIconoConfirmacion',
+      },
     });
   }
 }

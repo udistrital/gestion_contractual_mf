@@ -1,0 +1,78 @@
+.container-principal {
+  padding: 20px 25px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.close-button {
+  padding: 0;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container-title {
+  margin: 50px 0 5px 0;
+  padding: 8px;
+  background-color: #731514;
+  border-radius: 5px;
+  color: white;
+}
+
+.loading-shade {
+  padding: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.observacion {
+  margin: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.example-header-image {
+  color: white;
+  background-color: #731514;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.nombre-rechaza {
+  font-size: 16px;
+  font-weight: 600;
+  color: #393939;
+}
+
+.nombre-rechaza span {
+  font-size: 14px;
+  color: #731514;
+  font-weight: normal;
+}
+
+.fecha-rechazo {
+  font-size: 12px;
+  margin-top: 2.5px;
+  color: gray;
+}
+
+.motivo {
+  font-size: 14px;
+  color: #424242;
+}
+
+mat-card-footer {
+  padding: 10px 16px;
+}
+
+.estados {
+  margin: 10px 0;
+  font-size: 12px;
+  color: gray;
+}

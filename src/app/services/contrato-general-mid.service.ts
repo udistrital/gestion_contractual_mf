@@ -19,43 +19,41 @@ export class ContratoGeneralMidService {
   }
 
   getContratos(params: any): Observable<any> {
-
     this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
-
     let queryParams = [];
-
     const filterParams = { ...params };
     delete filterParams.limit;
     delete filterParams.offset;
+    delete filterParams.fechaCreacion;
 
-    // Función para aplanar objetos anidados
-    const flattenObject = (obj: any, prefix: string = ''): any => {
-      let items: any = {};
-      for (let key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          const newKey = prefix ? `${prefix}.${key}` : key;
-          if (typeof obj[key] === 'object' && obj[key] !== null) {
-            Object.assign(items, flattenObject(obj[key], newKey));
-          } else {
-            items[newKey] = obj[key];
-          }
-        }
-      }
-      return items;
-    };
+    // Construimos la parte del queryFilter
+    let queryFilterParts = [];
 
+    // Manejamos los filtros regulares
     if (Object.keys(filterParams).length > 0) {
-      const flatParams = flattenObject(filterParams);
-      queryParams.push(
-        `queryFilter=${encodeURIComponent(
-          Object.entries(flatParams)
-            .map(([key, value]) => `"${key}":${JSON.stringify(value)}`)
-            .join(',')
-        )}`
+      const flatParams = this.flattenObject(filterParams);
+      queryFilterParts.push(
+        Object.entries(flatParams)
+          .map(([key, value]) => `"${key}":${JSON.stringify(value)}`)
+          .join(',')
       );
     }
 
+    // Manejamos el filtro de fechas
+    if (params.fechaCreacion) {
+      queryFilterParts.push(
+        `"fechaCreacion":${JSON.stringify(params.fechaCreacion)}`
+      );
+    }
 
+    // Si hay algún filtro, lo añadimos a queryParams
+    if (queryFilterParts.length > 0) {
+      queryParams.push(
+        `queryFilter=${encodeURIComponent(queryFilterParts.join(','))}`
+      );
+    }
+
+    // Añadimos limit y offset
     if (params.limit !== undefined) {
       queryParams.push(`limit=${params.limit}`);
     }
@@ -64,9 +62,22 @@ export class ContratoGeneralMidService {
     }
 
     const url = `contratos-generales${queryParams.length ? '?' + queryParams.join('&') : ''}`;
-    console.log(url);
-
     return this.requestManager.get(url);
+  }
+
+  private flattenObject(obj: any, prefix: string = ''): any {
+    let items: any = {};
+    for (let key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const newKey = prefix ? `${prefix}.${key}` : key;
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+          Object.assign(items, this.flattenObject(obj[key], newKey));
+        } else {
+          items[newKey] = obj[key];
+        }
+      }
+    }
+    return items;
   }
 
   getSedes(): Observable<SedeContratoMidResponse[]> {
@@ -93,5 +104,12 @@ export class ContratoGeneralMidService {
           return [];
         })
       );
+  }
+
+  getEstados(idContrato: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
+    return this.requestManager.get(
+      `estados?queryFilter="contrato_general_id":${idContrato}&sortBy=fecha_creacion&orderBy=DESC`
+    );
   }
 }

@@ -41,6 +41,11 @@ export class ContratoGeneralCrudService {
     return this.requestManager.get('cdp/contrato/'+idContrato);
   }
 
+  getEstadoActual(idContrato: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`estados-contrato/contrato/${idContrato}/actual`);
+  }
+
   postEstadoContrato(estado: EstadoContratoCRUD): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post('estados-contrato', estado);
@@ -66,12 +71,30 @@ export class ContratoGeneralCrudService {
     return this.requestManager.delete('especificaciones-tecnicas', id);
   }
 
+  getContratista(idContrato: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`contratistas/contrato/${idContrato}`);
+  }
+
   postContratista(contratistaData: ContratistaCRUD): Observable<any> {
+    console.log(contratistaData);
     if(!contratistaData.contrato_general_id){
       throw new Error('No se ha especificado el contrato general asociado al contratista');
     }
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post('contratistas/', contratistaData);
+  }
+
+  putContratista(contratistaData: any): Observable<any> {
+    const {id, ...rest} = contratistaData;
+    if(!id){
+      throw new Error('No se ha especificado el id del contratista');
+    }
+    if(!contratistaData.contrato_general_id){
+      throw new Error('No se ha especificado el contrato general asociado al contratista');
+    }
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.put('contratistas/'+id, rest);
   }
 
   getDocumentoContrato(idContrato: number): Observable<any> {
@@ -128,5 +151,10 @@ export class ContratoGeneralCrudService {
   patchLugarEjecucion(id: number, contrato_general_parcial: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.patch('lugares-ejecucion/'+id, contrato_general_parcial);
+  }
+
+  postOrdenadorContrato(contrato_general_parcial: any): Observable<any>{
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post('ordenador-contrato', contrato_general_parcial);
   }
 }

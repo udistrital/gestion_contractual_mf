@@ -1,0 +1,36 @@
+<mat-card class="container-principal">
+  <button mat-icon-button class="close-button" [mat-dialog-close]>
+    <mat-icon color="primary" class="btn">close</mat-icon>
+  </button>
+
+  <h4 class="container-title">HISTORIAL DE OBSERVACIONES</h4>
+
+  <div class="loading-shade" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <ng-container *ngFor="let estado of estados">
+    <mat-card class="observacion" appearance="outlined">
+
+      <mat-card-header>
+        <div mat-card-avatar class="example-header-image">
+          {{ obtenerIniciales(estado.nombre_usuario) }}
+        </div>
+        <mat-card-title class="nombre-rechaza">
+          {{ estado.nombre_usuario }} <span>({{ estado.usuario_rol }})</span>
+        </mat-card-title>
+        <mat-card-subtitle class="fecha-rechazo">
+          Fecha: {{estado.fecha_creacion ? (estado.fecha_creacion | date:'dd/MM/yyyy') : 'N/A'}}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content class="motivo">{{ estado.motivo }}</mat-card-content>
+
+      <mat-card-footer>
+        <mat-divider></mat-divider>
+        <p class="estados">{{estado.estado_parametro_id}} - {{estado.estado_interno_parametro_id}}</p>
+      </mat-card-footer>
+
+    </mat-card>
+  </ng-container>
+</mat-card>

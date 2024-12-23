@@ -11,8 +11,18 @@ export class PolizasService {
     this.requestManager.setPath('POLIZAS_CRUD_SERVICE');
   }
 
-  post(amparos: any[]): Observable<any> {
+  postAmparos(amparos: any[]): Observable<any> {
     this.requestManager.setPath('POLIZAS_CRUD_SERVICE');
     return this.requestManager.post('amparos', amparos);
+  }
+
+  putAmparos(id: number, amparos: any): Observable<any> {
+    this.requestManager.setPath('POLIZAS_CRUD_SERVICE');
+    return this.requestManager.put('amparos/' + id, amparos);
+  }
+
+  getAmparos(contratoId: number): Observable<any> {
+    this.requestManager.setPath('POLIZAS_CRUD_SERVICE');
+    return this.requestManager.get('amparos/contrato/' + contratoId);
   }
 }

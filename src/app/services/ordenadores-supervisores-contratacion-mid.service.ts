@@ -12,37 +12,23 @@ export class OrdenadoresSupervisoresContratacionMidService {
     this.requestManager.setPath('ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE');
   }
 
-  getSupervisores(queryParams: any = {}): Observable<any> {
+  getSupervisores(): Observable<any> {
     this.requestManager.setPath('ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE');
-  
-    // Construir manualmente la URL con los parámetros de consulta
-    const queryString = new URLSearchParams(queryParams).toString();
-    const endpoint = `supervisor_contrato${queryString ? '?' + queryString : ''}`;
-  
-    return this.requestManager.get(endpoint);
+    return this.requestManager.get(``);
   }
   
-  getOrdenadores(queryParams: any = {}): Observable<any> {
+  getOrdenadores(rol: number): Observable<any> {
     this.requestManager.setPath('ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE');
-  
-    // Construir manualmente la URL con los parámetros de consulta
-    const queryString = new URLSearchParams(queryParams).toString();
-    const endpoint = `ordenadores${queryString ? '?' + queryString : ''}`;
-  
-    return this.requestManager.get(endpoint);
+    return this.requestManager.get(`ordenador?rol=${rol}`);
   }
   
-
-  // Método para crear o enviar datos adicionales en el MID (ejemplo con POST)
-  postOrdenador(data: any): Observable<any> {
+  getRolOrdenadores(): Observable<any> {
     this.requestManager.setPath('ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE');
-    return this.requestManager.post('ordenadores', data);
+    return this.requestManager.get(`rol-ordenador`);
   }
 
-  // Método para actualizar un recurso en el MID (ejemplo con PUT)
-  updateOrdenador(id: any, data: any): Observable<any> {
+  getOrdenadorActuales(rol: number): Observable<any> {
     this.requestManager.setPath('ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE');
-    return this.requestManager.put(`ordenadores/${id}`, data);
+    return this.requestManager.get(`rol-ordenador/actual?rol=${rol}`);
   }
-
 }

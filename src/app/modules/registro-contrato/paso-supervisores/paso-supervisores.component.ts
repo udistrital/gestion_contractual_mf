@@ -1,17 +1,28 @@
-import { ChangeDetectorRef, Component, EventEmitter, Output, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Output,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormBuilder, Validators, FormArray } from '@angular/forms';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
 import { distinctUntilChanged, filter, finalize } from 'rxjs/operators';
-import { DependenciaContratoMidResponse, SedeContratoMidResponse } from "../../../types/types";
-import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
-import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
-import Swal from "sweetalert2";
+import {
+  DependenciaContratoMidResponse,
+  SedeContratoMidResponse,
+} from '../../../types/types';
+import { ContratoGeneralMidService } from '../../../services/contrato-general-mid.service';
+import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
+import Swal from 'sweetalert2';
+import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
   selector: 'app-paso-supervisores',
   templateUrl: './paso-supervisores.component.html',
   styleUrls: ['./paso-supervisores.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PasoSupervisoresComponent implements OnInit {
   @Output() nextStep = new EventEmitter<void>();
@@ -41,7 +52,7 @@ export class PasoSupervisoresComponent implements OnInit {
       sede: [null, Validators.required],
       dependencia: [null, Validators.required],
       direccion: ['', Validators.required],
-    })
+    }),
   });
 
   pais: any[] = [];
@@ -49,12 +60,13 @@ export class PasoSupervisoresComponent implements OnInit {
   municipioCiudad: any[] = [];
 
   constructor(
+    private alertService: AlertService,
     private _formBuilder: FormBuilder,
     private ubicacionService: UbicacionService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private cdRef: ChangeDetectorRef
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.loadSavedData();
@@ -68,16 +80,17 @@ export class PasoSupervisoresComponent implements OnInit {
       }
     });
 
-    this.form.get('lugarEjecucion.departamento')?.valueChanges.subscribe((id_departamento) => {
-      if (id_departamento) {
-        this.CargarCiudad(id_departamento);
-      }
-    });
+    this.form
+      .get('lugarEjecucion.departamento')
+      ?.valueChanges.subscribe((id_departamento) => {
+        if (id_departamento) {
+          this.CargarCiudad(id_departamento);
+        }
+      });
   }
 
   private loadSavedData(): void {
     try {
-
       const contratoGeneral = localStorage.getItem('paso-info-general');
       if (contratoGeneral) {
         const parsedContrato = JSON.parse(contratoGeneral);
@@ -106,7 +119,7 @@ export class PasoSupervisoresComponent implements OnInit {
           municipioCiudad: parsedLugar.ciudad_id,
           sede: parsedLugar.sede_id,
           dependencia: parsedLugar.dependencia_id,
-          direccion: parsedLugar.direccion
+          direccion: parsedLugar.direccion,
         });
         this.lugareEjecucionId = parsedLugar.id;
         this.lugarEjecucionSaved = true;
@@ -117,8 +130,7 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   async guardarSolicitante() {
-
-    if(!this.contratoGeneralId){
+    if (!this.contratoGeneralId) {
       console.log('No se ha cargado el contrato general');
       return;
     }
@@ -132,38 +144,41 @@ export class PasoSupervisoresComponent implements OnInit {
       this.loading = true;
       let solicitanteData = {
         sedeSolicitanteId: this.form.get('solicitante.sede')?.value,
-        dependenciaSolicitanteId: this.form.get('solicitante.dependencia')?.value,
+        dependenciaSolicitanteId: this.form.get('solicitante.dependencia')
+          ?.value,
         contrato_general_id: this.contratoGeneralId,
       };
 
       let solicitanteId = this.solicitanteId;
 
       if (solicitanteId) {
-        this.contratoGeneralCrudService.patchSolicitante(solicitanteId, solicitanteData).subscribe((response: any) => {
-          solicitanteId = response.id;
-        });
+        this.contratoGeneralCrudService
+          .patchSolicitante(solicitanteId, solicitanteData)
+          .subscribe((response: any) => {
+            solicitanteId = response.id;
+          });
       } else {
-        this.contratoGeneralCrudService.postSolicitante(solicitanteData).subscribe((response: any) => {
-          solicitanteId = response.id;
-        });
+        this.contratoGeneralCrudService
+          .postSolicitante(solicitanteData)
+          .subscribe((response: any) => {
+            solicitanteId = response.id;
+          });
       }
 
-      localStorage.setItem('paso-info-solicitante', JSON.stringify({ ...solicitanteData, id: solicitanteId }));
+      localStorage.setItem(
+        'paso-info-solicitante',
+        JSON.stringify({ ...solicitanteData, id: solicitanteId })
+      );
       this.solicitanteSaved = true;
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Datos del solicitante guardados',
-        text: 'La información del solicitante se ha guardado correctamente'
-      });
-
+      await this.alertService.showSuccessAlert(
+        'La información del solicitante se ha guardado correctamente'
+      );
     } catch (error) {
       console.error('Error saving solicitante:', error);
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Ocurrió un error al guardar la información del solicitante'
-      });
+      await this.alertService.showErrorAlert(
+        'Ocurrió un error al guardar la información del solicitante'
+      );
     } finally {
       this.loading = false;
       this.cdRef.detectChanges();
@@ -190,32 +205,34 @@ export class PasoSupervisoresComponent implements OnInit {
 
       const lugarEjecucionId = this.lugareEjecucionId;
 
-      if(lugarEjecucionId){
-        this.contratoGeneralCrudService.patchLugarEjecucion(lugarEjecucionId, lugarData).subscribe((response: any) => {
-          this.lugareEjecucionId = response.id;
-        });
+      if (lugarEjecucionId) {
+        this.contratoGeneralCrudService
+          .patchLugarEjecucion(lugarEjecucionId, lugarData)
+          .subscribe((response: any) => {
+            this.lugareEjecucionId = response.id;
+          });
       } else {
-        this.contratoGeneralCrudService.postLugarEjecucion(lugarData).subscribe((response: any) => {
-          this.lugareEjecucionId = response.id;
-        });
+        this.contratoGeneralCrudService
+          .postLugarEjecucion(lugarData)
+          .subscribe((response: any) => {
+            this.lugareEjecucionId = response.id;
+          });
       }
 
-      localStorage.setItem('paso-lugar-ejecucion', JSON.stringify({ ...lugarData, id: this.lugareEjecucionId }));
+      localStorage.setItem(
+        'paso-lugar-ejecucion',
+        JSON.stringify({ ...lugarData, id: this.lugareEjecucionId })
+      );
       this.lugarEjecucionSaved = true;
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Lugar de ejecución guardado',
-        text: 'La información del lugar de ejecución se ha guardado correctamente'
-      });
-
+      await this.alertService.showSuccessAlert(
+        'La información del lugar de ejecución se ha guardado correctamente',
+        'Lugar de ejecución guardado'
+      );
     } catch (error) {
-      console.error('Error saving lugar ejecucion:', error);
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Ocurrió un error al guardar la información del lugar de ejecución'
-      });
+      await this.alertService.showErrorAlert(
+        'Ocurrió un error al guardar la información del lugar de ejecución'
+      );
     } finally {
       this.loading = false;
       this.cdRef.detectChanges();
@@ -224,11 +241,10 @@ export class PasoSupervisoresComponent implements OnInit {
 
   async guardarYContinuar() {
     if (!this.solicitanteSaved || !this.lugarEjecucionSaved) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'Información incompleta',
-        text: 'Por favor, guarde todas las secciones antes de continuar'
-      });
+      await this.alertService.showAlert(
+        'Por favor, guarde todas las secciones antes de continuar',
+        'Información incompleta'
+      );
       return;
     }
 
@@ -269,32 +285,37 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   private setupFormListeners(): void {
-    this.form.get('solicitante.sede')?.valueChanges
-      .pipe(
+    this.form
+      .get('solicitante.sede')
+      ?.valueChanges.pipe(
         distinctUntilChanged(),
-        filter(sedeId => sedeId !== null && sedeId !== undefined)
+        filter((sedeId) => sedeId !== null && sedeId !== undefined)
       )
-      .subscribe(sedeId => {
+      .subscribe((sedeId) => {
         this.cargarDependencias(Number(sedeId), 'solicitante');
       });
 
-    this.form.get('lugarEjecucion.sede')?.valueChanges
-      .pipe(
+    this.form
+      .get('lugarEjecucion.sede')
+      ?.valueChanges.pipe(
         distinctUntilChanged(),
-        filter(sedeId => sedeId !== null && sedeId !== undefined)
+        filter((sedeId) => sedeId !== null && sedeId !== undefined)
       )
-      .subscribe(sedeId => {
+      .subscribe((sedeId) => {
         this.cargarDependencias(Number(sedeId), 'lugarEjecucion');
       });
   }
 
   private cargarSedes(): void {
     this.loading = true;
-    this.contratoGeneralMidService.getSedes()
-      .pipe(finalize(() => {
-        this.loading = false;
-        this.cdRef.detectChanges();
-      }))
+    this.contratoGeneralMidService
+      .getSedes()
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdRef.detectChanges();
+        })
+      )
       .subscribe({
         next: (sedes) => {
           this.sedes = sedes;
@@ -302,20 +323,24 @@ export class PasoSupervisoresComponent implements OnInit {
         },
         error: async (error) => {
           console.error('Error al cargar sedes:', error);
-          await Swal.fire({
-            icon: 'error',
-            title: 'Error al cargar sedes',
-            text: 'Ocurrió un error al cargar las sedes, por favor intenta más tarde.',
-          });
-        }
+          await this.alertService.showErrorAlert(
+            'Ocurrió un error al cargar las sedes, por favor intenta más tarde.',
+            'Error al cargar sedes'
+          );
+        },
       });
   }
 
-  private cargarDependencias(sedeId: number, tipo: 'solicitante' | 'supervisor' | 'lugarEjecucion', supervisorIndex?: number): void {
+  private cargarDependencias(
+    sedeId: number,
+    tipo: 'solicitante' | 'supervisor' | 'lugarEjecucion',
+    supervisorIndex?: number
+  ): void {
     if (!sedeId) return;
 
     this.loading = true;
-    this.contratoGeneralMidService.getDependenciasBySede(sedeId)
+    this.contratoGeneralMidService
+      .getDependenciasBySede(sedeId)
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -329,28 +354,37 @@ export class PasoSupervisoresComponent implements OnInit {
           switch (tipo) {
             case 'supervisor':
               if (supervisorIndex !== undefined) {
-                const supervisor = this.getSupervisoresFormArray().at(supervisorIndex);
-                supervisor.get('dependencia')?.setValue(null, { emitEvent: false });
+                const supervisor =
+                  this.getSupervisoresFormArray().at(supervisorIndex);
+                supervisor
+                  .get('dependencia')
+                  ?.setValue(null, { emitEvent: false });
               }
               break;
 
             case 'solicitante':
-              this.form.get('solicitante.dependencia')?.setValue(null, { emitEvent: false });
+              this.form
+                .get('solicitante.dependencia')
+                ?.setValue(null, { emitEvent: false });
               break;
 
             case 'lugarEjecucion':
-              this.form.get('lugarEjecucion.dependencia')?.setValue(null, { emitEvent: false });
+              this.form
+                .get('lugarEjecucion.dependencia')
+                ?.setValue(null, { emitEvent: false });
               break;
           }
         },
         error: async (error) => {
-          console.error(`Error al cargar dependencias para sede ${sedeId}:`, error);
-          await Swal.fire({
-            icon: 'error',
-            title: 'Error al cargar dependencias',
-            text: 'Ocurrió un error al cargar las dependencias, por favor intenta más tarde.',
-          });
-        }
+          console.error(
+            `Error al cargar dependencias para sede ${sedeId}:`,
+            error
+          );
+          await this.alertService.showErrorAlert(
+            'Ocurrió un error al cargar las dependencias, por favor intenta más tarde.',
+            'Error al cargar dependencias'
+          );
+        },
       });
   }
 
@@ -370,27 +404,41 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   CargarPais() {
-    this.ubicacionService.get('lugar?query=TipoLugarId:1&limit=0').subscribe((Response: any) => {
-      if (Response.length != 0) {
-        this.pais = Response;
-      }
-    });
+    this.ubicacionService
+      .get('lugar?query=TipoLugarId:1&limit=0')
+      .subscribe((Response: any) => {
+        if (Response.length != 0) {
+          this.pais = Response;
+        }
+      });
   }
 
   CargarDepartamento(id_pais: string) {
-    this.ubicacionService.get('relacion_lugares?query=LugarPadreId:' + id_pais + '&limit=0').subscribe((Response: any) => {
-      if (Response.length != 0) {
-        this.departamento = Response;
-      }
-    });
+    console.log('Cargando departamentos para país:', id_pais);
+    this.ubicacionService
+      .get('relacion_lugares?query=LugarPadreId:' + id_pais + '&limit=0')
+      .subscribe({
+        next: (Response: any) => {
+          console.log('Respuesta departamentos:', Response);
+          if (Response.length != 0) {
+            this.departamento = Response;
+            this.cdRef.detectChanges();
+          }
+        },
+        error: (error) => console.error('Error cargando departamentos:', error),
+      });
   }
 
   CargarCiudad(id_departamento: string) {
-    this.ubicacionService.get('relacion_lugares?query=LugarPadreId:' + id_departamento + '&limit=0').subscribe((Response: any) => {
-      if (Response.length != 0) {
-        this.municipioCiudad = Response;
-      }
-    });
+    this.ubicacionService
+      .get(
+        'relacion_lugares?query=LugarPadreId:' + id_departamento + '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.length != 0) {
+          this.municipioCiudad = Response;
+        }
+      });
   }
 
   async onInView(inView: boolean) {

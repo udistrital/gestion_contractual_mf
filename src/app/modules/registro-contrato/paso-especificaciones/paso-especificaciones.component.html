@@ -1,6 +1,12 @@
 <div class="border">
-  <div class="full-width-field">
-    <div class="title-box">Especificaciones Técnicas</div>
+  <div class="d-flex align-items-center fondo-acento-50 mb-4 mt-lg">
+    <div>
+      <mat-icon>settings</mat-icon>
+    </div>
+    <div class="mx-3">
+      <h2>Especificaciones Técnicas</h2>
+      Especificaciones Técnicas del contrato
+    </div>
   </div>
 
   <div class="btn-container">
@@ -71,8 +77,17 @@
 </div>
 
 <div class="btn-container">
-  <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
+  <button
+    mat-stroked-button
+    style="border: 1px solid var(--md-primary-500)"
+    color="primary"
+    matStepperPrevious
+  >
+    <mat-icon>arrow_back</mat-icon>
+    Volver
+  </button>
   <button mat-raised-button matStepperNext color="primary">
+    <mat-icon>save</mat-icon>
     Guardar y Continuar
   </button>
 </div>

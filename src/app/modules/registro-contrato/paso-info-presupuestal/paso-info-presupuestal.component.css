@@ -1,47 +1,90 @@
 .btn-container {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    gap: 10px;
-    margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 15px;
 }
 
 .form-grid2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    padding: 2%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 2%;
 }
 
 .form-grid3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    padding: 2%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 2%;
 }
 
 mat-table mat-cell,
 mat-table mat-header-cell {
-    border: 1px solid;
+  border: 1px solid;
 }
 
 mat-table {
-    padding-bottom: 2%;
+  padding-bottom: 2%;
 }
 
 .full-width-field {
-    width: 96%;
-    margin: 2%;
+  width: 96%;
+  margin: 2%;
 }
 
 .full-width {
-    width: 100%;
+  width: 100%;
 }
 
 .title-box {
-    background-color: rgb(100, 21, 21);
-    color: white;
-    padding: 8px;
-    margin-bottom: 8px;
-    border-radius: 4px;
+  background-color: var(--md-primary-500);
+  color: white;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.even-row {
+  background-color: #f4f4f4;
+}
+
+.mat-column-vigencia {
+  text-align: center;
+  font-size: 9.5pt;
+}
+
+.mat-column-solicitudNecesidad {
+  font-size: 9.5pt;
+}
+
+.mat-column-numeroCDP {
+  font-size: 9.5pt;
+}
+
+.mat-column-valor {
+  font-size: 9.5pt;
+}
+
+.mat-column-dependencia {
+  font-size: 9.5pt;
+}
+
+.mat-column-rubro {
+  font-size: 9.5pt;
+}
+
+.mat-column-estado {
+  font-size: 9.5pt;
+}
+
+.mat-column-acciones {
+  text-align: center;
+  font-size: 9.5pt;
+}
+
+::ng-deep .mat-cell {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
 }

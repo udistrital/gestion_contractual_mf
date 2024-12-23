@@ -15,23 +15,22 @@ import { FileService } from './services/file.service';
 import { UbicacionService } from './services/ubicacion.service';
 import { DocumentosService } from './services/documentos.service';
 import { QuillModule } from 'ngx-quill';
-import { InViewDirective } from './directives/InViewDirective';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
 import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
 
 @NgModule({
   declarations: [AppComponent],
   imports: [
-    RegistroContratoModule,
-    ConsultaContratoModule,
-    RevisionContratoModule,
-    BrowserModule,
-    BrowserAnimationsModule,
     AppRoutingModule,
+    BrowserAnimationsModule,
+    BrowserModule,
     CommonModule,
-    MatIconModule,
+    ConsultaContratoModule,
     HttpClientModule,
+    MatIconModule,
     MatSnackBarModule,
+    RegistroContratoModule,
+    RevisionContratoModule,
     QuillModule.forRoot(),
   ],
   providers: [

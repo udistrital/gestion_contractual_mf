@@ -1,0 +1,35 @@
+@import "quill/dist/quill.core.css";
+@import "quill/dist/quill.snow.css";
+
+.fondo-acento-50 {
+  background-color: var(--md-accent-50);
+  padding: 15px;
+  color: var(--md-accent-900);
+  border-radius: 10px;
+}
+
+@media (max-width: 992px) {
+  .mt-lg {
+    margin-top: 10px;
+  }
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rounded-table {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #bdbdbd;
+  border-radius: 4px;
+}

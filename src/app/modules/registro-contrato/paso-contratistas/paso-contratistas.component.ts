@@ -1,12 +1,25 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
-import { FormBuilder, Validators, FormGroup, ValidationErrors, AbstractControl } from '@angular/forms';
-import { ProveedoresService } from "../../../services/proveedores.service";
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  Output,
+  EventEmitter,
+} from '@angular/core';
+import {
+  FormBuilder,
+  Validators,
+  FormGroup,
+  ValidationErrors,
+  AbstractControl,
+} from '@angular/forms';
+import { ProveedoresService } from '../../../services/proveedores.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { environment } from 'src/environments/environment';
 import { ContratistaCRUD } from 'src/app/types/types';
+import { AlertService } from 'src/app/services/alert.service';
 
 export interface Proveedor {
   id_proveedor: string;
@@ -85,6 +98,16 @@ interface Contrato {
   estado_contrato: EstadoContrato;
 }
 
+interface ContratistaResponse {
+  id: string;
+  numero_documento: string;
+  tipo_persona_id: number;
+  activo: boolean;
+  fecha_creacion: string;
+  fecha_modificacion: string | null;
+  contrato_general_id: number;
+}
+
 @Component({
   selector: 'app-paso-contratistas',
   templateUrl: './paso-contratistas.component.html',
@@ -94,11 +117,11 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
+  private contratistaId: string | null = null;
   contratoGeneralId: number | null = null;
+
   form: FormGroup;
-  tiposContratista = [
-    { value: 'clase1', viewValue: 'Contratista Único' }
-  ];
+  tiposContratista = [{ value: 'clase1', viewValue: 'Contratista Único' }];
   datosContratista: DatosContratista | null = null;
 
   contratistaObject: ProveedorObject = {
@@ -109,7 +132,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     direccion: '',
     correo: '',
     contratos: [],
-    ultimoContrato: undefined
+    ultimoContrato: undefined,
   };
 
   mostrarConsulta = false;
@@ -120,35 +143,41 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
+    private alertService: AlertService,
     private fb: FormBuilder,
     private proveedoresService: ProveedoresService,
     private contratoGeneralCrudService: ContratoGeneralCrudService
   ) {
     this.form = this.fb.group({
       claseContratista: ['', Validators.required],
-      documentoContratista: ['', [Validators.required, Validators.minLength(5)]],
-      contratistaData: ['', [this.contratistaValidator()]]
+      documentoContratista: [
+        '',
+        [Validators.required, Validators.minLength(5)],
+      ],
+      contratistaData: ['', [this.contratistaValidator()]],
     });
   }
 
   ngOnInit() {
     this.cargarContratoGeneral();
-    this.form.get('claseContratista')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(value => {
-      this.mostrarConsulta = value === 'clase1';
-      if (!this.mostrarConsulta) {
-        this.form.get('documentoContratista')?.reset();
-        this.resetContratista();
-      }
-    });
+    this.cargarContratistaExistente();
+    this.form
+      .get('claseContratista')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        this.mostrarConsulta = value === 'clase1';
+        if (!this.mostrarConsulta) {
+          this.form.get('documentoContratista')?.reset();
+          this.resetContratista();
+        }
+      });
 
-    this.form.get('contratistaData')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.form.get('contratistaData')?.updateValueAndValidity();
-    });
-
+    this.form
+      .get('contratistaData')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.form.get('contratistaData')?.updateValueAndValidity();
+      });
   }
 
   ngOnDestroy() {
@@ -163,28 +192,32 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.success = false;
 
-      this.proveedoresService.get(`contratistas?id=${documentoContratista}`).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: (response: any) => {
-          this.loading = false;
-          if (response.Status === 200) {
-            this.datosContratista = response.Data;
-            this.actualizarObjetoContratista();
-            if (this.success) {
-              this.form.get('contratistaData')?.setValue(this.contratistaObject);
+      this.proveedoresService
+        .get(`contratistas?id=${documentoContratista}`)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response: any) => {
+            this.loading = false;
+            if (response.Status === 200) {
+              this.datosContratista = response.Data;
+              this.actualizarObjetoContratista();
+              if (this.success) {
+                this.form
+                  .get('contratistaData')
+                  ?.setValue(this.contratistaObject);
+              }
+            } else {
+              this.errorMessage = response.Message;
+              this.resetContratista();
             }
-          } else {
-            this.errorMessage = response.Message;
+          },
+          error: () => {
+            this.loading = false;
+            this.errorMessage =
+              'Error al buscar el contratista. Por favor, intente de nuevo.';
             this.resetContratista();
-          }
-        },
-        error: () => {
-          this.loading = false;
-          this.errorMessage = 'Error al buscar el contratista. Por favor, intente de nuevo.';
-          this.resetContratista();
-        }
-      });
+          },
+        });
     }
   }
 
@@ -207,15 +240,14 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
     if (tipoPersona === 'NATURAL' && contratosOrdenados.length > 0) {
       const ultimoContrato = contratosOrdenados[0];
-      const estadoContrato = ultimoContrato.estado_contrato.nombre.toUpperCase();
+      const estadoContrato =
+        ultimoContrato.estado_contrato.nombre.toUpperCase();
       const tipoContrato = ultimoContrato.tipo_contrato.nombre;
 
       if (estadoContrato === environment.ESTADO_CONTRATO_ENEJECUCION) {
-        Swal.fire({
-          icon: 'error',
-          title: '¡¡ERROR!!',
-          text: `El contratista seleccionado tiene un ${tipoContrato} en estado "${estadoContrato}" en el sistema`,
-        });
+        this.alertService.showErrorAlert(
+          `El contratista seleccionado tiene un ${tipoContrato} en estado "${estadoContrato}" en el sistema`
+        );
         this.resetContratista();
         this.success = false;
         return;
@@ -248,21 +280,21 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
       if (contratosOrdenados.length > 0) {
         const ultimoContrato = contratosOrdenados[0];
-        const estadoContrato = ultimoContrato.estado_contrato.nombre.toUpperCase();
+        const estadoContrato =
+          ultimoContrato.estado_contrato.nombre.toUpperCase();
         const tipoContrato = ultimoContrato.tipo_contrato.nombre;
         const estadosPermitidos = [
           environment.ESTADO_CONTRATO_SUSCRITO,
           environment.ESTADO_CONTRATO_PORSUSCRIBIR,
-          environment.ESTADO_CONTRATO_LEGALIZADO
+          environment.ESTADO_CONTRATO_LEGALIZADO,
         ];
 
         if (estadosPermitidos.includes(estadoContrato)) {
           const mensajeContrato = `${tipoContrato} en estado "${estadoContrato}"`;
-          Swal.fire({
-            icon: 'warning',
-            title: `El contratista seleccionado tiene un ${mensajeContrato} en el sistema`,
-            text: 'Por favor verifique la información antes de continuar con el registro',
-          });
+          this.alertService.showAlert(
+            'Por favor verifique la información antes de continuar con el registro',
+            `El contratista seleccionado tiene un ${mensajeContrato} en el sistema`
+          );
         }
       }
     }
@@ -276,19 +308,21 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       persona.primer_nombre,
       persona.segundo_nombre,
       persona.primer_apellido,
-      persona.segundo_apellido
-    ].filter(Boolean).join(' ');
+      persona.segundo_apellido,
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   private resetContratista() {
     this.datosContratista = null;
     this.contratistaObject = {
-      correo: "",
+      correo: '',
       tipo: '',
       nombre: '',
       documento: '',
       ciudad_contacto: '',
-      direccion: ''
+      direccion: '',
     };
     this.success = false;
   }
@@ -296,7 +330,10 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   private contratistaValidator() {
     return (control: AbstractControl): ValidationErrors | null => {
       const contratistaObject = control.value as ProveedorObject;
-      if (!contratistaObject || Object.values(contratistaObject).every(val => val === '')) {
+      if (
+        !contratistaObject ||
+        Object.values(contratistaObject).every((val) => val === '')
+      ) {
         return { emptyContratista: true };
       }
       return null;
@@ -306,66 +343,107 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   private async cargarContratoGeneral() {
     const infoGeneral = localStorage.getItem('paso-info-general');
     if (!infoGeneral) {
-      console.error('Paso Contratistas: No se ha encontrado información general del contrato');
+      console.error(
+        'Paso Contratistas: No se ha encontrado información general del contrato'
+      );
       return;
     }
     try {
       const contratoGeneral = JSON.parse(infoGeneral);
       this.contratoGeneralId = contratoGeneral.id;
     } catch (error) {
-      console.error('Error loading contrato general:', error);
-      await Swal.fire({
-        title: 'Error',
-        text: 'No se ha encontrado información general del contrato. PC2',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
+      this.alertService.showErrorAlert(
+        'No se ha encontrado información general del contrato. PC2'
+      );
     }
+  }
+
+  private async cargarContratistaExistente() {
+    if (!this.contratoGeneralId) return;
+
+    this.loading = true;
+    this.contratoGeneralCrudService
+      .getContratista(this.contratoGeneralId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: ContratistaResponse) => {
+          if (response) {
+            this.contratistaId = response.id;
+
+            this.form.patchValue({
+              claseContratista: 'clase1',
+              documentoContratista: response.numero_documento,
+            });
+            this.buscarContratista();
+          }
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar contratista:', error);
+          this.loading = false;
+        },
+      });
   }
 
   guardarYContinuar(): void {
     if (!this.form.valid || !this.datosContratista) {
       return;
     }
+
     const datosContratista: ContratistaCRUD = {
-      numero_documento: this.datosContratista!.proveedor.numero_documento,
+      numero_documento: this.datosContratista.proveedor.numero_documento,
       tipo_persona_id: 1,
-      contrato_general_id: this.contratoGeneralId!
+      contrato_general_id: this.contratoGeneralId!,
     };
 
-    this.contratoGeneralCrudService.postContratista(datosContratista)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: any) => {
-          console.log(response.Status);
-          if (response.Status === 201) {
-            Swal.fire({
-              icon: 'success',
-              title: '¡Éxito!',
-              text: response.Message || 'El contratista ha sido guardado correctamente',
-              confirmButtonText: 'Aceptar'
-            }).then(() => {
-              this.nextStep.emit();
-            });
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: response.Message || 'No se pudo completar el registro del contratista',
-              confirmButtonText: 'Aceptar'
-            });
-          }
-        },
-        error: (error) => {
-          console.error('Error al guardar contratista:', error);
+    if (this.contratistaId) {
+      datosContratista.id = this.contratistaId;
+    }
+
+    const request$ = this.contratistaId
+      ? this.contratoGeneralCrudService.putContratista(datosContratista)
+      : this.contratoGeneralCrudService.postContratista(datosContratista);
+
+    request$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (response: any) => {
+        const successStatus = this.contratistaId ? 200 : 201;
+        if (response.Status === successStatus) {
           Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.Message || 'Ha ocurrido un error al guardar el contratista. Por favor, intente nuevamente.',
-            confirmButtonText: 'Aceptar'
+            icon: 'success',
+            title: '¡Éxito!',
+            text:
+              response.Message ||
+              `El contratista ha sido ${
+                this.contratistaId ? 'actualizado' : 'guardado'
+              } correctamente`,
+            confirmButtonText: 'Aceptar',
+          }).then(() => {
+            this.nextStep.emit();
           });
+        } else {
+          this.alertService.showErrorAlert(
+            response.Message ||
+              `No se pudo ${
+                this.contratistaId ? 'actualizar' : 'completar el registro del'
+              } contratista`
+          );
         }
-      });
+      },
+      error: (error) => {
+        console.error(
+          `Error al ${
+            this.contratistaId ? 'actualizar' : 'guardar'
+          } contratista:`,
+          error
+        );
+        this.alertService.showErrorAlert(
+          error.Message ||
+            `Ha ocurrido un error al ${
+              this.contratistaId ? 'actualizar' : 'guardar'
+            } el contratista. Por favor, intente nuevamente.`
+        );
+      },
+    });
   }
 
   resetComponent() {
@@ -375,6 +453,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.success = false;
     this.loading = false;
+    this.contratistaId = null;
   }
 
   onStepLeave() {

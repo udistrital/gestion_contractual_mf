@@ -21,10 +21,10 @@ import { PasoEspecificacionesComponent } from './paso-especificaciones/paso-espe
 import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos/paso-clausulas-paragrafos.component';
 import { PasoDocumentosComponent } from './paso-documentos/paso-documentos.component';
 
-import {MatMenuModule} from '@angular/material/menu';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { GuardarInfoComponent } from './guardar-info/guardar-info.component';
 import { RegistroContratoComponent } from './registro-contrato.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -34,20 +34,22 @@ import { UbicacionService } from 'src/app/services/ubicacion.service';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { HttpClientModule } from '@angular/common/http';
 import { ParagrafoDialogComponent } from './paragrafo-dialog/paragrafo-dialog.component';
-import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.component';
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {PdfViewerModule} from "ng2-pdf-viewer";
-import {EditorEnriquecidoComponent} from "../../components/editor-enriquecido/editor-enriquecido..component";
-import {InViewDirective} from "../../directives/InViewDirective";
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { PdfViewerModule } from 'ng2-pdf-viewer';
+import { EditorEnriquecidoComponent } from '../../components/editor-enriquecido/editor-enriquecido..component';
+import { InViewDirective } from '../../directives/InViewDirective';
 import {
   MatAccordion,
   MatExpansionPanel,
   MatExpansionPanelDescription,
-  MatExpansionPanelTitle
-} from "@angular/material/expansion";
-import {CDPListComponent} from "../../components/cdp-lista/cdp-lista";
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import { CDPListComponent } from '../../components/cdp-lista/cdp-lista';
 import { ModalEspecificacionComponent } from './paso-especificaciones/modal-especificacion/modal-especificacion.component';
+import { SearchableSelectComponent } from '../../components/searchable-select/searchable-select.component';
+import { SharedModule } from 'src/app/shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -65,7 +67,7 @@ import { ModalEspecificacionComponent } from './paso-especificaciones/modal-espe
     ParagrafoDialogComponent,
     PasoDocumentosComponent,
     PdfViewerModalComponent,
-    InViewDirective
+    InViewDirective,
   ],
   imports: [
     CommonModule,
@@ -96,7 +98,9 @@ import { ModalEspecificacionComponent } from './paso-especificaciones/modal-espe
     MatExpansionPanel,
     MatExpansionPanelTitle,
     MatExpansionPanelDescription,
-    CDPListComponent
+    CDPListComponent,
+    SearchableSelectComponent,
+    SharedModule,
   ],
   exports: [
     PasoInfoGeneralComponent,
@@ -107,12 +111,8 @@ import { ModalEspecificacionComponent } from './paso-especificaciones/modal-espe
     PasoEspecificacionesComponent,
     PasoGarantiasComponent,
     PasoClausulasParagrafosComponent,
-    PasoDocumentosComponent
+    PasoDocumentosComponent,
   ],
-  providers: [
-    ParametrosService,
-    UbicacionService,
-    RequestManager
-  ]
+  providers: [ParametrosService, UbicacionService, RequestManager],
 })
-export class RegistroContratoModule { }
+export class RegistroContratoModule {}

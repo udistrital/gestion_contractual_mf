@@ -1,224 +1,318 @@
 <div appInView (inView)="onInView($event)">
-<form [formGroup]="form">
-  <!-- Información del Solicitante -->
-  <div class="border" formGroupName="solicitante">
-    <div class="title">
-      <h3>Información del Solicitante</h3>
-    </div>
-    <div class="form-grid2">
-      <mat-form-field>
-        <mat-label>Sede:</mat-label>
-        <mat-select formControlName="sede">
-          <mat-option *ngFor="let sede of sedes" [value]="sede.Id">
-            {{sede.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('solicitante.sede')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Dependencia:</mat-label>
-        <mat-select formControlName="dependencia"
-                    [disabled]="!form.get('solicitante.sede')?.value">
-          <mat-option *ngFor="let dep of getDependenciasSolicitante()"
-                      [value]="dep.id">
-            {{dep.nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('solicitante.dependencia')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-    </div>
-    <div class="btn-container">
-      <button mat-raised-button color="primary"
-              (click)="guardarSolicitante()"
-              [disabled]="form.get('solicitante')?.invalid || loading">
-        <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-        <span>Guardar Solicitante</span>
-      </button>
-      <mat-icon class="success-icon" *ngIf="solicitanteSaved">check_circle</mat-icon>
-    </div>
-  </div>
-
-  <!-- Datos del Supervisor -->
-  <div class="border">
-    <div class="title">
-      <h3>Datos del Supervisor</h3>
-    </div>
-    <div formArrayName="supervisores">
-      <div *ngFor="let supervisorGroup of getSupervisoresFormArray().controls; let i = index"
-           [formGroupName]="i">
-        <h4>Supervisor {{i + 1}}</h4>
-        <div class="form-grid2">
-          <mat-form-field>
-            <mat-label>Sede:</mat-label>
-            <mat-select formControlName="sede">
-              <mat-option *ngFor="let sede of sedes" [value]="sede.Id">
-                {{sede.Nombre}}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="supervisorGroup.get('sede')?.hasError('required')">
-              Este campo es requerido
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Dependencia:</mat-label>
-            <mat-select formControlName="dependencia"
-                        [disabled]="!supervisorGroup.get('sede')?.value">
-              <mat-option *ngFor="let dep of getDependenciasSupervisor(i)"
-                          [value]="dep.id">
-                {{dep.nombre}}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="supervisorGroup.get('dependencia')?.hasError('required')">
-              Este campo es requerido
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Supervisor:</mat-label>
-            <input matInput formControlName="nombre">
-            <mat-error *ngIf="supervisorGroup.get('nombre')?.hasError('required')">
-              Este campo es requerido
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Cargo:</mat-label>
-            <input matInput formControlName="cargo">
-            <mat-error *ngIf="supervisorGroup.get('cargo')?.hasError('required')">
-              Este campo es requerido
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Tipo de Control:</mat-label>
-            <mat-select formControlName="tipoControl">
-              <mat-option value="tecnico">Técnico</mat-option>
-              <mat-option value="administrativo">Administrativo</mat-option>
-              <mat-option value="financiero">Financiero</mat-option>
-            </mat-select>
-            <mat-error *ngIf="supervisorGroup.get('tipoControl')?.hasError('required')">
-              Este campo es requerido
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Código de Verificación:</mat-label>
-            <input matInput formControlName="codigoVerificacion">
-            <mat-error *ngIf="supervisorGroup.get('codigoVerificacion')?.hasError('required')">
-              Este campo es requerido
-            </mat-error>
-          </mat-form-field>
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex align-items-center fondo-acento-50 mb-4 mt-lg">
+        <div>
+          <mat-icon>group</mat-icon>
         </div>
-        <div class="btn-container">
-          <button mat-icon-button color="warn"
-                  (click)="eliminarSupervisor(i)"
-                  [disabled]="getSupervisoresFormArray().length === 1">
-            <mat-icon>delete</mat-icon>
-          </button>
+        <div class="mx-3">
+          <h2>Solicitante y Supervisor</h2>
+          Información de responsables
         </div>
       </div>
-    </div>
-    <div class="btn-container">
-      <button mat-raised-button color="primary" (click)="agregarSupervisor()">
-        <mat-icon>add</mat-icon>
-        Agregar Supervisor
-      </button>
-    </div>
-  </div>
+      <form [formGroup]="form">
+        <!-- Información del Solicitante -->
+        <div class="border" formGroupName="solicitante">
+          <div class="title">
+            <h3>Información del Solicitante</h3>
+          </div>
+          <div class="form-grid2">
+            <mat-form-field appearance="outline">
+              <mat-label>Sede:</mat-label>
+              <mat-icon matPrefix>location_city</mat-icon>
+              <mat-select formControlName="sede">
+                <mat-option *ngFor="let sede of sedes" [value]="sede.Id">
+                  {{ sede.Nombre }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="form.get('solicitante.sede')?.hasError('required')"
+              >
+                Este campo es requerido
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Dependencia:</mat-label>
+              <mat-icon matPrefix>account_balance</mat-icon>
+              <mat-select
+                formControlName="dependencia"
+                [disabled]="!form.get('solicitante.sede')?.value"
+              >
+                <mat-option
+                  *ngFor="let dep of getDependenciasSolicitante()"
+                  [value]="dep.id"
+                >
+                  {{ dep.nombre }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="
+                  form.get('solicitante.dependencia')?.hasError('required')
+                "
+              >
+                Este campo es requerido
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="btn-container">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="guardarSolicitante()"
+              [disabled]="form.get('solicitante')?.invalid || loading"
+            >
+              <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+              <span>Guardar Solicitante</span>
+            </button>
+            <mat-icon class="success-icon" *ngIf="solicitanteSaved"
+              >check_circle</mat-icon
+            >
+          </div>
+        </div>
 
-  <!-- Lugar de Ejecución -->
-  <div class="border" formGroupName="lugarEjecucion">
-    <div class="title">
-      <h3>Lugar de Ejecución</h3>
-    </div>
-    <div class="form-grid3">
-      <mat-form-field>
-        <mat-label>País:</mat-label>
-        <mat-select formControlName="pais">
-          <mat-option *ngFor="let pais of pais" [value]="pais.Id">
-            {{pais.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.pais')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Departamento:</mat-label>
-        <mat-select formControlName="departamento">
-          <mat-option *ngFor="let departamento of departamento"
-                      [value]="departamento.LugarHijoId.Id">
-            {{departamento.LugarHijoId.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.departamento')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Municipio/Ciudad:</mat-label>
-        <mat-select formControlName="municipioCiudad">
-          <mat-option *ngFor="let municipio of municipioCiudad"
-                      [value]="municipio.LugarHijoId.Id">
-            {{municipio.LugarHijoId.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.municipioCiudad')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Sede:</mat-label>
-        <mat-select formControlName="sede">
-          <mat-option *ngFor="let sede of sedes" [value]="sede.Id">
-            {{sede.Nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.sede')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Dependencia:</mat-label>
-        <mat-select formControlName="dependencia"
-                    [disabled]="!form.get('lugarEjecucion.sede')?.value">
-          <mat-option *ngFor="let dep of getDependenciasLugarEjecucion()"
-                      [value]="dep.id">
-            {{dep.nombre}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lugarEjecucion.dependencia')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Dirección:</mat-label>
-        <input matInput formControlName="direccion">
-        <mat-error *ngIf="form.get('lugarEjecucion.direccion')?.hasError('required')">
-          Este campo es requerido
-        </mat-error>
-      </mat-form-field>
-    </div>
-    <div class="btn-container">
-      <button mat-raised-button color="primary"
+        <!-- Datos del Supervisor -->
+        <div class="border">
+          <div class="title">
+            <h3>Datos del Supervisor</h3>
+          </div>
+          <div formArrayName="supervisores">
+            <div
+              *ngFor="
+                let supervisorGroup of getSupervisoresFormArray().controls;
+                let i = index
+              "
+              [formGroupName]="i"
+            >
+              <h4>Supervisor {{ i + 1 }}</h4>
+              <div class="form-grid2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Sede:</mat-label>
+                  <mat-icon matPrefix>location_city</mat-icon>
+                  <mat-select formControlName="sede">
+                    <mat-option *ngFor="let sede of sedes" [value]="sede.Id">
+                      {{ sede.Nombre }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="supervisorGroup.get('sede')?.hasError('required')"
+                  >
+                    Este campo es requerido
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Dependencia:</mat-label>
+                  <mat-icon matPrefix>account_balance</mat-icon>
+                  <mat-select
+                    formControlName="dependencia"
+                    [disabled]="!supervisorGroup.get('sede')?.value"
+                  >
+                    <mat-option
+                      *ngFor="let dep of getDependenciasSupervisor(i)"
+                      [value]="dep.id"
+                    >
+                      {{ dep.nombre }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="
+                      supervisorGroup.get('dependencia')?.hasError('required')
+                    "
+                  >
+                    Este campo es requerido
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Supervisor:</mat-label>
+                  <mat-icon matPrefix>person</mat-icon>
+                  <input matInput formControlName="nombre" />
+                  <mat-error
+                    *ngIf="supervisorGroup.get('nombre')?.hasError('required')"
+                  >
+                    Este campo es requerido
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Cargo:</mat-label>
+                  <mat-icon matPrefix>work</mat-icon>
+                  <input matInput formControlName="cargo" />
+                  <mat-error
+                    *ngIf="supervisorGroup.get('cargo')?.hasError('required')"
+                  >
+                    Este campo es requerido
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Tipo de Control:</mat-label>
+                  <mat-icon matPrefix>settings</mat-icon>
+                  <mat-select formControlName="tipoControl">
+                    <mat-option value="tecnico">Técnico</mat-option>
+                    <mat-option value="administrativo"
+                      >Administrativo</mat-option
+                    >
+                    <mat-option value="financiero">Financiero</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="
+                      supervisorGroup.get('tipoControl')?.hasError('required')
+                    "
+                  >
+                    Este campo es requerido
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Código de Verificación:</mat-label>
+                  <mat-icon matPrefix>verified</mat-icon>
+                  <input matInput formControlName="codigoVerificacion" />
+                  <mat-error
+                    *ngIf="
+                      supervisorGroup
+                        .get('codigoVerificacion')
+                        ?.hasError('required')
+                    "
+                  >
+                    Este campo es requerido
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div class="btn-container">
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="eliminarSupervisor(i)"
+                  [disabled]="getSupervisoresFormArray().length === 1"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="btn-container">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="agregarSupervisor()"
+            >
+              <mat-icon>add</mat-icon>
+              Agregar Supervisor
+            </button>
+          </div>
+        </div>
+
+        <!-- Lugar de Ejecución -->
+        <div class="border" formGroupName="lugarEjecucion">
+          <div class="title">
+            <h3>Lugar de Ejecución</h3>
+          </div>
+          <div class="form-grid3">
+            <app-searchable-select
+              icon="public"
+              label="País"
+              [items]="pais"
+              [control]="form.get('lugarEjecucion.pais')"
+              [required]="true"
+            >
+            </app-searchable-select>
+
+            <app-searchable-select
+              label="Departamento"
+              icon="map"
+              [items]="departamento"
+              [control]="form.get('lugarEjecucion.departamento')"
+              [required]="true"
+            >
+            </app-searchable-select>
+
+            <app-searchable-select
+              label="Municipio/Ciudad"
+              icon="location_city"
+              [items]="municipioCiudad"
+              [control]="form.get('lugarEjecucion.municipioCiudad')"
+              [required]="true"
+            >
+            </app-searchable-select>
+
+            <app-searchable-select
+              icon="domain"
+              label="Sede"
+              [items]="sedes"
+              [control]="form.get('lugarEjecucion.sede')"
+              [required]="true"
+            >
+            </app-searchable-select>
+            <mat-form-field appearance="outline">
+              <mat-label>Dependencia:</mat-label>
+              <mat-icon matPrefix>account_balance</mat-icon>
+              <mat-select
+                formControlName="dependencia"
+                [disabled]="!form.get('lugarEjecucion.sede')?.value"
+              >
+                <mat-option
+                  *ngFor="let dep of getDependenciasLugarEjecucion()"
+                  [value]="dep.id"
+                >
+                  {{ dep.nombre }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="
+                  form.get('lugarEjecucion.dependencia')?.hasError('required')
+                "
+              >
+                Este campo es requerido
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Dirección:</mat-label>
+              <mat-icon matPrefix>home</mat-icon>
+              <input matInput formControlName="direccion" />
+              <mat-error
+                *ngIf="
+                  form.get('lugarEjecucion.direccion')?.hasError('required')
+                "
+              >
+                Este campo es requerido
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="btn-container">
+            <button
+              mat-raised-button
+              color="primary"
               (click)="guardarLugarEjecucion()"
-              [disabled]="form.get('lugarEjecucion')?.invalid || loading">
-        <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-        <span>Guardar Lugar de Ejecución</span>
-      </button>
-      <mat-icon class="success-icon" *ngIf="lugarEjecucionSaved">check_circle</mat-icon>
+              [disabled]="form.get('lugarEjecucion')?.invalid || loading"
+            >
+              <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+              <span>Guardar Lugar de Ejecución</span>
+            </button>
+            <mat-icon class="success-icon" *ngIf="lugarEjecucionSaved"
+              >check_circle</mat-icon
+            >
+          </div>
+        </div>
+
+        <!-- Botones de navegación -->
+        <div class="btn-container">
+          <button
+            mat-stroked-button
+            style="border: 1px solid var(--md-primary-500)"
+            color="primary"
+            matStepperPrevious
+          >
+            <mat-icon>arrow_back</mat-icon>
+            Volver
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="guardarYContinuar()"
+            [disabled]="!solicitanteSaved || !lugarEjecucionSaved || loading"
+          >
+            <mat-icon>save</mat-icon>
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <span>Guardar y Continuar</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
-
-  <!-- Botones de navegación -->
-  <div class="btn-container">
-    <button mat-raised-button matStepperPrevious color="primary">Atrás</button>
-    <button mat-raised-button color="primary"
-            (click)="guardarYContinuar()"
-            [disabled]="!solicitanteSaved || !lugarEjecucionSaved || loading">
-      <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-      <span>Guardar y Continuar</span>
-    </button>
-  </div>
-</form>
 </div>
