@@ -1,12 +1,27 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import {ParametrosService, sortParametros} from 'src/app/services/parametros.service';
+import {
+  ParametrosService,
+  sortParametros,
+} from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
-import { ApiResponse, EstadoContrato, ParametroResponse } from "src/app/types/types";
 import { RolService } from "src/app/services/rol.service";
+import { AlertService } from 'src/app/services/alert.service';
+import {
+  ApiResponse,
+  EstadoContrato,
+  ParametroResponse,
+} from 'src/app/types/types';
+
 
 interface Parametro {
   Id: number | string;
@@ -40,14 +55,14 @@ export class PasoInfoGeneralComponent implements OnInit {
   private formSaved: boolean = false;
 
   constructor(
+    private alertService: AlertService,
     private fb: FormBuilder,
     private rolService: RolService,
     private parametrosService: ParametrosService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private cdRef: ChangeDetectorRef
-  ) {
-  }
+  ) {}
 
   formInfoGeneral = this.fb.group({
     tipoCompromisoId: ['', Validators.required],
@@ -67,24 +82,24 @@ export class PasoInfoGeneralComponent implements OnInit {
   });
 
   //Parametros (Opciones)
-  tipoCompromisos: ParametroResponse[] = [];
-  tipoContratos: ParametroResponse[] = [];
-  modalidadSeleccion: ParametroResponse[] = [];
-  tipologiaEspecifica: ParametroResponse[] = [];
-  regimenContratacion: ParametroResponse[] = [];
-  procedimiento: ParametroResponse[] = [];
-  unidadEjecucion: ParametroResponse[] = [];
+  tiposCompromisos: ParametroResponse[] = [];
+  tiposContratos: ParametroResponse[] = [];
+  modalidadesSeleccion: ParametroResponse[] = [];
+  tipologiasEspecificas: ParametroResponse[] = [];
+  regimenesContratacion: ParametroResponse[] = [];
+  procedimientos: ParametroResponse[] = [];
+  unidadesEjecucion: ParametroResponse[] = [];
   // orden-contrato
-  perfilContratista: ParametroResponse[] = [];
+  perfilesContratista: ParametroResponse[] = [];
 
   aplicaPoliza: { value: string; viewValue: string }[] = [
-    {value: '0', viewValue: 'No'},
-    {value: '1', viewValue: 'Si'},
+    { value: '0', viewValue: 'No' },
+    { value: '1', viewValue: 'Si' },
   ];
 
   // convenio
-  vigenciaConvenio: ParametroResponse[] = [];
-  convenio: ParametroResponse[] = [];
+  vigenciasConvenio: ParametroResponse[] = [];
+  convenios: ParametroResponse[] = [];
 
   //Estado
   estado_id: number | null = null;
@@ -96,7 +111,6 @@ export class PasoInfoGeneralComponent implements OnInit {
       this.formInfoGeneral.disable();
       this.loadInfoDataMid();
     } else {
-
       this.loadInitialData();
       this.setuptipoCompromisoId();
       this.setuptipoContratoId();
@@ -113,70 +127,79 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   private setuptipoCompromisoId() {
-    this.formInfoGeneral.get('tipoCompromisoId')?.valueChanges.subscribe((id_compromiso) => {
-      if (id_compromiso) {
-        //Emite el evento para que el padre sepa que se seleccionó un tipo de compromiso
-        this.tipoCompromisoChange.emit(id_compromiso.toString());
-
-        this.CargartipoContratoIds(id_compromiso);
-        this.showFieldsBasedOnCompromiso(id_compromiso);
+    this.formInfoGeneral
+      .get('tipoCompromisoId')
+      ?.valueChanges.subscribe((id_compromiso) => {
         if (id_compromiso) {
-          this.CargartipologiaEspecificaId(id_compromiso);
+          //Emite el evento para que el padre sepa que se seleccionó un tipo de compromiso
+          this.tipoCompromisoChange.emit(id_compromiso.toString());
 
-          const idCompromisoStr = id_compromiso.toString();
-          const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
+          this.CargartipoContratoIds(id_compromiso);
+          this.showFieldsBasedOnCompromiso(id_compromiso);
+          if (id_compromiso) {
+            this.CargartipologiaEspecificaId(id_compromiso);
 
-          const perfilCompromisoControl = this.formInfoGeneral.get('aplicaPoliza');
-          if (idCompromisoStr === perfilCompromisoIdStr) {
-            perfilCompromisoControl?.setValidators(Validators.required);
-            perfilCompromisoControl?.enable();
-          } else {
-            perfilCompromisoControl?.clearValidators();
-            perfilCompromisoControl?.disable();
+            const idCompromisoStr = id_compromiso.toString();
+            const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
+
+            const perfilCompromisoControl =
+              this.formInfoGeneral.get('aplicaPoliza');
+            if (idCompromisoStr === perfilCompromisoIdStr) {
+              perfilCompromisoControl?.setValidators(Validators.required);
+              perfilCompromisoControl?.enable();
+            } else {
+              perfilCompromisoControl?.clearValidators();
+              perfilCompromisoControl?.disable();
+            }
+            perfilCompromisoControl?.updateValueAndValidity();
+
+            this.cdRef.detectChanges();
           }
-          perfilCompromisoControl?.updateValueAndValidity();
-
-          this.cdRef.detectChanges();
         }
-      }
-    });
+      });
   }
 
   private setuptipoContratoId() {
-    this.formInfoGeneral.get('tipoContratoId')?.valueChanges.subscribe((id_contrato) => {
-      if (id_contrato) {
-        this.CargartipologiaEspecificaId(id_contrato);
+    this.formInfoGeneral
+      .get('tipoContratoId')
+      ?.valueChanges.subscribe((id_contrato) => {
+        if (id_contrato) {
+          this.CargartipologiaEspecificaId(id_contrato);
 
-        const idContratoStr = id_contrato.toString();
-        const tipoContratoIdIdStr = environment.CONTRATO_PSPAG_ID.toString();
+          const idContratoStr = id_contrato.toString();
+          const tipoContratoIdIdStr = environment.CONTRATO_PSPAG_ID.toString();
 
-        const perfilContratistaControl = this.formInfoGeneral.get('perfilContratistaId');
-        const fechaSuscripcionControl = this.formInfoGeneral.get('fechaSuscripcionEstudios');
+          const perfilContratistaControl = this.formInfoGeneral.get(
+            'perfilContratistaId'
+          );
+          const fechaSuscripcionControl = this.formInfoGeneral.get(
+            'fechaSuscripcionEstudios'
+          );
 
-        if (idContratoStr === tipoContratoIdIdStr) {
-          this.CargarPerfilContratista(id_contrato);
-          perfilContratistaControl?.setValidators(Validators.required);
-          perfilContratistaControl?.enable();
+          if (idContratoStr === tipoContratoIdIdStr) {
+            this.CargarPerfilContratista(id_contrato);
+            perfilContratistaControl?.setValidators(Validators.required);
+            perfilContratistaControl?.enable();
 
-          fechaSuscripcionControl?.setValidators(Validators.required);
-          fechaSuscripcionControl?.enable();
-        } else {
-          perfilContratistaControl?.clearValidators();
-          perfilContratistaControl?.disable();
+            fechaSuscripcionControl?.setValidators(Validators.required);
+            fechaSuscripcionControl?.enable();
+          } else {
+            perfilContratistaControl?.clearValidators();
+            perfilContratistaControl?.disable();
 
-          fechaSuscripcionControl?.clearValidators();
-          fechaSuscripcionControl?.disable();
+            fechaSuscripcionControl?.clearValidators();
+            fechaSuscripcionControl?.disable();
+          }
+          perfilContratistaControl?.updateValueAndValidity();
+
+          this.cdRef.detectChanges();
         }
-        perfilContratistaControl?.updateValueAndValidity();
-
-        this.cdRef.detectChanges();
-      }
-    });
+      });
   }
 
   private loadSavedData(): void {
     console.log('Loading info general data data...');
-    try{
+    try {
       this.isLoading = true;
       const savedForm = localStorage.getItem('paso-info-general');
       if (savedForm) {
@@ -201,125 +224,170 @@ export class PasoInfoGeneralComponent implements OnInit {
       this.CargarmodalidadSeleccionId(),
       this.CargarregimenContratacionId(),
       this.CargarprocedimientoId(),
-      this.CargarunidadEjecutoraId()
-    ]).then(() => {
-      this.isLoading = false;
-      this.loadedData = true;
-      this.cdRef.detectChanges();
-    }).catch(this.handleError);
+      this.CargarunidadEjecutoraId(),
+    ])
+      .then(() => {
+        this.isLoading = false;
+        this.loadedData = true;
+        this.cdRef.detectChanges();
+      })
+      .catch(this.handleError);
   }
 
   //Generales
 
   CargarEstado() {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('parametro/' + environment.ESTADOS_GENERALES.POR_SUSCRIBIR).subscribe({
-        next: (Response: any) => {
-          if (Response.Status == "200") {
-            this.estado_id = Response.Data.Id;
-            resolve(true);
-          } else {
-            reject('Error en la respuesta del servidor');
-          }
-        },
-        error: (error) => {
-          reject(error);
-        }
-      });
+      this.parametrosService
+        .get('parametro/' + environment.ESTADOS_GENERALES.POR_SUSCRIBIR)
+        .subscribe({
+          next: (Response: any) => {
+            if (Response.Status == '200') {
+              this.estado_id = Response.Data.Id;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
     });
   }
 
   CargarEstadoInterno() {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('parametro/' + environment.ESTADOS_INTERNOS.BORRADOR).subscribe({
-        next: (Response: any) => {
-          if (Response.Status == "200") {
-            this.estado_interno_id = Response.Data.Id;
-            resolve(true);
-          } else {
-            reject('Error en la respuesta del servidor');
-          }
-        },
-        error: (error) => {
-          reject(error);
-        }
-      });
+      this.parametrosService
+        .get('parametro/' + environment.ESTADOS_INTERNOS.BORRADOR)
+        .subscribe({
+          next: (Response: any) => {
+            if (Response.Status == '200') {
+              this.estado_interno_id = Response.Data.Id;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
     });
   }
 
-
   CargarCompromisos() {
     return new Promise((resolve, reject) => {
-      this.parametrosService.get('parametro?query=TipoParametroId:' + environment.TIPO_COMPROMISO_ID + '&limit=0').subscribe({
-        next: (Response: any) => {
-          if (Response.Status == "200") {
-            this.tipoCompromisos = sortParametros(Response.Data);
-            resolve(true);
-          } else {
-            reject('Error en la respuesta del servidor');
-          }
-        },
-        error: (error) => {
-          reject(error);
-        }
-      });
+      this.parametrosService
+        .get(
+          'parametro?query=TipoParametroId:' +
+            environment.TIPO_COMPROMISO_ID +
+            '&limit=0'
+        )
+        .subscribe({
+          next: (Response: any) => {
+            if (Response.Status == '200') {
+              this.tiposCompromisos = sortParametros(Response.Data);
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
     });
   }
 
   setupAplicaPoliza() {
-    this.formInfoGeneral.get('aplicaPoliza')?.valueChanges.subscribe((value) => {
-      if (value) {
-        this.aplicaPolizaChange.emit(value.toString());
-      }
-    });
+    this.formInfoGeneral
+      .get('aplicaPoliza')
+      ?.valueChanges.subscribe((value) => {
+        if (value) {
+          this.aplicaPolizaChange.emit(value.toString());
+        }
+      });
   }
 
   CargarmodalidadSeleccionId() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.MODALIDAD_SELECCION_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.modalidadSeleccion = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=TipoParametroId:' +
+          environment.MODALIDAD_SELECCION_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.modalidadesSeleccion = sortParametros(Response.Data);
+        }
+      });
   }
 
   CargarregimenContratacionId() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.REGIMEN_CONTRATACION_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.regimenContratacion = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=TipoParametroId:' +
+          environment.REGIMEN_CONTRATACION_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.regimenesContratacion = sortParametros(Response.Data);
+        }
+      });
   }
 
   CargarprocedimientoId() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.PROCEDIMIENTO_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.procedimiento = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=TipoParametroId:' +
+          environment.PROCEDIMIENTO_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.procedimientos = Response.Data;
+          this.procedimientos = sortParametros(this.procedimientos);
+        }
+      });
   }
 
   CargarunidadEjecutoraId() {
-    this.parametrosService.get('parametro?query=TipoParametroId:' + environment.UNIDAD_EJECUCION_ID + ',Id__in:166|180|181&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.unidadEjecucion = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=TipoParametroId:' +
+          environment.UNIDAD_EJECUCION_ID +
+          ',Id__in:166|180|181&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.unidadesEjecucion = Response.Data;
+        }
+      });
   }
 
   //Especificos
   showFieldsBasedOnCompromiso(id_compromiso: string) {
     const idCompromisoStr = id_compromiso.toString();
 
-    this.showContratoFields = idCompromisoStr === environment.CONTRATO_ID || idCompromisoStr === environment.ORDEN_ID;
+    this.showContratoFields =
+      idCompromisoStr === environment.CONTRATO_ID ||
+      idCompromisoStr === environment.ORDEN_ID;
     this.showConvenioFields = idCompromisoStr === environment.CONVENIO_ID;
 
     const convenioFields = ['vigenciaConvenio', 'convenio', 'nombreConvenio'];
 
-    [...convenioFields, 'perfilContratistaId', 'aplicaPoliza', 'fechaSuscripcionEstudios'].forEach(field => {
+    [
+      ...convenioFields,
+      'perfilContratistaId',
+      'aplicaPoliza',
+      'fechaSuscripcionEstudios',
+    ].forEach((field) => {
       const control = this.formInfoGeneral.get(field);
       if (control) {
         control.reset();
-        if ((this.showConvenioFields && convenioFields.includes(field))) {
+        if (this.showConvenioFields && convenioFields.includes(field)) {
           control.setValidators(Validators.required);
           control.enable();
         } else {
@@ -334,36 +402,69 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   CargartipoContratoIds(id_compromiso: string) {
-    this.parametrosService.get('parametro?query=ParametroPadreId:' + id_compromiso + '&TipoParametroId:' + environment.TIPO_CONTRATO_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.tipoContratos = Response.Data;
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=ParametroPadreId:' +
+          id_compromiso +
+          '&TipoParametroId:' +
+          environment.TIPO_CONTRATO_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.tiposContratos = Response.Data;
+        }
+      });
   }
 
   CargartipologiaEspecificaId(id_contrato: string) {
-    this.parametrosService.get('parametro?query=ParametroPadreId:' + id_contrato + '&TipoParametroId:' + environment.TIPOLOGIA_ESPECIFICA_ID + '&limit=0').subscribe((Response: any) => {
-      if (Response.Status == "200") {
-        this.tipologiaEspecifica = Response.Data;
-        console.log('Tipologia Especifica:', this.tipologiaEspecifica); //TODO: Inconsistencia con mid.
-      }
-    })
+    this.parametrosService
+      .get(
+        'parametro?query=ParametroPadreId:' +
+          id_contrato +
+          '&TipoParametroId:' +
+          environment.TIPOLOGIA_ESPECIFICA_ID +
+          '&limit=0'
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.tipologiasEspecificas = Response.Data;
+          this.tipologiasEspecificas = sortParametros(
+            this.tipologiasEspecificas
+          );
+          console.log('Tipologia Especifica:', this.tipologiasEspecificas); //TODO: Inconsistencia con mid.
+        }
+      });
   }
 
   CargarPerfilContratista(id_contrato: string) {
     if (id_contrato == environment.CONTRATO_PSPAG_ID) {
-      this.parametrosService.get('parametro?query=TipoParametroId:' + environment.PERFIL_CONTRATISTA_ID + '&ParametroPadreId:' + id_contrato + '&limit=0').subscribe((Response: any) => {
-        if (Response.Status == "200") {
-          this.perfilContratista = Response.Data;
-        }
-      });
+      this.parametrosService
+        .get(
+          'parametro?query=TipoParametroId:' +
+            environment.PERFIL_CONTRATISTA_ID +
+            '&ParametroPadreId:' +
+            id_contrato +
+            '&limit=0'
+        )
+        .subscribe((Response: any) => {
+          if (Response.Status == '200') {
+            this.perfilesContratista = Response.Data;
+          }
+        });
     }
   }
 
   // Método para manejar la entrada de solo números
   validateOnlyNumbers(event: KeyboardEvent) {
     const allowedKeys = [
-      'Backspace', 'Tab', 'End', 'Home', 'ArrowLeft', 'ArrowRight', 'Delete'
+      'Backspace',
+      'Tab',
+      'End',
+      'Home',
+      'ArrowLeft',
+      'ArrowRight',
+      'Delete',
     ];
     const pattern = /^[0-9]$/;
 
@@ -373,10 +474,9 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   loadInfoDataMid() {
-
     this.isLoading = true;
 
-    const getOperation = this.contratoGeneralMidService.get("29"); //Id quemado para la prueba.
+    const getOperation = this.contratoGeneralMidService.get('29'); //Id quemado para la prueba.
 
     getOperation.subscribe({
       next: async (response: ApiResponse<any>) => {
@@ -389,27 +489,38 @@ export class PasoInfoGeneralComponent implements OnInit {
       },
       error: async (error) => {
         this.isLoading = false;
-        await Swal.fire({
-          icon: 'error',
-          title: 'Error al obtener los datos',
-          text: 'Ocurrió un error al obtener los datos',
-        });
-        console.error('Error fetching data:', error);
-      }
+        await this.alertService.showErrorAlert(
+          'Ocurrió un error al obtener los datos',
+          'Error al obtener los datos'
+        );
+      },
     });
-
   }
 
   updateFormAndSelects(data: any) {
     this.formInfoGeneral.patchValue(data);
 
-    this.tipoCompromisos = sortParametros(this.createDynamicOption(data.tipoCompromisoId));
-    this.tipoContratos = sortParametros(this.createDynamicOption(data.tipoContratoId));
-    this.modalidadSeleccion = sortParametros(this.createDynamicOption(data.modalidadSeleccionId));
-    this.tipologiaEspecifica = sortParametros(this.createDynamicOption(data.tipologiaEspecificaId));
-    this.regimenContratacion = sortParametros(this.createDynamicOption(data.regimenContratacionId));
-    this.procedimiento = sortParametros(this.createDynamicOption(data.procedimientoId));
-    this.unidadEjecucion = sortParametros(this.createDynamicOption(data.unidadEjecutoraId));
+    this.tiposCompromisos = sortParametros(
+      this.createDynamicOption(data.tipoCompromisoId)
+    );
+    this.tiposContratos = sortParametros(
+      this.createDynamicOption(data.tipoContratoId)
+    );
+    this.modalidadesSeleccion = sortParametros(
+      this.createDynamicOption(data.modalidadSeleccionId)
+    );
+    this.tipologiasEspecificas = sortParametros(
+      this.createDynamicOption(data.tipologiaEspecificaId)
+    );
+    this.regimenesContratacion = sortParametros(
+      this.createDynamicOption(data.regimenContratacionId)
+    );
+    this.procedimientos = sortParametros(
+      this.createDynamicOption(data.procedimientoId)
+    );
+    this.unidadesEjecucion = sortParametros(
+      this.createDynamicOption(data.unidadEjecutoraId)
+    );
   }
 
   createDynamicOption(value: string | number): ParametroResponse[] {
@@ -418,7 +529,6 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   guardarYContinuar() {
-
     if (this.viewMode) return;
 
     if (this.formInfoGeneral.invalid) {
@@ -430,9 +540,24 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     this.isLoading = true;
 
+    const formParsed = {
+      tipo_compromiso_id: formData.tipoCompromisoId,
+      tipo_contrato_id: formData.tipoContratoId,
+      perfil_contratista_id: formData.perfilContratistaId,
+      fecha_suscripcion_estudios: formData.fechaSuscripcionEstudios,
+      aplica_poliza: formData.aplicaPoliza,
+      vigencia_convenio: formData.vigenciaConvenio,
+      convenio: formData.convenio,
+      nombre_convenio: formData.nombreConvenio,
+      modalidad_seleccion_id: formData.modalidadSeleccionId,
+      tipologia_especifica_id: formData.tipologiaEspecificaId,
+      regimen_contratacion_id: formData.regimenContratacionId,
+      procedimiento_id: formData.procedimientoId,
+      plazo_ejecucion: formData.plazoEjecucion,
+    };
     const saveOperation = this.formId
-      ? this.contratoGeneralCrudService.put(this.formId, formData)
-      : this.contratoGeneralCrudService.post(formData);
+      ? this.contratoGeneralCrudService.put(this.formId, formParsed)
+      : this.contratoGeneralCrudService.post(formParsed);
 
     saveOperation.subscribe({
       next: async (response: ApiResponse<any>) => {
@@ -440,13 +565,15 @@ export class PasoInfoGeneralComponent implements OnInit {
 
         await this.guardarEstado(response.Data.id);
 
-        await Swal.fire({
-          icon: 'success',
-          title: 'Datos guardados',
-          text: 'Los datos se guardaron correctamente. IDs: ' + response.Data.id,
-        });
+        await this.alertService.showSuccessAlert(
+          'Los datos se guardaron correctamente. IDs: ' + response.Data.id,
+          'Datos guardados'
+        );
 
-        localStorage.setItem(`paso-info-general`, JSON.stringify({...formData, id: response.Data.id}));
+        localStorage.setItem(
+          `paso-info-general`,
+          JSON.stringify({ ...formData, id: response.Data.id })
+        );
 
         this.initialFormValue = this.formInfoGeneral.value;
         this.formSaved = true;
@@ -454,15 +581,12 @@ export class PasoInfoGeneralComponent implements OnInit {
       },
       error: async (error) => {
         this.isLoading = false;
-        await Swal.fire({
-          icon: 'error',
-          title: 'Error al guardar los datos',
-          text: 'Ocurrió un error al guardar los datos',
-        });
-        console.error('Error saving data:', error);
-      }
+        await this.alertService.showErrorAlert(
+          'Ocurrió un error al guardar los datos',
+          'Error al guardar los datos'
+        );
+      },
     });
-
   }
 
   private async guardarEstado(contratoId: number) {
@@ -486,8 +610,8 @@ export class PasoInfoGeneralComponent implements OnInit {
       error: (error: any) => {
         console.error('Error al guardar estado', error);
         throw new Error('Error al guardar estado');
-      }
-    })
+      },
+    });
   }
 
   async onInView(inView: boolean) {
@@ -500,11 +624,9 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   private async handleError(error: any): Promise<void> {
     this.isLoading = false;
-    await Swal.fire({
-      icon: 'error',
-      title: 'Error al cargar los datos iniciales',
-      text: 'Ocurrió un error al cargar los datos iniciales',
-    });
-    console.error('Error loading initial data:', error);
+    await this.alertService.showErrorAlert(
+      'Ocurrió un error al cargar los datos iniciales',
+      'Error al cargar los datos iniciales'
+    );
   }
 }

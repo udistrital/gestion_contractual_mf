@@ -1,33 +1,35 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
-import Swal from "sweetalert2";
-import {ParametrosService} from "../../../services/parametros.service";
-import {DocumentosService} from "../../../services/documentos.service";
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import Swal from 'sweetalert2';
+import { ParametrosService } from '../../../services/parametros.service';
+import { DocumentosService } from '../../../services/documentos.service';
+import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
   selector: 'app-paso-documentos',
   templateUrl: './paso-documentos.component.html',
-  styleUrls: ['./paso-documentos.component.css']
+  styleUrls: ['./paso-documentos.component.css'],
 })
 export class PasoDocumentosComponent implements OnInit {
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
   form: FormGroup = this.formBuilder.group({
-    pdfFileName: ['', Validators.required]
+    pdfFileName: ['', Validators.required],
   });
   pdfFile: File | null = null;
   errorMessage: string = '';
 
   constructor(
+    private alertService: AlertService,
     private formBuilder: FormBuilder,
     private dialog: MatDialog,
     private http: HttpClient,
-    private documentosService: DocumentosService,
-  ) { }
+    private documentosService: DocumentosService
+  ) {}
 
   ngOnInit() {}
 
@@ -50,7 +52,9 @@ export class PasoDocumentosComponent implements OnInit {
   resetFileInput() {
     this.pdfFile = null;
     this.form.patchValue({ pdfFileName: '' });
-    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    const fileInput = document.getElementById(
+      'file-upload'
+    ) as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
@@ -61,7 +65,7 @@ export class PasoDocumentosComponent implements OnInit {
       this.dialog.open(PdfViewerModalComponent, {
         width: '80%',
         height: '80%',
-        data: { file: this.pdfFile }
+        data: { file: this.pdfFile },
       });
     }
   }
@@ -71,10 +75,10 @@ export class PasoDocumentosComponent implements OnInit {
       console.log('Formulario enviado', this.form.value);
       this.uploadDocument();
     } else {
-      this.errorMessage = 'Por favor, seleccione un archivo PDF antes de continuar.';
+      this.errorMessage =
+        'Por favor, seleccione un archivo PDF antes de continuar.';
     }
   }
-
 
   uploadDocument() {
     if (!this.pdfFile) {
@@ -86,26 +90,32 @@ export class PasoDocumentosComponent implements OnInit {
     reader.onload = (e: any) => {
       const base64String = e.target.result.split(',')[1];
 
-      const payload = [{
-        IdTipoDocumento: 1,
-        nombre: this.pdfFile!.name,
-        descripcion: "Documento del Contratista",
-        metadatos: {},
-        file: base64String
-      }];
-
-      this.documentosService.postAny("/document/uploadAnyFormat", payload).subscribe({
-        next: (response) => {
-          console.log('Documento subido exitosamente', response);
-          Swal.fire('Documento subido exitosamente', '', 'success');
+      const payload = [
+        {
+          IdTipoDocumento: 1,
+          nombre: this.pdfFile!.name,
+          descripcion: 'Documento del Contratista',
+          metadatos: {},
+          file: base64String,
         },
-        error: (error) => {
-          Swal.fire('Error al subir el documento', 'Por favor, intente de nuevo.', 'error');
-          console.error('Error al subir el documento', error);
-          this.errorMessage = 'Error al subir el documento. Por favor, intente de nuevo.';
-        }
-      });
-    }
+      ];
+
+      this.documentosService
+        .postAny('/document/uploadAnyFormat', payload)
+        .subscribe({
+          next: (response) => {
+            this.alertService.showSuccessAlert('Documento subido exitosamente');
+          },
+          error: (error) => {
+            this.alertService.showErrorAlert(
+              'Error al subir el documento',
+              'Por favor, intente de nuevo.'
+            );
+            this.errorMessage =
+              'Error al subir el documento. Por favor, intente de nuevo.';
+          },
+        });
+    };
     reader.readAsDataURL(this.pdfFile);
   }
 }

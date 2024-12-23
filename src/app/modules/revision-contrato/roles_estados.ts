@@ -10,6 +10,17 @@ const generarEstado = (
   enviado,
 });
 
+// Configuración del rol por estado
+export const rolPorEstado: any = {
+  [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
+    'JEFE_CONTRATACION_RECTOR',
+    'JEFE_CONTRATACION_IDEXUD',
+  ],
+  [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: ['ORDENADOR_DEL_GASTO'],
+  [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['ORDENADOR_DEL_GASTO'],
+  [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['PROVEEDOR'],
+};
+
 const textos = {
   JEFE_CONTRATACION: generarEstado(
     'Aprobar y Enviar a Ordenador',

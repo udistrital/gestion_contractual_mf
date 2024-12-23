@@ -1,0 +1,27 @@
+<div class="container">
+  <div class="row">
+    <div class="col-12 my-2">
+      <div [innerHTML]="breadcrumb"></div>
+    </div>
+  </div>
+  <mat-card class="p-3">
+    <mat-card-content>
+      <div class="d-flex justify-content-between my-2">
+        <div class="row">
+          <h2 style="color: var(--md-primary-700)">{{ title }}</h2>
+        </div>
+        <button
+          *ngIf="mostrarBotonRegresar"
+          mat-stroked-button
+          color="primary"
+          style="border: 1px solid var(--md-primary-500)"
+          (click)="emitirEventoRegresar()"
+        >
+          <mat-icon>toll</mat-icon>Regresar
+        </button>
+      </div>
+      <!-- Renderiza el template proporcionado -->
+      <ng-container *ngTemplateOutlet="contenido"></ng-container>
+    </mat-card-content>
+  </mat-card>
+</div>

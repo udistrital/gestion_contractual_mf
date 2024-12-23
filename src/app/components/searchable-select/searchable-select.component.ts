@@ -1,12 +1,17 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { AbstractControl, FormControl, ReactiveFormsModule } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
 import { map, startWith, takeUntil } from 'rxjs/operators';
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatSelectModule } from "@angular/material/select";
-import { NgxMatSelectSearchModule } from "ngx-mat-select-search";
-import { AsyncPipe, NgForOf, NgIf } from "@angular/common";
-import {ParametroResponse} from "../../types/types";
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
+import { AsyncPipe, NgForOf, NgIf } from '@angular/common';
+import { ParametroResponse } from '../../types/types';
+import { MatIconModule } from '@angular/material/icon';
 
 interface SimpleItem {
   Id: number;
@@ -17,7 +22,7 @@ interface NestedItem {
   LugarHijoId: {
     Id: number;
     Nombre: string;
-  }
+  };
 }
 
 interface DependenciaItem {
@@ -30,21 +35,26 @@ type ItemType = SimpleItem | NestedItem | DependenciaItem | ParametroResponse;
 @Component({
   selector: 'app-searchable-select',
   template: `
-    <mat-form-field appearance="fill" class="w-100">
-      <mat-label>{{label}}</mat-label>
-      <mat-select [formControl]="controlValue" [required]="required" [disabled]="disabled">
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>{{ label }}</mat-label>
+      <mat-icon *ngIf="icon" matIconPrefix>{{ icon }}</mat-icon>
+      <mat-select
+        [formControl]="controlValue"
+        [required]="required"
+      >
         <mat-option>
           <ngx-mat-select-search
             [formControl]="searchCtrl"
             [placeholderLabel]="'Buscar ' + label.toLowerCase()"
             [noEntriesFoundLabel]="'No se encontraron resultados'"
             [showToggleAllCheckbox]="false"
-            [hideClearSearchButton]="false">
+            [hideClearSearchButton]="false"
+          >
           </ngx-mat-select-search>
         </mat-option>
 
         <mat-option *ngFor="let item of items" [value]="getValue(item)">
-          {{getDisplayName(item)}}
+          {{ getDisplayName(item) }}
         </mat-option>
       </mat-select>
       <mat-error *ngIf="controlValue.hasError('required')">
@@ -52,34 +62,46 @@ type ItemType = SimpleItem | NestedItem | DependenciaItem | ParametroResponse;
       </mat-error>
     </mat-form-field>
   `,
-  styles: [`
-    .w-100 {
-      width: 100%;
-    }
-    ::ng-deep .mat-mdc-select-search-input {
-      padding: 8px !important;
-    }
-    ::ng-deep .mat-mdc-select-search-inner {
-      margin-bottom: 0 !important;
-    }
-    ::ng-deep .mat-mdc-select-panel {
-      min-width: fit-content !important;
-    }
-  `],
+  styles: [
+    `
+      .w-100 {
+        width: 100%;
+      }
+      ::ng-deep .mat-mdc-select-search-input {
+        padding: 8px !important;
+      }
+      ::ng-deep .mat-mdc-select-search-inner {
+        margin-bottom: 0 !important;
+      }
+      ::ng-deep .mat-mdc-select-panel {
+        min-width: fit-content !important;
+      }
+    `,
+  ],
   standalone: true,
   imports: [
     MatFormFieldModule,
+    MatIconModule,
     MatSelectModule,
     NgxMatSelectSearchModule,
     NgForOf,
     ReactiveFormsModule,
-    NgIf
+    NgIf,
   ],
 })
 export class SearchableSelectComponent implements OnInit, OnDestroy {
+
   @Input() label: string = '';
+  @Input() icon: string = '';
   @Input() required: boolean = false;
-  @Input() disabled: boolean = false;
+
+  @Input() set disabled(value: boolean) {
+    if (value) {
+      this.controlValue.disable({emitEvent: false});
+    } else {
+      this.controlValue.enable({emitEvent: false});
+    }
+  }
 
   private _items: ItemType[] = [];
   @Input() set items(value: ItemType[]) {
@@ -95,21 +117,25 @@ export class SearchableSelectComponent implements OnInit, OnDestroy {
   @Input() set control(value: AbstractControl | null) {
     if (value) {
       this.controlValue = value as FormControl;
+      if (this.disabled) {
+        this.controlValue.disable({emitEvent: false});
+      }
       this.subscribeToValueChanges();
     }
   }
 
-  controlValue: FormControl = new FormControl();
+  controlValue: FormControl = new FormControl({
+    value: null,
+    disabled: this.disabled
+  });
+
   searchCtrl = new FormControl('');
   private _filteredItems: ItemType[] = [];
   private destroy$ = new Subject<void>();
 
   ngOnInit() {
     this.searchCtrl.valueChanges
-      .pipe(
-        startWith(''),
-        takeUntil(this.destroy$)
-      )
+      .pipe(startWith(''), takeUntil(this.destroy$))
       .subscribe(() => {
         this.updateFilteredItems();
       });
@@ -125,7 +151,7 @@ export class SearchableSelectComponent implements OnInit, OnDestroy {
 
   private updateFilteredItems() {
     const search = this.searchCtrl.value?.toLowerCase() || '';
-    this._filteredItems = this._items.filter(item => {
+    this._filteredItems = this._items.filter((item) => {
       if (!item) return false;
       if (!search) return true;
       const nombre = this.getDisplayName(item);

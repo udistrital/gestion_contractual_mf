@@ -1,13 +1,22 @@
-import {Component, OnInit, ViewChild, AfterViewInit, ChangeDetectorRef} from '@angular/core';
-import { PasoContratistasComponent } from "./paso-contratistas/paso-contratistas.component";
-import { PasoInfoGeneralComponent } from "./paso-info-general/paso-info-general.component";
-import { PasoObligacionesComponent } from "./paso-obligaciones/paso-obligaciones.component";
-import { PasoInfoPresupuestalComponent } from "./paso-info-presupuestal/paso-info-presupuestal.component";
-import { MatStepper } from "@angular/material/stepper";
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  AfterViewInit,
+  ChangeDetectorRef,
+  ViewChildren,
+  QueryList,
+} from '@angular/core';
+import { PasoContratistasComponent } from './paso-contratistas/paso-contratistas.component';
+import { PasoInfoGeneralComponent } from './paso-info-general/paso-info-general.component';
+import { PasoObligacionesComponent } from './paso-obligaciones/paso-obligaciones.component';
+import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-info-presupuestal.component';
+import { MatStep, MatStepper } from '@angular/material/stepper';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import {environment} from "../../../environments/environment";
+import { environment } from '../../../environments/environment';
+import { BreakpointObserver } from '@angular/cdk/layout';
 
 @Component({
   selector: 'app-registro-contrato',
@@ -21,23 +30,35 @@ import {environment} from "../../../environments/environment";
   ],
 })
 export class RegistroContratoComponent implements OnInit, AfterViewInit {
+  @ViewChildren(MatStep) steps!: QueryList<MatStep>;
   @ViewChild('stepper') stepper!: MatStepper;
-  @ViewChild(PasoContratistasComponent) pasoContratistas!: PasoContratistasComponent;
-  @ViewChild(PasoInfoGeneralComponent) pasoInfoGeneral!: PasoInfoGeneralComponent;
-  @ViewChild(PasoObligacionesComponent) pasoObligaciones!: PasoObligacionesComponent;
-  @ViewChild(PasoInfoPresupuestalComponent) pasoInfoPresupuestal!: PasoInfoPresupuestalComponent;
+  @ViewChild(PasoContratistasComponent)
+  pasoContratistas!: PasoContratistasComponent;
+  @ViewChild(PasoInfoGeneralComponent)
+  pasoInfoGeneral!: PasoInfoGeneralComponent;
+  @ViewChild(PasoObligacionesComponent)
+  pasoObligaciones!: PasoObligacionesComponent;
+  @ViewChild(PasoInfoPresupuestalComponent)
+  pasoInfoPresupuestal!: PasoInfoPresupuestalComponent;
+
+  orientation: 'horizontal' | 'vertical' = 'horizontal';
 
   isLinear = false;
   showEspecificacionesTecnicas = false;
   showAplicaPoliza = false;
-  stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(new Array(9).fill(false));
+  stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(
+    new Array(9).fill(false)
+  );
 
-  constructor(private cdRef: ChangeDetectorRef) {}
+  constructor(private breakpointObserver: BreakpointObserver) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.manejarResponsiveStepper();
+  }
 
   onTipoCompromisoChange(tipoCompromisoId: string) {
-    this.showEspecificacionesTecnicas = tipoCompromisoId === environment.ORDEN_ID.toString();
+    this.showEspecificacionesTecnicas =
+      tipoCompromisoId === environment.ORDEN_ID.toString();
 
     if (!this.showEspecificacionesTecnicas) {
       const currentSteps = this.stepsCompleted.value;
@@ -48,7 +69,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   onAplicaPolizaChange(aplicaPoliza: string) {
     this.showAplicaPoliza = aplicaPoliza == '1'; // 1 = Si, 0 = No
-    if(!this.showAplicaPoliza){
+    if (!this.showAplicaPoliza) {
       const currentSteps = this.stepsCompleted.value;
       currentSteps[7] = true;
       this.stepsCompleted.next(currentSteps);
@@ -68,6 +89,9 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
         this.pasoContratistas.onStepLeave();
       }
     });
+    this.steps.toArray().forEach((step, index) => {
+      step.label = `Paso ${index + 1}`;
+    });
   }
 
   stepCompleted(stepIndex: number, isCompleted: boolean) {
@@ -78,7 +102,15 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   canProceedToStep(stepIndex: number): Observable<boolean> {
     return this.stepsCompleted.pipe(
-      map(steps => steps.slice(0, stepIndex).every(step => step))
+      map((steps) => steps.slice(0, stepIndex).every((step) => step))
     );
+  }
+
+  manejarResponsiveStepper() {
+    this.breakpointObserver
+      .observe(['(max-width: 992px)'])
+      .subscribe((result) => {
+        this.orientation = result.matches ? 'vertical' : 'horizontal';
+      });
   }
 }

@@ -1,60 +1,130 @@
-<h1>Registrar Contrato</h1>
-<div class="border">
-  <mat-stepper #stepper [linear]="isLinear" labelPosition="bottom">
+<plantilla-tarjeta-contenedora
+  [title]="'Registrar Contrato'"
+  [contenido]="contenidoDePlantilla"
+></plantilla-tarjeta-contenedora>
 
-    <mat-step [stepControl]="pasoInfoGeneral.formInfoGeneral">
-      <ng-template matStepLabel>Información General</ng-template>
-      <app-paso-info-general
-        #pasoInfoGeneral
-        (stepCompleted)="stepCompleted(0, $event)"
-        (nextStep)="goToNextStep()"
-        (tipoCompromisoChange)="onTipoCompromisoChange($event)"
-        (aplicaPolizaChange)="onAplicaPolizaChange($event)">
-      </app-paso-info-general>
-    </mat-step>
-
-    <mat-step [stepControl]="pasoInfoPresupuestal.form" [editable]="canProceedToStep(1) | async">
-      <ng-template matStepLabel>Información Presupuestal</ng-template>
-      <app-paso-info-presupuestal
-        #pasoInfoPresupuestal
-        (stepCompleted)="stepCompleted(1, $event)"
-        (nextStep)="goToNextStep()" />
-    </mat-step>
-    <mat-step [stepControl]="pasoSupervisores.form" [editable]="canProceedToStep(2) | async">
-        <ng-template matStepLabel>Información Solicitante y Supervisor</ng-template>
-        <app-paso-supervisores
-          #pasoSupervisores
-          (stepCompleted)="stepCompleted(2, $event)"
-          (nextStep)="goToNextStep()" />
-    </mat-step>
-    <mat-step>
-        <ng-template matStepLabel>Información Contratista</ng-template>
-        <app-paso-contratistas (stepCompleted)="stepCompleted(3, $event)" />
-    </mat-step>
-    <mat-step>
-        <ng-template matStepLabel>Obligaciones del Contrato</ng-template>
-        <app-paso-obligaciones #pasoObligaciones (stepCompleted)="stepCompleted(4, $event)" />
-    </mat-step>
-    <ng-container *ngIf="showEspecificacionesTecnicas">
-      <mat-step>
-        <ng-template matStepLabel>Especificaciones Técnicas</ng-template>
-        <app-paso-especificaciones (stepCompleted)="stepCompleted(5, $event)">
-        </app-paso-especificaciones>
-      </mat-step>
-    </ng-container>
-    <ng-container *ngIf="showAplicaPoliza">
-        <mat-step>
-            <ng-template matStepLabel>Garantías y Mecanismos de Cobertura del Riesgo</ng-template>
-            <app-paso-garantias (stepCompleted)="stepCompleted(6, $event)" />
+<ng-template #contenidoDePlantilla>
+  <div class="row">
+    <div class="col-12">
+      <mat-stepper
+        #stepper
+        [linear]="isLinear"
+        labelPosition="bottom"
+        [orientation]="orientation"
+        class="stepper-responsive"
+      >
+        <ng-template matStepperIcon="number">
+          <mat-icon>lens</mat-icon>
+        </ng-template>
+        <mat-step [stepControl]="pasoInfoGeneral.formInfoGeneral">
+          <ng-template matStepLabel>
+            <p>Paso</p>
+            <b style="color: var(--primary)">Información General</b>
+          </ng-template>
+          <app-paso-info-general
+            #pasoInfoGeneral
+            (stepCompleted)="stepCompleted(0, $event)"
+            (nextStep)="goToNextStep()"
+            (tipoCompromisoChange)="onTipoCompromisoChange($event)"
+            (aplicaPolizaChange)="onAplicaPolizaChange($event)"
+          >
+          </app-paso-info-general>
         </mat-step>
-    </ng-container>
-    <mat-step>
-        <ng-template matStepLabel>Cláusulas y Parágrafos</ng-template>
-        <app-paso-clausulas-paragrafos (stepCompleted)="stepCompleted(7, $event)" />
-    </mat-step>
-    <mat-step>
-        <ng-template matStepLabel>Documentos Contratista</ng-template>
-        <app-paso-documentos (stepCompleted)="stepCompleted(8, $event)" />
-    </mat-step>
-    </mat-stepper>
-</div>
+
+        <mat-step
+          [stepControl]="pasoInfoPresupuestal.form"
+          [editable]="canProceedToStep(1) | async"
+        >
+          <ng-template matStepLabel>
+            <p>Paso</p>
+            <b style="color: var(--primary)">Información Presupuestal</b>
+          </ng-template>
+          <app-paso-info-presupuestal
+            #pasoInfoPresupuestal
+            (stepCompleted)="stepCompleted(1, $event)"
+            (nextStep)="goToNextStep()"
+          />
+        </mat-step>
+
+        <mat-step
+          [stepControl]="pasoSupervisores.form"
+          [editable]="canProceedToStep(2) | async"
+        >
+          <ng-template matStepLabel>
+            <p>Paso</p>
+            <b style="color: var(--primary)"
+              >Información Solicitante y Supervisor</b
+            >
+          </ng-template>
+          <app-paso-supervisores
+            #pasoSupervisores
+            (stepCompleted)="stepCompleted(2, $event)"
+            (nextStep)="goToNextStep()"
+          />
+        </mat-step>
+
+        <mat-step>
+          <ng-template matStepLabel>
+            <p>Paso</p>
+            <b style="color: var(--primary)">Información Contratista</b>
+          </ng-template>
+          <app-paso-contratistas (stepCompleted)="stepCompleted(3, $event)" />
+        </mat-step>
+
+        <mat-step>
+          <ng-template matStepLabel>
+            <p>Paso</p>
+            <b style="color: var(--primary)">Obligaciones del Contrato</b>
+          </ng-template>
+          <app-paso-obligaciones
+            #pasoObligaciones
+            (stepCompleted)="stepCompleted(4, $event)"
+          />
+        </mat-step>
+
+        <ng-container *ngIf="showEspecificacionesTecnicas">
+          <mat-step>
+            <ng-template matStepLabel>
+              <p>Paso</p>
+              <b style="color: var(--primary)">Especificaciones Técnicas</b>
+            </ng-template>
+            <app-paso-especificaciones
+              (stepCompleted)="stepCompleted(5, $event)"
+            >
+            </app-paso-especificaciones>
+          </mat-step>
+        </ng-container>
+
+        <ng-container *ngIf="showAplicaPoliza">
+          <mat-step>
+            <ng-template matStepLabel>
+              <p>Paso</p>
+              <b style="color: var(--primary)"
+                >Garantías y Mecanismos de Cobertura del Riesgo</b
+              >
+            </ng-template>
+            <app-paso-garantias (stepCompleted)="stepCompleted(6, $event)" />
+          </mat-step>
+        </ng-container>
+
+        <mat-step>
+          <ng-template matStepLabel>
+            <p>Paso</p>
+            <b style="color: var(--primary)">Cláusulas y Parágrafos</b>
+          </ng-template>
+          <app-paso-clausulas-paragrafos
+            (stepCompleted)="stepCompleted(7, $event)"
+          />
+        </mat-step>
+
+        <mat-step>
+          <ng-template matStepLabel>
+            <p>Paso</p>
+            <b style="color: var(--primary)">Documentos Contratista</b>
+          </ng-template>
+          <app-paso-documentos (stepCompleted)="stepCompleted(8, $event)" />
+        </mat-step>
+      </mat-stepper>
+    </div>
+  </div>
+</ng-template>

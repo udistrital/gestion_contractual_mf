@@ -9,7 +9,7 @@ import { DocumentosService } from 'src/app/services/documentos.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { ActivatedRoute } from '@angular/router';
-import { textosMensaje, flujoEstados } from './roles_estados';
+import { textosMensaje, flujoEstados, rolPorEstado } from './roles_estados';
 
 @Component({
   selector: 'app-revision-contrato',
@@ -105,7 +105,7 @@ export class RevisionContratoComponent {
       });
   }
 
-  private getMensajes() {
+  private getTextosMensajes() {
     for (const role of this.roles) {
       this.mensaje =
         textosMensaje[this.unidad_ejecutora]?.[role]?.[
@@ -124,7 +124,7 @@ export class RevisionContratoComponent {
         next: (res: EstadoContrato) => {
           if (res.estado_interno_parametro_id) {
             this.estadoInternoActual = res.estado_interno_parametro_id;
-            this.getMensajes();
+            this.getTextosMensajes();
           }
         },
         error: (error) =>
@@ -192,21 +192,8 @@ export class RevisionContratoComponent {
   }
 
   getRolPorEstado(): string {
-    const rolesPorEstado = {
-      [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
-        'JEFE_CONTRATACION_RECTOR',
-        'JEFE_CONTRATACION_IDEXUD',
-      ],
-      [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: [
-        'ORDENADOR_DEL_GASTO',
-      ],
-      [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
-        'ORDENADOR_DEL_GASTO',
-      ],
-      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['PROVEEDOR'],
-    };
-    const rolesEsperados = rolesPorEstado[this.estadoInternoActual] || [];
-    const rolEncontrado = rolesEsperados.find((rol) =>
+    const rolesEsperados = rolPorEstado[this.estadoInternoActual] || [];
+    const rolEncontrado = rolesEsperados.find((rol: any) =>
       this.roles.includes(rol)
     );
     return rolEncontrado || '';

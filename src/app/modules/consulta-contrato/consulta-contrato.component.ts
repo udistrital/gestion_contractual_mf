@@ -22,6 +22,7 @@ import {
   MAT_DATE_FORMATS,
   MAT_DATE_LOCALE,
 } from '@angular/material/core';
+import { AlertService } from 'src/app/services/alert.service';
 
 export const FORMATO_LOCAL_FECHA = {
   parse: {
@@ -81,6 +82,7 @@ export class ConsultaContratoComponent implements OnInit {
   ];
 
   constructor(
+    private alertService: AlertService,
     public dialog: MatDialog,
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
@@ -223,8 +225,7 @@ export class ConsultaContratoComponent implements OnInit {
         }
       },
       error: async (error) => {
-        console.error('Error al consultar contratos:', error);
-        await Swal.fire('Error', 'Error al consultar contratos', 'error');
+        await this.alertService.showErrorAlert('Error al consultar contratos');
       },
       complete: () => {
         this.isLoading = false;

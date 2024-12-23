@@ -21,16 +21,16 @@ import { RevisionContratoModule } from './modules/revision-contrato/revision-con
 @NgModule({
   declarations: [AppComponent],
   imports: [
-    RegistroContratoModule,
-    ConsultaContratoModule,
-    RevisionContratoModule,
-    BrowserModule,
-    BrowserAnimationsModule,
     AppRoutingModule,
+    BrowserAnimationsModule,
+    BrowserModule,
     CommonModule,
-    MatIconModule,
+    ConsultaContratoModule,
     HttpClientModule,
+    MatIconModule,
     MatSnackBarModule,
+    RegistroContratoModule,
+    RevisionContratoModule,
     QuillModule.forRoot(),
   ],
   providers: [
