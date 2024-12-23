@@ -29,10 +29,10 @@ interface CDPData {
 }
 
 interface OrdenadorContratoData {
-  tercero_id: number;
+  tercero_id?: number;
   ordenador_argo_id: number;
   ordenador_sikarca_id: number;
-  resolucion: string;
+  resolucion?: string;
   documento_identidad: string;
   cargo_id: number;
   contrato_general_id: number;
@@ -59,7 +59,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     tipoMoneda: ['', Validators.required],
     valorContrato: ['', Validators.required],
     ordenadorGasto: ['', Validators.required],
-    nombreOrdenador: ['', Validators.required],
+    nombreOrdenador: [{ value: '', disabled: true }, [Validators.required]],
     tipoGasto: ['', Validators.required],
     origenRecurso: ['', Validators.required],
     origenPresupuesto: ['', Validators.required],
@@ -109,6 +109,10 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   cdpConstructorTabla: any;
   tablaCdpColumnas: any;
+
+  documentoIdentidadOrdenador: string | null = null;
+  cargoIdOrdenador: number | null = null;
+  idSikarcaOrdenador: number | null = null;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -165,14 +169,13 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         this.formId = parsedForm.id;
 
         const formValues = {
-          ordenadorGasto: parsedForm.ordenadorId,
-          tipoGasto: parsedForm.tipoGastoId,
-          origenPresupuesto: parsedForm.origenPresupuestosId,
-          temaGasto: parsedForm.temaGastoInversionId,
-          medioPago: parsedForm.medioPagoId,
-          tipoMoneda: parsedForm.tipoMonedaId,
-          valorContrato: parsedForm.valorPesos,
-          origenRecurso: parsedForm.origenRecursosId,
+          tipoGasto: parsedForm.tipo_gasto_id,
+          origenPresupuesto: parsedForm.origen_presupuestos_id,
+          temaGasto: parsedForm.tema_gasto_inversion_id,
+          medioPago: parsedForm.medio_pago_id,
+          tipoMoneda: parsedForm.tipo_moneda_id,
+          valorContrato: parsedForm.valor_pesos,
+          origenRecurso: parsedForm.origen_recursos_id,
         };
 
         console.log('Loading values into form:', formValues);
@@ -207,20 +210,13 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
       // Datos para la información presupuestal
       const formData = {
-        vigencia: this.form.get('vigencia')?.value,
-        cdp: this.form.get('cdp')?.value,
-        valorAcumulado: this.form.get('valorAcumulado')?.value,
-        tipoMonedaId: this.form.get('tipoMoneda')?.value,
-        valorContrato: this.form.get('valorContrato')?.value,
-        ordenadorGastoId: this.form.get('ordenadorGasto')?.value,
-        nombreOrdenador: this.form.get('nombreOrdenador')?.value,
-        tipoGastoId: this.form.get('tipoGasto')?.value,
-        origenRecursoId: this.form.get('origenRecurso')?.value,
-        origenPresupuestoId: this.form.get('origenPresupuesto')?.value,
-        temaGastoId: this.form.get('temaGasto')?.value,
-        monedaExtranjeraId: this.form.get('monedaExtranjera')?.value,
-        tasaCambio: this.form.get('tasaCambio')?.value,
-        medioPagoId: this.form.get('medioPago')?.value,
+        tipo_gasto_id: this.form.get('tipoGasto')?.value,
+        origen_presupuestos_id: this.form.get('origenPresupuesto')?.value,
+        tema_gasto_inversion_id: this.form.get('temaGasto')?.value,
+        medio_pago_id: this.form.get('medioPago')?.value,
+        tipo_moneda_id: this.form.get('tipoMoneda')?.value,
+        valor_pesos: this.form.get('valorContrato')?.value,
+        origen_recursos_id: this.form.get('origenRecurso')?.value,
       };
 
       // Obtener el ID del contrato del localStorage
@@ -236,14 +232,14 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         throw new Error('No se ha encontrado el ID del contrato');
       }
 
+      const ordenadorGastoId = this.form.get('ordenadorGasto')?.value;
+
       // Preparar datos para el POST de OrdenadorContrato
       const ordenadorContratoData: OrdenadorContratoData = {
-        tercero_id: 0, // no se obtiene en este paso
-        ordenador_argo_id: formData.ordenadorGastoId ? Number(formData.ordenadorGastoId) : 0, // ??
-        ordenador_sikarca_id: formData.ordenadorGastoId ? Number(formData.ordenadorGastoId) : 0, // ??
-        resolucion: '', // no se obtiene en este paso
-        documento_identidad: '', // no se obtiene en este paso
-        cargo_id: formData.ordenadorGastoId ? Number(formData.ordenadorGastoId) : 0, 
+        ordenador_argo_id: ordenadorGastoId ? Number(ordenadorGastoId) : 0,
+        ordenador_sikarca_id: this.idSikarcaOrdenador ? Number(this.idSikarcaOrdenador) : 0,
+        documento_identidad: this.documentoIdentidadOrdenador || '',
+        cargo_id: this.cargoIdOrdenador || 0,
         contrato_general_id: contratoId,
       };
 
@@ -266,7 +262,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         })
       );
 
-      await this.alertService.showSuccessAlert(
+      this.alertService.showSuccessAlert(
         'La información presupuestal se ha guardado correctamente',
         'Datos guardados'
       );
@@ -274,7 +270,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       this.nextStep.emit();
     } catch (error) {
       console.error('Error saving data:', error);
-      await this.alertService.showErrorAlert(
+      this.alertService.showErrorAlert(
         'Ocurrió un error al guardar la información presupuestal',
         'Error al guardar'
       );
@@ -574,12 +570,20 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarOrdenadorActuales(rol: number) {
     this.ordenadoresSupervisoresMidService
       .getOrdenadorActuales(rol)
-      .subscribe((Response: any) => {
+      .subscribe(async (Response: any) => {
+        console.log('Respuesta de ordenadores', Response);
         if (Response.Status == '200') {
-          console.log(Response.Data.nombre_ordenador);
           this.form
             .get('nombreOrdenador')
-            ?.setValue(Response.Data.nombre_ordenador);
+            ?.setValue(Response.Data[0].nombre_ordenador);
+        } else {
+          this.form.get('ordenadorGasto')?.reset();
+          this.form.get('nombreOrdenador')?.reset();
+          await Swal.fire({
+            title: 'Error',
+            text: 'No se encontraron ordenadores para el rol seleccionado',
+            icon: 'error',
+          });
         }
       });
   }
@@ -669,7 +673,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         await this.alertService.showSuccessAlert('CDP eliminado correctamente');
       }
     } catch (error) {
-      await this.alertService.showErrorAlert(
+      this.alertService.showErrorAlert(
         'Hubo un error al eliminar el CDP'
       );
     }
@@ -685,7 +689,4 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     }
   }
 
-  isOddRow(index: number): boolean {
-    return index % 2 !== 0;
-  }
 }
