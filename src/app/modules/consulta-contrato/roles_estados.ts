@@ -1,7 +1,7 @@
 import { environment } from 'src/environments/environment';
 
 export const accionesPorRolYEstado: {
-  [rol: string]: { [estado: string]: string[] };
+  [rol: string]: { [estado: number]: string[] };
 } = {
   ABOGADO_CONTRATACION_RECTOR: {
     //ABOGADO_CONTRATACION_RECTOR
@@ -11,6 +11,10 @@ export const accionesPorRolYEstado: {
       'Declinar',
     ],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
+      'Ver Contrato',
+      'Ver Historial',
+    ],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: [
       'Ver Contrato',
       'Ver Historial',
     ],
@@ -42,6 +46,10 @@ export const accionesPorRolYEstado: {
       'Ver Contrato',
       'Ver Historial',
     ],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: [
+      'Ver Contrato',
+      'Ver Historial',
+    ],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
       'Ver Contrato',
       'Ver Historial',
@@ -63,6 +71,7 @@ export const accionesPorRolYEstado: {
     //JEFE_CONTRATACION_RECTOR
     [environment.ESTADOS_INTERNOS.BORRADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],
@@ -73,6 +82,7 @@ export const accionesPorRolYEstado: {
     //JEFE_CONTRATACION_RECTOR
     [environment.ESTADOS_INTERNOS.BORRADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: ['Revisar Contrato'],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],
@@ -83,6 +93,7 @@ export const accionesPorRolYEstado: {
     //ORDENADOR DEL GASTO
     [environment.ESTADOS_INTERNOS.BORRADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: ['Revisar Contrato'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['Revisar Contrato'],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Ver Documentos'],
     [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],
@@ -93,6 +104,7 @@ export const accionesPorRolYEstado: {
     //CONTRATISTA
     [environment.ESTADOS_INTERNOS.BORRADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Revisar Contrato'],
     [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],

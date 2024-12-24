@@ -3,7 +3,6 @@ import {
   Component,
   EventEmitter,
   Input,
-  OnChanges,
   OnInit,
   Output,
 } from '@angular/core';
@@ -13,16 +12,16 @@ import {
   sortParametros,
 } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import Swal from 'sweetalert2';
-import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
-import { ContratoGeneralMidService } from '../../../services/contrato-general-mid.service';
+import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
+import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
+import { RolService } from "src/app/services/rol.service";
+import { AlertService } from 'src/app/services/alert.service';
 import {
   ApiResponse,
-  EstadoContratoCRUD,
+  EstadoContrato,
   ParametroResponse,
 } from 'src/app/types/types';
-import { RolService } from 'src/app/services/rol.service';
-import { AlertService } from 'src/app/services/alert.service';
+
 
 interface Parametro {
   Id: number | string;
@@ -593,9 +592,8 @@ export class PasoInfoGeneralComponent implements OnInit {
   private async guardarEstado(contratoId: number) {
     if (this.estado_id === null || this.estado_interno_id === null) return;
 
-    const rol =
-      this.roles.find((item) => item.includes('ABOGADO')) || 'ABOGADO';
-    const estado: EstadoContratoCRUD = {
+    const rol = this.roles.find(item => item.includes("ABOGADO")) || "ABOGADO";
+    const estado: EstadoContrato = {
       contrato_general_id: contratoId,
       usuario_id: 1,
       usuario_rol: rol,

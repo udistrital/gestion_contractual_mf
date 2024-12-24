@@ -28,7 +28,7 @@ export interface CDP {
   estado: string;
 }
 
-export interface EstadoContratoCRUD {
+export interface EstadoContrato {
   contrato_general_id: number;
   usuario_id: number;
   usuario_rol: string;
