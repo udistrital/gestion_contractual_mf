@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {FileService} from "src/app/services/file.service";
-import { DocumentosService } from 'src/app/services/documentos.service';
+import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { DocumentoContrato } from 'src/app/types/types';
@@ -31,7 +31,7 @@ export class PdfViewerModalComponent implements OnInit {
     public data: { file: File; documento: any },
     private fileService: FileService,
     private alertService: AlertService,
-    private documentosService: DocumentosService,
+    private gestorDocumentalService: GestorDocumentalService,
     private contratoGeneralCrudService: ContratoGeneralCrudService
   ) {}
 
@@ -65,7 +65,7 @@ export class PdfViewerModalComponent implements OnInit {
       },
     ];
 
-    this.documentosService.postAny('document/upload', data).subscribe({
+    this.gestorDocumentalService.postAny('document/upload', data).subscribe({
       next: ({ Status, res }: { Status: string; res: any }) => {
         if (Status == '200' && res?.Id) {
           this.registrarDocumento(res);

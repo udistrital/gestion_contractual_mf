@@ -23,9 +23,12 @@
   padding: 0 2%;
 }
 
-.mat-column-item,
-.mat-column-acciones {
+.mat-column-item {
   flex: 0 0 10%;
+}
+
+.mat-column-descripcion {
+  flex: 0 0 25%;
 }
 
 .edit-icon {
@@ -34,4 +37,24 @@
 
 .delete-icon {
   color: gray !important;
+}
+
+.full-width-table {
+  width: 100%;
+  min-width: 800px;
+}
+
+.mat-elevation-z4 {
+  height: 300px;
+  overflow: auto;
+}
+
+.mat-mdc-header-cell,
+.mat-mdc-cell {
+  display: flex;
+  justify-content: center;
+}
+
+.mat-mdc-row .mat-column-descripcion {
+  justify-content: flex-start;
 }
