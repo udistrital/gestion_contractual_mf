@@ -34,7 +34,7 @@ export interface EstadoContrato {
   usuario_rol: string;
   estado_parametro_id: number;
   estado_interno_parametro_id: number;
-  motivo: string;
+  motivo?: string;
 }
 
 export interface ContratistaCRUD {
