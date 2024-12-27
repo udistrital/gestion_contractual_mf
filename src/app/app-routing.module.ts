@@ -21,7 +21,7 @@ const routes: Routes = [
   },
   {
     path: ':idContrato/documentos',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     component: RevisionContratoComponent,
   },
 ];

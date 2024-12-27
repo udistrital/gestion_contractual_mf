@@ -197,10 +197,10 @@ export class PasoEspecificacionesComponent {
     });
   }
 
-  abrirModalCargarArchivo(tipoArchivo: string): void {
+  abrirModalCargarArchivo(): void {
     this.dialog.open(CargarArchivoComponent, {
       width: '800px',
-      data: { tipoArchivo, contrato_general_id: this.contrato_general_id },
+      data: { contrato_general_id: this.contrato_general_id },
     });
   }
 }

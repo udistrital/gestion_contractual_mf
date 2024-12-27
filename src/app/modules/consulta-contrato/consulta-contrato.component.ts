@@ -7,7 +7,6 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { ContratoGeneralMidService } from '../../services/contrato-general-mid.service';
-import Swal from 'sweetalert2';
 import { RolService } from 'src/app/services/rol.service';
 import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
 import { MatDialog } from '@angular/material/dialog';

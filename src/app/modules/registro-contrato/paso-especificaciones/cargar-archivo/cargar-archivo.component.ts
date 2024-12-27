@@ -12,12 +12,13 @@ import { environment } from 'src/environments/environment';
 })
 export class CargarArchivoComponent {
   archivo: File | null = null;
-
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;
+  isLoading = false;
+  fileTypeXLSX =
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
   constructor(
-    @Inject(MAT_DIALOG_DATA)
-    public data: { tipoArchivo: string; contrato_general_id: number },
+    @Inject(MAT_DIALOG_DATA) public data: { contrato_general_id: number },
     public dialogRef: MatDialogRef<CargarArchivoComponent>,
     private gestorDocumentalService: GestorDocumentalService,
     private contratoGeneralMidService: ContratoGeneralMidService,
@@ -27,24 +28,14 @@ export class CargarArchivoComponent {
   onFileSelected(event: any): void {
     const input = event.target as HTMLInputElement;
     const file = input.files ? input.files[0] : null;
-
     if (file) {
-      if (this.data.tipoArchivo === 'pdf' && file.type !== 'application/pdf') {
-        alert('Por favor seleccione un archivo PDF.');
+      if (file.type !== this.fileTypeXLSX) {
+        this.alertService.showAlert(
+          'Por favor, seleccione un archivo válido en formato .xlsx'
+        );
         this.removerArchivo();
         return;
       }
-
-      if (
-        this.data.tipoArchivo === 'xlsx' &&
-        file.type !==
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      ) {
-        alert('Por favor seleccione un archivo XLSX.');
-        this.removerArchivo();
-        return;
-      }
-
       this.archivo = file;
     }
   }
@@ -62,57 +53,66 @@ export class CargarArchivoComponent {
     if (!this.archivo) {
       return;
     }
+    this.isLoading = true;
     const reader = new FileReader();
     reader.onload = (e: any) => {
       const base64String = e.target.result.split(',')[1];
-
-      const lambdaPayload = {
-        base64data: base64String,
-        complement: { contrato_general_id: this.data.contrato_general_id },
-      };
-
-      const payload = [
-        {
-          IdTipoDocumento:
-            environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.PLANTILLAS_XLSX,
-          nombre: this.archivo!.name,
-          descripcion: 'Documento xlsx especificaciones técnicas',
-          metadatos: {},
-          file: base64String,
-        },
-      ];
-
-      this.contratoGeneralMidService
-        .postCargaMasivaEspecificaciones(lambdaPayload)
-        .subscribe({
-          next: (response: any) => {
-            console.log('Archivo enviado exitosamente al MID', response);
-            if (response && response.Data) {
-              this.resultados(response.Data);
-            }
-          },
-          error: (error: any) => {
-            console.error('Error al enviar el archivo al MID', error);
-          },
-        });
-
-      this.gestorDocumentalService
-        .postAny('document/uploadAnyFormat', payload)
-        .subscribe({
-          next: (response: any) => {
-            console.log('Documento subido exitosamente', response);
-          },
-          error: (error: any) => {
-            console.error('Error al subir el documento', error);
-          },
-        });
+      this.realizarCargaMasiva(base64String);
+      // this.guardarArchivoGestorDocumental(base64String);
     };
     reader.readAsDataURL(this.archivo);
   }
 
-  resultados(data: any): void {
-    let mensaje = '';
+  // Enviar XLSX al MID
+  realizarCargaMasiva(base64String: any) {
+    const data = {
+      base64data: base64String,
+      complement: { contrato_general_id: this.data.contrato_general_id },
+    };
+    this.contratoGeneralMidService
+      .postCargaMasivaEspecificaciones(data)
+      .subscribe({
+        next: (response: any) => {
+          console.log('Archivo enviado exitosamente al MID', response);
+          if (response && response.Data) {
+            this.dialogRef.close();
+            this.mostrarResultados(response.Data);
+          }
+        },
+        error: (error: any) => {
+          console.error('Error al enviar el archivo al MID', error);
+        },
+        complete: () => {
+          this.isLoading = false
+        },
+      });
+  }
 
+  guardarArchivoGestorDocumental(base64String: any) {
+    const data = [
+      {
+        IdTipoDocumento:
+          environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.PLANTILLAS_XLSX,
+        nombre: this.archivo!.name,
+        descripcion: 'Documento xlsx especificaciones técnicas',
+        metadatos: {},
+        file: base64String,
+      },
+    ];
+    this.gestorDocumentalService
+      .postAny('document/uploadAnyFormat', data)
+      .subscribe({
+        next: (response: any) => {
+          console.log('Documento subido exitosamente', response);
+        },
+        error: (error: any) => {
+          console.error('Error al subir el documento', error);
+        },
+      });
+  }
+
+  mostrarResultados(data: any): void {
+    let mensaje = '';
     if (data.Erróneos?.length > 0) {
       mensaje += `<strong>Se encontraron los siguientes errores en algunos registros:</strong><ul><br>`;
       data.Erróneos.forEach((error: any) => {
@@ -120,12 +120,10 @@ export class CargarArchivoComponent {
       });
       mensaje += `</ul>`;
     }
-
     if (data.Correctos?.length > 0) {
       mensaje += `<br><strong>Registros correctos:</strong><ul>`;
       mensaje += data.Correctos.join(', ') + '<br><br>';
     }
-
     this.alertService.showAlertHTML(mensaje, '');
   }
 }
