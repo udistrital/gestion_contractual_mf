@@ -19,17 +19,8 @@ import { AlertService } from 'src/app/services/alert.service';
 import {
   ApiResponse,
   EstadoContrato,
-  ParametroResponse,
+  ParametroResponse, SimpleItem,
 } from 'src/app/types/types';
-
-
-interface Parametro {
-  Id: number | string;
-  Nombre: string;
-  Descripcion?: string;
-  CodigoAbreviacion?: string;
-  Activo?: boolean;
-}
 
 @Component({
   selector: 'app-paso-info-general',
@@ -65,6 +56,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   ) {}
 
   formInfoGeneral = this.fb.group({
+    unidadEjecutoraId: ['', Validators.required],
     tipoCompromisoId: ['', Validators.required],
     tipoContratoId: ['', Validators.required],
     perfilContratistaId: [''],
@@ -78,7 +70,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     regimenContratacionId: ['', Validators.required],
     procedimientoId: ['', Validators.required],
     plazoEjecucion: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
-    unidadEjecutoraId: ['', Validators.required],
+    unidadEjecucionId: ['', Validators.required]
   });
 
   //Parametros (Opciones)
@@ -91,6 +83,8 @@ export class PasoInfoGeneralComponent implements OnInit {
   unidadesEjecucion: ParametroResponse[] = [];
   // orden-contrato
   perfilesContratista: ParametroResponse[] = [];
+
+  unidadesEjecutoras: SimpleItem[] = [];
 
   aplicaPoliza: { value: string; viewValue: string }[] = [
     { value: '0', viewValue: 'No' },
@@ -112,6 +106,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       this.loadInfoDataMid();
     } else {
       this.loadInitialData();
+      this.processRoles();
       this.setuptipoCompromisoId();
       this.setuptipoContratoId();
       this.setupAplicaPoliza();
@@ -224,7 +219,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       this.CargarmodalidadSeleccionId(),
       this.CargarregimenContratacionId(),
       this.CargarprocedimientoId(),
-      this.CargarunidadEjecutoraId(),
+      this.CargarunidadEjecucionId(),
     ])
       .then(() => {
         this.isLoading = false;
@@ -232,6 +227,50 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.cdRef.detectChanges();
       })
       .catch(this.handleError);
+  }
+
+  private processRoles(): void {
+    console.log('Roles:', this.roles);
+
+    const filteredRoles = this.roles.filter(role =>
+      role.includes('RECTOR') || role.includes('IDEXUD')
+    );
+
+    const mappedItems = filteredRoles.map(role => {
+      if (role.includes('RECTOR')) {
+        return {
+          Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+          Nombre: 'Rectoría'
+        };
+      }
+      if (role.includes('IDEXUD')) {
+        return {
+          Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+          Nombre: 'IDEXUD'
+        };
+      }
+      return null;
+    }).filter((item): item is SimpleItem => item !== null);
+
+    const uniqueMap = new Map(mappedItems.map(item => [item.Id, item]));
+    let uniqueOptions: SimpleItem[] = Array.from(uniqueMap.values());
+
+    console.log('Unidades ejecutoras:', uniqueOptions);
+
+    uniqueOptions = [...uniqueOptions,
+/*
+{
+  Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+  Nombre: 'Rectoría'
+},
+
+{
+  Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+  Nombre: 'IDEXUD'
+}
+*/
+      ];
+    this.unidadesEjecutoras = uniqueOptions;
   }
 
   //Generales
@@ -353,7 +392,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       });
   }
 
-  CargarunidadEjecutoraId() {
+  CargarunidadEjecucionId() {
     this.parametrosService
       .get(
         'parametro?query=TipoParametroId:' +
@@ -488,8 +527,9 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.loadedData = true;
       },
       error: async (error) => {
+        console.log('Error:', error);
         this.isLoading = false;
-        await this.alertService.showErrorAlert(
+        this.alertService.showErrorAlert(
           'Ocurrió un error al obtener los datos',
           'Error al obtener los datos'
         );
@@ -519,7 +559,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       this.createDynamicOption(data.procedimientoId)
     );
     this.unidadesEjecucion = sortParametros(
-      this.createDynamicOption(data.unidadEjecutoraId)
+      this.createDynamicOption(data.unidadEjecucionId)
     );
   }
 
@@ -554,6 +594,8 @@ export class PasoInfoGeneralComponent implements OnInit {
       regimen_contratacion_id: formData.regimenContratacionId,
       procedimiento_id: formData.procedimientoId,
       plazo_ejecucion: formData.plazoEjecucion,
+      unidad_ejecucion_id: formData.unidadEjecucionId,
+      unidad_ejecutora_id: formData.unidadEjecutoraId,
     };
     const saveOperation = this.formId
       ? this.contratoGeneralCrudService.put(this.formId, formParsed)
@@ -565,7 +607,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
         await this.guardarEstado(response.Data.id);
 
-        await this.alertService.showSuccessAlert(
+        this.alertService.showSuccessAlert(
           'Los datos se guardaron correctamente. IDs: ' + response.Data.id,
           'Datos guardados'
         );
@@ -580,8 +622,9 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.nextStep.emit();
       },
       error: async (error) => {
+        console.log('Error:', error);
         this.isLoading = false;
-        await this.alertService.showErrorAlert(
+        this.alertService.showErrorAlert(
           'Ocurrió un error al guardar los datos',
           'Error al guardar los datos'
         );
@@ -623,8 +666,9 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   private async handleError(error: any): Promise<void> {
+    console.log('Error:', error);
     this.isLoading = false;
-    await this.alertService.showErrorAlert(
+    this.alertService.showErrorAlert(
       'Ocurrió un error al cargar los datos iniciales',
       'Error al cargar los datos iniciales'
     );

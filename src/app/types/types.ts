@@ -90,3 +90,20 @@ export interface AmparoResponse {
   amparo_id: number;
   descripcion: string;
 }
+
+export interface SimpleItem {
+  Id: number;
+  Nombre: string;
+}
+
+export interface NestedItem {
+  LugarHijoId: {
+    Id: number;
+    Nombre: string;
+  };
+}
+
+export interface DependenciaItem {
+  id: number;
+  nombre: string;
+}

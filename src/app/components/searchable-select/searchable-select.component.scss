@@ -1,0 +1,39 @@
+.w-100 {
+  width: 100%;
+}
+
+::ng-deep .mat-mdc-select-search-input {
+  padding: 8px !important;
+}
+
+::ng-deep .mat-mdc-select-search-inner {
+  margin-bottom: 0 !important;
+}
+
+::ng-deep .mat-mdc-select-panel {
+  min-width: fit-content !important;
+}
+
+.error-border {
+  border-color: red !important;
+}
+
+.mat-mdc-form-field.mat-form-field-invalid .mat-mdc-text-field-wrapper.mdc-text-field--outlined,
+.mat-mdc-form-field.mat-form-field-invalid .mat-mdc-text-field-wrapper.mdc-text-field--filled,
+.mat-form-field.error-border .mat-form-field-outline {
+  border-color: red !important;
+}
+
+.disabled-label {
+  color: rgba(0,0,0,.38);
+  font-size: 12px;
+  transform: translateY(-50%) scale(0.75);
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  pointer-events: none;
+}
+
+.mat-form-field-should-float .mat-form-field-label {
+  transform: translateY(-50%) scale(0.75) !important;
+}
