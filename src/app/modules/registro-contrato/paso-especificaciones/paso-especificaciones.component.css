@@ -45,7 +45,7 @@
 }
 
 .mat-elevation-z4 {
-  height: 300px;
+  max-height: 300px;
   overflow: auto;
 }
 

@@ -88,7 +88,7 @@ export class PasoEspecificacionesComponent {
     this.contratoGeneralCrudService
       .postEspecificacionTecnica({
         ...especificacionSinId,
-        contratoGeneralId: this.contrato_general_id,
+        contrato_general_id: this.contrato_general_id,
       })
       .subscribe({
         next: (response: { Success: boolean; Data: EspecificacionTecnica }) => {
