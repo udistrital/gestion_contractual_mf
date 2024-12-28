@@ -2,9 +2,6 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import Swal from 'sweetalert2';
-import { ParametrosService } from '../../../services/parametros.service';
 import { DocumentosService } from '../../../services/documentos.service';
 import { AlertService } from 'src/app/services/alert.service';
 
@@ -27,7 +24,6 @@ export class PasoDocumentosComponent implements OnInit {
     private alertService: AlertService,
     private formBuilder: FormBuilder,
     private dialog: MatDialog,
-    private http: HttpClient,
     private documentosService: DocumentosService
   ) {}
 

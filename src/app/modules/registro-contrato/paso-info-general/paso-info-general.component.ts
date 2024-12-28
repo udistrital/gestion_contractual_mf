@@ -1,26 +1,12 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Input,
-  OnInit,
-  Output,
-} from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import {
-  ParametrosService,
-  sortParametros,
-} from 'src/app/services/parametros.service';
-import { environment } from 'src/environments/environment';
-import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
-import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
-import { RolService } from "src/app/services/rol.service";
-import { AlertService } from 'src/app/services/alert.service';
-import {
-  ApiResponse,
-  EstadoContrato,
-  ParametroResponse, SimpleItem,
-} from 'src/app/types/types';
+import {ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output,} from '@angular/core';
+import {FormBuilder, Validators} from '@angular/forms';
+import {ParametrosService, sortParametros,} from 'src/app/services/parametros.service';
+import {environment} from 'src/environments/environment';
+import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
+import {ContratoGeneralMidService} from "../../../services/contrato-general-mid.service";
+import {RolService} from "src/app/services/rol.service";
+import {AlertService} from 'src/app/services/alert.service';
+import {ApiResponse, EstadoContrato, ParametroResponse, SimpleItem,} from 'src/app/types/types';
 
 @Component({
   selector: 'app-paso-info-general',
@@ -253,24 +239,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     }).filter((item): item is SimpleItem => item !== null);
 
     const uniqueMap = new Map(mappedItems.map(item => [item.Id, item]));
-    let uniqueOptions: SimpleItem[] = Array.from(uniqueMap.values());
-
-    console.log('Unidades ejecutoras:', uniqueOptions);
-
-    uniqueOptions = [...uniqueOptions,
-/*
-{
-  Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-  Nombre: 'Rectoría'
-},
-
-{
-  Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-  Nombre: 'IDEXUD'
-}
-*/
-      ];
-    this.unidadesEjecutoras = uniqueOptions;
+    this.unidadesEjecutoras = Array.from(uniqueMap.values());
   }
 
   //Generales
