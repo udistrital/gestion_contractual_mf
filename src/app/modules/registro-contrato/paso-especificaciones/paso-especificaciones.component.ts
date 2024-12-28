@@ -198,9 +198,13 @@ export class PasoEspecificacionesComponent {
   }
 
   abrirModalCargarArchivo(): void {
-    this.dialog.open(CargarArchivoComponent, {
+    const dialog = this.dialog.open(CargarArchivoComponent, {
       width: '800px',
       data: { contrato_general_id: this.contrato_general_id },
+    });
+
+    dialog.afterClosed().subscribe(() => {
+      this.getEspecificaciones();
     });
   }
 }
