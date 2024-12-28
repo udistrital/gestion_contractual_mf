@@ -7,9 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import {NgxMatSelectSearchModule} from "ngx-mat-select-search";
 import {NgForOf, NgIf} from "@angular/common";
-import {DependenciaItem, NestedItem, ParametroResponse, SimpleItem} from "../../types/types";
+import {CDPItem, DependenciaItem, NestedItem, ParametroResponse, SimpleItem} from "../../types/types";
 
-export type ItemType = SimpleItem | NestedItem | DependenciaItem | ParametroResponse;
+export type ItemType = SimpleItem | NestedItem | DependenciaItem | ParametroResponse | CDPItem;
 
 @Component({
   selector: 'app-searchable-select',

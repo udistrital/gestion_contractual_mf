@@ -28,16 +28,13 @@
               </mat-select>
               <mat-icon matPrefix>event</mat-icon>
             </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Número de la Disponibilidad (CDP):</mat-label>
-              <mat-select formControlName="cdp">
-                <mat-option>Ninguna Seleccionada</mat-option>
-                <mat-option *ngFor="let cdp of cdps" [value]="cdp.value">
-                  {{ cdp.viewValue }}
-                </mat-option>
-              </mat-select>
-              <mat-icon matPrefix>list_alt</mat-icon>
-            </mat-form-field>
+            <app-searchable-select
+              label="Número de la Disponibilidad (CDP)"
+              icon="list_alt"
+              [items]="cdps"
+              [control]="form.get('cdp')"
+            >
+            </app-searchable-select>
             <mat-form-field appearance="outline">
               <mat-label>Valor Acumulado:</mat-label>
               <input matInput formControlName="valorAcumulado" />
