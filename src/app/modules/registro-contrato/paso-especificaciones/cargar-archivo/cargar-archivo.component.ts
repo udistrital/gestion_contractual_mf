@@ -75,15 +75,16 @@ export class CargarArchivoComponent {
         next: (response: any) => {
           console.log('Archivo enviado exitosamente al MID', response);
           if (response && response.Data) {
-            this.dialogRef.close();
             this.mostrarResultados(response.Data);
           }
         },
         error: (error: any) => {
+          this.dialogRef.close();
           console.error('Error al enviar el archivo al MID', error);
         },
         complete: () => {
-          this.isLoading = false
+          this.isLoading = false;
+          this.dialogRef.close();
         },
       });
   }
