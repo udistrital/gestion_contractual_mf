@@ -3,7 +3,6 @@ import {
   OnInit,
   ViewChild,
   AfterViewInit,
-  ChangeDetectorRef,
   ViewChildren,
   QueryList,
 } from '@angular/core';

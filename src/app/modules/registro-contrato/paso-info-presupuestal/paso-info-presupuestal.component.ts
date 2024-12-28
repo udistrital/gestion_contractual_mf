@@ -82,17 +82,6 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   cdps: any[] = [];
 
-  displayedColumns: string[] = [
-    'vigencia',
-    'solicitudNecesidad',
-    'numeroCDP',
-    'valor',
-    'dependencia',
-    'rubro',
-    'estado',
-    'acciones',
-  ];
-
   selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
   cdpsContrato: CDPContratoCRUD[] = []; // Lista de CDPs asociados al contrato general
 
