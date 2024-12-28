@@ -78,7 +78,7 @@ export class RevisionContratoComponent {
     this.contratoGeneralCrudService.get(this.contrato_general_id).subscribe({
       next: (res: any) => {
         if (res.Success && res.Status == 200) {
-          this.unidad_ejecutora_id = res.Data?.unidadEjecutoraId;
+          this.unidad_ejecutora_id = res.Data?.unidad_ejecutora_id;
           this.setUnidadEjecutora();
         }
       },
@@ -234,7 +234,6 @@ export class RevisionContratoComponent {
         usuario_rol: rol,
         estado_parametro_id,
         estado_interno_parametro_id: estado,
-        motivo: ' ',
       };
       if (estado == environment.ESTADOS_INTERNOS.APROBADO_JEFE) {
         estadoContrato.estado_parametro_id =
