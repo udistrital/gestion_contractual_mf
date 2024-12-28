@@ -304,16 +304,6 @@ export class RevisionContratoComponent {
             <i class="material-icons">error</i>
             <span></span>
           </p>
-          <div class="btn-container">
-            <button
-              id="previewBtn"
-              class="mat-stroked-button mat-primary"
-              style="display: none;"
-            >
-              <i class="material-icons">visibility</i>
-              Ver
-            </button>
-          </div>
         </div>
       `,
       showCancelButton: true,
@@ -394,11 +384,11 @@ export class RevisionContratoComponent {
           }
         `;
         document.head.appendChild(style);
-        
+
         this.setupFileUploadListeners();
       }
     });
-  
+
     if (formValues) {
       await this.uploadAndProcessDocument(formValues.file);
     }
@@ -427,31 +417,6 @@ export class RevisionContratoComponent {
         }
       }
     });
-
-    previewBtn.addEventListener('click', () => {
-      const file = fileInput.files?.[0];
-      if (file) {
-        this.openPdfPreview(file);
-      }
-    });
-  }
-
-  private async openPdfPreview(file: File): Promise<void> {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const pdfWindow = window.open('');
-      if (pdfWindow) {
-        pdfWindow.document.write(`
-          <iframe 
-            src="${e.target?.result}"
-            width="100%" 
-            height="100%" 
-            style="border: none;">
-          </iframe>
-        `);
-      }
-    };
-    reader.readAsDataURL(file);
   }
 
   private async uploadAndProcessDocument(file: File): Promise<void> {
