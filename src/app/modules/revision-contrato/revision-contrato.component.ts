@@ -5,7 +5,7 @@ import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { EstadoContrato, DocumentoContrato } from 'src/app/types/types';
-import { DocumentosService } from 'src/app/services/documentos.service';
+import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { ActivatedRoute } from '@angular/router';
@@ -36,7 +36,7 @@ export class RevisionContratoComponent {
     private route: ActivatedRoute,
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
-    private documentosService: DocumentosService,
+    private gestorDocumentalService: GestorDocumentalService,
     private rolService: RolService,
     private userService: UserService
   ) {}
@@ -163,7 +163,7 @@ export class RevisionContratoComponent {
   }
 
   getDocumentoGestorDocumental(documento: DocumentoContrato) {
-    this.documentosService.getDocumento(documento.documento_enlace).subscribe({
+    this.gestorDocumentalService.getDocumento(documento.documento_enlace).subscribe({
       next: (response: any) => {
         if (response.file) {
           const tipoDocumento = documento.tipo_documento_id;

@@ -10,8 +10,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { PolizasService } from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import { finalize, firstValueFrom } from 'rxjs';
-import Swal from 'sweetalert2';
+import { firstValueFrom } from 'rxjs';
 import { AmparoResponse, ApiResponse } from '../../../types/types';
 import { AlertService } from 'src/app/services/alert.service';
 

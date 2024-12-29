@@ -64,4 +64,18 @@ export class AlertService {
       },
     });
   }
+
+  showAlertHTML(text: string, title: string = 'Atención') {
+    Swal.fire({
+      title: title,
+      html: text,
+      icon: 'warning',
+      confirmButtonText: 'Aceptar',
+      customClass: {
+        confirmButton: 'alertaConfirmarBoton',
+        cancelButton: 'alertaCancelarBoton',
+        icon: 'alertaIconoConfirmacion',
+      },
+    });
+  }
 }

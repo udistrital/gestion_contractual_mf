@@ -13,7 +13,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
 import { FileService } from './services/file.service';
 import { UbicacionService } from './services/ubicacion.service';
-import { DocumentosService } from './services/documentos.service';
+import { GestorDocumentalService } from './services/gestor-documental.service';
 import { QuillModule } from 'ngx-quill';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
 import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
@@ -38,7 +38,7 @@ import { RevisionContratoModule } from './modules/revision-contrato/revision-con
     UbicacionService,
     RequestManager,
     FileService,
-    DocumentosService,
+    GestorDocumentalService,
     OrdenadoresSupervisoresContratacionMidService,
   ],
   bootstrap: [AppComponent],

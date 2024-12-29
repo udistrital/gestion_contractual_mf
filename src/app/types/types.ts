@@ -65,9 +65,9 @@ export interface EspecificacionTecnica {
   id: number;
   descripcion: string;
   cantidad: number;
-  valorUnitario: number;
-  valorTotal: number;
-  contratoGeneralId?: number;
+  valor_unitario: number;
+  valor_total: number;
+  contrato_general_id?: number;
 }
 
 export interface DocumentoContrato {

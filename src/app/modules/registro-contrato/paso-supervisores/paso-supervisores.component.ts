@@ -15,7 +15,6 @@ import {
 } from '../../../types/types';
 import { ContratoGeneralMidService } from '../../../services/contrato-general-mid.service';
 import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
-import Swal from 'sweetalert2';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
