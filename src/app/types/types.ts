@@ -34,7 +34,7 @@ export interface EstadoContrato {
   usuario_rol: string;
   estado_parametro_id: number;
   estado_interno_parametro_id: number;
-  motivo: string;
+  motivo?: string;
 }
 
 export interface ContratistaCRUD {
@@ -65,9 +65,9 @@ export interface EspecificacionTecnica {
   id: number;
   descripcion: string;
   cantidad: number;
-  valorUnitario: number;
-  valorTotal: number;
-  contratoGeneralId?: number;
+  valor_unitario: number;
+  valor_total: number;
+  contrato_general_id?: number;
 }
 
 export interface DocumentoContrato {

@@ -48,6 +48,7 @@ import {
 } from '@angular/material/expansion';
 import { CDPListComponent } from '../../components/cdp-lista/cdp-lista';
 import { ModalEspecificacionComponent } from './paso-especificaciones/modal-especificacion/modal-especificacion.component';
+import { CargarArchivoComponent } from './paso-especificaciones/cargar-archivo/cargar-archivo.component';
 import { SearchableSelectComponent } from '../../components/searchable-select/searchable-select.component';
 import { SharedModule } from 'src/app/shared/shared.module';
 
@@ -63,6 +64,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
     GuardarInfoComponent,
     PasoEspecificacionesComponent,
     ModalEspecificacionComponent,
+    CargarArchivoComponent,
     PasoClausulasParagrafosComponent,
     ParagrafoDialogComponent,
     PasoDocumentosComponent,

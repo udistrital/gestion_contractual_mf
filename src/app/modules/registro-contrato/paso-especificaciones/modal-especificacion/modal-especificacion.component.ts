@@ -9,6 +9,15 @@ import { EspecificacionTecnica } from 'src/app/types/types';
   styleUrls: ['./modal-especificacion.component.css'],
 })
 export class ModalEspecificacionComponent implements OnInit {
+  allowedKeys = [
+    'Backspace',
+    'Tab',
+    'End',
+    'Home',
+    'ArrowLeft',
+    'ArrowRight',
+    'Delete',
+  ];
   formEspecificacion!: FormGroup;
   especificacionOriginal!: EspecificacionTecnica;
   guardarHabilitado: boolean = false;
@@ -35,26 +44,44 @@ export class ModalEspecificacionComponent implements OnInit {
       id: [null],
       descripcion: ['', Validators.required],
       cantidad: ['', Validators.required],
-      valorUnitario: ['', Validators.required],
-      valorTotal: ['', Validators.required],
+      valor_unitario: ['', Validators.required],
+      valor_total: ['', Validators.required],
     });
   }
 
-  validarInput(event: Event, controlName: string) {
-    const inputElement = event.target as HTMLInputElement;
-    const value = inputElement.value;
-    let validValue: string | null = null;
+  validarNumero(event: KeyboardEvent) {
+    const pattern = /^[0-9]$/;
+    if (!this.allowedKeys.includes(event.key) && !pattern.test(event.key)) {
+      event.preventDefault();
+    }
+  }
 
-    if (controlName === 'cantidad') {
-      validValue = value.match(/^\d+/)?.[0] || ''; // Captura solo los dígitos iniciales
-    } else {
-      validValue = value.match(/^\d+(\.\d{0,2})?/)?.[0] || ''; // Captura hasta dos decimales
+  validarNumeroConDecimales(event: KeyboardEvent, inputValue: string) {
+    const key = event.key;
+
+    // Permitir teclas funcionales (no numéricas)
+    if (this.allowedKeys.includes(key)) {
+      return; // Permite estas teclas
     }
 
-    // Si el valor válido es diferente al valor original, actualizar el valor en el input
-    if (validValue !== value) {
-      inputElement.value = validValue;
-      this.formEspecificacion.get(controlName)?.setValue(validValue);
+    // Permitir números y el punto decimal
+    const pattern = /^[0-9.]$/;
+    if (!pattern.test(key)) {
+      event.preventDefault();
+      return;
+    }
+
+    // Evitar más de un punto decimal
+    if (key === '.' && inputValue.includes('.')) {
+      event.preventDefault();
+      return;
+    }
+    
+    // Validar que después del punto decimal solo haya hasta dos dígitos
+    const [integerPart, decimalPart] = inputValue.split('.');
+    if (decimalPart && decimalPart.length >= 2 && key !== 'Backspace') {
+      event.preventDefault();
+      return;
     }
   }
 

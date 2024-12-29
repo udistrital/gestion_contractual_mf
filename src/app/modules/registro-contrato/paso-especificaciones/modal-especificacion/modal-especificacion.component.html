@@ -22,7 +22,7 @@
           matInput
           formControlName="cantidad"
           step="1"
-          (input)="validarInput($event, 'cantidad')"
+          (keydown)="validarNumero($event)"
         />
       </mat-form-field>
     </div>
@@ -32,9 +32,11 @@
         <input
           type="number"
           matInput
-          formControlName="valorUnitario"
+          formControlName="valor_unitario"
           step="0.01"
-          (input)="validarInput($event, 'valorUnitario')"
+          (keydown)="
+            validarNumeroConDecimales($event, $any($event.target).value)
+          "
         />
       </mat-form-field>
       <mat-form-field class="valor-total-field">
@@ -42,9 +44,11 @@
         <input
           type="number"
           matInput
-          formControlName="valorTotal"
+          formControlName="valor_total"
           step="0.01"
-          (input)="validarInput($event, 'valorTotal')"
+          (keydown)="
+            validarNumeroConDecimales($event, $any($event.target).value)
+          "
         />
       </mat-form-field>
     </div>
