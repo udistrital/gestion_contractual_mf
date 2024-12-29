@@ -8,7 +8,11 @@ import { RequestManager } from './managers/requestManager';
 import { RegistroContratoModule } from './modules/registro-contrato/registro-contrato.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatIconModule } from '@angular/material/icon';
-import { HttpClientModule } from '@angular/common/http';
+import {
+  HttpClientModule,
+  provideHttpClient,
+  withInterceptors,
+} from '@angular/common/http';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
 import { FileService } from './services/file.service';
@@ -17,6 +21,7 @@ import { DocumentosService } from './services/documentos.service';
 import { QuillModule } from 'ngx-quill';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
 import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
+import { SpinnerIntercerptor } from './core/intercerptors/spinner.interceptor';
 
 @NgModule({
   declarations: [AppComponent],
@@ -40,6 +45,7 @@ import { RevisionContratoModule } from './modules/revision-contrato/revision-con
     FileService,
     DocumentosService,
     OrdenadoresSupervisoresContratacionMidService,
+    provideHttpClient(withInterceptors([SpinnerIntercerptor])),
   ],
   bootstrap: [AppComponent],
 })
