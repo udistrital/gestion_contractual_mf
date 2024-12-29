@@ -2,7 +2,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
-import { DocumentosService } from '../../../services/documentos.service';
+import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
@@ -24,7 +24,7 @@ export class PasoDocumentosComponent implements OnInit {
     private alertService: AlertService,
     private formBuilder: FormBuilder,
     private dialog: MatDialog,
-    private documentosService: DocumentosService
+    private gestorDocumentalService: GestorDocumentalService
   ) {}
 
   ngOnInit() {}
@@ -96,7 +96,7 @@ export class PasoDocumentosComponent implements OnInit {
         },
       ];
 
-      this.documentosService
+      this.gestorDocumentalService
         .postAny('/document/uploadAnyFormat', payload)
         .subscribe({
           next: (response) => {

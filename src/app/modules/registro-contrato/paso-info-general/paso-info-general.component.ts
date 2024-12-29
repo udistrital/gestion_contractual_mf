@@ -611,7 +611,6 @@ export class PasoInfoGeneralComponent implements OnInit {
       usuario_rol: rol,
       estado_parametro_id: this.estado_id,
       estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR,
-      motivo: ' ',
     };
 
     this.contratoGeneralCrudService.postEstadoContrato(estado).subscribe({

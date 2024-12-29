@@ -11,7 +11,6 @@ import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import { CdpsService } from 'src/app/services/cdps.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
 import {CDP, CDPContratoCRUD, CDPData, CDPItem, OrdenadorContratoData, SimpleItem} from '../../../types/types';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
@@ -206,7 +205,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       // Preparar datos para el POST de OrdenadorContrato
       const ordenadorContratoData: OrdenadorContratoData = {
         ordenador_argo_id: ordenadorGastoId ? Number(ordenadorGastoId) : 0,
-        ordenador_sikarca_id: this.idSikarcaOrdenador ? Number(this.idSikarcaOrdenador) : 0,
+        ordenador_sikarca_id: this.idSikarcaOrdenador
+          ? Number(this.idSikarcaOrdenador)
+          : 0,
         documento_identidad: this.documentoIdentidadOrdenador || '',
         cargo_id: this.cargoIdOrdenador || 0,
         contrato_general_id: contratoId,
@@ -214,7 +215,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
       // Realizar el POST al endpoint de OrdenadorContrato
       const ordenadorContratoResponse = await firstValueFrom(
-        this.contratoGeneralCrudService.postOrdenadorContrato(ordenadorContratoData)
+        this.contratoGeneralCrudService.postOrdenadorContrato(
+          ordenadorContratoData
+        )
       );
 
       // Actualizar en el backend la información presupuestal
@@ -549,11 +552,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         } else {
           this.form.get('ordenadorGasto')?.reset();
           this.form.get('nombreOrdenador')?.reset();
-          await Swal.fire({
-            title: 'Error',
-            text: 'No se encontraron ordenadores para el rol seleccionado',
-            icon: 'error',
-          });
+          this.alertService.showErrorAlert(
+            'No se encontraron ordenadores para el rol seleccionado'
+          );
         }
       });
   }
@@ -643,9 +644,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         await this.alertService.showSuccessAlert('CDP eliminado correctamente');
       }
     } catch (error) {
-      this.alertService.showErrorAlert(
-        'Hubo un error al eliminar el CDP'
-      );
+      this.alertService.showErrorAlert('Hubo un error al eliminar el CDP');
     }
 
     this.form.get('cdp')?.reset();
@@ -658,5 +657,4 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       console.log('Paso Info Presupuestal - out of view');
     }
   }
-
 }
