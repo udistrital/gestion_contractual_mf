@@ -20,6 +20,16 @@
     <div class="row">
       <div class="col-12 col-lg-6">
         <app-searchable-select
+          label="Unidad Ejecutora"
+          icon="widgets"
+          [items]="unidadesEjecutoras"
+          [control]="formInfoGeneral.get('unidadEjecutoraId')"
+          [required]="true"
+        >
+        </app-searchable-select>
+      </div>
+      <div class="col-12 col-lg-6">
+        <app-searchable-select
           label="Tipo de Compromiso"
           icon="assignment"
           [items]="tiposCompromisos"
@@ -181,7 +191,7 @@
       <mat-form-field class="col-12 col-lg-6" appearance="outline">
         <mat-label>Unidad de Ejecución:</mat-label>
         <mat-icon matIconPrefix>timer</mat-icon>
-        <mat-select formControlName="unidadEjecutoraId">
+        <mat-select formControlName="unidadEjecucionId">
           <mat-option
             *ngFor="let unidad_ejecucion of unidadesEjecucion"
             [value]="unidad_ejecucion.Id"

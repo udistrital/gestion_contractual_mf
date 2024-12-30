@@ -170,12 +170,12 @@ export class PasoSupervisoresComponent implements OnInit {
       );
       this.solicitanteSaved = true;
 
-      await this.alertService.showSuccessAlert(
+      this.alertService.showSuccessAlert(
         'La información del solicitante se ha guardado correctamente'
       );
     } catch (error) {
       console.error('Error saving solicitante:', error);
-      await this.alertService.showErrorAlert(
+      this.alertService.showErrorAlert(
         'Ocurrió un error al guardar la información del solicitante'
       );
     } finally {
@@ -224,12 +224,12 @@ export class PasoSupervisoresComponent implements OnInit {
       );
       this.lugarEjecucionSaved = true;
 
-      await this.alertService.showSuccessAlert(
+      this.alertService.showSuccessAlert(
         'La información del lugar de ejecución se ha guardado correctamente',
         'Lugar de ejecución guardado'
       );
     } catch (error) {
-      await this.alertService.showErrorAlert(
+      this.alertService.showErrorAlert(
         'Ocurrió un error al guardar la información del lugar de ejecución'
       );
     } finally {
@@ -240,7 +240,7 @@ export class PasoSupervisoresComponent implements OnInit {
 
   async guardarYContinuar() {
     if (!this.solicitanteSaved || !this.lugarEjecucionSaved) {
-      await this.alertService.showAlert(
+      this.alertService.showAlert(
         'Por favor, guarde todas las secciones antes de continuar',
         'Información incompleta'
       );
@@ -322,7 +322,7 @@ export class PasoSupervisoresComponent implements OnInit {
         },
         error: async (error) => {
           console.error('Error al cargar sedes:', error);
-          await this.alertService.showErrorAlert(
+          this.alertService.showErrorAlert(
             'Ocurrió un error al cargar las sedes, por favor intenta más tarde.',
             'Error al cargar sedes'
           );
@@ -379,7 +379,7 @@ export class PasoSupervisoresComponent implements OnInit {
             `Error al cargar dependencias para sede ${sedeId}:`,
             error
           );
-          await this.alertService.showErrorAlert(
+          this.alertService.showErrorAlert(
             'Ocurrió un error al cargar las dependencias, por favor intenta más tarde.',
             'Error al cargar dependencias'
           );

@@ -37,7 +37,7 @@ export class PdfViewerModalComponent implements OnInit {
 
   async ngOnInit() {
     this.guardarDoc = this.data.documento;
-    this.loadPdf();
+    await this.loadPdf();
   }
 
   async loadPdf() {

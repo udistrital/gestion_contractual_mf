@@ -1,0 +1,30 @@
+<mat-form-field
+  appearance="outline"
+  class="w-100"
+  [class.error-border]="controlValue.disabled && !items.length"
+  [class.mat-form-field-should-float]="controlValue.disabled && items.length">
+  <mat-label>{{ label }}</mat-label>
+  <mat-icon *ngIf="icon" matIconPrefix>{{ icon }}</mat-icon>
+  <mat-select
+    [formControl]="controlValue"
+    [required]="required"
+  >
+    <mat-option>
+      <ngx-mat-select-search
+        [formControl]="searchCtrl"
+        [placeholderLabel]="'Buscar ' + label.toLowerCase()"
+        [noEntriesFoundLabel]="'No se encontraron resultados'"
+        [showToggleAllCheckbox]="false"
+        [hideClearSearchButton]="false"
+      >
+      </ngx-mat-select-search>
+    </mat-option>
+
+    <mat-option *ngFor="let item of items" [value]="getValue(item)">
+      {{ getDisplayName(item) }}
+    </mat-option>
+  </mat-select>
+  <mat-error *ngIf="controlValue.hasError('required')">
+    Este campo es requerido
+  </mat-error>
+</mat-form-field>

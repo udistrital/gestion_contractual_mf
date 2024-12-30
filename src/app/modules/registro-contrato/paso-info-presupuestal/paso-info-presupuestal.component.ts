@@ -12,30 +12,10 @@ import { CdpsService } from 'src/app/services/cdps.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
-import { CDP, CDPContratoCRUD } from '../../../types/types';
+import {CDP, CDPContratoCRUD, CDPData, CDPItem, OrdenadorContratoData, SimpleItem} from '../../../types/types';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
 import { cdpConstructorTabla } from './paso-info-presupuestal.utilidades';
 import { AlertService } from 'src/app/services/alert.service';
-
-interface CDPData {
-  vigencia: string;
-  numero_necesidad: string;
-  estado_necesidad: string;
-  numero_disponibilidad: string;
-  estadocdp: string;
-  nombre_dependencia: string;
-  id_necesidad: string;
-}
-
-interface OrdenadorContratoData {
-  tercero_id?: number;
-  ordenador_argo_id: number;
-  ordenador_sikarca_id: number;
-  resolucion?: string;
-  documento_identidad: string;
-  cargo_id: number;
-  contrato_general_id: number;
-}
 
 @Component({
   selector: 'app-paso-info-presupuestal',
@@ -79,18 +59,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   vigencias: any[] = [{ value: '2024', viewValue: '2024' }];
 
-  cdps: any[] = [];
-
-  displayedColumns: string[] = [
-    'vigencia',
-    'solicitudNecesidad',
-    'numeroCDP',
-    'valor',
-    'dependencia',
-    'rubro',
-    'estado',
-    'acciones',
-  ];
+  cdps: CDPItem[] = [];
 
   selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
   cdpsContrato: CDPContratoCRUD[] = []; // Lista de CDPs asociados al contrato general
@@ -369,10 +338,11 @@ export class PasoInfoPresupuestalComponent implements OnInit {
             });
 
             this.cdps = Array.from(uniqueCDPs.values()).map((cdp) => ({
-              value: cdp.numero_disponibilidad,
-              viewValue: cdp.numero_disponibilidad,
+              Id: cdp.numero_disponibilidad,
+              Nombre: cdp.numero_disponibilidad,
             }));
 
+            console.log("CDps:", this.cdps)
             this.sortCDPs();
           } else {
             console.error('Error loading CDPs:', response.Message);
@@ -419,7 +389,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     this.cdps = this.cdps.filter(
       (cdp) =>
         !this.selectedCDP.some(
-          (selected) => selected.numero_disponibilidad === cdp.value
+          (selected) => selected.numero_disponibilidad === cdp.Id
         )
     );
   }
@@ -635,8 +605,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   sortCDPs() {
     this.cdps.sort((a, b) => {
-      const numA = parseInt(a.value, 10);
-      const numB = parseInt(b.value, 10);
+      const numA = parseInt(a.Id, 10);
+      const numB = parseInt(b.Id, 10);
       return numA - numB;
     });
   }
@@ -663,8 +633,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         this.updateValorAcumulado();
 
         this.cdps.push({
-          value: cdpAEliminar.numero_disponibilidad,
-          viewValue: cdpAEliminar.numero_disponibilidad,
+          Id: cdpAEliminar.numero_disponibilidad,
+          Nombre: cdpAEliminar.numero_disponibilidad,
         });
 
         this.cdpsService.updateLocalCDP(this.selectedCDP);
