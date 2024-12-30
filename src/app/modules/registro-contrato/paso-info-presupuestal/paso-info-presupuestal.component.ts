@@ -11,32 +11,11 @@ import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import { CdpsService } from 'src/app/services/cdps.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import Swal from 'sweetalert2';
 import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
-import { CDP, CDPContratoCRUD } from '../../../types/types';
+import {CDP, CDPContratoCRUD, CDPData, CDPItem, OrdenadorContratoData, SimpleItem} from '../../../types/types';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
 import { cdpConstructorTabla } from './paso-info-presupuestal.utilidades';
 import { AlertService } from 'src/app/services/alert.service';
-
-interface CDPData {
-  vigencia: string;
-  numero_necesidad: string;
-  estado_necesidad: string;
-  numero_disponibilidad: string;
-  estadocdp: string;
-  nombre_dependencia: string;
-  id_necesidad: string;
-}
-
-interface OrdenadorContratoData {
-  tercero_id?: number;
-  ordenador_argo_id: number;
-  ordenador_sikarca_id: number;
-  resolucion?: string;
-  documento_identidad: string;
-  cargo_id: number;
-  contrato_general_id: number;
-}
 
 @Component({
   selector: 'app-paso-info-presupuestal',
@@ -80,18 +59,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   vigencias: any[] = [{ value: '2024', viewValue: '2024' }];
 
-  cdps: any[] = [];
-
-  displayedColumns: string[] = [
-    'vigencia',
-    'solicitudNecesidad',
-    'numeroCDP',
-    'valor',
-    'dependencia',
-    'rubro',
-    'estado',
-    'acciones',
-  ];
+  cdps: CDPItem[] = [];
 
   selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
   cdpsContrato: CDPContratoCRUD[] = []; // Lista de CDPs asociados al contrato general
@@ -237,7 +205,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       // Preparar datos para el POST de OrdenadorContrato
       const ordenadorContratoData: OrdenadorContratoData = {
         ordenador_argo_id: ordenadorGastoId ? Number(ordenadorGastoId) : 0,
-        ordenador_sikarca_id: this.idSikarcaOrdenador ? Number(this.idSikarcaOrdenador) : 0,
+        ordenador_sikarca_id: this.idSikarcaOrdenador
+          ? Number(this.idSikarcaOrdenador)
+          : 0,
         documento_identidad: this.documentoIdentidadOrdenador || '',
         cargo_id: this.cargoIdOrdenador || 0,
         contrato_general_id: contratoId,
@@ -245,7 +215,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
       // Realizar el POST al endpoint de OrdenadorContrato
       const ordenadorContratoResponse = await firstValueFrom(
-        this.contratoGeneralCrudService.postOrdenadorContrato(ordenadorContratoData)
+        this.contratoGeneralCrudService.postOrdenadorContrato(
+          ordenadorContratoData
+        )
       );
 
       // Actualizar en el backend la información presupuestal
@@ -366,10 +338,11 @@ export class PasoInfoPresupuestalComponent implements OnInit {
             });
 
             this.cdps = Array.from(uniqueCDPs.values()).map((cdp) => ({
-              value: cdp.numero_disponibilidad,
-              viewValue: cdp.numero_disponibilidad,
+              Id: cdp.numero_disponibilidad,
+              Nombre: cdp.numero_disponibilidad,
             }));
 
+            console.log("CDps:", this.cdps)
             this.sortCDPs();
           } else {
             console.error('Error loading CDPs:', response.Message);
@@ -416,7 +389,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     this.cdps = this.cdps.filter(
       (cdp) =>
         !this.selectedCDP.some(
-          (selected) => selected.numero_disponibilidad === cdp.value
+          (selected) => selected.numero_disponibilidad === cdp.Id
         )
     );
   }
@@ -579,11 +552,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         } else {
           this.form.get('ordenadorGasto')?.reset();
           this.form.get('nombreOrdenador')?.reset();
-          await Swal.fire({
-            title: 'Error',
-            text: 'No se encontraron ordenadores para el rol seleccionado',
-            icon: 'error',
-          });
+          this.alertService.showErrorAlert(
+            'No se encontraron ordenadores para el rol seleccionado'
+          );
         }
       });
   }
@@ -634,8 +605,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   sortCDPs() {
     this.cdps.sort((a, b) => {
-      const numA = parseInt(a.value, 10);
-      const numB = parseInt(b.value, 10);
+      const numA = parseInt(a.Id, 10);
+      const numB = parseInt(b.Id, 10);
       return numA - numB;
     });
   }
@@ -662,8 +633,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         this.updateValorAcumulado();
 
         this.cdps.push({
-          value: cdpAEliminar.numero_disponibilidad,
-          viewValue: cdpAEliminar.numero_disponibilidad,
+          Id: cdpAEliminar.numero_disponibilidad,
+          Nombre: cdpAEliminar.numero_disponibilidad,
         });
 
         this.cdpsService.updateLocalCDP(this.selectedCDP);
@@ -673,9 +644,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         await this.alertService.showSuccessAlert('CDP eliminado correctamente');
       }
     } catch (error) {
-      this.alertService.showErrorAlert(
-        'Hubo un error al eliminar el CDP'
-      );
+      this.alertService.showErrorAlert('Hubo un error al eliminar el CDP');
     }
 
     this.form.get('cdp')?.reset();
@@ -688,5 +657,4 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       console.log('Paso Info Presupuestal - out of view');
     }
   }
-
 }
