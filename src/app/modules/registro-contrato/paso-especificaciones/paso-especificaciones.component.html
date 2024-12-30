@@ -15,13 +15,19 @@
       color="primary"
       (click)="openModalEspecificacion()"
     >
-      Añadir Especificación
+      <mat-icon>add_circle</mat-icon> Añadir Especificación
     </button>
-    <button mat-raised-button color="primary">Cargue Masivo XLS</button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="abrirModalCargarArchivo()"
+    >
+      <mat-icon>file_upload</mat-icon> Cargue Masivo
+    </button>
   </div>
 
-  <div class="form-grid1">
-    <table mat-table [dataSource]="especificaciones" class="mat-elevation-z4">
+  <div class="form-grid1" class="mat-elevation-z4">
+    <table mat-table [dataSource]="especificaciones" class="full-width-table">
       <ng-container matColumnDef="item">
         <mat-header-cell *matHeaderCellDef> ITEM </mat-header-cell>
         <mat-cell *matCellDef="let especificacion; let i = index">{{
@@ -43,13 +49,13 @@
       <ng-container matColumnDef="valorUnitario">
         <mat-header-cell *matHeaderCellDef> VALOR UNITARIO </mat-header-cell>
         <mat-cell *matCellDef="let especificacion">
-          {{ especificacion.valorUnitario }}
+          {{ especificacion.valor_unitario }}
         </mat-cell>
       </ng-container>
       <ng-container matColumnDef="valorTotal">
         <mat-header-cell *matHeaderCellDef> VALOR TOTAL </mat-header-cell>
         <mat-cell *matCellDef="let especificacion">
-          {{ especificacion.valorTotal }}
+          {{ especificacion.valor_total }}
         </mat-cell>
       </ng-container>
       <ng-container matColumnDef="acciones">
@@ -59,7 +65,7 @@
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="asignarEdicionEspecificacion(i)">
+            <button mat-menu-item (click)="editarEspecificacion(i)">
               <mat-icon class="edit-icon">edit</mat-icon>
               <span>Editar Especificación</span>
             </button>

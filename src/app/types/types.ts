@@ -34,7 +34,7 @@ export interface EstadoContrato {
   usuario_rol: string;
   estado_parametro_id: number;
   estado_interno_parametro_id: number;
-  motivo: string;
+  motivo?: string;
 }
 
 export interface ContratistaCRUD {
@@ -65,9 +65,9 @@ export interface EspecificacionTecnica {
   id: number;
   descripcion: string;
   cantidad: number;
-  valorUnitario: number;
-  valorTotal: number;
-  contratoGeneralId?: number;
+  valor_unitario: number;
+  valor_total: number;
+  contrato_general_id?: number;
 }
 
 export interface DocumentoContrato {
@@ -89,4 +89,46 @@ export interface AmparoResponse {
   suficiencia: number;
   amparo_id: number;
   descripcion: string;
+}
+
+export interface SimpleItem {
+  Id: number;
+  Nombre: string;
+}
+
+export interface NestedItem {
+  LugarHijoId: {
+    Id: number;
+    Nombre: string;
+  };
+}
+
+export interface DependenciaItem {
+  id: number;
+  nombre: string;
+}
+
+export interface CDPData {
+  vigencia: string;
+  numero_necesidad: string;
+  estado_necesidad: string;
+  numero_disponibilidad: string;
+  estadocdp: string;
+  nombre_dependencia: string;
+  id_necesidad: string;
+}
+
+export interface OrdenadorContratoData {
+  tercero_id?: number;
+  ordenador_argo_id: number;
+  ordenador_sikarca_id: number;
+  resolucion?: string;
+  documento_identidad: string;
+  cargo_id: number;
+  contrato_general_id: number;
+}
+
+export interface CDPItem {
+  Id: string,
+  Nombre: string
 }

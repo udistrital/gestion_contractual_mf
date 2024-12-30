@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ModalEspecificacionComponent } from './modal-especificacion/modal-especificacion.component';
 import { EspecificacionTecnica } from 'src/app/types/types';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { CargarArchivoComponent } from './cargar-archivo/cargar-archivo.component';
 
 @Component({
   selector: 'app-paso-especificaciones',
@@ -24,7 +25,7 @@ export class PasoEspecificacionesComponent {
   ];
   editando: boolean = false;
   especificaciones: EspecificacionTecnica[] = [];
-  idContrato = 1;
+  contrato_general_id = 1;
 
   constructor(
     public dialog: MatDialog,
@@ -43,13 +44,13 @@ export class PasoEspecificacionesComponent {
   }
 
   getDataResponse(data: any): EspecificacionTecnica {
-    const { id, descripcion, cantidad, valorUnitario, valorTotal } = data;
+    const { id, descripcion, cantidad, valor_unitario, valor_total } = data;
     return {
       id,
       descripcion,
       cantidad,
-      valorUnitario,
-      valorTotal,
+      valor_unitario,
+      valor_total,
     };
   }
 
@@ -65,7 +66,7 @@ export class PasoEspecificacionesComponent {
 
   getEspecificaciones() {
     this.contratoGeneralCrudService
-      .getEspecificacionesTecnicas(this.idContrato)
+      .getEspecificacionesTecnicas(this.contrato_general_id)
       .subscribe({
         next: (response: {
           Success: boolean;
@@ -87,7 +88,7 @@ export class PasoEspecificacionesComponent {
     this.contratoGeneralCrudService
       .postEspecificacionTecnica({
         ...especificacionSinId,
-        contratoGeneralId: this.idContrato,
+        contrato_general_id: this.contrato_general_id,
       })
       .subscribe({
         next: (response: { Success: boolean; Data: EspecificacionTecnica }) => {
@@ -172,7 +173,7 @@ export class PasoEspecificacionesComponent {
       });
   }
 
-  asignarEdicionEspecificacion(index: number) {
+  editarEspecificacion(index: number) {
     this.editando = true;
     const especificacion = this.especificaciones[index];
     this.openModalEspecificacion(especificacion);
@@ -193,6 +194,17 @@ export class PasoEspecificacionesComponent {
         }
         this.editando = false;
       }
+    });
+  }
+
+  abrirModalCargarArchivo(): void {
+    const dialog = this.dialog.open(CargarArchivoComponent, {
+      width: '800px',
+      data: { contrato_general_id: this.contrato_general_id },
+    });
+
+    dialog.afterClosed().subscribe(() => {
+      this.getEspecificaciones();
     });
   }
 }
