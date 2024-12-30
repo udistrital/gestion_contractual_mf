@@ -1,66 +1,35 @@
-.form-grid4 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2%;
+.mat-column-vigencia {
+  font-size: 9.5pt;
 }
 
-.form-grid3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2%;
+.mat-column-tipoContratoId {
+  font-size: 9.5pt;
 }
 
-.btn-container {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  gap: 10px;
-  margin-top: 15px;
-  margin-bottom: 1rem;
+.mat-column-tipo_persona {
+  font-size: 9.5pt;
 }
 
-
-.full-width-table {
-  width: 100%;
-  min-width: 800px;
+.mat-column-numero_contrato {
+  font-size: 9.5pt;
 }
 
-.mat-elevation-z8 {
-  position: relative;
-  overflow: auto;
+.mat-column-contratista {
+  font-size: 9.5pt;
 }
 
-.loading-shade {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.mat-column-fecha_registro {
+  font-size: 9.5pt;
 }
 
-td.mat-column-acciones {
-  width: 60px;
-  text-align: center;
+.mat-column-fecha_aprobado {
+  font-size: 9.5pt;
 }
 
-td.mat-column-activo {
-  width: 80px;
-  text-align: center;
+.mat-column-estado {
+  font-size: 9.5pt;
 }
 
-.active {
-  color: green;
-}
-
-.inactive {
-  color: red;
-}
-
-.icon {
-  color: rgb(100, 21, 21) !important;
+.mat-column-acciones {
+  font-size: 9.5pt;
 }
