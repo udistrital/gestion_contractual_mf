@@ -430,14 +430,16 @@ export class RevisionContratoComponent {
         file: base64String.split(',')[1]
       }];
 
-      const response = await this.documentosService
+      this.gestorDocumentalService
         .postAny('/document/uploadAnyFormat', payload)
-        .toPromise();
-
-      if (response) {
-        await this.alertService.showSuccessAlert('Documento subido exitosamente');
-        this.aprobarContrato();
-      }
+        .subscribe({
+          next: (response: any) => {
+            console.log('Documento subido exitosamente', response);
+          },
+          error: (error: any) => {
+            console.error('Error al subir el documento', error);
+          },
+        });
     } catch (error) {
       this.alertService.showErrorAlert(
         'Error al subir el documento',
