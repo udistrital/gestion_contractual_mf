@@ -1,5 +1,6 @@
 @import "quill/dist/quill.core.css";
 @import "quill/dist/quill.snow.css";
+@import "./responsive/input-form-field.scss";
 
 .fondo-acento-50 {
   background-color: var(--md-accent-50);
