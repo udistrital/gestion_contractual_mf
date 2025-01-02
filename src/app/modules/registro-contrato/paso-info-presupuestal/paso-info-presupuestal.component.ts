@@ -46,6 +46,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     monedaExtranjera: ['', Validators.required],
     tasaCambio: [''],
     medioPago: ['', Validators.required],
+    clausulaRegistroPresupuestal: [false, Validators.required],
   });
 
   monedas: any[] = [];
@@ -63,8 +64,6 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   selectedCDP: CDP[] = []; // Lista de CDPs seleccionados (Tabla)
   cdpsContrato: CDPContratoCRUD[] = []; // Lista de CDPs asociados al contrato general
-
-  checked = true;
 
   private destroy$ = new Subject<void>();
 
@@ -144,6 +143,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
           tipoMoneda: parsedForm.tipo_moneda_id,
           valorContrato: parsedForm.valor_pesos,
           origenRecurso: parsedForm.origen_recursos_id,
+          clausulaRegistroPresupuestal: parsedForm.clausula_registro_presupuestal,
         };
 
         console.log('Loading values into form:', formValues);
@@ -185,6 +185,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         tipo_moneda_id: this.form.get('tipoMoneda')?.value,
         valor_pesos: this.form.get('valorContrato')?.value,
         origen_recursos_id: this.form.get('origenRecurso')?.value,
+        clausula_registro_presupuestal: this.form.get('clausulaRegistroPresupuestal')?.value,
       };
 
       // Obtener el ID del contrato del localStorage
