@@ -12,47 +12,27 @@
       </div>
       <form [formGroup]="form">
         <!-- Información del Solicitante -->
-        <div class="border" formGroupName="solicitante">
+        <div class="border">
           <div class="title">
             <h3>Información del Solicitante</h3>
           </div>
           <div class="form-grid2">
-            <mat-form-field appearance="outline">
-              <mat-label>Sede:</mat-label>
-              <mat-icon matPrefix>location_city</mat-icon>
-              <mat-select formControlName="sede">
-                <mat-option *ngFor="let sede of sedes" [value]="sede.Id">
-                  {{ sede.Nombre }}
-                </mat-option>
-              </mat-select>
-              <mat-error
-                *ngIf="form.get('solicitante.sede')?.hasError('required')"
-              >
-                Este campo es requerido
-              </mat-error>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Dependencia:</mat-label>
-              <mat-icon matPrefix>account_balance</mat-icon>
-              <mat-select
-                formControlName="dependencia"
-                [disabled]="!form.get('solicitante.sede')?.value"
-              >
-                <mat-option
-                  *ngFor="let dep of getDependenciasSolicitante()"
-                  [value]="dep.id"
-                >
-                  {{ dep.nombre }}
-                </mat-option>
-              </mat-select>
-              <mat-error
-                *ngIf="
-                  form.get('solicitante.dependencia')?.hasError('required')
-                "
-              >
-                Este campo es requerido
-              </mat-error>
-            </mat-form-field>
+            <app-searchable-select
+              icon="location_city"
+              label="Sede"
+              [items]="sedes"
+              [control]="form.get('solicitante.sede')"
+              [required]="true"
+            >
+            </app-searchable-select>
+            <app-searchable-select
+              icon="account_balance"
+              label="Dependencia"
+              [items]="getDependenciasSolicitante()"
+              [control]="form.get('solicitante.dependencia')"
+              [required]="true"
+            >
+            </app-searchable-select>
           </div>
           <div class="btn-container">
             <button

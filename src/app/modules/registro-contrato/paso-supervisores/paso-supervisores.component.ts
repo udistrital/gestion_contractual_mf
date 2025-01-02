@@ -101,8 +101,8 @@ export class PasoSupervisoresComponent implements OnInit {
       if (savedSolicitante) {
         const parsedSolicitante = JSON.parse(savedSolicitante);
         this.form.get('solicitante')?.patchValue({
-          sede: parsedSolicitante.sedeSolicitanteId,
-          dependencia: parsedSolicitante.dependenciaSolicitanteId,
+          sede: parsedSolicitante.sede_solicitante_id,
+          dependencia: parsedSolicitante.dependencia_solicitante_id,
         });
         this.solicitanteId = parsedSolicitante.id;
         this.solicitanteSaved = true;
@@ -142,31 +142,31 @@ export class PasoSupervisoresComponent implements OnInit {
     try {
       this.loading = true;
       let solicitanteData = {
-        sedeSolicitanteId: this.form.get('solicitante.sede')?.value,
-        dependenciaSolicitanteId: this.form.get('solicitante.dependencia')
+        sede_solicitante_id: this.form.get('solicitante.sede')?.value,
+        dependencia_solicitante_id: this.form.get('solicitante.dependencia')
           ?.value,
         contrato_general_id: this.contratoGeneralId,
       };
 
-      let solicitanteId = this.solicitanteId;
+      let solicitante_id = this.solicitanteId;
 
-      if (solicitanteId) {
+      if (solicitante_id) {
         this.contratoGeneralCrudService
-          .patchSolicitante(solicitanteId, solicitanteData)
+          .patchSolicitante(solicitante_id, solicitanteData)
           .subscribe((response: any) => {
-            solicitanteId = response.id;
+            solicitante_id = response.id;
           });
       } else {
         this.contratoGeneralCrudService
           .postSolicitante(solicitanteData)
           .subscribe((response: any) => {
-            solicitanteId = response.id;
+            solicitante_id = response.id;
           });
       }
 
       localStorage.setItem(
         'paso-info-solicitante',
-        JSON.stringify({ ...solicitanteData, id: solicitanteId })
+        JSON.stringify({ ...solicitanteData, id: solicitante_id })
       );
       this.solicitanteSaved = true;
 
@@ -303,6 +303,19 @@ export class PasoSupervisoresComponent implements OnInit {
       .subscribe((sedeId) => {
         this.cargarDependencias(Number(sedeId), 'lugarEjecucion');
       });
+
+    this.setupSupervisorListeners(0);
+  }
+
+  private setupSupervisorListeners(index: number): void {
+    const supervisor = this.getSupervisoresFormArray().at(index);
+
+    supervisor.get('sede')?.valueChanges.pipe(
+      distinctUntilChanged(),
+      filter((sedeId) => sedeId !== null && sedeId !== undefined)
+    ).subscribe((sedeId) => {
+      this.cargarDependencias(Number(sedeId), 'supervisor', index);
+    });
   }
 
   private cargarSedes(): void {
@@ -353,32 +366,24 @@ export class PasoSupervisoresComponent implements OnInit {
           switch (tipo) {
             case 'supervisor':
               if (supervisorIndex !== undefined) {
-                const supervisor =
-                  this.getSupervisoresFormArray().at(supervisorIndex);
-                supervisor
-                  .get('dependencia')
-                  ?.setValue(null, { emitEvent: false });
+                const supervisor = this.getSupervisoresFormArray().at(supervisorIndex);
+                supervisor.get('dependencia')?.setValue(null, { emitEvent: false });
               }
               break;
 
             case 'solicitante':
-              this.form
-                .get('solicitante.dependencia')
-                ?.setValue(null, { emitEvent: false });
+              this.form.get('solicitante.dependencia')?.setValue(null, { emitEvent: false });
               break;
 
             case 'lugarEjecucion':
-              this.form
-                .get('lugarEjecucion.dependencia')
-                ?.setValue(null, { emitEvent: false });
+              this.form.get('lugarEjecucion.dependencia')?.setValue(null, { emitEvent: false });
               break;
           }
+
+          this.cdRef.detectChanges();
         },
         error: async (error) => {
-          console.error(
-            `Error al cargar dependencias para sede ${sedeId}:`,
-            error
-          );
+          console.error(`Error al cargar dependencias para sede ${sedeId}:`, error);
           this.alertService.showErrorAlert(
             'Ocurrió un error al cargar las dependencias, por favor intenta más tarde.',
             'Error al cargar dependencias'
@@ -394,6 +399,8 @@ export class PasoSupervisoresComponent implements OnInit {
   agregarSupervisor() {
     const supervisorGroup = this.crearSupervisorFormGroup();
     this.getSupervisoresFormArray().push(supervisorGroup);
+    const newIndex = this.getSupervisoresFormArray().length - 1;
+    this.setupSupervisorListeners(newIndex);
   }
 
   eliminarSupervisor(index: number) {
