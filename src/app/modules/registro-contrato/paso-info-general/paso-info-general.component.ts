@@ -218,9 +218,25 @@ export class PasoInfoGeneralComponent implements OnInit {
   private processRoles(): void {
     console.log('Roles:', this.roles);
 
+    const defaultOptions = [
+      {
+        Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+        Nombre: 'Rectoría'
+      },
+      {
+        Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+        Nombre: 'IDEXUD'
+      }
+    ];
+
     const filteredRoles = this.roles.filter(role =>
       role.includes('RECTOR') || role.includes('IDEXUD')
     );
+
+    if (filteredRoles.length === 0) {
+      this.unidadesEjecutoras = defaultOptions;
+      return;
+    }
 
     const mappedItems = filteredRoles.map(role => {
       if (role.includes('RECTOR')) {
