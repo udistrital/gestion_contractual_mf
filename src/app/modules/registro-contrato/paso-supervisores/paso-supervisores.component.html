@@ -122,24 +122,6 @@
                   </mat-error>
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Tipo de Control:</mat-label>
-                  <mat-icon matPrefix>settings</mat-icon>
-                  <mat-select formControlName="tipoControl">
-                    <mat-option value="tecnico">Técnico</mat-option>
-                    <mat-option value="administrativo"
-                      >Administrativo</mat-option
-                    >
-                    <mat-option value="financiero">Financiero</mat-option>
-                  </mat-select>
-                  <mat-error
-                    *ngIf="
-                      supervisorGroup.get('tipoControl')?.hasError('required')
-                    "
-                  >
-                    Este campo es requerido
-                  </mat-error>
-                </mat-form-field>
-                <mat-form-field appearance="outline">
                   <mat-label>Código de Verificación:</mat-label>
                   <mat-icon matPrefix>verified</mat-icon>
                   <input matInput formControlName="codigoVerificacion" />
@@ -148,6 +130,24 @@
                       supervisorGroup
                         .get('codigoVerificacion')
                         ?.hasError('required')
+                    "
+                  >
+                    Este campo es requerido
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Tipo de Control:</mat-label>
+                  <mat-icon matPrefix>settings</mat-icon>
+                  <mat-select formControlName="tipoControl">
+                    <mat-option value="tecnico">Técnico</mat-option>
+                    <mat-option value="administrativo"
+                    >Administrativo</mat-option
+                    >
+                    <mat-option value="financiero">Financiero</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="
+                      supervisorGroup.get('tipoControl')?.hasError('required')
                     "
                   >
                     Este campo es requerido

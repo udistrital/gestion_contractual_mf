@@ -276,10 +276,10 @@ export class PasoSupervisoresComponent implements OnInit {
     return this._formBuilder.group({
       sede: [null, Validators.required],
       dependencia: [null, Validators.required],
-      nombre: ['', Validators.required],
-      cargo: ['', Validators.required],
+      nombre: [{value: '', disabled: true}, Validators.required],
+      cargo: [{value: '', disabled: true}, Validators.required],
       tipoControl: [null, Validators.required],
-      codigoVerificacion: ['', Validators.required],
+      codigoVerificacion: [{value: '', disabled: true}, Validators.required],
     });
   }
 
