@@ -37,6 +37,7 @@ export interface Proveedor {
   correo: string;
   id_entidad_bancaria: string;
   tipo_persona: string;
+  tipo_persona_id: number;
   tipo_cuenta_bancaria: string;
   fecha_ultima_modificacion: string;
   contratos: Contrato[];
@@ -392,7 +393,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
     const datosContratista: ContratistaCRUD = {
       numero_documento: this.datosContratista.proveedor.numero_documento,
-      tipo_persona_id: 1,
+      tipo_persona_id: this.datosContratista.proveedor.tipo_persona_id,
       contrato_general_id: this.contratoGeneralId!,
     };
 
