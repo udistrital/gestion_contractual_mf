@@ -449,9 +449,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarMonedas() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.TIPO_MONEDA +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.TIPO_MONEDA},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -463,9 +461,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarGastos() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.TIPO_GASTO_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.TIPO_GASTO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -477,9 +473,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarOrigenRecursos() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.ORIGEN_RECURSOS_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.ORIGEN_RECURSOS_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -491,9 +485,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarOrigenPresupuesto() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.ORIGEN_PRESUPUESTO_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.ORIGEN_PRESUPUESTO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -505,9 +497,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarTemaGasto() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.TEMA_GASTO_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.TEMA_GASTO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -519,9 +509,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarMediosPago() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.MEDIO_PAGO_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.MEDIO_PAGO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
