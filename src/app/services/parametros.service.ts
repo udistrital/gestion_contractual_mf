@@ -29,11 +29,3 @@ export class ParametrosService {
     }
 
 }
-
-export function sortParametros(parametros: ParametroResponse[]): ParametroResponse[] {
-  return parametros.sort((a, b) => {
-    const nombreA = a.Nombre?.toLowerCase() ?? '';
-    const nombreB = b.Nombre?.toLowerCase() ?? '';
-    return nombreA.localeCompare(nombreB, 'es');
-  });
-}
