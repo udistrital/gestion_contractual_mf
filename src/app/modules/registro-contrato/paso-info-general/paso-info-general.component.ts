@@ -1,12 +1,12 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output,} from '@angular/core';
-import {FormBuilder, Validators} from '@angular/forms';
-import {ParametrosService, sortParametros,} from 'src/app/services/parametros.service';
-import {environment} from 'src/environments/environment';
-import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
-import {ContratoGeneralMidService} from "../../../services/contrato-general-mid.service";
-import {RolService} from "src/app/services/rol.service";
-import {AlertService} from 'src/app/services/alert.service';
-import {ApiResponse, EstadoContrato, ParametroResponse, SimpleItem,} from 'src/app/types/types';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { ParametrosService, sortParametros, } from 'src/app/services/parametros.service';
+import { environment } from 'src/environments/environment';
+import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
+import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
+import { RolService } from "src/app/services/rol.service";
+import { AlertService } from 'src/app/services/alert.service';
+import { ApiResponse, EstadoContrato, ParametroResponse, SimpleItem, } from 'src/app/types/types';
 
 @Component({
   selector: 'app-paso-info-general',
@@ -39,7 +39,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private cdRef: ChangeDetectorRef
-  ) {}
+  ) { }
 
   formInfoGeneral = this.fb.group({
     unidadEjecutoraId: ['', Validators.required],
@@ -247,7 +247,9 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarEstado() {
     return new Promise((resolve, reject) => {
       this.parametrosService
-        .get('parametro/' + environment.ESTADOS_GENERALES.POR_SUSCRIBIR)
+        .get(
+          `parametro/${environment.ESTADOS_GENERALES.POR_SUSCRIBIR}`
+        )
         .subscribe({
           next: (Response: any) => {
             if (Response.Status == '200') {
@@ -267,7 +269,9 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarEstadoInterno() {
     return new Promise((resolve, reject) => {
       this.parametrosService
-        .get('parametro/' + environment.ESTADOS_INTERNOS.BORRADOR)
+        .get(
+          `parametro/${environment.ESTADOS_INTERNOS.BORRADOR}`
+        )
         .subscribe({
           next: (Response: any) => {
             if (Response.Status == '200') {
@@ -288,9 +292,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     return new Promise((resolve, reject) => {
       this.parametrosService
         .get(
-          'parametro?query=TipoParametroId:' +
-            environment.TIPO_COMPROMISO_ID +
-            '&limit=0'
+          `parametro?query=TipoParametroId:${environment.TIPO_COMPROMISO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
         )
         .subscribe({
           next: (Response: any) => {
@@ -321,9 +323,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarmodalidadSeleccionId() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.MODALIDAD_SELECCION_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.MODALIDAD_SELECCION_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -335,9 +335,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarregimenContratacionId() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.REGIMEN_CONTRATACION_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.REGIMEN_CONTRATACION_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -349,9 +347,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarprocedimientoId() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.PROCEDIMIENTO_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.PROCEDIMIENTO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -364,9 +360,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarunidadEjecucionId() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.UNIDAD_EJECUCION_ID +
-          ',Id__in:166|180|181&limit=0'
+        `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUCION_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -412,11 +406,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargartipoContratoIds(id_compromiso: string) {
     this.parametrosService
       .get(
-        'parametro?query=ParametroPadreId:' +
-          id_compromiso +
-          '&TipoParametroId:' +
-          environment.TIPO_CONTRATO_ID +
-          '&limit=0'
+        `parametro?query=ParametroPadreId:${id_compromiso}&TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -428,11 +418,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargartipologiaEspecificaId(id_contrato: string) {
     this.parametrosService
       .get(
-        'parametro?query=ParametroPadreId:' +
-          id_contrato +
-          '&TipoParametroId:' +
-          environment.TIPOLOGIA_ESPECIFICA_ID +
-          '&limit=0'
+        `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.TIPOLOGIA_ESPECIFICA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -449,11 +435,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     if (id_contrato == environment.CONTRATO_PSPAG_ID) {
       this.parametrosService
         .get(
-          'parametro?query=TipoParametroId:' +
-            environment.PERFIL_CONTRATISTA_ID +
-            '&ParametroPadreId:' +
-            id_contrato +
-            '&limit=0'
+          `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.PERFIL_CONTRATISTA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
         )
         .subscribe((Response: any) => {
           if (Response.Status == '200') {

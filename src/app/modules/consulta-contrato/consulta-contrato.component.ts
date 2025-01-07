@@ -295,9 +295,7 @@ export class ConsultaContratoComponent implements OnInit {
   CargarVigencia() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.VIGENCIA_ID +
-          '&limit=0'
+         `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre` 
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -309,9 +307,7 @@ export class ConsultaContratoComponent implements OnInit {
   CargartipoContratoIds() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.TIPO_CONTRATO_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -323,9 +319,7 @@ export class ConsultaContratoComponent implements OnInit {
   CargarTipoPersona() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.TIPO_PERSONA_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.TIPO_PERSONA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -337,9 +331,7 @@ export class ConsultaContratoComponent implements OnInit {
   CargarEstado() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.TIPO_ESTADO_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.TIPO_ESTADO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {

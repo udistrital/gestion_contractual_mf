@@ -291,7 +291,7 @@ export class PasoGarantiasComponent implements OnInit {
   cargarTipoAmparos() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' + environment.AMPARO_ID + '&limit=0'
+        `parametro?query=TipoParametroId:${environment.AMPARO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
