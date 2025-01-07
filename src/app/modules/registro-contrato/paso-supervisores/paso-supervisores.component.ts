@@ -6,16 +6,20 @@ import {
   OnInit,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { FormBuilder, Validators, FormArray } from '@angular/forms';
+import {FormBuilder, Validators, FormArray, AbstractControl} from '@angular/forms';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
 import { distinctUntilChanged, filter, finalize } from 'rxjs/operators';
 import {
   DependenciaContratoMidResponse,
-  SedeContratoMidResponse,
+  SedeContratoMidResponse, SupervisorResponse, SupervisorToSave,
 } from '../../../types/types';
 import { ContratoGeneralMidService } from '../../../services/contrato-general-mid.service';
 import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
 import { AlertService } from 'src/app/services/alert.service';
+import {
+  OrdenadoresSupervisoresContratacionMidService
+} from "../../../services/ordenadores-supervisores-contratacion-mid.service";
+import {firstValueFrom} from "rxjs";
 
 @Component({
   selector: 'app-paso-supervisores',
@@ -30,6 +34,12 @@ export class PasoSupervisoresComponent implements OnInit {
   contratoGeneralId: number | null = null;
   solicitanteId: number | null = null;
   supervisoresIds: number[] = [];
+  supervisorLegacy = {
+    documento: '',
+    sede_legado: '',
+    dependencia_legado: '',
+    cargo_legado: '',
+  }
   lugareEjecucionId: number | null = null;
 
   sedes: SedeContratoMidResponse[] = [];
@@ -64,7 +74,8 @@ export class PasoSupervisoresComponent implements OnInit {
     private ubicacionService: UbicacionService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
-    private cdRef: ChangeDetectorRef
+    private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService,
+  private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -101,8 +112,8 @@ export class PasoSupervisoresComponent implements OnInit {
       if (savedSolicitante) {
         const parsedSolicitante = JSON.parse(savedSolicitante);
         this.form.get('solicitante')?.patchValue({
-          sede: parsedSolicitante.sedeSolicitanteId,
-          dependencia: parsedSolicitante.dependenciaSolicitanteId,
+          sede: parsedSolicitante.sede_solicitante_id,
+          dependencia: parsedSolicitante.dependencia_solicitante_id,
         });
         this.solicitanteId = parsedSolicitante.id;
         this.solicitanteSaved = true;
@@ -123,6 +134,13 @@ export class PasoSupervisoresComponent implements OnInit {
         this.lugareEjecucionId = parsedLugar.id;
         this.lugarEjecucionSaved = true;
       }
+
+      const savedSupervisores = localStorage.getItem('paso-supervisores');
+      if (savedSupervisores) {
+        const parsedSupervisores = JSON.parse(savedSupervisores);
+        console.log('Supervisores guardados:', parsedSupervisores);
+        this.supervisoresIds = parsedSupervisores.supervisores;
+      }
     } catch (error) {
       console.error('Error loading saved data:', error);
     }
@@ -142,31 +160,31 @@ export class PasoSupervisoresComponent implements OnInit {
     try {
       this.loading = true;
       let solicitanteData = {
-        sedeSolicitanteId: this.form.get('solicitante.sede')?.value,
-        dependenciaSolicitanteId: this.form.get('solicitante.dependencia')
+        sede_solicitante_id: this.form.get('solicitante.sede')?.value,
+        dependencia_solicitante_id: this.form.get('solicitante.dependencia')
           ?.value,
         contrato_general_id: this.contratoGeneralId,
       };
 
-      let solicitanteId = this.solicitanteId;
+      let solicitante_id = this.solicitanteId;
 
-      if (solicitanteId) {
+      if (solicitante_id) {
         this.contratoGeneralCrudService
-          .patchSolicitante(solicitanteId, solicitanteData)
+          .patchSolicitante(solicitante_id, solicitanteData)
           .subscribe((response: any) => {
-            solicitanteId = response.id;
+            solicitante_id = response.id;
           });
       } else {
         this.contratoGeneralCrudService
           .postSolicitante(solicitanteData)
           .subscribe((response: any) => {
-            solicitanteId = response.id;
+            solicitante_id = response.id;
           });
       }
 
       localStorage.setItem(
         'paso-info-solicitante',
-        JSON.stringify({ ...solicitanteData, id: solicitanteId })
+        JSON.stringify({ ...solicitanteData, id: solicitante_id })
       );
       this.solicitanteSaved = true;
 
@@ -238,6 +256,92 @@ export class PasoSupervisoresComponent implements OnInit {
     }
   }
 
+  async guardarSupervisores() {
+    if (!this.contratoGeneralId) {
+      this.alertService.showErrorAlert(
+        'No se ha encontrado información del contrato'
+      );
+      return;
+    }
+
+    if (this.form.get('supervisores')?.invalid) {
+      this.form.get('supervisores')?.markAllAsTouched();
+      this.alertService.showErrorAlert(
+        'Por favor, complete todos los campos requeridos de los supervisores'
+      );
+      return;
+    }
+
+    try {
+      this.loading = true;
+      const supervisoresArray = this.getSupervisoresFormArray();
+      const supervisoresPromises = [];
+
+      for (let i = 0; i < supervisoresArray.length; i++) {
+        const supervisorGroup = supervisoresArray.at(i);
+
+        const supervisorData: SupervisorToSave = {
+          supervisor_id: this.supervisorLegacy.documento, // TODO: Validar Supervisor ID
+          sede_legado: this.supervisorLegacy.sede_legado,
+          dependencia_legado: this.supervisorLegacy.dependencia_legado,
+          cargo_legado: this.supervisorLegacy.cargo_legado,
+          cargo_id: supervisorGroup.get('cargoId')?.value, // TODO: Validar Cargo ID
+          digito_verificacion: supervisorGroup.get('codigoVerificacion')?.value,
+          documento: this.supervisorLegacy.documento,
+          sede_id: supervisorGroup.get('sede')?.value,
+          dependencia_id: supervisorGroup.get('dependencia')?.value,
+          contrato_general_id: this.contratoGeneralId
+        };
+
+        // Si ya existe un ID para este supervisor, actualizamos
+        const supervisorId = this.supervisoresIds[i];
+        let promise;
+
+        if (supervisorId) {
+          promise = firstValueFrom(
+            this.contratoGeneralCrudService.patchSupervisor(
+              supervisorId,
+              supervisorData
+            )
+          );
+        } else {
+          promise = firstValueFrom(
+            this.contratoGeneralCrudService.postSupervisor(supervisorData)
+          );
+        }
+
+        supervisoresPromises.push(promise);
+      }
+
+      const results = await Promise.all(supervisoresPromises);
+
+      // Actualizar los IDs de los supervisores guardados
+      this.supervisoresIds = results.map(result => result.id);
+
+      // Guardar en localStorage para persistencia
+      localStorage.setItem(
+        'paso-supervisores',
+        JSON.stringify({
+          supervisores: this.supervisoresIds,
+          contrato_id: this.contratoGeneralId
+        })
+      );
+
+      this.alertService.showSuccessAlert(
+        'La información de los supervisores se ha guardado correctamente'
+      );
+
+    } catch (error) {
+      console.error('Error saving supervisors:', error);
+      this.alertService.showErrorAlert(
+        'Ocurrió un error al guardar la información de los supervisores'
+      );
+    } finally {
+      this.loading = false;
+      this.cdRef.detectChanges();
+    }
+  }
+
   async guardarYContinuar() {
     if (!this.solicitanteSaved || !this.lugarEjecucionSaved) {
       this.alertService.showAlert(
@@ -276,10 +380,10 @@ export class PasoSupervisoresComponent implements OnInit {
     return this._formBuilder.group({
       sede: [null, Validators.required],
       dependencia: [null, Validators.required],
-      nombre: ['', Validators.required],
-      cargo: ['', Validators.required],
+      nombre: [{value: '', disabled: true}, Validators.required],
+      cargo: [{value: '', disabled: true}, Validators.required],
       tipoControl: [null, Validators.required],
-      codigoVerificacion: ['', Validators.required],
+      codigoVerificacion: [{value: '', disabled: true}, Validators.required],
     });
   }
 
@@ -303,6 +407,105 @@ export class PasoSupervisoresComponent implements OnInit {
       .subscribe((sedeId) => {
         this.cargarDependencias(Number(sedeId), 'lugarEjecucion');
       });
+
+    this.setupSupervisorListeners(0);
+  }
+
+  private setupSupervisorListeners(index: number): void {
+    const supervisor = this.getSupervisoresFormArray().at(index);
+
+    supervisor.get('sede')?.valueChanges.pipe(
+      distinctUntilChanged(),
+      filter((sedeId) => sedeId !== null && sedeId !== undefined)
+    ).subscribe((sedeId) => {
+      this.cargarDependencias(Number(sedeId), 'supervisor', index);
+
+      supervisor.patchValue({
+        dependencia: null,
+        nombre: '',
+        cargo: '',
+        codigoVerificacion: '',
+        cargoId: '',
+        documento: ''
+      }, { emitEvent: false });
+
+    });
+
+    supervisor.get('dependencia')?.valueChanges.pipe(
+      distinctUntilChanged(),
+      filter((dependenciaId) => dependenciaId !== null && dependenciaId !== undefined)
+    ).subscribe((dependenciaId) => {
+      this.cargarSupervisor(String(dependenciaId), index);
+    });
+  }
+
+  private cargarSupervisor(dependenciaId: string, index: number): void {
+    if (!dependenciaId) return;
+
+    this.loading = true;
+    const supervisor = this.getSupervisoresFormArray().at(index);
+
+    this.ordenadoresSupervisoresMidService.getSupervisoresDependencia(dependenciaId)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdRef.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response: SupervisorResponse) => {
+          if (response.Success && response.Data && response.Data.length > 0) {
+            const supervisorData = response.Data[0];
+            this.supervisorLegacy = {
+              documento: supervisorData.documento,
+              sede_legado: supervisorData.sede_supervisor,
+              dependencia_legado: supervisorData.dependencia_supervisor,
+              cargo_legado: supervisorData.cargo_id
+            }
+            supervisor.patchValue({
+              nombre: supervisorData.nombre,
+              cargo: supervisorData.cargo,
+              codigoVerificacion: supervisorData.digito_verificacion,
+              cargoId: supervisorData.cargo_id,
+              documento: supervisorData.documento
+            }, { emitEvent: false });
+          } else {
+            // Limpiar campos si no hay respuesta
+            this.limpiarCamposSupervisor(supervisor);
+            this.alertService.showAlert(
+              'No se encontró información del supervisor para la dependencia seleccionada',
+              'Sin datos'
+            );
+          }
+          this.cdRef.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error al cargar supervisor:', error);
+          this.alertService.showErrorAlert(
+            'Ocurrió un error al cargar la información del supervisor',
+            'Error'
+          );
+          this.limpiarCamposSupervisor(supervisor);
+          this.cdRef.detectChanges();
+        }
+      });
+  }
+
+  private limpiarCamposSupervisor(supervisorGroup: AbstractControl) {
+    supervisorGroup.patchValue({
+      nombre: '',
+      cargo: '',
+      codigoVerificacion: '',
+      cargoId: '',
+      documento: ''
+    }, { emitEvent: false });
+
+    this.supervisorLegacy = {
+      documento: '',
+      sede_legado: '',
+      dependencia_legado: '',
+      cargo_legado: '',
+    }
   }
 
   private cargarSedes(): void {
@@ -353,32 +556,24 @@ export class PasoSupervisoresComponent implements OnInit {
           switch (tipo) {
             case 'supervisor':
               if (supervisorIndex !== undefined) {
-                const supervisor =
-                  this.getSupervisoresFormArray().at(supervisorIndex);
-                supervisor
-                  .get('dependencia')
-                  ?.setValue(null, { emitEvent: false });
+                const supervisor = this.getSupervisoresFormArray().at(supervisorIndex);
+                supervisor.get('dependencia')?.setValue(null, { emitEvent: false });
               }
               break;
 
             case 'solicitante':
-              this.form
-                .get('solicitante.dependencia')
-                ?.setValue(null, { emitEvent: false });
+              this.form.get('solicitante.dependencia')?.setValue(null, { emitEvent: false });
               break;
 
             case 'lugarEjecucion':
-              this.form
-                .get('lugarEjecucion.dependencia')
-                ?.setValue(null, { emitEvent: false });
+              this.form.get('lugarEjecucion.dependencia')?.setValue(null, { emitEvent: false });
               break;
           }
+
+          this.cdRef.detectChanges();
         },
         error: async (error) => {
-          console.error(
-            `Error al cargar dependencias para sede ${sedeId}:`,
-            error
-          );
+          console.error(`Error al cargar dependencias para sede ${sedeId}:`, error);
           this.alertService.showErrorAlert(
             'Ocurrió un error al cargar las dependencias, por favor intenta más tarde.',
             'Error al cargar dependencias'
@@ -394,6 +589,8 @@ export class PasoSupervisoresComponent implements OnInit {
   agregarSupervisor() {
     const supervisorGroup = this.crearSupervisorFormGroup();
     this.getSupervisoresFormArray().push(supervisorGroup);
+    const newIndex = this.getSupervisoresFormArray().length - 1;
+    this.setupSupervisorListeners(newIndex);
   }
 
   eliminarSupervisor(index: number) {

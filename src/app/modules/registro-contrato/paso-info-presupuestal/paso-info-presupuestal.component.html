@@ -222,10 +222,9 @@
               </mat-select>
               <mat-icon matPrefix>credit_card</mat-icon>
             </mat-form-field>
-            <mat-checkbox [(ngModel)]="checked"
-              >Sujeto a Registro Presupuestal (Hasta Agotar
-              Presupuesto)</mat-checkbox
-            >
+            <mat-checkbox formControlName="clausulaRegistroPresupuestal">
+              Sujeto a Registro Presupuestal (Hasta Agotar Presupuesto)
+            </mat-checkbox>
           </div>
           <div class="full-width-field">
             <div class="title-box">Forma de Pago:</div>

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import {
   CDPContratoCRUD,
   ContratistaCRUD,
-  EstadoContrato,
+  EstadoContrato, SupervisorToSave,
 } from '../types/types';
 
 @Injectable({
@@ -210,5 +210,15 @@ export class ContratoGeneralCrudService {
       'ordenador-contrato',
       contrato_general_parcial
     );
+  }
+
+  postSupervisor(data: SupervisorToSave): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.post(`supervisores`, data);
+  }
+
+  patchSupervisor(id: number, data: SupervisorToSave): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.patch(`supervisores/${id}`, data);
   }
 }
