@@ -6,7 +6,7 @@ import { ContratoGeneralCrudService } from "../../../services/contrato-general-c
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
 import { RolService } from "src/app/services/rol.service";
 import { AlertService } from 'src/app/services/alert.service';
-import { ApiResponse, EstadoContrato, ParametroResponse, SimpleItem, } from 'src/app/types/types';
+import {ApiResponse, EstadoContrato, ParametroListResponse, ParametroResponse, SimpleItem,} from 'src/app/types/types';
 
 @Component({
   selector: 'app-paso-info-general',
@@ -307,12 +307,13 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarCompromisos() {
     return new Promise((resolve, reject) => {
       this.parametrosService
-        .get(
+        .get<ParametroListResponse>(
           `parametro?query=TipoParametroId:${environment.TIPO_COMPROMISO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
         )
         .subscribe({
-          next: (Response: any) => {
+          next: (Response) => {
             if (Response.Status == '200') {
+              this.tiposCompromisos = Response.Data;
               resolve(true);
             } else {
               reject('Error en la respuesta del servidor');
@@ -337,26 +338,34 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   CargarmodalidadSeleccionId() {
     this.parametrosService
-      .get(
+      .get<ParametroListResponse>(
         `parametro?query=TipoParametroId:${environment.MODALIDAD_SELECCION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {});
+      .subscribe((Response) => {
+        if (Response.Status == '200') {
+          this.modalidadesSeleccion = Response.Data;
+        }
+      });
   }
 
   CargarregimenContratacionId() {
     this.parametrosService
-      .get(
+      .get<ParametroListResponse>(
         `parametro?query=TipoParametroId:${environment.REGIMEN_CONTRATACION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {});
+      .subscribe((Response) => {
+        if (Response.Status == '200') {
+          this.regimenesContratacion = Response.Data;
+        }
+      });
   }
 
   CargarprocedimientoId() {
     this.parametrosService
-      .get(
+      .get<ParametroListResponse>(
         `parametro?query=TipoParametroId:${environment.PROCEDIMIENTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
+      .subscribe((Response) => {
         if (Response.Status == '200') {
           this.procedimientos = Response.Data;
         }
@@ -365,10 +374,10 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   CargarunidadEjecucionId() {
     this.parametrosService
-      .get(
+      .get<ParametroListResponse>(
         `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUCION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
+      .subscribe((Response) => {
         if (Response.Status == '200') {
           this.unidadesEjecucion = Response.Data;
         }
@@ -411,10 +420,10 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   CargartipoContratoIds(id_compromiso: string) {
     this.parametrosService
-      .get(
+      .get<ParametroListResponse>(
         `parametro?query=ParametroPadreId:${id_compromiso}&TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
+      .subscribe((Response) => {
         if (Response.Status == '200') {
           this.tiposContratos = Response.Data;
         }
@@ -423,10 +432,10 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   CargartipologiaEspecificaId(id_contrato: string) {
     this.parametrosService
-      .get(
+      .get<ParametroListResponse>(
         `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.TIPOLOGIA_ESPECIFICA_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
+      .subscribe((Response) => {
         if (Response.Status == '200') {
           this.tipologiasEspecificas = Response.Data;
           console.log('Tipologia Especifica:', this.tipologiasEspecificas); //TODO: Inconsistencia con mid.
@@ -437,10 +446,10 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarPerfilContratista(id_contrato: string) {
     if (id_contrato == environment.CONTRATO_PSPAG_ID) {
       this.parametrosService
-        .get(
+        .get<ParametroListResponse>(
           `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.PERFIL_CONTRATISTA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
         )
-        .subscribe((Response: any) => {
+        .subscribe((Response) => {
           if (Response.Status == '200') {
             this.perfilesContratista = Response.Data;
           }
