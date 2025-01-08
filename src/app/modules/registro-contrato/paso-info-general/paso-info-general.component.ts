@@ -1,12 +1,12 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output,} from '@angular/core';
-import {FormBuilder, Validators} from '@angular/forms';
-import {ParametrosService, sortParametros,} from 'src/app/services/parametros.service';
-import {environment} from 'src/environments/environment';
-import {ContratoGeneralCrudService} from "../../../services/contrato-general-crud.service";
-import {ContratoGeneralMidService} from "../../../services/contrato-general-mid.service";
-import {RolService} from "src/app/services/rol.service";
-import {AlertService} from 'src/app/services/alert.service';
-import {ApiResponse, EstadoContrato, ParametroResponse, SimpleItem,} from 'src/app/types/types';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { ParametrosService } from 'src/app/services/parametros.service';
+import { environment } from 'src/environments/environment';
+import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
+import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
+import { RolService } from "src/app/services/rol.service";
+import { AlertService } from 'src/app/services/alert.service';
+import { ApiResponse, EstadoContrato, ParametroResponse, SimpleItem, } from 'src/app/types/types';
 
 @Component({
   selector: 'app-paso-info-general',
@@ -39,7 +39,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private cdRef: ChangeDetectorRef
-  ) {}
+  ) { }
 
   formInfoGeneral = this.fb.group({
     unidadEjecutoraId: ['', Validators.required],
@@ -218,9 +218,25 @@ export class PasoInfoGeneralComponent implements OnInit {
   private processRoles(): void {
     console.log('Roles:', this.roles);
 
+    const defaultOptions = [
+      {
+        Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+        Nombre: 'Rectoría'
+      },
+      {
+        Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+        Nombre: 'IDEXUD'
+      }
+    ];
+
     const filteredRoles = this.roles.filter(role =>
       role.includes('RECTOR') || role.includes('IDEXUD')
     );
+
+    if (filteredRoles.length === 0) {
+      this.unidadesEjecutoras = defaultOptions;
+      return;
+    }
 
     const mappedItems = filteredRoles.map(role => {
       if (role.includes('RECTOR')) {
@@ -247,7 +263,9 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarEstado() {
     return new Promise((resolve, reject) => {
       this.parametrosService
-        .get('parametro/' + environment.ESTADOS_GENERALES.POR_SUSCRIBIR)
+        .get(
+          `parametro/${environment.ESTADOS_GENERALES.POR_SUSCRIBIR}`
+        )
         .subscribe({
           next: (Response: any) => {
             if (Response.Status == '200') {
@@ -267,7 +285,9 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarEstadoInterno() {
     return new Promise((resolve, reject) => {
       this.parametrosService
-        .get('parametro/' + environment.ESTADOS_INTERNOS.BORRADOR)
+        .get(
+          `parametro/${environment.ESTADOS_INTERNOS.BORRADOR}`
+        )
         .subscribe({
           next: (Response: any) => {
             if (Response.Status == '200') {
@@ -288,14 +308,11 @@ export class PasoInfoGeneralComponent implements OnInit {
     return new Promise((resolve, reject) => {
       this.parametrosService
         .get(
-          'parametro?query=TipoParametroId:' +
-            environment.TIPO_COMPROMISO_ID +
-            '&limit=0'
+          `parametro?query=TipoParametroId:${environment.TIPO_COMPROMISO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
         )
         .subscribe({
           next: (Response: any) => {
             if (Response.Status == '200') {
-              this.tiposCompromisos = sortParametros(Response.Data);
               resolve(true);
             } else {
               reject('Error en la respuesta del servidor');
@@ -321,42 +338,27 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarmodalidadSeleccionId() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.MODALIDAD_SELECCION_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.MODALIDAD_SELECCION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.modalidadesSeleccion = sortParametros(Response.Data);
-        }
-      });
+      .subscribe((Response: any) => {});
   }
 
   CargarregimenContratacionId() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.REGIMEN_CONTRATACION_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.REGIMEN_CONTRATACION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.regimenesContratacion = sortParametros(Response.Data);
-        }
-      });
+      .subscribe((Response: any) => {});
   }
 
   CargarprocedimientoId() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.PROCEDIMIENTO_ID +
-          '&limit=0'
+        `parametro?query=TipoParametroId:${environment.PROCEDIMIENTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
           this.procedimientos = Response.Data;
-          this.procedimientos = sortParametros(this.procedimientos);
         }
       });
   }
@@ -364,9 +366,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarunidadEjecucionId() {
     this.parametrosService
       .get(
-        'parametro?query=TipoParametroId:' +
-          environment.UNIDAD_EJECUCION_ID +
-          ',Id__in:166|180|181&limit=0'
+        `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUCION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -412,11 +412,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargartipoContratoIds(id_compromiso: string) {
     this.parametrosService
       .get(
-        'parametro?query=ParametroPadreId:' +
-          id_compromiso +
-          '&TipoParametroId:' +
-          environment.TIPO_CONTRATO_ID +
-          '&limit=0'
+        `parametro?query=ParametroPadreId:${id_compromiso}&TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -428,18 +424,11 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargartipologiaEspecificaId(id_contrato: string) {
     this.parametrosService
       .get(
-        'parametro?query=ParametroPadreId:' +
-          id_contrato +
-          '&TipoParametroId:' +
-          environment.TIPOLOGIA_ESPECIFICA_ID +
-          '&limit=0'
+        `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.TIPOLOGIA_ESPECIFICA_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
           this.tipologiasEspecificas = Response.Data;
-          this.tipologiasEspecificas = sortParametros(
-            this.tipologiasEspecificas
-          );
           console.log('Tipologia Especifica:', this.tipologiasEspecificas); //TODO: Inconsistencia con mid.
         }
       });
@@ -449,11 +438,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     if (id_contrato == environment.CONTRATO_PSPAG_ID) {
       this.parametrosService
         .get(
-          'parametro?query=TipoParametroId:' +
-            environment.PERFIL_CONTRATISTA_ID +
-            '&ParametroPadreId:' +
-            id_contrato +
-            '&limit=0'
+          `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.PERFIL_CONTRATISTA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
         )
         .subscribe((Response: any) => {
           if (Response.Status == '200') {
@@ -509,28 +494,14 @@ export class PasoInfoGeneralComponent implements OnInit {
   updateFormAndSelects(data: any) {
     this.formInfoGeneral.patchValue(data);
 
-    this.tiposCompromisos = sortParametros(
-      this.createDynamicOption(data.tipoCompromisoId)
-    );
-    this.tiposContratos = sortParametros(
-      this.createDynamicOption(data.tipoContratoId)
-    );
-    this.modalidadesSeleccion = sortParametros(
-      this.createDynamicOption(data.modalidadSeleccionId)
-    );
-    this.tipologiasEspecificas = sortParametros(
-      this.createDynamicOption(data.tipologiaEspecificaId)
-    );
-    this.regimenesContratacion = sortParametros(
-      this.createDynamicOption(data.regimenContratacionId)
-    );
-    this.procedimientos = sortParametros(
-      this.createDynamicOption(data.procedimientoId)
-    );
-    this.unidadesEjecucion = sortParametros(
-      this.createDynamicOption(data.unidadEjecucionId)
-    );
-  }
+    this.tiposCompromisos = this.createDynamicOption(data.tipoCompromisoId);
+    this.tiposContratos = this.createDynamicOption(data.tipoContratoId);
+    this.modalidadesSeleccion = this.createDynamicOption(data.modalidadSeleccionId);
+    this.tipologiasEspecificas = this.createDynamicOption(data.tipologiaEspecificaId);
+    this.regimenesContratacion = this.createDynamicOption(data.regimenContratacionId);
+    this.procedimientos = this.createDynamicOption(data.procedimientoId);
+    this.unidadesEjecucion = this.createDynamicOption(data.unidadEjecucionId);
+}
 
   createDynamicOption(value: string | number): ParametroResponse[] {
     if (value === null || value === undefined) return [];

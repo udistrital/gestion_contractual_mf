@@ -29,7 +29,6 @@ import { SpinnerIntercerptor } from './core/intercerptors/spinner.interceptor';
     AppRoutingModule,
     BrowserAnimationsModule,
     BrowserModule,
-    CommonModule,
     ConsultaContratoModule,
     HttpClientModule,
     MatIconModule,

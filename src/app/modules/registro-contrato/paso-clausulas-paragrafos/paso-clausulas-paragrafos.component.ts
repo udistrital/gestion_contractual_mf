@@ -77,7 +77,7 @@ export class PasoClausulasParagrafosComponent {
   private cargarIndices() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.ENUMERACION_CLAUSULAS_ID}&limit=0`
+        `parametro?query=TipoParametroId:${environment.ENUMERACION_CLAUSULAS_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe({
         next: (response: any) => {

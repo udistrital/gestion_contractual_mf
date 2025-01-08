@@ -132,3 +132,36 @@ export interface CDPItem {
   Id: string,
   Nombre: string
 }
+
+export interface SupervisorResponse {
+  Success: boolean;
+  Status: number;
+  Message: string;
+  Data: SupervisorData[];
+}
+
+export interface SupervisorData {
+  dependencia_supervisor: string;
+  estado: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  cargo_id: string;
+  documento: string;
+  cargo: string;
+  nombre: string;
+  digito_verificacion: string;
+  sede_supervisor: string;
+}
+
+export interface SupervisorToSave {
+  supervisor_id: string;
+  sede_legado: string;
+  dependencia_legado: string;
+  cargo_legado: string;
+  cargo_id: string;
+  documento: string;
+  digito_verificacion: string;
+  sede_id: string;
+  dependencia_id: string;
+  contrato_general_id: number;
+}
