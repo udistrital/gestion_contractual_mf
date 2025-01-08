@@ -462,7 +462,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarGastos() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.TIPO_GASTO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=TipoParametroId:${environment.TIPO_GASTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -474,7 +474,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarOrigenRecursos() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.ORIGEN_RECURSOS_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=TipoParametroId:${environment.ORIGEN_RECURSOS_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -486,7 +486,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarOrigenPresupuesto() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.ORIGEN_PRESUPUESTO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=TipoParametroId:${environment.ORIGEN_PRESUPUESTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -498,7 +498,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   CargarTemaGasto() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.TEMA_GASTO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=TipoParametroId:${environment.TEMA_GASTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {

@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { ParametrosService, sortParametros, } from 'src/app/services/parametros.service';
+import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
 import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
@@ -308,12 +308,11 @@ export class PasoInfoGeneralComponent implements OnInit {
     return new Promise((resolve, reject) => {
       this.parametrosService
         .get(
-          `parametro?query=TipoParametroId:${environment.TIPO_COMPROMISO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+          `parametro?query=TipoParametroId:${environment.TIPO_COMPROMISO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
         )
         .subscribe({
           next: (Response: any) => {
             if (Response.Status == '200') {
-              this.tiposCompromisos = sortParametros(Response.Data);
               resolve(true);
             } else {
               reject('Error en la respuesta del servidor');
@@ -339,36 +338,27 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarmodalidadSeleccionId() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.MODALIDAD_SELECCION_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=TipoParametroId:${environment.MODALIDAD_SELECCION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.modalidadesSeleccion = sortParametros(Response.Data);
-        }
-      });
+      .subscribe((Response: any) => {});
   }
 
   CargarregimenContratacionId() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.REGIMEN_CONTRATACION_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=TipoParametroId:${environment.REGIMEN_CONTRATACION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.regimenesContratacion = sortParametros(Response.Data);
-        }
-      });
+      .subscribe((Response: any) => {});
   }
 
   CargarprocedimientoId() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.PROCEDIMIENTO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=TipoParametroId:${environment.PROCEDIMIENTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
           this.procedimientos = Response.Data;
-          this.procedimientos = sortParametros(this.procedimientos);
         }
       });
   }
@@ -376,7 +366,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarunidadEjecucionId() {
     this.parametrosService
       .get(
-        `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUCION_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUCION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -422,7 +412,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargartipoContratoIds(id_compromiso: string) {
     this.parametrosService
       .get(
-        `parametro?query=ParametroPadreId:${id_compromiso}&TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=ParametroPadreId:${id_compromiso}&TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
@@ -434,14 +424,11 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargartipologiaEspecificaId(id_contrato: string) {
     this.parametrosService
       .get(
-        `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.TIPOLOGIA_ESPECIFICA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.TIPOLOGIA_ESPECIFICA_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {
           this.tipologiasEspecificas = Response.Data;
-          this.tipologiasEspecificas = sortParametros(
-            this.tipologiasEspecificas
-          );
           console.log('Tipologia Especifica:', this.tipologiasEspecificas); //TODO: Inconsistencia con mid.
         }
       });
@@ -507,28 +494,14 @@ export class PasoInfoGeneralComponent implements OnInit {
   updateFormAndSelects(data: any) {
     this.formInfoGeneral.patchValue(data);
 
-    this.tiposCompromisos = sortParametros(
-      this.createDynamicOption(data.tipoCompromisoId)
-    );
-    this.tiposContratos = sortParametros(
-      this.createDynamicOption(data.tipoContratoId)
-    );
-    this.modalidadesSeleccion = sortParametros(
-      this.createDynamicOption(data.modalidadSeleccionId)
-    );
-    this.tipologiasEspecificas = sortParametros(
-      this.createDynamicOption(data.tipologiaEspecificaId)
-    );
-    this.regimenesContratacion = sortParametros(
-      this.createDynamicOption(data.regimenContratacionId)
-    );
-    this.procedimientos = sortParametros(
-      this.createDynamicOption(data.procedimientoId)
-    );
-    this.unidadesEjecucion = sortParametros(
-      this.createDynamicOption(data.unidadEjecucionId)
-    );
-  }
+    this.tiposCompromisos = this.createDynamicOption(data.tipoCompromisoId);
+    this.tiposContratos = this.createDynamicOption(data.tipoContratoId);
+    this.modalidadesSeleccion = this.createDynamicOption(data.modalidadSeleccionId);
+    this.tipologiasEspecificas = this.createDynamicOption(data.tipologiaEspecificaId);
+    this.regimenesContratacion = this.createDynamicOption(data.regimenContratacionId);
+    this.procedimientos = this.createDynamicOption(data.procedimientoId);
+    this.unidadesEjecucion = this.createDynamicOption(data.unidadEjecucionId);
+}
 
   createDynamicOption(value: string | number): ParametroResponse[] {
     if (value === null || value === undefined) return [];
