@@ -77,6 +77,13 @@ export interface DocumentoContrato {
   contrato_general_id: number;
 }
 
+export interface ParametroListResponse {
+  Data: ParametroResponse[];
+  Message: string;
+  Status: string;
+  Success: boolean;
+}
+
 export interface ParametroResponse {
   Id: number | string;
   Nombre: string;
