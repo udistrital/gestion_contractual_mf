@@ -49,7 +49,6 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
     this.cdpSubscription = this.cdpService.cdp$.subscribe(data => {
       this.cdpData = data;
       this.updateFormWithCDPData();
-      console.log('CDP data updated:', this.cdpData);
     });
   }
 

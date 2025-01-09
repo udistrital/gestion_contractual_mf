@@ -56,8 +56,7 @@
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.development.ts"
                 }
-              ],
-              "deployUrl": "https://pruebasargogestioncontractual.portaloas.udistrital.edu.co/"
+              ]
             },
             "local": {
               "buildOptimizer": false,
@@ -66,8 +65,7 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true,
-              "outputHashing": "none",
-              "deployUrl": "http://localhost:4201/"
+              "outputHashing": "none"
             }
           },
           "defaultConfiguration": "local"
@@ -82,7 +80,7 @@
               "buildTarget": "gestion_contractual_mf:build:development"
             },
             "local": {
-              "browserTarget": "gestion_contractual_mf:build:local"
+              "buildTarget": "gestion_contractual_mf:build:local"
             }
           },
           "defaultConfiguration": "local"

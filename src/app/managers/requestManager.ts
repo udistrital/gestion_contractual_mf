@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { catchError, map } from 'rxjs/operators';
-import { HttpErrorManager } from './errorManager'
+import {ErrorResponse, HttpErrorManager} from './errorManager'
 
 /**
  * This class manage the http connections with internal REST services. Use the response format {
@@ -45,19 +45,12 @@ export class RequestManager {
    * @param params (an Key, Value object with que query params for the request)
    * @returns Observable<any>
    */
-  get(endpoint: any) {
-
-    return this.http.get<any>(`${this.path}${endpoint}`, this.httpOptions).pipe(
-      map(
-        (res) => {
-          if (res.hasOwnProperty('Body')) {
-            return res;
-          } else {
-            return res;
-          }
-        },
-      ),
-      catchError((error) => this.errManager.handleError(error)),
+  get<T>(endpoint: string) {
+    return this.http.get<T>(`${this.path}${endpoint}`, this.httpOptions).pipe(
+      map((response) => response as T),
+      catchError((error) => {
+        throw error as ErrorResponse;
+      })
     );
   }
 

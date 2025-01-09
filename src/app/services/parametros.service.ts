@@ -8,9 +8,9 @@ export class ParametrosService {
     constructor(private requestManager: RequestManager) {
         this.requestManager.setPath('PARAMETROS_SERVICE');
     }
-    get(endpoint: string) {
+    get<T>(endpoint: string) {
         this.requestManager.setPath('PARAMETROS_SERVICE');
-        return this.requestManager.get(endpoint);
+        return this.requestManager.get<T>(endpoint);
     }
 
     post(endpoint: string, element: any) {
