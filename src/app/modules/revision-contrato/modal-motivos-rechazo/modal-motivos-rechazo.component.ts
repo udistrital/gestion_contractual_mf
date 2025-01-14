@@ -58,12 +58,10 @@ export class ModalMotivosRechazoComponent implements OnInit {
       .postEstadoContrato(estado)
       .subscribe((res: any) => {
         if (res.id) {
-          this.alertService.showSuccessAlert(
-            'El contrato fue rechazado',
-            'CONTRATO RECHAZADO'
-          );
+          this.dialogRef.close({ rechazado: true });
+        } else {
+          this.dialogRef.close({ rechazado: false });
         }
-        this.dialogRef.close();
       });
   }
 }
