@@ -34,12 +34,12 @@ export class PasoSupervisoresComponent implements OnInit {
   contratoGeneralId: number | null = null;
   solicitanteId: number | null = null;
   supervisoresIds: number[] = [];
-  supervisorLegacy = {
+  supervisorLegacy = [{
     documento: '',
     sede_legado: '',
     dependencia_legado: '',
     cargo_legado: '',
-  }
+  }]
   lugareEjecucionId: number | null = null;
 
   sedes: SedeContratoMidResponse[] = [];
@@ -281,13 +281,13 @@ export class PasoSupervisoresComponent implements OnInit {
         const supervisorGroup = supervisoresArray.at(i);
 
         const supervisorData: SupervisorToSave = {
-          supervisor_id: this.supervisorLegacy.documento, // TODO: Validar Supervisor ID
-          sede_legado: this.supervisorLegacy.sede_legado,
-          dependencia_legado: this.supervisorLegacy.dependencia_legado,
-          cargo_legado: this.supervisorLegacy.cargo_legado,
+          supervisor_id: this.supervisorLegacy[i].documento, // TODO: Validar Supervisor ID
+          sede_legado: this.supervisorLegacy[i].sede_legado,
+          dependencia_legado: this.supervisorLegacy[i].dependencia_legado,
+          cargo_legado: this.supervisorLegacy[i].cargo_legado,
           cargo_id: supervisorGroup.get('cargoId')?.value, // TODO: Validar Cargo ID
           digito_verificacion: supervisorGroup.get('codigoVerificacion')?.value,
-          documento: this.supervisorLegacy.documento,
+          documento: this.supervisorLegacy[i].documento,
           sede_id: supervisorGroup.get('sede')?.value,
           dependencia_id: supervisorGroup.get('dependencia')?.value,
           contrato_general_id: this.contratoGeneralId
@@ -456,7 +456,8 @@ export class PasoSupervisoresComponent implements OnInit {
         next: (response: SupervisorResponse) => {
           if (response.Success && response.Data && response.Data.length > 0) {
             const supervisorData = response.Data[0];
-            this.supervisorLegacy = {
+
+            this.supervisorLegacy[index] = {
               documento: supervisorData.documento,
               sede_legado: supervisorData.sede_supervisor,
               dependencia_legado: supervisorData.dependencia_supervisor,
@@ -500,12 +501,7 @@ export class PasoSupervisoresComponent implements OnInit {
       documento: ''
     }, { emitEvent: false });
 
-    this.supervisorLegacy = {
-      documento: '',
-      sede_legado: '',
-      dependencia_legado: '',
-      cargo_legado: '',
-    }
+    this.supervisorLegacy = []
   }
 
   private cargarSedes(): void {

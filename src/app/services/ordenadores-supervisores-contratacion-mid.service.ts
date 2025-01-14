@@ -37,7 +37,7 @@ export class OrdenadoresSupervisoresContratacionMidService {
   getSupervisoresDependencia(dependenciaId: string): Observable<SupervisorResponse> {
     this.requestManager.setPath('ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE');
     return this.requestManager
-      .get(`supervisores/dependencia?dependenciaId=${dependenciaId}&fecha=2024-10-01`)
+      .get(`supervisores/dependencia?dependenciaId=${dependenciaId}&fecha=2023-10-01`)
       .pipe(
         tap(response => console.log('Respuesta original:', response)),
         map((response: any) => {
