@@ -52,6 +52,7 @@ export class PasoClausulasParagrafosComponent {
   tipoContratoId: number = 1;
   reversionSaldo: boolean = false;
   aplicaPoliza: boolean = true;
+  undadEjecutora: number = environment.UNIDADES_EJECUTORAS.RECTORIA;
   usuarioId: number = 25;
 
   constructor(
@@ -111,7 +112,7 @@ export class PasoClausulasParagrafosComponent {
   private cargarPlantillaPorTipoContrato() {
     this.clausulasParagrafosService
       .get(
-        `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo};aplica_poliza:${this.aplicaPoliza}`
+        `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo};aplica_poliza:${this.aplicaPoliza};unidad_ejecutora_id:${this.undadEjecutora}`
       )
       .subscribe({
         next: (response: { Success: boolean; Data: Clausula[] }) => {
