@@ -43,17 +43,17 @@ export class ContratoGeneralCrudService {
       );
     }
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.post('cdp/', cdpData);
+    return this.requestManager.post('disponibilidad_presupuestal/', cdpData);
   }
 
   deleteCdp(id: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.delete('cdp', id);
+    return this.requestManager.delete('disponibilidad_presupuestal', id);
   }
 
   getCdpContrato(idContrato: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get('cdp/contrato/' + idContrato);
+    return this.requestManager.get('disponibilidad_presupuestal/contrato/' + idContrato);
   }
 
   getEstadoActual(idContrato: number): Observable<any> {
