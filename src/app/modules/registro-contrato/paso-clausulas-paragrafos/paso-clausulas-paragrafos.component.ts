@@ -16,6 +16,10 @@ import { MatStepper } from '@angular/material/stepper';
 import { NgZone } from '@angular/core';
 import { base64 } from 'src/assets/base64';
 import { AlertService } from 'src/app/services/alert.service';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { RolService } from 'src/app/services/rol.service';
+import { UserService } from 'src/app/services/user.service';
+import { rolPorEstado } from 'src/app/utils/rolesEstados';
 
 interface Indice {
   Id: string;
@@ -46,6 +50,9 @@ export class PasoClausulasParagrafosComponent {
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
+  roles: string[] = [];
+  usuario_id: number = 0;
+  estadoInternoActual: number = 0;
   form: FormGroup;
   indices: Indice[] = [];
   contratoId: number = 9512;
@@ -58,6 +65,9 @@ export class PasoClausulasParagrafosComponent {
     private alertService: AlertService,
     private fb: FormBuilder,
     private dialog: MatDialog,
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private rolService: RolService,
+    private userService: UserService,
     private clausulasParagrafosService: ClausulasParagrafosService,
     private parametrosService: ParametrosService,
     private stepper: MatStepper,
@@ -67,7 +77,37 @@ export class PasoClausulasParagrafosComponent {
   }
 
   ngOnInit(): void {
+    this.roles = this.rolService.getRol();
+    this.getIdUsuario();
+    this.getEstadoActual();
     this.cargarIndices();
+  }
+
+  getRolPorEstado(): string {
+    const rolesEsperados = rolPorEstado[this.estadoInternoActual] || [];
+    const rolEncontrado = rolesEsperados.find((rol: any) =>
+      this.roles.includes(rol)
+    );
+    return rolEncontrado || '';
+  }
+
+  getIdUsuario() {
+    this.userService.getPersonaId().then((usuario_id) => {
+      this.usuario_id = usuario_id;
+    });
+  }
+
+  getEstadoActual() {
+    this.contratoGeneralCrudService.getEstadoActual(1).subscribe({
+      next: (response: any) => {
+        if (response.id) {
+          this.estadoInternoActual = response.estado_interno_parametro_id || 0;
+          console.log(this.estadoInternoActual);
+        }
+      },
+      error: (error) =>
+        this.handleError('Error al crear estado de contrato', error),
+    });
   }
 
   get clausulas(): FormArray {
@@ -959,18 +999,19 @@ export class PasoClausulasParagrafosComponent {
   }
 
   openPdfViewer(): void {
-    const pdfBlob = this.base64ToBlob(base64, 'application/pdf');
+    const file = this.base64ToBlob(base64, 'application/pdf');
+    const datos = {
+      base64,
+      nombre: `MINUTA ${this.contratoId}`,
+      descripcion: `Cargue de minuta firmada, contrato general id ${this.contratoId}`,
+      contrato_general_id: this.contratoId,
+      usuario_id: this.usuarioId,
+      usuario_rol: this.getRolPorEstado(),
+    };
+
     this.dialog.open(PdfViewerModalComponent, {
       width: '70vw',
-      data: {
-        file: pdfBlob,
-        documento: {
-          base64,
-          nombre: `MINUTA ${this.contratoId} - ${this.tipoContratoId}`,
-          descripcion: '',
-          contrato_general_id: 1,
-        },
-      },
+      data: { file, datos },
     });
   }
 }

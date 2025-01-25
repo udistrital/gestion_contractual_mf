@@ -48,7 +48,7 @@
                 <button
                   mat-raised-button
                   color="primary"
-                  (click)="openModalRechazo()"
+                  (click)="abrirModalRechazo()"
                 >
                   Rechazar Contrato
                 </button>
@@ -56,9 +56,9 @@
               <button
                 mat-raised-button
                 color="primary"
-                (click)="openMensajeConfirmacion()"
+                (click)="abrirModalCargarArchivo()"
               >
-                {{ mensaje.accion }}
+                {{ textos.accion }}
               </button>
             </mat-dialog-actions>
           </ng-container>

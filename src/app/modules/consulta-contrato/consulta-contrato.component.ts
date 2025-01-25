@@ -11,7 +11,7 @@ import { RolService } from 'src/app/services/rol.service';
 import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ContratoGeneral } from 'src/app/types/types';
-import { accionesPorRolYEstado } from './roles_estados';
+import { accionesPorRolYEstado } from 'src/app/utils/accionesPorRolYEstado';
 import {
   MomentDateAdapter,
   MAT_MOMENT_DATE_ADAPTER_OPTIONS,
@@ -295,7 +295,7 @@ export class ConsultaContratoComponent implements OnInit {
   CargarVigencia() {
     this.parametrosService
       .get(
-         `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre` 
+        `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
       .subscribe((Response: any) => {
         if (Response.Status == '200') {

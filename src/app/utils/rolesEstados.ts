@@ -12,6 +12,10 @@ const generarEstado = (
 
 // Configuración del rol por estado
 export const rolPorEstado: any = {
+  [environment.ESTADOS_INTERNOS.BORRADOR]: [
+    'ABOGADO_CONTRATACION_RECTOR',
+    'ABOGADO_CONTRATACION_IDEXUD',
+  ],
   [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
     'JEFE_CONTRATACION_RECTOR',
     'JEFE_CONTRATACION_IDEXUD',
@@ -51,7 +55,7 @@ const textos = {
 
 // Configuración de mensajes por rol y estado
 export const textosMensaje: any = {
-  RECTORIA: {
+  [environment.UNIDADES_EJECUTORAS.RECTORIA]: {
     JEFE_CONTRATACION_RECTOR: {
       [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: textos.JEFE_CONTRATACION,
     },
@@ -65,7 +69,7 @@ export const textosMensaje: any = {
       [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: textos.PROVEEDOR,
     },
   },
-  IDEXUD: {
+  [environment.UNIDADES_EJECUTORAS.IDEXUD]: {
     JEFE_CONTRATACION_RECTOR: {
       [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: textos.JEFE_CONTRATACION,
     },
@@ -86,7 +90,7 @@ export const textosMensaje: any = {
 
 // Configuración de estados a registrar cuando se apruebe un contrato
 export const flujoEstados: any = {
-  RECTORIA: {
+  [environment.UNIDADES_EJECUTORAS.RECTORIA]: {
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
       environment.ESTADOS_INTERNOS.APROBADO_JEFE, //Estado automático
       environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR,
@@ -100,7 +104,7 @@ export const flujoEstados: any = {
       environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS,
     ],
   },
-  IDEXUD: {
+  [environment.UNIDADES_EJECUTORAS.IDEXUD]: {
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
       environment.ESTADOS_INTERNOS.APROBADO_JEFE, //Estado automático
       environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR,
