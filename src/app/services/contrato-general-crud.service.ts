@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import {
   CDPContratoCRUD,
   ContratistaCRUD,
-  EstadoContrato, SupervisorToSave,
+  EstadoContrato,
+  SupervisorToSave,
 } from '../types/types';
 
 @Injectable({
@@ -131,16 +132,19 @@ export class ContratoGeneralCrudService {
     return this.requestManager.put('contratistas/' + id, rest);
   }
 
-  getDocumentoContrato(idContrato: number): Observable<any> {
+  getDocumentoActual(
+    idContrato: number,
+    tipoDocumentoId: number
+  ): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get(
-      `documentos-contratos?query={"activo":true, "contrato_general_id":"${idContrato}"}`
+      `documentos-contrato/contrato/${idContrato}?tipoDocumentoId=${tipoDocumentoId}&actual=true`
     );
   }
 
   postDocumentoContrato(documento: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.post('documentos-contratos', documento);
+    return this.requestManager.post('documentos-contrato', documento);
   }
 
   getContratos(params: any): Observable<any> {
