@@ -535,10 +535,8 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   guardarYContinuar() {
-    // const formData = this.formInfoGeneral.value;
-    // let unidad_ejecutora_id = formData.unidadEjecutoraId;
-
-    const unidad_ejecutora_id = environment.UNIDADES_EJECUTORAS.RECTORIA; //Valor quemado ya que no se toma la unidad
+    const formData = this.formInfoGeneral.value;
+    const unidad_ejecutora_id = String(formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id);
 
     // Obtener el consecutivo del contrato
     this.contratoGeneralMidService
@@ -546,7 +544,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       .subscribe({
         next: (response: ApiResponse<any>) => {
           if (response.Success && response.Status === 200) {
-            this.guardarContrato(response.Data);
+            this.guardarContrato(response.Data, parseInt(unidad_ejecutora_id, 10));
           } else {
             this.alertService.showErrorAlert(
               'Error al generar consecutivo de contrato',
@@ -564,7 +562,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       });
   }
 
-  guardarContrato(consecutivo: string) {
+  guardarContrato(consecutivo: string, unidad_ejecutora_id: number) {
     if (this.viewMode) return;
 
     if (this.formInfoGeneral.invalid) {
@@ -591,8 +589,10 @@ export class PasoInfoGeneralComponent implements OnInit {
       procedimiento_id: formData.procedimientoId,
       plazo_ejecucion: formData.plazoEjecucion,
       unidad_ejecucion_id: formData.unidadEjecucionId,
-      unidad_ejecutora_id: environment.UNIDADES_EJECUTORAS.RECTORIA, // formData.unidadEjecutoraId,
+      unidad_ejecutora_id: unidad_ejecutora_id
     };
+
+    // Guardar o actualizar el contrato
     const saveOperation = this.formId
       ? this.contratoGeneralCrudService.put(this.formId, formParsed)
       : this.contratoGeneralCrudService.post({
