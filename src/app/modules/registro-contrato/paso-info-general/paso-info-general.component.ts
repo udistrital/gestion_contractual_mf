@@ -1,12 +1,25 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import { ContratoGeneralCrudService } from "../../../services/contrato-general-crud.service";
-import { ContratoGeneralMidService } from "../../../services/contrato-general-mid.service";
-import { RolService } from "src/app/services/rol.service";
+import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
+import { ContratoGeneralMidService } from '../../../services/contrato-general-mid.service';
+import { RolService } from 'src/app/services/rol.service';
 import { AlertService } from 'src/app/services/alert.service';
-import {ApiResponse, EstadoContrato, ParametroListResponse, ParametroResponse, SimpleItem,} from 'src/app/types/types';
+import {
+  ApiResponse,
+  EstadoContrato,
+  ParametroListResponse,
+  ParametroResponse,
+  SimpleItem,
+} from 'src/app/types/types';
 
 @Component({
   selector: 'app-paso-info-general',
@@ -39,7 +52,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private cdRef: ChangeDetectorRef
-  ) { }
+  ) {}
 
   formInfoGeneral = this.fb.group({
     unidadEjecutoraId: ['', Validators.required],
@@ -56,7 +69,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     regimenContratacionId: ['', Validators.required],
     procedimientoId: ['', Validators.required],
     plazoEjecucion: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
-    unidadEjecucionId: ['', Validators.required]
+    unidadEjecucionId: ['', Validators.required],
   });
 
   //Parametros (Opciones)
@@ -221,16 +234,16 @@ export class PasoInfoGeneralComponent implements OnInit {
     const defaultOptions = [
       {
         Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-        Nombre: 'Rectoría'
+        Nombre: 'Rectoría',
       },
       {
         Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-        Nombre: 'IDEXUD'
-      }
+        Nombre: 'IDEXUD',
+      },
     ];
 
-    const filteredRoles = this.roles.filter(role =>
-      role.includes('RECTOR') || role.includes('IDEXUD')
+    const filteredRoles = this.roles.filter(
+      (role) => role.includes('RECTOR') || role.includes('IDEXUD')
     );
 
     if (filteredRoles.length === 0) {
@@ -238,23 +251,25 @@ export class PasoInfoGeneralComponent implements OnInit {
       return;
     }
 
-    const mappedItems = filteredRoles.map(role => {
-      if (role.includes('RECTOR')) {
-        return {
-          Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-          Nombre: 'Rectoría'
-        };
-      }
-      if (role.includes('IDEXUD')) {
-        return {
-          Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-          Nombre: 'IDEXUD'
-        };
-      }
-      return null;
-    }).filter((item): item is SimpleItem => item !== null);
+    const mappedItems = filteredRoles
+      .map((role) => {
+        if (role.includes('RECTOR')) {
+          return {
+            Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+            Nombre: 'Rectoría',
+          };
+        }
+        if (role.includes('IDEXUD')) {
+          return {
+            Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+            Nombre: 'IDEXUD',
+          };
+        }
+        return null;
+      })
+      .filter((item): item is SimpleItem => item !== null);
 
-    const uniqueMap = new Map(mappedItems.map(item => [item.Id, item]));
+    const uniqueMap = new Map(mappedItems.map((item) => [item.Id, item]));
     this.unidadesEjecutoras = Array.from(uniqueMap.values());
   }
 
@@ -263,9 +278,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarEstado() {
     return new Promise((resolve, reject) => {
       this.parametrosService
-        .get(
-          `parametro/${environment.ESTADOS_GENERALES.POR_SUSCRIBIR}`
-        )
+        .get(`parametro/${environment.ESTADOS_GENERALES.POR_SUSCRIBIR}`)
         .subscribe({
           next: (Response: any) => {
             if (Response.Status == '200') {
@@ -285,9 +298,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   CargarEstadoInterno() {
     return new Promise((resolve, reject) => {
       this.parametrosService
-        .get(
-          `parametro/${environment.ESTADOS_INTERNOS.BORRADOR}`
-        )
+        .get(`parametro/${environment.ESTADOS_INTERNOS.BORRADOR}`)
         .subscribe({
           next: (Response: any) => {
             if (Response.Status == '200') {
@@ -505,12 +516,18 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     this.tiposCompromisos = this.createDynamicOption(data.tipoCompromisoId);
     this.tiposContratos = this.createDynamicOption(data.tipoContratoId);
-    this.modalidadesSeleccion = this.createDynamicOption(data.modalidadSeleccionId);
-    this.tipologiasEspecificas = this.createDynamicOption(data.tipologiaEspecificaId);
-    this.regimenesContratacion = this.createDynamicOption(data.regimenContratacionId);
+    this.modalidadesSeleccion = this.createDynamicOption(
+      data.modalidadSeleccionId
+    );
+    this.tipologiasEspecificas = this.createDynamicOption(
+      data.tipologiaEspecificaId
+    );
+    this.regimenesContratacion = this.createDynamicOption(
+      data.regimenContratacionId
+    );
     this.procedimientos = this.createDynamicOption(data.procedimientoId);
     this.unidadesEjecucion = this.createDynamicOption(data.unidadEjecucionId);
-}
+  }
 
   createDynamicOption(value: string | number): ParametroResponse[] {
     if (value === null || value === undefined) return [];
@@ -518,6 +535,34 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   guardarYContinuar() {
+    const formData = this.formInfoGeneral.value;
+    const unidad_ejecutora_id = String(formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id);
+
+    // Obtener el consecutivo del contrato
+    this.contratoGeneralMidService
+      .postConsecutivo({ unidad_ejecutora_id })
+      .subscribe({
+        next: (response: ApiResponse<any>) => {
+          if (response.Success && response.Status === 200) {
+            this.guardarContrato(response.Data, parseInt(unidad_ejecutora_id, 10));
+          } else {
+            this.alertService.showErrorAlert(
+              'Error al generar consecutivo de contrato',
+              'Por favor, intente de nuevo'
+            );
+          }
+        },
+        error: (error) => {
+          console.log(error);
+          this.alertService.showErrorAlert(
+            'Error al generar consecutivo de contrato',
+            'Por favor, intente de nuevo'
+          );
+        },
+      });
+  }
+
+  guardarContrato(consecutivo: string, unidad_ejecutora_id: number) {
     if (this.viewMode) return;
 
     if (this.formInfoGeneral.invalid) {
@@ -544,11 +589,16 @@ export class PasoInfoGeneralComponent implements OnInit {
       procedimiento_id: formData.procedimientoId,
       plazo_ejecucion: formData.plazoEjecucion,
       unidad_ejecucion_id: formData.unidadEjecucionId,
-      unidad_ejecutora_id: formData.unidadEjecutoraId,
+      unidad_ejecutora_id: unidad_ejecutora_id
     };
+
+    // Guardar o actualizar el contrato
     const saveOperation = this.formId
       ? this.contratoGeneralCrudService.put(this.formId, formParsed)
-      : this.contratoGeneralCrudService.post(formParsed);
+      : this.contratoGeneralCrudService.post({
+          ...formParsed,
+          consecutivo_elaboracion: consecutivo,
+        });
 
     saveOperation.subscribe({
       next: async (response: ApiResponse<any>) => {
@@ -584,7 +634,8 @@ export class PasoInfoGeneralComponent implements OnInit {
   private async guardarEstado(contratoId: number) {
     if (this.estado_id === null || this.estado_interno_id === null) return;
 
-    const rol = this.roles.find(item => item.includes("ABOGADO")) || "ABOGADO";
+    const rol =
+      this.roles.find((item) => item.includes('ABOGADO')) || 'ABOGADO';
     const estado: EstadoContrato = {
       contrato_general_id: contratoId,
       usuario_id: 1,

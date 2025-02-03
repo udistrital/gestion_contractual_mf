@@ -23,6 +23,16 @@ export class ContratoGeneralMidService {
     return this.requestManager.post(`cargue-masivo/especificaciones-tecnicas`, data);
   }
 
+  postConsecutivo(data: any): Observable<any> {
+    this.requestManager.setPath("GESTION_CONTRACTUAL_MID_SERVICE");
+    return this.requestManager.post(`contratos-generales/consecutivo`, data);
+  }
+
+  postNumeroContrato(data: any): Observable<any> {
+    this.requestManager.setPath("GESTION_CONTRACTUAL_MID_SERVICE");
+    return this.requestManager.post(`contratos-generales/numero-contrato`, data);
+  }
+
   getContratos(params: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     let queryParams = [];
