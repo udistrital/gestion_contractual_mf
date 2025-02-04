@@ -1,63 +1,72 @@
-import {
-  Component,
-  ElementRef,
-  Inject,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FileService } from 'src/app/services/file.service';
+import { Component, ElementRef, Inject, ViewChild } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { AlertService } from 'src/app/services/alert.service';
-import { DocumentoContrato } from 'src/app/types/types';
 import { environment } from 'src/environments/environment';
+import { DocumentoContrato } from 'src/app/types/types';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 
 @Component({
-  selector: 'app-pdf-viewer-modal',
-  templateUrl: './pdf-viewer-modal.component.html',
-  styleUrls: ['./pdf-viewer-modal.component.css'],
+  selector: 'app-cargar-archivo',
+  templateUrl: './cargar-archivo.component.html',
+  styleUrl: './cargar-archivo.component.css',
 })
-export class PdfViewerModalComponent implements OnInit {
-  @ViewChild('pdfCanvas', { static: true })
-  pdfCanvas!: ElementRef<HTMLCanvasElement>;
+export class CargarArchivoComponent {
+  @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;
 
-  isLoading: boolean = false;
-  pdfLoading = true;
-  pdfSrc?: Uint8Array;
-  guardarDoc: boolean = false;
+  archivo: File | null = null;
+  isLoading = false;
+  textos: any;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA)
-    public data: { file: File; datos: any },
-    private fileService: FileService,
-    private alertService: AlertService,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MatDialogRef<CargarArchivoComponent>,
     private gestorDocumentalService: GestorDocumentalService,
+    private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService
-  ) {}
-
-  async ngOnInit() {
-    this.guardarDoc = this.data.datos || false;
-    await this.loadPdf();
+  ) {
+    this.textos = data.textos;
   }
 
-  async loadPdf() {
-    try {
-      const arrayBuffer = await this.fileService.readFileAsArrayBuffer(
-        this.data.file
+  onFileSelected(event: any): void {
+    const file = event.target.files ? event.target.files[0] : null;
+    if (file && file.type === 'application/pdf') {
+      this.archivo = file;
+    } else {
+      this.alertService.showAlert(
+        'Por favor, seleccione un archivo válido en formato .pdf'
       );
-      this.pdfSrc = new Uint8Array(arrayBuffer);
-      this.pdfLoading = false;
-    } catch (error) {
-      this.handleError('Error al cargar el PDF', error);
+      this.removerArchivo();
     }
   }
 
+  abrirGestorArchivos(): void {
+    this.fileInput.nativeElement.click();
+  }
+
+  removerArchivo(): void {
+    this.archivo = null;
+    this.fileInput.nativeElement.value = '';
+  }
+
+  cargarArchivo(): void {
+    if (!this.archivo) return;
+
+    this.isLoading = true;
+    const reader = new FileReader();
+
+    reader.onload = (e: any) => {
+      const base64String = e.target.result.split(',')[1];
+      this.guardarDocumentoGestorDocumental(base64String);
+    };
+    reader.readAsDataURL(this.archivo);
+  }
+
   // Guardar el documento del contrato (pdf) en gestor_documental_mid
-  guardarDocumentoGestorDocumental() {
+  guardarDocumentoGestorDocumental(base64: any) {
     this.isLoading = true;
 
-    const { base64, nombre, descripcion } = this.data.datos;
+    const { nombre, descripcion } = this.data.datos;
     const idTipoDoc = environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.MINUTAS;
 
     const data = [
@@ -108,6 +117,7 @@ export class PdfViewerModalComponent implements OnInit {
             this.alertService.showSuccessAlert(
               'El documento del contrato se ha guardado exitosamente'
             );
+            this.dialogRef.close({ confirmado: true });
           } else {
             this.alertService.showErrorAlert(
               'Error al registrar el documento del contrato'

@@ -11,13 +11,16 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CargarArchivoComponent } from './cargar-archivo/cargar-archivo.component';
+import { SharedModule } from 'src/app/shared/shared.module';
 
 @NgModule({
   declarations: [
     RevisionContratoComponent,
     ModalMotivosRechazoComponent,
-    PdfVisualizadorComponent
+    PdfVisualizadorComponent,
+    CargarArchivoComponent,
   ],
   imports: [
     CommonModule,
@@ -31,7 +34,8 @@ import { MatProgressSpinnerModule} from "@angular/material/progress-spinner";
     MatDialogActions,
     MatButtonModule,
     PdfViewerModule,
-    MatProgressSpinnerModule
-  ]
+    MatProgressSpinnerModule,
+    SharedModule,
+  ],
 })
-export class RevisionContratoModule { }
+export class RevisionContratoModule {}

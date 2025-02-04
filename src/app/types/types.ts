@@ -39,9 +39,9 @@ export interface EstadoContrato {
 
 export interface ContratistaCRUD {
   id?: string;
-  numero_documento: string,
-  tipo_persona_id: number,
-  contrato_general_id: number
+  numero_documento: string;
+  tipo_persona_id: number;
+  contrato_general_id: number;
 }
 
 export interface SedeContratoMidResponse {
@@ -71,10 +71,12 @@ export interface EspecificacionTecnica {
 }
 
 export interface DocumentoContrato {
+  contrato_general_id: number;
   tipo_documento_id: number;
+  usuario_id: number;
+  usuario_rol: string;
   documento_id: number;
   documento_enlace: string;
-  contrato_general_id: number;
 }
 
 export interface ParametroListResponse {
@@ -136,8 +138,8 @@ export interface OrdenadorContratoData {
 }
 
 export interface CDPItem {
-  Id: string,
-  Nombre: string
+  Id: string;
+  Nombre: string;
 }
 
 export interface SupervisorResponse {
