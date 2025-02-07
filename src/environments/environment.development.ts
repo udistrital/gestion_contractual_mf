@@ -10,8 +10,8 @@ export const environment = {
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/presupuesto_contractual_mid/',
   CLAUSULAS_PARAGRAFOS_SERVICE:
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/clausulas_paragrafos_crud/',
-  GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:3117/',
-  GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:3001/',
+  GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:8080/',
+  GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:8081/',
   POLIZAS_CRUD_SERVICE: 'http://localhost:3117/',
   GESTOR_DOCUMENTAL_SERVICE:
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
@@ -47,6 +47,7 @@ export const environment = {
   SUFICIENCIA_SMLV_ID: '6708',
   SUFICIENCIA_PORCENTAJE_ID: '6709',
 
+  UNIDAD_EJECUTORA_ID: '146',
   UNIDADES_EJECUTORAS: {
     RECTORIA: 6818,
     IDEXUD: 6819,
