@@ -9,9 +9,9 @@
       <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
         <mat-label>Unidad Ejecutora</mat-label>
         <mat-icon matIconPrefix>business</mat-icon>
-        <mat-select formControlName="unidadEjecucion">
+        <mat-select formControlName="unidadEjecutora">
           <mat-option
-            *ngFor="let unidad_ejecucion of unidadEjecucion"
+            *ngFor="let unidad_ejecucion of unidadEjecutora"
             [value]="unidad_ejecucion.Id"
           >
             {{ unidad_ejecucion.Nombre }}

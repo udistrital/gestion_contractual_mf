@@ -4,7 +4,11 @@ import { ModalMotivosRechazoComponent } from './modal-motivos-rechazo/modal-moti
 import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
-import { EstadoContrato, DocumentoContrato } from 'src/app/types/types';
+import {
+  EstadoContrato,
+  DocumentoContrato,
+  ApiResponse,
+} from 'src/app/types/types';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
@@ -16,6 +20,7 @@ import {
 } from 'src/app/utils/rolesEstados';
 import { CargarArchivoComponent } from './cargar-archivo/cargar-archivo.component';
 import { forkJoin } from 'rxjs';
+import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 
 @Component({
   selector: 'app-revision-contrato',
@@ -29,6 +34,8 @@ export class RevisionContratoComponent {
   documentos = { minuta: '', documentos_precontractuales: '' };
   contrato_general_id = 0;
   unidad_ejecutora_id = 0;
+  vigencia: string = '';
+  numero_contrato: string = '';
   usuario_id: number = 0;
   roles: string[] = [];
   estadoInternoActual: number = 0;
@@ -41,6 +48,7 @@ export class RevisionContratoComponent {
     private route: ActivatedRoute,
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private contratoGeneralMidService: ContratoGeneralMidService,
     private gestorDocumentalService: GestorDocumentalService,
     private rolService: RolService,
     private userService: UserService
@@ -86,16 +94,16 @@ export class RevisionContratoComponent {
 
   cargarDatosIniciales() {
     forkJoin({
-      unidadEjecutora: this.contratoGeneralCrudService.get(
-        this.contrato_general_id
-      ),
+      contrato: this.contratoGeneralCrudService.get(this.contrato_general_id),
       estadosContrato: this.contratoGeneralCrudService.getEstados(
         this.contrato_general_id
       ),
     }).subscribe({
-      next: ({ unidadEjecutora, estadosContrato }: any) => {
-        if (unidadEjecutora.Success && unidadEjecutora.Status === 200) {
-          this.unidad_ejecutora_id = unidadEjecutora.Data?.unidad_ejecutora_id;
+      next: ({ contrato, estadosContrato }: any) => {
+        if (contrato.Success && contrato.Status === 200) {
+          this.unidad_ejecutora_id = contrato.Data?.unidad_ejecutora_id;
+          this.vigencia = contrato.Data?.vigencia;
+          this.numero_contrato = contrato.Data?.numero_contrato;
         }
 
         if (estadosContrato.length > 0) {
@@ -239,31 +247,35 @@ export class RevisionContratoComponent {
     let estados: number[] =
       flujoEstados[this.unidad_ejecutora_id]?.[this.estadoInternoActual];
     const rol = this.getRolPorEstado();
-    if (rol != '' && estados?.length > 0) {
-      const estado = estados[0];
-      const estado_parametro_id = environment.ESTADOS_GENERALES.SUSCRITO;
-      let estadoContrato: EstadoContrato = {
-        contrato_general_id: this.contrato_general_id,
-        usuario_id: this.usuario_id,
-        usuario_rol: rol,
-        estado_parametro_id,
-        estado_interno_parametro_id: estado,
-      };
-      if (estado == environment.ESTADOS_INTERNOS.APROBADO_JEFE) {
-        estadoContrato.estado_parametro_id =
-          environment.ESTADOS_GENERALES.POR_SUSCRIBIR;
-      }
-      if (estados.length > 1) {
-        this.crearEstadoAutomaticoContrato(estadoContrato, estados[1]);
-      } else {
-        this.crearEstadoContrato(estadoContrato);
-      }
+
+    if (!rol || !estados?.length) return;
+
+    const [estadoActual, estadoAnterior] = estados;
+
+    let estado_parametro_id = environment.ESTADOS_GENERALES.SUSCRITO;
+    if (estadoActual === environment.ESTADOS_INTERNOS.APROBADO_JEFE) {
+      estado_parametro_id = environment.ESTADOS_GENERALES.POR_SUSCRIBIR;
+    }
+
+    let estadoContrato: EstadoContrato = {
+      contrato_general_id: this.contrato_general_id,
+      usuario_id: this.usuario_id,
+      usuario_rol: rol,
+      estado_parametro_id,
+      estado_interno_parametro_id: estadoActual,
+    };
+
+    if (this.numero_contrato == null) {
+      this.generarNumeroContrato(estadoContrato, estadoAnterior);
+    } else {
+      this.crearEstadoAutomaticoContrato(estadoContrato, estadoAnterior);
     }
   }
 
   crearEstadoAutomaticoContrato(
     estadoContrato: EstadoContrato,
-    estado: number
+    estado: number,
+    numeroContrato?: string
   ) {
     this.contratoGeneralCrudService
       .postEstadoContrato(estadoContrato)
@@ -273,7 +285,7 @@ export class RevisionContratoComponent {
             estadoContrato.estado_parametro_id =
               environment.ESTADOS_GENERALES.SUSCRITO;
             estadoContrato.estado_interno_parametro_id = estado;
-            this.crearEstadoContrato(estadoContrato);
+            this.crearEstadoContrato(estadoContrato, numeroContrato);
           }
         },
         error: (error) =>
@@ -281,7 +293,7 @@ export class RevisionContratoComponent {
       });
   }
 
-  crearEstadoContrato(estadoContrato: EstadoContrato) {
+  crearEstadoContrato(estadoContrato: EstadoContrato, numeroContrato?: string) {
     this.contratoGeneralCrudService
       .postEstadoContrato(estadoContrato)
       .subscribe({
@@ -291,10 +303,70 @@ export class RevisionContratoComponent {
               this.textos.enviado,
               'CONTRATO ENVIADO'
             );
+            if (
+              estadoContrato.estado_parametro_id ===
+                environment.ESTADOS_GENERALES.SUSCRITO &&
+              !this.numero_contrato &&
+              numeroContrato
+            ) {
+              this.guardarNumeroContrato(numeroContrato);
+            }
           }
         },
         error: (error) =>
           this.handleError('Error al crear estado de contrato', error),
+      });
+  }
+
+  // Generar número de contrato si aplica
+  generarNumeroContrato(estadoContrato: EstadoContrato, estado: number) {
+    this.contratoGeneralMidService
+      .postNumeroContrato({
+        unidad_ejecutora_id: this.unidad_ejecutora_id,
+        vigencia: this.vigencia,
+        estado: environment.ESTADOS_GENERALES.SUSCRITO,
+      })
+      .subscribe({
+        next: (response: ApiResponse<any>) => {
+          if (response.Success && response.Status === 200) {
+            this.crearEstadoAutomaticoContrato(
+              estadoContrato,
+              estado,
+              response.Data
+            );
+          } else {
+            this.alertService.showErrorAlert(
+              'Error al generar número de contrato',
+              'Por favor, intente de nuevo'
+            );
+          }
+        },
+        error: (error) => {
+          this.handleError('Error al generar número de contrato', error);
+        },
+      });
+  }
+
+  // Actualizar el contrato para guardar el número de contrato
+  guardarNumeroContrato(numeroContrato: string) {
+    this.contratoGeneralCrudService
+      .put(this.contrato_general_id, { numero_contrato: numeroContrato })
+      .subscribe({
+        next: (response: ApiResponse<any>) => {
+          if (response.Success && response.Status === 200) {
+            this.alertService.showSuccessAlert(
+              `Número de contrato generado: ${numeroContrato}`
+            );
+          } else {
+            this.alertService.showErrorAlert(
+              'Error al guardar número de contrato',
+              'Por favor, intente de nuevo'
+            );
+          }
+        },
+        error: (error) => {
+          this.handleError('Error al guardar número de contrato', error);
+        },
       });
   }
 }

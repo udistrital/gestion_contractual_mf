@@ -58,7 +58,7 @@ export class ConsultaContratoComponent implements OnInit {
   tamanioPagina = 10;
   paginaActual = 0;
   roles: string[] = [];
-  unidadEjecucion: any[] = [];
+  unidadEjecutora: any[] = [];
   vigencia: any[] = [];
   tipoContratoId: any[] = [];
   tipoPersona: any[] = [];
@@ -88,10 +88,10 @@ export class ConsultaContratoComponent implements OnInit {
     private contratoMidService: ContratoGeneralMidService,
     private rolService: RolService,
     private router: Router
-  ) {}
+  ) { }
 
   form = this._formBuilder.group({
-    unidadEjecucion: [''],
+    unidadEjecutora: [''],
     vigencia: [''],
     tipoContratoId: [''],
     tipoPersona: [''],
@@ -252,8 +252,8 @@ export class ConsultaContratoComponent implements OnInit {
       offset: this.paginaActual * this.tamanioPagina,
     };
 
-    if (formValues.unidadEjecucion)
-      params.unidadEjecucion = formValues.unidadEjecucion;
+    if (formValues.unidadEjecutora)
+      params.unidad_ejecutora_id = formValues.unidadEjecutora;
     if (formValues.vigencia) params.vigencia = formValues.vigencia;
     if (formValues.tipoContratoId)
       params.tipoContratoId = formValues.tipoContratoId;
@@ -290,7 +290,17 @@ export class ConsultaContratoComponent implements OnInit {
     return params;
   }
 
-  CargarunidadEjecutoraId() {}
+  CargarunidadEjecutoraId() {
+    this.parametrosService
+      .get(
+        `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUTORA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+      )
+      .subscribe((Response: any) => {
+        if (Response.Status == '200') {
+          this.unidadEjecutora = Response.Data;
+        }
+      });
+  }
 
   CargarVigencia() {
     this.parametrosService

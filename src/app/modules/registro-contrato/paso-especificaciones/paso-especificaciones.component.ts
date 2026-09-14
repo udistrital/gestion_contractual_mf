@@ -5,6 +5,8 @@ import { ModalEspecificacionComponent } from './modal-especificacion/modal-espec
 import { EspecificacionTecnica } from 'src/app/types/types';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { CargarArchivoComponent } from './cargar-archivo/cargar-archivo.component';
+import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-paso-especificaciones',
@@ -30,7 +32,8 @@ export class PasoEspecificacionesComponent {
   constructor(
     public dialog: MatDialog,
     private alertService: AlertService,
-    private contratoGeneralCrudService: ContratoGeneralCrudService
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private gestorDocumentalService: GestorDocumentalService
   ) {}
 
   ngOnInit() {
@@ -206,5 +209,43 @@ export class PasoEspecificacionesComponent {
     dialog.afterClosed().subscribe(() => {
       this.getEspecificaciones();
     });
+  }
+
+  obtenerPlantilla() {
+    const enlace = environment.ESPECIFICACIONES_ENLACE_XLSX;
+    this.gestorDocumentalService.getDocumento(enlace).subscribe({
+      next: (response: any) => {
+        if (response?.file) {
+          this.descargarPlantilla(response.file);
+        } else {
+          this.alertService.showErrorAlert(
+            'No se pudo descargar plantilla de especificaciones técnicas'
+          );
+        }
+      },
+      error: (error) => this.handleError('Error al descargar plantilla', error),
+    });
+  }
+
+  descargarPlantilla(base64String: string) {
+    // Decodificar Base64 y convertirlo en un array de bytes
+    const byteArray = Uint8Array.from(atob(base64String), (char) =>
+      char.charCodeAt(0)
+    );
+
+    // Crear un Blob con el contenido y el tipo MIME
+    const blob = new Blob([byteArray], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    // Crear un enlace temporal para descargar el archivo
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Plantilla cargue especificaciones técnicas';
+    a.click();
+
+    // Liberar el objeto URL para evitar fugas de memoria
+    URL.revokeObjectURL(url);
   }
 }
