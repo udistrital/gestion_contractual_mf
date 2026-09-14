@@ -229,8 +229,6 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   private processRoles(): void {
-    console.log('Roles:', this.roles);
-
     const defaultOptions = [
       {
         Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
@@ -248,6 +246,9 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     if (filteredRoles.length === 0) {
       this.unidadesEjecutoras = defaultOptions;
+      this.formInfoGeneral.patchValue({
+        unidadEjecutoraId: defaultOptions[0].Id.toString()
+      });
       return;
     }
 
@@ -271,6 +272,12 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     const uniqueMap = new Map(mappedItems.map((item) => [item.Id, item]));
     this.unidadesEjecutoras = Array.from(uniqueMap.values());
+
+    if (this.unidadesEjecutoras.length === 1) {
+      this.formInfoGeneral.patchValue({
+        unidadEjecutoraId: this.unidadesEjecutoras[0].Id.toString()
+      });
+    }
   }
 
   //Generales
@@ -589,10 +596,9 @@ export class PasoInfoGeneralComponent implements OnInit {
       procedimiento_id: formData.procedimientoId,
       plazo_ejecucion: formData.plazoEjecucion,
       unidad_ejecucion_id: formData.unidadEjecucionId,
-      unidad_ejecutora_id: unidad_ejecutora_id
+      unidad_ejecutora_id: formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id,
     };
 
-    // Guardar o actualizar el contrato
     const saveOperation = this.formId
       ? this.contratoGeneralCrudService.put(this.formId, formParsed)
       : this.contratoGeneralCrudService.post({
