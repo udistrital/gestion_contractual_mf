@@ -25,12 +25,13 @@
           <mat-cell *matCellDef="let filaFormGroup; let i = index">
             <mat-form-field>
               <mat-select [formControl]="filaFormGroup.get('amparo')">
-                <mat-option
-                  *ngFor="let amparo of getAmparosDisponibles(i)"
-                  [value]="amparo.Id"
-                >
-                  {{ amparo.Nombre }}
-                </mat-option>
+                @for (amparo of getAmparosDisponibles(i); track amparo) {
+                  <mat-option
+                    [value]="amparo.Id"
+                    >
+                    {{ amparo.Nombre }}
+                  </mat-option>
+                }
               </mat-select>
             </mat-form-field>
           </mat-cell>
@@ -38,91 +39,93 @@
         <ng-container matColumnDef="suficiencia">
           <mat-header-cell *matHeaderCellDef> SUFICIENCIA </mat-header-cell>
           <mat-cell *matCellDef="let filaFormGroup">
-            <mat-form-field
-              *ngIf="filaFormGroup.get('suficienciaPorcentaje').enabled"
-            >
-              <input
-                matInput
-                [formControl]="filaFormGroup.get('suficienciaPorcentaje')"
-                placeholder="Porcentaje (%) -> 10%"
+            @if (filaFormGroup.get('suficienciaPorcentaje').enabled) {
+              <mat-form-field
+                >
+                <input
+                  matInput
+                  [formControl]="filaFormGroup.get('suficienciaPorcentaje')"
+                  placeholder="Porcentaje (%) -> 10%"
                 (keydown)="
                   onlyNumbersFrom1To100(
                     $event,
                     filaFormGroup.get('suficienciaPorcentaje').value
                   )
                 "
-              />
-            </mat-form-field>
-            <mat-form-field
-              *ngIf="filaFormGroup.get('suficienciaSalarios').enabled"
-            >
-              <input
-                matInput
-                [formControl]="filaFormGroup.get('suficienciaSalarios')"
-                placeholder="Cantidad de SMLV"
+                  />
+                </mat-form-field>
+              }
+              @if (filaFormGroup.get('suficienciaSalarios').enabled) {
+                <mat-form-field
+                  >
+                  <input
+                    matInput
+                    [formControl]="filaFormGroup.get('suficienciaSalarios')"
+                    placeholder="Cantidad de SMLV"
                 (keydown)="
                   onlyPositiveIntegers(
                     $event,
                     filaFormGroup.get('suficienciaSalarios').value
                   )
                 "
-              />
-            </mat-form-field>
-          </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="descripcion">
-          <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
-          <mat-cell *matCellDef="let filaFormGroup">
-            <mat-form-field>
-              <input
-                matInput
-                [formControl]="filaFormGroup.get('descripcion')"
-                placeholder="Descripción"
-              />
-            </mat-form-field>
-          </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="acciones">
-          <mat-header-cell *matHeaderCellDef> ACCIONES </mat-header-cell>
-          <mat-cell *matCellDef="let element; let i = index">
-            <button mat-icon-button (click)="eliminarFila(i)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </mat-cell>
-        </ng-container>
-        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-      </table>
-      <div class="btn-container">
-        <button
-          mat-raised-button
-          color="primary"
-          type="button"
-          (click)="agregarFila()"
-        >
-          Agregar Registro
-        </button>
-      </div>
-    </div>
-  </div>
-  <div class="btn-container">
-    <button
-      mat-stroked-button
-      style="border: 1px solid var(--md-primary-500)"
-      color="primary"
-      matStepperPrevious
-    >
-      <mat-icon>arrow_back</mat-icon>
-      Volver
-    </button>
-    <button
-      mat-raised-button
-      type="submit"
-      color="primary"
-      [disabled]="!form.valid"
-    >
-      <mat-icon>save</mat-icon>
-      Guardar y Continuar
-    </button>
-  </div>
-</form>
+                    />
+                  </mat-form-field>
+                }
+              </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="descripcion">
+              <mat-header-cell *matHeaderCellDef> DESCRIPCIÓN </mat-header-cell>
+              <mat-cell *matCellDef="let filaFormGroup">
+                <mat-form-field>
+                  <input
+                    matInput
+                    [formControl]="filaFormGroup.get('descripcion')"
+                    placeholder="Descripción"
+                    />
+                  </mat-form-field>
+                </mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="acciones">
+                <mat-header-cell *matHeaderCellDef> ACCIONES </mat-header-cell>
+                <mat-cell *matCellDef="let element; let i = index">
+                  <button mat-icon-button (click)="eliminarFila(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </mat-cell>
+              </ng-container>
+              <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+            </table>
+            <div class="btn-container">
+              <button
+                mat-raised-button
+                color="primary"
+                type="button"
+                (click)="agregarFila()"
+                >
+                Agregar Registro
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="btn-container">
+          <button
+            mat-stroked-button
+            style="border: 1px solid var(--md-primary-500)"
+            color="primary"
+            matStepperPrevious
+            >
+            <mat-icon>arrow_back</mat-icon>
+            Volver
+          </button>
+          <button
+            mat-raised-button
+            type="submit"
+            color="primary"
+            [disabled]="!form.valid"
+            >
+            <mat-icon>save</mat-icon>
+            Guardar y Continuar
+          </button>
+        </div>
+      </form>

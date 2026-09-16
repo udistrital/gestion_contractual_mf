@@ -1,10 +1,12 @@
 <div appInView (inView)="onInView($event)">
-  <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner-container">
-      <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
-      <p>Cargando...</p>
+  @if (isLoading) {
+    <div class="loading-overlay">
+      <div class="spinner-container">
+        <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+        <p>Cargando...</p>
+      </div>
     </div>
-  </div>
+  }
 
   <div class="d-flex align-items-center fondo-acento-50 mb-4 mt-lg">
     <div>
@@ -16,202 +18,207 @@
     </div>
   </div>
 
-  <form [formGroup]="formInfoGeneral" *ngIf="!isLoading && loadedData">
-    <div class="row">
-      <div class="col-12 col-lg-6">
-        <app-searchable-select
-          label="Unidad Ejecutora"
-          icon="widgets"
-          [items]="unidadesEjecutoras"
-          [control]="formInfoGeneral.get('unidadEjecutoraId')"
-          [required]="true"
-        >
-        </app-searchable-select>
-      </div>
-      <div class="col-12 col-lg-6">
-        <app-searchable-select
-          label="Tipo de Compromiso"
-          icon="assignment"
-          [items]="tiposCompromisos"
-          [control]="formInfoGeneral.get('tipoCompromisoId')"
-          [required]="true"
-        >
-        </app-searchable-select>
-      </div>
-      <div class="col-12 col-lg-6">
-        <app-searchable-select
-          label="Tipo de Contrato"
-          icon="description"
-          [items]="tiposContratos"
-          [control]="formInfoGeneral.get('tipoContratoId')"
-          [required]="true"
-        >
-        </app-searchable-select>
-      </div>
-
-      <ng-container *ngIf="showContratoFields">
-        <mat-form-field
-          class="col-12 col-lg-6"
-          appearance="outline"
-          *ngIf="formInfoGeneral.get('perfilContratistaId')?.enabled"
-        >
-          <mat-label>Perfil del Contratista:</mat-label>
-          <mat-icon matIconPrefix>person_outline</mat-icon>
-          <mat-select formControlName="perfilContratistaId">
-            <mat-option
-              *ngFor="let perfil_contratista of perfilesContratista"
-              [value]="perfil_contratista.Id"
+  @if (!isLoading && loadedData) {
+    <form [formGroup]="formInfoGeneral">
+      <div class="row">
+        <div class="col-12 col-lg-6">
+          <app-searchable-select
+            label="Unidad Ejecutora"
+            icon="widgets"
+            [items]="unidadesEjecutoras"
+            [control]="formInfoGeneral.get('unidadEjecutoraId')"
+            [required]="true"
             >
-              {{ perfil_contratista.Nombre }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field
-          class="col-12 col-lg-6"
-          *ngIf="formInfoGeneral.get('fechaSuscripcionEstudios')?.enabled"
-          appearance="outline"
-        >
-          <mat-label
-            >Fecha Suscripción Estudios y Documentos Previos:</mat-label
-          >
-          <input
-            matInput
-            [matDatepicker]="picker"
-            formControlName="fechaSuscripcionEstudios"
-            [max]="maxDate"
-          />
-          <mat-datepicker-toggle
-            matIconSuffix
-            [for]="picker"
-          ></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-        <mat-form-field
-          class="col-12 col-lg-6"
-          appearance="outline"
-          *ngIf="formInfoGeneral.get('aplicaPoliza')?.enabled"
-        >
-          <mat-label>Aplica Póliza:</mat-label>
-          <mat-icon matIconPrefix>admin_panel_settings</mat-icon>
-          <mat-select formControlName="aplicaPoliza">
-            <mat-option
-              *ngFor="let aplica_poliza of aplicaPoliza"
-              [value]="aplica_poliza.value"
+          </app-searchable-select>
+        </div>
+        <div class="col-12 col-lg-6">
+          <app-searchable-select
+            label="Tipo de Compromiso"
+            icon="assignment"
+            [items]="tiposCompromisos"
+            [control]="formInfoGeneral.get('tipoCompromisoId')"
+            [required]="true"
             >
-              {{ aplica_poliza.viewValue }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </ng-container>
-
-      <ng-container *ngIf="showConvenioFields">
-        <mat-form-field class="col-12 col-lg-6" appearance="outline">
-          <mat-label>Vigencia de Convenio:</mat-label>
-          <mat-icon matIconPrefix>date_range</mat-icon>
-          <mat-select formControlName="vigenciaConvenio">
-            <mat-option
-              *ngFor="let vigencia_convenio of vigenciasConvenio"
-              [value]="vigencia_convenio.Id"
+          </app-searchable-select>
+        </div>
+        <div class="col-12 col-lg-6">
+          <app-searchable-select
+            label="Tipo de Contrato"
+            icon="description"
+            [items]="tiposContratos"
+            [control]="formInfoGeneral.get('tipoContratoId')"
+            [required]="true"
             >
-              {{ vigencia_convenio.Nombre }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field class="col-12 col-lg-6" appearance="outline">
-          <mat-label>Convenio:</mat-label>
-          <mat-icon matIconPrefix>folder_shared</mat-icon>
-          <mat-select formControlName="convenio">
-            <mat-option
-              *ngFor="let convenio of convenios"
-              [value]="convenio.Id"
-            >
-              {{ convenio.Nombre }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field class="col-12 col-lg-6" appearance="outline">
-          <mat-label>Nombre Convenio:</mat-label>
-          <mat-icon matIconPrefix>text_fields</mat-icon>
-          <input matInput formControlName="nombreConvenio" />
-        </mat-form-field>
-      </ng-container>
-
-      <div class="col-12 col-lg-6">
-        <app-searchable-select
-          label="Modalidad de Selección"
-          icon="filter_list"
-          [items]="modalidadesSeleccion"
-          [control]="formInfoGeneral.get('modalidadSeleccionId')"
-          [required]="true"
-        >
-        </app-searchable-select>
+          </app-searchable-select>
+        </div>
+        @if (showContratoFields) {
+          @if (formInfoGeneral.get('perfilContratistaId')?.enabled) {
+            <mat-form-field
+              class="col-12 col-lg-6"
+              appearance="outline"
+              >
+              <mat-label>Perfil del Contratista:</mat-label>
+              <mat-icon matIconPrefix>person_outline</mat-icon>
+              <mat-select formControlName="perfilContratistaId">
+                @for (perfil_contratista of perfilesContratista; track perfil_contratista) {
+                  <mat-option
+                    [value]="perfil_contratista.Id"
+                    >
+                    {{ perfil_contratista.Nombre }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+          @if (formInfoGeneral.get('fechaSuscripcionEstudios')?.enabled) {
+            <mat-form-field
+              class="col-12 col-lg-6"
+              appearance="outline"
+              >
+              <mat-label
+                >Fecha Suscripción Estudios y Documentos Previos:</mat-label
+                >
+                <input
+                  matInput
+                  [matDatepicker]="picker"
+                  formControlName="fechaSuscripcionEstudios"
+                  [max]="maxDate"
+                  />
+                  <mat-datepicker-toggle
+                    matIconSuffix
+                    [for]="picker"
+                  ></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+              }
+              @if (formInfoGeneral.get('aplicaPoliza')?.enabled) {
+                <mat-form-field
+                  class="col-12 col-lg-6"
+                  appearance="outline"
+                  >
+                  <mat-label>Aplica Póliza:</mat-label>
+                  <mat-icon matIconPrefix>admin_panel_settings</mat-icon>
+                  <mat-select formControlName="aplicaPoliza">
+                    @for (aplica_poliza of aplicaPoliza; track aplica_poliza) {
+                      <mat-option
+                        [value]="aplica_poliza.value"
+                        >
+                        {{ aplica_poliza.viewValue }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              }
+            }
+            @if (showConvenioFields) {
+              <mat-form-field class="col-12 col-lg-6" appearance="outline">
+                <mat-label>Vigencia de Convenio:</mat-label>
+                <mat-icon matIconPrefix>date_range</mat-icon>
+                <mat-select formControlName="vigenciaConvenio">
+                  @for (vigencia_convenio of vigenciasConvenio; track vigencia_convenio) {
+                    <mat-option
+                      [value]="vigencia_convenio.Id"
+                      >
+                      {{ vigencia_convenio.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field class="col-12 col-lg-6" appearance="outline">
+                <mat-label>Convenio:</mat-label>
+                <mat-icon matIconPrefix>folder_shared</mat-icon>
+                <mat-select formControlName="convenio">
+                  @for (convenio of convenios; track convenio) {
+                    <mat-option
+                      [value]="convenio.Id"
+                      >
+                      {{ convenio.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field class="col-12 col-lg-6" appearance="outline">
+                <mat-label>Nombre Convenio:</mat-label>
+                <mat-icon matIconPrefix>text_fields</mat-icon>
+                <input matInput formControlName="nombreConvenio" />
+              </mat-form-field>
+            }
+            <div class="col-12 col-lg-6">
+              <app-searchable-select
+                label="Modalidad de Selección"
+                icon="filter_list"
+                [items]="modalidadesSeleccion"
+                [control]="formInfoGeneral.get('modalidadSeleccionId')"
+                [required]="true"
+                >
+              </app-searchable-select>
+            </div>
+            <div class="col-12 col-lg-6">
+              <app-searchable-select
+                label="Tipología Espécifica (CGR)"
+                icon="category"
+                [items]="tipologiasEspecificas"
+                [control]="formInfoGeneral.get('tipologiaEspecificaId')"
+                [required]="true"
+                >
+              </app-searchable-select>
+            </div>
+            <div class="col-12 col-lg-6">
+              <app-searchable-select
+                label="Régimen de Contratación"
+                icon="gavel"
+                [items]="regimenesContratacion"
+                [control]="formInfoGeneral.get('regimenContratacionId')"
+                [required]="true"
+                >
+              </app-searchable-select>
+            </div>
+            <div class="col-12 col-lg-6">
+              <app-searchable-select
+                label="Procedimiento"
+                icon="timeline"
+                [items]="procedimientos"
+                [control]="formInfoGeneral.get('procedimientoId')"
+                [required]="true"
+                >
+              </app-searchable-select>
+            </div>
+            <mat-form-field class="col-12 col-lg-6" appearance="outline">
+              <mat-label>Plazo Ejecución:</mat-label>
+              <mat-icon matIconPrefix>hourglass_empty</mat-icon>
+              <input
+                matInput
+                formControlName="plazoEjecucion"
+                (keydown)="validateOnlyNumbers($event)"
+                />
+              </mat-form-field>
+              <mat-form-field class="col-12 col-lg-6" appearance="outline">
+                <mat-label>Unidad de Ejecución:</mat-label>
+                <mat-icon matIconPrefix>timer</mat-icon>
+                <mat-select formControlName="unidadEjecucionId">
+                  @for (unidad_ejecucion of unidadesEjecucion; track unidad_ejecucion) {
+                    <mat-option
+                      [value]="unidad_ejecucion.Id"
+                      >
+                      {{ unidad_ejecucion.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="d-flex justify-content-end">
+              @if (!viewMode) {
+                <button
+                  mat-raised-button
+                  (click)="guardarYContinuar()"
+                  color="primary"
+                  [disabled]="!formInfoGeneral.valid || isLoading"
+                  >
+                  <mat-icon>save</mat-icon>
+                  Guardar y Continuar
+                </button>
+              }
+            </div>
+          </form>
+        }
       </div>
-
-      <div class="col-12 col-lg-6">
-        <app-searchable-select
-          label="Tipología Espécifica (CGR)"
-          icon="category"
-          [items]="tipologiasEspecificas"
-          [control]="formInfoGeneral.get('tipologiaEspecificaId')"
-          [required]="true"
-        >
-        </app-searchable-select>
-      </div>
-      <div class="col-12 col-lg-6">
-        <app-searchable-select
-          label="Régimen de Contratación"
-          icon="gavel"
-          [items]="regimenesContratacion"
-          [control]="formInfoGeneral.get('regimenContratacionId')"
-          [required]="true"
-        >
-        </app-searchable-select>
-      </div>
-
-      <div class="col-12 col-lg-6">
-        <app-searchable-select
-          label="Procedimiento"
-          icon="timeline"
-          [items]="procedimientos"
-          [control]="formInfoGeneral.get('procedimientoId')"
-          [required]="true"
-        >
-        </app-searchable-select>
-      </div>
-
-      <mat-form-field class="col-12 col-lg-6" appearance="outline">
-        <mat-label>Plazo Ejecución:</mat-label>
-        <mat-icon matIconPrefix>hourglass_empty</mat-icon>
-        <input
-          matInput
-          formControlName="plazoEjecucion"
-          (keydown)="validateOnlyNumbers($event)"
-        />
-      </mat-form-field>
-      <mat-form-field class="col-12 col-lg-6" appearance="outline">
-        <mat-label>Unidad de Ejecución:</mat-label>
-        <mat-icon matIconPrefix>timer</mat-icon>
-        <mat-select formControlName="unidadEjecucionId">
-          <mat-option
-            *ngFor="let unidad_ejecucion of unidadesEjecucion"
-            [value]="unidad_ejecucion.Id"
-          >
-            {{ unidad_ejecucion.Nombre }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-    <div class="d-flex justify-content-end">
-      <button
-        mat-raised-button
-        *ngIf="!viewMode"
-        (click)="guardarYContinuar()"
-        color="primary"
-        [disabled]="!formInfoGeneral.valid || isLoading"
-      >
-        <mat-icon>save</mat-icon>
-        Guardar y Continuar
-      </button>
-    </div>
-  </form>
-</div>

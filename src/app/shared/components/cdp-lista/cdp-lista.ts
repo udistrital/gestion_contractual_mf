@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { CommonModule, NgSwitch } from "@angular/common";
+
 
 interface CDP {
   vigencia: string;

@@ -10,118 +10,117 @@
 <form [formGroup]="form">
   <div class="border">
     <div formArrayName="clausulas">
-      <div
-        *ngFor="let clausula of clausulas.controls; let i = index"
-        [formGroupName]="i"
-        class="clausula-container"
-      >
-        <div class="form-grid2">
-          <div class="clausula-select">
-            <mat-form-field appearance="outline">
-              <mat-label>Cláusula</mat-label>
-              <mat-icon matPrefix>library_books</mat-icon>
-              <mat-select
-                formControlName="index"
-                [disabled]="!isClausulaEditable(i)"
-              >
-                <mat-option *ngFor="let indice of indices" [value]="indice.Id">
-                  {{ indice.Nombre }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="form-grid1">
-            <mat-form-field appearance="outline">
-              <mat-label>Nombre</mat-label>
-              <mat-icon matPrefix>edit</mat-icon>
-              <input matInput formControlName="nombre" />
-            </mat-form-field>
-            <div class="editor-container">
-              <ng-container
-                *ngIf="isClausulaEditable(i); else readOnlyClausula"
-              >
-                <app-editor-enriquecido
-                  formControlName="descripcion"
-                  placeholder="Ingresa la descripción de la cláusula."
-                ></app-editor-enriquecido>
-              </ng-container>
-              <ng-template #readOnlyClausula>
-                <div
-                  class="read-only-content"
-                  [innerHTML]="clausula.get('descripcion')?.value"
-                ></div>
-              </ng-template>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="eliminarClausula(i)"
-                *ngIf="clausulas.length > 1 && isClausulaEditable(i)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div formArrayName="paragrafos" class="paragrafo-container">
-          <div
-            *ngFor="
-              let paragrafo of getParagrafos(clausula).controls;
-              let j = index
-            "
-            [formGroupName]="j"
-            class="paragrafo-item"
+      @for (clausula of clausulas.controls; track clausula; let i = $index) {
+        <div
+          [formGroupName]="i"
+          class="clausula-container"
           >
-            <div class="paragrafo-label">
-              <p>{{ paragrafo.get("nombre")?.value }}</p>
+          <div class="form-grid2">
+            <div class="clausula-select">
+              <mat-form-field appearance="outline">
+                <mat-label>Cláusula</mat-label>
+                <mat-icon matPrefix>library_books</mat-icon>
+                <mat-select
+                  formControlName="index"
+                  [disabled]="!isClausulaEditable(i)"
+                  >
+                  @for (indice of indices; track indice) {
+                    <mat-option [value]="indice.Id">
+                      {{ indice.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
             </div>
-            <div class="paragrafo-content">
-              <ng-container
-                *ngIf="isParagrafoEditable(i, j); else readOnlyParagrafo"
-              >
-                <app-editor-enriquecido
-                  formControlName="descripcion"
-                  placeholder="Ingresa la descripción del parágrafo."
-                ></app-editor-enriquecido>
-              </ng-container>
-              <ng-template #readOnlyParagrafo>
-                <div
-                  class="read-only-content"
-                  [innerHTML]="paragrafo.get('descripcion')?.value"
-                ></div>
-              </ng-template>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="eliminarParagrafo(i, j)"
-                *ngIf="isParagrafoEditable(i, j)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
+            <div class="form-grid1">
+              <mat-form-field appearance="outline">
+                <mat-label>Nombre</mat-label>
+                <mat-icon matPrefix>edit</mat-icon>
+                <input matInput formControlName="nombre" />
+              </mat-form-field>
+              <div class="editor-container">
+                @if (isClausulaEditable(i)) {
+                  <app-editor-enriquecido
+                    formControlName="descripcion"
+                    placeholder="Ingresa la descripción de la cláusula."
+                  ></app-editor-enriquecido>
+                } @else {
+                  <div
+                    class="read-only-content"
+                    [innerHTML]="clausula.get('descripcion')?.value"
+                  ></div>
+                }
+                @if (clausulas.length > 1 && isClausulaEditable(i)) {
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    (click)="eliminarClausula(i)"
+                    >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                }
+              </div>
             </div>
           </div>
-        </div>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="guardarClausula(i)"
-          [disabled]="!isClausulaModificada(i) || !isClausulaEditable(i)"
-        >
-          <mat-icon>save</mat-icon>
-          Guardar Cláusula
-        </button>
-        <div class="btn-container3">
+          <div formArrayName="paragrafos" class="paragrafo-container">
+            @for (
+              paragrafo of getParagrafos(clausula).controls; track
+              paragrafo; let j = $index) {
+              <div
+                [formGroupName]="j"
+                class="paragrafo-item"
+                >
+                <div class="paragrafo-label">
+                  <p>{{ paragrafo.get("nombre")?.value }}</p>
+                </div>
+                <div class="paragrafo-content">
+                  @if (isParagrafoEditable(i, j)) {
+                    <app-editor-enriquecido
+                      formControlName="descripcion"
+                      placeholder="Ingresa la descripción del parágrafo."
+                    ></app-editor-enriquecido>
+                  } @else {
+                    <div
+                      class="read-only-content"
+                      [innerHTML]="paragrafo.get('descripcion')?.value"
+                    ></div>
+                  }
+                  @if (isParagrafoEditable(i, j)) {
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      (click)="eliminarParagrafo(i, j)"
+                      >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
           <button
             mat-raised-button
             color="primary"
-            (click)="agregarParagrafo(i)"
-            *ngIf="isClausulaEditable(i)"
-          >
-            <mat-icon>add</mat-icon>
-            Agregar Parágrafo
+            (click)="guardarClausula(i)"
+            [disabled]="!isClausulaModificada(i) || !isClausulaEditable(i)"
+            >
+            <mat-icon>save</mat-icon>
+            Guardar Cláusula
           </button>
+          <div class="btn-container3">
+            @if (isClausulaEditable(i)) {
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="agregarParagrafo(i)"
+                >
+                <mat-icon>add</mat-icon>
+                Agregar Parágrafo
+              </button>
+            }
+          </div>
         </div>
-      </div>
+      }
     </div>
     <div class="d-flex justify-content-center">
       <button mat-raised-button color="primary" (click)="agregarClausula()">
@@ -136,7 +135,7 @@
       style="border: 1px solid var(--md-primary-500)"
       color="primary"
       matStepperPrevious
-    >
+      >
       <mat-icon>arrow_back</mat-icon>
       Volver
     </button>
@@ -148,7 +147,7 @@
       "
       color="primary"
       (click)="openPdfViewer()"
-    >
+      >
       Ver
       <mat-icon>visibility</mat-icon>
     </button>
