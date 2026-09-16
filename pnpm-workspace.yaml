@@ -1,0 +1,7 @@
+allowBuilds:
+  '@parcel/watcher': false
+  canvas: false
+  esbuild: false
+  unrs-resolver: false
+minimumReleaseAgeExclude:
+  - moment@2.31.0
