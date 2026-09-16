@@ -170,8 +170,8 @@ importers:
         specifier: ^20.3.31
         version: 20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))
       '@angular/cdk':
-        specifier: ^19.2.19
-        version: 19.2.19(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
+        specifier: ^20.2.14
+        version: 20.2.14(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
       '@angular/common':
         specifier: ^20.3.31
         version: 20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
@@ -185,11 +185,11 @@ importers:
         specifier: ^20.3.31
         version: 20.3.31(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@20.3.31(@angular/animations@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1)))(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1)))(rxjs@7.8.2)
       '@angular/material':
-        specifier: ^19.2.19
-        version: 19.2.19(42a81c254c8830d5a2d6c4766164fa8d)
+        specifier: ^20.2.14
+        version: 20.2.14(eb2857489f902b621f1834083951e96a)
       '@angular/material-moment-adapter':
-        specifier: ^19.2.19
-        version: 19.2.19(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/material@19.2.19(42a81c254c8830d5a2d6c4766164fa8d))(moment@2.31.0)
+        specifier: ^20.2.14
+        version: 20.2.14(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/material@20.2.14(eb2857489f902b621f1834083951e96a))(moment@2.31.0)
       '@angular/platform-browser':
         specifier: ^20.3.31
         version: 20.3.31(@angular/animations@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1)))(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))
@@ -213,7 +213,7 @@ importers:
         version: 10.4.0
       ngx-mat-select-search:
         specifier: ^9.0.0
-        version: 9.0.0(@angular/material@19.2.19(42a81c254c8830d5a2d6c4766164fa8d))
+        version: 9.0.0(@angular/material@20.2.14(eb2857489f902b621f1834083951e96a))
       ngx-quill:
         specifier: ^28.0.0
         version: 28.0.2(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(quill@2.0.3)(rxjs@7.8.2)
@@ -478,11 +478,11 @@ packages:
       vitest:
         optional: true
 
-  '@angular/cdk@19.2.19':
-    resolution: {integrity: sha512-PCpJagurPBqciqcq4Z8+3OtKLb7rSl4w/qBJoIMua8CgnrjvA1i+SWawhdtfI1zlY8FSwhzLwXV0CmWWfFzQPg==}
+  '@angular/cdk@20.2.14':
+    resolution: {integrity: sha512-7bZxc01URbiPiIBWThQ69XwOxVduqEKN4PhpbF2AAyfMc/W8Hcr4VoIJOwL0O1Nkq5beS8pCAqoOeIgFyXd/kg==}
     peerDependencies:
-      '@angular/common': ^19.0.0 || ^20.0.0
-      '@angular/core': ^19.0.0 || ^20.0.0
+      '@angular/common': ^20.0.0 || ^21.0.0
+      '@angular/core': ^20.0.0 || ^21.0.0
       rxjs: ^6.5.3 || ^7.4.0
 
   '@angular/cli@20.3.37':
@@ -534,21 +534,21 @@ packages:
       '@angular/platform-browser': 20.3.31
       rxjs: ^6.5.3 || ^7.4.0
 
-  '@angular/material-moment-adapter@19.2.19':
-    resolution: {integrity: sha512-yL7ES1HgtEW5D3iOkio/PD/UwBgXuyNDkxBdcrRYih+8ihhbaU6rBzCT5juUujjmRtt8Aj+3M80PSq5dlsingA==}
+  '@angular/material-moment-adapter@20.2.14':
+    resolution: {integrity: sha512-K9LHW3MhesJjKbVZ5O58ZBT4pLwLIf+Yyjbf1slkBll++4W1saZuPbMHnVH+DyQ52iZ0Q2TIq17MM0KG9f/WFg==}
     peerDependencies:
-      '@angular/core': ^19.0.0 || ^20.0.0
-      '@angular/material': 19.2.19
+      '@angular/core': ^20.0.0 || ^21.0.0
+      '@angular/material': 20.2.14
       moment: ^2.18.1
 
-  '@angular/material@19.2.19':
-    resolution: {integrity: sha512-auIE6JUzTIA3LyYklh9J/T7u64crmphxUBgAa0zcOMDog6SYfwbNe9YeLQqua5ek4OUAOdK/BHHfVl5W5iaUoQ==}
+  '@angular/material@20.2.14':
+    resolution: {integrity: sha512-IbAgV6XLsvmHiJzxycVhcNC1PA4M30qi+ERCOir6cT333Bxm8vDV32gsOjfL52uzG5YRARroPC+8s1XqR2oxeA==}
     peerDependencies:
-      '@angular/cdk': 19.2.19
-      '@angular/common': ^19.0.0 || ^20.0.0
-      '@angular/core': ^19.0.0 || ^20.0.0
-      '@angular/forms': ^19.0.0 || ^20.0.0
-      '@angular/platform-browser': ^19.0.0 || ^20.0.0
+      '@angular/cdk': 20.2.14
+      '@angular/common': ^20.0.0 || ^21.0.0
+      '@angular/core': ^20.0.0 || ^21.0.0
+      '@angular/forms': ^20.0.0 || ^21.0.0
+      '@angular/platform-browser': ^20.0.0 || ^21.0.0
       rxjs: ^6.5.3 || ^7.4.0
 
   '@angular/platform-browser-dynamic@20.3.31':
@@ -6515,11 +6515,11 @@ snapshots:
       - tsx
       - yaml
 
-  '@angular/cdk@19.2.19(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)':
+  '@angular/cdk@20.2.14(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)':
     dependencies:
       '@angular/common': 20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
       '@angular/core': 20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1)
-      parse5: 7.3.0
+      parse5: 8.0.1
       rxjs: 7.8.2
       tslib: 2.8.1
 
@@ -6591,16 +6591,16 @@ snapshots:
       rxjs: 7.8.2
       tslib: 2.8.1
 
-  '@angular/material-moment-adapter@19.2.19(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/material@19.2.19(42a81c254c8830d5a2d6c4766164fa8d))(moment@2.31.0)':
+  '@angular/material-moment-adapter@20.2.14(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/material@20.2.14(eb2857489f902b621f1834083951e96a))(moment@2.31.0)':
     dependencies:
       '@angular/core': 20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1)
-      '@angular/material': 19.2.19(42a81c254c8830d5a2d6c4766164fa8d)
+      '@angular/material': 20.2.14(eb2857489f902b621f1834083951e96a)
       moment: 2.31.0
       tslib: 2.8.1
 
-  '@angular/material@19.2.19(42a81c254c8830d5a2d6c4766164fa8d)':
+  '@angular/material@20.2.14(eb2857489f902b621f1834083951e96a)':
     dependencies:
-      '@angular/cdk': 19.2.19(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
+      '@angular/cdk': 20.2.14(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
       '@angular/common': 20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
       '@angular/core': 20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1)
       '@angular/forms': 20.3.31(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@20.3.31(@angular/animations@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1)))(@angular/common@20.3.31(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1)))(rxjs@7.8.2)
@@ -11130,9 +11130,9 @@ snapshots:
       pdfjs-dist: 4.8.69
       tslib: 2.8.1
 
-  ngx-mat-select-search@9.0.0(@angular/material@19.2.19(42a81c254c8830d5a2d6c4766164fa8d)):
+  ngx-mat-select-search@9.0.0(@angular/material@20.2.14(eb2857489f902b621f1834083951e96a)):
     dependencies:
-      '@angular/material': 19.2.19(42a81c254c8830d5a2d6c4766164fa8d)
+      '@angular/material': 20.2.14(eb2857489f902b621f1834083951e96a)
       tslib: 2.8.1
 
   ngx-quill@28.0.2(@angular/core@20.3.31(@angular/compiler@20.3.31)(rxjs@7.8.2)(zone.js@0.15.1))(quill@2.0.3)(rxjs@7.8.2):
