@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { RolService } from './services/rol.service';
 
 @Component({
-  selector: 'argo-gestion-contractual-mf',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+    selector: 'argo-gestion-contractual-mf',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css'],
+    standalone: false
 })
 export class AppComponent implements OnInit {
   title = 'argo-gestion-contractual-mf';

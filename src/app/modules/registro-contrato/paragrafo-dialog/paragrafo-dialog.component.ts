@@ -3,8 +3,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
-  selector: 'app-paragrafo-dialog',
-  template: `
+    selector: 'app-paragrafo-dialog',
+    template: `
     <h2 mat-dialog-title>Agregar Parágrafo a Cláusula {{data.clausulaIndex}}</h2>
     <mat-dialog-content>
       <form [formGroup]="form">
@@ -22,7 +22,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
       <button mat-button (click)="onCancel()">Cancelar</button>
       <button mat-button color="primary" [disabled]="!form.valid" (click)="onSubmit()">Agregar</button>
     </mat-dialog-actions>
-  `
+  `,
+    standalone: false
 })
 export class ParagrafoDialogComponent {
   form: FormGroup;

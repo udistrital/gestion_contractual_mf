@@ -18,15 +18,16 @@ import { environment } from '../../../environments/environment';
 import { BreakpointObserver } from '@angular/cdk/layout';
 
 @Component({
-  selector: 'app-registro-contrato',
-  templateUrl: './registro-contrato.component.html',
-  styleUrls: ['./registro-contrato.component.css'],
-  providers: [
-    {
-      provide: STEPPER_GLOBAL_OPTIONS,
-      useValue: { showError: true },
-    },
-  ],
+    selector: 'app-registro-contrato',
+    templateUrl: './registro-contrato.component.html',
+    styleUrls: ['./registro-contrato.component.css'],
+    providers: [
+        {
+            provide: STEPPER_GLOBAL_OPTIONS,
+            useValue: { showError: true },
+        },
+    ],
+    standalone: false
 })
 export class RegistroContratoComponent implements OnInit, AfterViewInit {
   @ViewChildren(MatStep) steps!: QueryList<MatStep>;

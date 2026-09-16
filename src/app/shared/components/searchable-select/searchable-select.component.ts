@@ -1,30 +1,16 @@
 import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
-import {AbstractControl, FormControl, ReactiveFormsModule} from '@angular/forms';
+import {AbstractControl, FormControl} from '@angular/forms';
 import { Subject } from 'rxjs';
 import { startWith, takeUntil } from 'rxjs/operators';
-import {MatFormFieldModule} from "@angular/material/form-field";
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import {NgxMatSelectSearchModule} from "ngx-mat-select-search";
-import {NgForOf, NgIf} from "@angular/common";
-import {CDPItem, DependenciaItem, NestedItem, ParametroResponse, SimpleItem} from "../../types/types";
+import {CDPItem, DependenciaItem, NestedItem, ParametroResponse, SimpleItem} from "../../../types/types";
 
 export type ItemType = SimpleItem | NestedItem | DependenciaItem | ParametroResponse | CDPItem;
 
 @Component({
-  selector: 'app-searchable-select',
-  templateUrl: './searchable-select.component.html',
-  styleUrls: ['./searchable-select.component.scss'],
-  standalone: true,
-  imports: [
-    MatFormFieldModule,
-    MatIconModule,
-    MatSelectModule,
-    NgxMatSelectSearchModule,
-    NgForOf,
-    ReactiveFormsModule,
-    NgIf,
-  ],
+    selector: 'app-searchable-select',
+    templateUrl: './searchable-select.component.html',
+    styleUrls: ['./searchable-select.component.scss'],
+    standalone: false,
 })
 export class SearchableSelectComponent implements OnInit, OnDestroy, OnChanges {
   @Input() label: string = '';

@@ -1,9 +1,10 @@
 import { Component, Input, OnInit, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
 
 @Component({
-  selector: 'app-pdf-visualizador',
-  templateUrl: './pdf-visualizador.component.html',
-  styleUrls: ['./pdf-visualizador.component.css'],
+    selector: 'app-pdf-visualizador',
+    templateUrl: './pdf-visualizador.component.html',
+    styleUrls: ['./pdf-visualizador.component.css'],
+    standalone: false
 })
 export class PdfVisualizadorComponent implements OnInit {
   @ViewChild('pdfCanvas', { static: true })

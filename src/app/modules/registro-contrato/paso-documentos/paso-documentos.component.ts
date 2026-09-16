@@ -6,9 +6,10 @@ import { GestorDocumentalService } from 'src/app/services/gestor-documental.serv
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
-  selector: 'app-paso-documentos',
-  templateUrl: './paso-documentos.component.html',
-  styleUrls: ['./paso-documentos.component.css'],
+    selector: 'app-paso-documentos',
+    templateUrl: './paso-documentos.component.html',
+    styleUrls: ['./paso-documentos.component.css'],
+    standalone: false
 })
 export class PasoDocumentosComponent implements OnInit {
   @Output() nextStep = new EventEmitter<void>();

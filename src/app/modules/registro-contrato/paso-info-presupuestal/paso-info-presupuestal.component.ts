@@ -18,9 +18,10 @@ import { cdpConstructorTabla } from './paso-info-presupuestal.utilidades';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
-  selector: 'app-paso-info-presupuestal',
-  templateUrl: './paso-info-presupuestal.component.html',
-  styleUrls: ['./paso-info-presupuestal.component.css'],
+    selector: 'app-paso-info-presupuestal',
+    templateUrl: './paso-info-presupuestal.component.html',
+    styleUrls: ['./paso-info-presupuestal.component.css'],
+    standalone: false
 })
 export class PasoInfoPresupuestalComponent implements OnInit {
   @Output() stepCompleted = new EventEmitter<boolean>();

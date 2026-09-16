@@ -22,9 +22,10 @@ import {
 } from 'src/app/types/types';
 
 @Component({
-  selector: 'app-paso-info-general',
-  templateUrl: './paso-info-general.component.html',
-  styleUrls: ['./paso-info-general.component.css'],
+    selector: 'app-paso-info-general',
+    templateUrl: './paso-info-general.component.html',
+    styleUrls: ['./paso-info-general.component.css'],
+    standalone: false
 })
 export class PasoInfoGeneralComponent implements OnInit {
   @Input() viewMode: boolean = false; //Determina si el paso es de creación o visualización

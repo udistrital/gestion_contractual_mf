@@ -5,9 +5,10 @@ import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 
 @Component({
-  selector: 'app-modal-observaciones',
-  templateUrl: './modal-observaciones.component.html',
-  styleUrls: ['./modal-observaciones.component.css'],
+    selector: 'app-modal-observaciones',
+    templateUrl: './modal-observaciones.component.html',
+    styleUrls: ['./modal-observaciones.component.css'],
+    standalone: false
 })
 export class ModalObservacionesComponent implements OnInit {
   estados: any;

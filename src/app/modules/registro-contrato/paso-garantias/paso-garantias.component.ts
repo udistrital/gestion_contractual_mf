@@ -15,9 +15,10 @@ import { AmparoResponse, ApiResponse } from '../../../types/types';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
-  selector: 'app-paso-garantias',
-  templateUrl: './paso-garantias.component.html',
-  styleUrls: ['./paso-garantias.component.css'],
+    selector: 'app-paso-garantias',
+    templateUrl: './paso-garantias.component.html',
+    styleUrls: ['./paso-garantias.component.css'],
+    standalone: false
 })
 export class PasoGarantiasComponent implements OnInit {
   @Output() nextStep = new EventEmitter<void>();

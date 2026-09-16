@@ -9,9 +9,10 @@ import { GestorDocumentalService } from 'src/app/services/gestor-documental.serv
 import { environment } from 'src/environments/environment';
 
 @Component({
-  selector: 'app-paso-especificaciones',
-  templateUrl: './paso-especificaciones.component.html',
-  styleUrls: ['./paso-especificaciones.component.css'],
+    selector: 'app-paso-especificaciones',
+    templateUrl: './paso-especificaciones.component.html',
+    styleUrls: ['./paso-especificaciones.component.css'],
+    standalone: false
 })
 export class PasoEspecificacionesComponent {
   @Output() nextStep = new EventEmitter<void>();

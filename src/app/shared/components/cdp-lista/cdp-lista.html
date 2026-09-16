@@ -1,0 +1,17 @@
+<mat-accordion [multi]="true">
+    <mat-expansion-panel
+    *ngFor="let cdp of cdpData"
+    [expanded]="true"
+    >
+    <mat-expansion-panel-header>
+        <mat-panel-title>
+        Número de Disponibilidad: {{ cdp.numero_disponibilidad }}
+        </mat-panel-title>
+    </mat-expansion-panel-header>
+    <ng-container [ngSwitch]="tipo">
+        <div *ngSwitchCase="'justificacion'" class="cdp-content">{{ cdp.justificacion }}</div>
+        <div *ngSwitchCase="'descripcion'" class="cdp-content">{{ cdp.descripcion }}</div>
+        <div *ngSwitchCase="'observaciones'" class="cdp-content">{{ cdp.observaciones }}</div>
+    </ng-container>
+    </mat-expansion-panel>
+</mat-accordion>

@@ -22,10 +22,11 @@ import {
 import {firstValueFrom} from "rxjs";
 
 @Component({
-  selector: 'app-paso-supervisores',
-  templateUrl: './paso-supervisores.component.html',
-  styleUrls: ['./paso-supervisores.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-paso-supervisores',
+    templateUrl: './paso-supervisores.component.html',
+    styleUrls: ['./paso-supervisores.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PasoSupervisoresComponent implements OnInit {
   @Output() nextStep = new EventEmitter<void>();

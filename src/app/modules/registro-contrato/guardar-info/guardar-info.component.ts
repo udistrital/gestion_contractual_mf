@@ -2,9 +2,10 @@ import { Component } from '@angular/core';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-guardar-info',
-  templateUrl: './guardar-info.component.html',
-  styleUrls: ['./guardar-info.component.css'],
+    selector: 'app-guardar-info',
+    templateUrl: './guardar-info.component.html',
+    styleUrls: ['./guardar-info.component.css'],
+    standalone: false
 })
 export class GuardarInfoComponent {
   mostrarModal() {
