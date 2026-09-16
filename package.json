@@ -25,13 +25,13 @@
     "@angular/platform-browser": "^19.2.25",
     "@angular/platform-browser-dynamic": "^19.2.25",
     "@angular/router": "^19.2.25",
+    "bootstrap": "^5.3.0",
     "crypto-js": "^4.2.0",
     "moment": "^2.31.0",
     "ng2-pdf-viewer": "^10.4.0",
     "ngx-mat-select-search": "^9.0.0",
     "ngx-quill": "^28.0.0",
     "quill": "^2.0.2",
-    "bootstrap": "^5.3.0",
     "rxjs": "~7.8.0",
     "single-spa": ">=4.0.0",
     "single-spa-angular": "^9.1.2",
@@ -40,7 +40,7 @@
     "zone.js": "~0.15.1"
   },
   "devDependencies": {
-    "@angular-builders/custom-webpack": "17.0.2",
+    "@angular-builders/custom-webpack": "20.0.0",
     "@angular/build": "^19.2.27",
     "@angular/cli": "^19.2.27",
     "@angular/compiler-cli": "^19.2.25",
