@@ -1,4 +1,4 @@
-# gestion_contractual_compras_contrato_mf
+# gestion_contractual_mf
 
 Cliente para la gestión, registro, actualización y consulta de contratos, parte del sistema de gestion de contratación y compras (ARGO). Este proyecto está desarrollado con Angular.
 
@@ -6,17 +6,17 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
 
 ### Tecnologías Implementadas y Versiones
 
-- [Angular](https://angular.io/docs) 17.3
-  - Incluye Animations, Common, Compiler, Core, Forms, Platform-Browser, Platform-Browser-Dynamic, Router
-- [Angular Material](https://material.angular.io/) 17.3
-- [Node](https://nodejs.org/en) 18.20.0
+- [Angular](https://angular.io/docs) 21.2
+  - Incluye Animations, Common, Compiler, Core, Forms, Platform-Browser, Router
+- [Angular Material](https://material.angular.io/) 21.2
+- [Node](https://nodejs.org/en) 24
 - [RxJS](https://rxjs.dev/guide/overview) ~7.8.0
 - [Single-spa](https://single-spa.js.org/) >=9.0.0
   - Incluye single-spa-angular
-- [SweetAlert2](https://sweetalert2.github.io/) 11.12.0
-- [ts-md5](https://github.com/cotag/ts-md5) 1.3.1
-- [tslib](https://github.com/Microsoft/tslib) 2.3.0
-- [Zone.js](https://github.com/angular/angular/tree/master/packages/zone.js) ~0.14.0
+- [SweetAlert2](https://sweetalert2.github.io/) 11.26.25
+- [tslib](https://github.com/Microsoft/tslib) 2.8.1
+- [Zone.js](https://github.com/angular/angular/tree/master/packages/zone.js) ~0.15.1
+- [Jest](https://jestjs.io/) 30.0
 
 ### Variables de Entorno
 ```bash
@@ -48,12 +48,12 @@ El Root contiene la lógica de Argo
 3. Instalar las dependencias:
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 4. Iniciar el Root:
    ```bash
-   npm start
+   pnpm run start
    ```
 
 ### Core
@@ -86,34 +86,34 @@ El Core contiene componentes generales que construyen el layout y administran as
    npm start
    ```
 
-### gestion_contractual_compras_contrato_mf
+### gestion_contractual_mf
 
 Microcliente de gestion de contratos
 
-### Pasos para la Ejecución de gestion_contractual_compras_contrato_mf
+### Pasos para la Ejecución de gestion_contractual_mf
 
 1. Clonar el repositorio:
 
    ```bash
-   git clone https://github.com/udistrital/gestion_contractual_compras_contrato_mf
+   git clone https://github.com/udistrital/gestion_contractual_mf
    ```
 
 2. Acceder al directorio del repositorio clonado:
 
    ```bash
-   cd gestion_contractual_compras_contrato_mf
+   cd gestion_contractual_mf
    ```
 
 3. Instalar las dependencias:
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 4. Iniciar usuario_mf:
 
    ```bash
-   npm start
+   pnpm run start
    ```
 
 Con estos pasos, se tendrán las partes mínimas necesarias para ejecutar el proyecto en un entorno local.
@@ -133,15 +133,15 @@ Con estos pasos, se tendrán las partes mínimas necesarias para ejecutar el pro
 ## Ejecución Pruebas
 
 ```bash
-# Developing
+pnpm run test
 ```
 
 ## Estado CI
 
-```bash
-# Developing
-```
-|
+| Develop | Release | Master |
+| -- | -- | -- |
+| [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/gestion_contractual_mf/status.svg)](https://hubci.portaloas.udistrital.edu.co/udistrital/gestion_contractual_mf) | [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/gestion_contractual_mf/status.svg?ref=refs/heads/release/0.0.1)](https://hubci.portaloas.udistrital.edu.co/udistrital/gestion_contractual_mf) | [![Build Status](https://hubci.portaloas.udistrital.edu.co/api/badges/udistrital/gestion_contractual_mf/status.svg?ref=refs/heads/develop)](https://hubci.portaloas.udistrital.edu.co/udistrital/gestion_contractual_mf) |
+
 ## Licencia
 
 [This file is part of auditoria_plan_mejoramiento_usuario_mf](LICENSE)
