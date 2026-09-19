@@ -1,3 +1,5 @@
+@use "@angular/material" as mat;
+
 @media (max-width: 575.98px) {
   mat-form-field {
     @include mat.form-field-density(-4);

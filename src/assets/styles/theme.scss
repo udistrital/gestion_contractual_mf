@@ -1,11 +1,15 @@
 @use "@angular/material" as mat;
 
+@use "bootstrap/scss/bootstrap-grid";
+@use "sweetalert.scss";
+@use "estilos-generales.scss";
+@use "responsive/input-form-field.scss";
+@use "quill/dist/quill.core.css";
+@forward "quill/dist/quill.snow.css";
+
 @include mat.elevation-classes();
 @include mat.app-background();
 
-@import "bootstrap/scss/bootstrap-grid";
-@import "sweetalert.scss";
-@import "./estilos-generales.scss";
 * {
   font-family: "Raleway", "Open Sans", sans-serif;
 }

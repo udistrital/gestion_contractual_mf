@@ -17,9 +17,10 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatStepperModule } from '@angular/material/stepper';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @NgModule({
-  declarations: [],
   exports: [
     MatFormFieldModule,
     MatCardModule,
@@ -31,6 +32,7 @@ import { MatStepperModule } from '@angular/material/stepper';
     MatIconModule,
     MatDividerModule,
     MatMenuModule,
+    MatCheckboxModule,
     MatPaginatorModule,
     MatSortModule,
     MatTableModule,
@@ -38,7 +40,9 @@ import { MatStepperModule } from '@angular/material/stepper';
     MatTooltipModule,
     MatDialogModule,
     MatExpansionModule,
-    MatStepperModule
+    MatStepperModule,
+    MatSnackBarModule,
+    
   ],
 })
 export class MaterialModule {}

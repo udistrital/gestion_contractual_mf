@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 // @ts-ignore
-import Swal from 'sweetalert2/dist/sweetalert2';
+import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root',
@@ -8,7 +8,7 @@ import Swal from 'sweetalert2/dist/sweetalert2';
 export class AlertService {
   constructor() {}
 
-  showAlert(text: string, title: string | null = null) {
+  showAlert(text: string, title: string = "") {
     Swal.fire({
       icon: 'info',
       title: title,

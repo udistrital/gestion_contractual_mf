@@ -1,6 +1,4 @@
 import { Component, Input } from '@angular/core';
-import { MatExpansionModule } from '@angular/material/expansion';
-
 
 interface CDP {
   vigencia: string;
@@ -20,7 +18,7 @@ interface CDP {
 
 @Component({
     selector: 'app-cdp-list',
-    templateUrl: `cdp-lista.html`,
+    templateUrl: `./cdp-lista.html`,
     styles: [`
     .cdp-content {
       white-space: pre-wrap;

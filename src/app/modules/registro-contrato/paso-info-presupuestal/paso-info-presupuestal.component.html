@@ -60,7 +60,7 @@
                     <td
                       mat-cell
                       *matCellDef="let element; let i = index"
-                      [ngClass]="{ 'even-row': i % 2 === 0 }"
+                      [class.even-row]="i % 2 === 0"
                       >
                       @if (columna.columnDef; as colDef) {
                         @switch (colDef) {

@@ -17,7 +17,7 @@
           @for (tab of tabs; track tab; let i = $index) {
             <button
               class="tab-button"
-              [ngClass]="{ selected: selectedTab === i }"
+              [class.selected]="selectedTab === i"
               (click)="selectTab(i)"
               >
               {{ tab }}

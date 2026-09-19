@@ -25,7 +25,13 @@
               "path": "extra-webpack.config.js",
               "libraryName": "gestion_contractual_mf",
               "libraryTarget": "umd"
-            }
+            },
+            "allowedCommonJsDependencies": [
+              "sweetalert2",
+              "moment",
+              "quill-delta",
+              "crypto-js"
+            ]
           },
           "configurations": {
             "production": {
@@ -85,6 +91,11 @@
               "buildTarget": "gestion_contractual_mf:build:local"
             }
           },
+          "options": {
+            "headers": {
+              "Access-Control-Allow-Origin": "*"
+            }
+          },
           "defaultConfiguration": "local"
         },
         "extract-i18n": {
@@ -104,7 +115,8 @@
     }
   },
   "cli": {
-    "analytics": false
+    "analytics": false,
+    "packageManager": "pnpm"
   },
   "schematics": {
     "@schematics/angular:component": {
