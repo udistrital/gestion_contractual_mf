@@ -25,7 +25,13 @@
               "path": "extra-webpack.config.js",
               "libraryName": "gestion_contractual_mf",
               "libraryTarget": "umd"
-            }
+            },
+            "allowedCommonJsDependencies": [
+              "sweetalert2",
+              "moment",
+              "quill-delta",
+              "crypto-js"
+            ]
           },
           "configurations": {
             "production": {
@@ -85,28 +91,57 @@
               "buildTarget": "gestion_contractual_mf:build:local"
             }
           },
+          "options": {
+            "headers": {
+              "Access-Control-Allow-Origin": "*"
+            }
+          },
           "defaultConfiguration": "local"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "builder": "@angular/build:extract-i18n",
           "options": {
             "buildTarget": "gestion_contractual_mf:build"
           }
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
+          "builder": "@angular-builders/jest:run",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
-            "tsConfig": "tsconfig.spec.json",
-            "assets": ["src/favicon.ico", "src/assets"],
-            "styles": ["src/styles.css"],
-            "scripts": []
+            "configPath": "jest.config.ts",
+            "tsConfig": "tsconfig.spec.json"
           }
         }
       }
     }
   },
   "cli": {
-    "analytics": false
+    "analytics": false,
+    "packageManager": "pnpm"
+  },
+  "schematics": {
+    "@schematics/angular:component": {
+      "type": "component"
+    },
+    "@schematics/angular:directive": {
+      "type": "directive"
+    },
+    "@schematics/angular:service": {
+      "type": "service"
+    },
+    "@schematics/angular:guard": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:interceptor": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:module": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:pipe": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:resolver": {
+      "typeSeparator": "."
+    }
   }
 }

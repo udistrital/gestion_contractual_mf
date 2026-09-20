@@ -4,9 +4,10 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EspecificacionTecnica } from 'src/app/types/types';
 
 @Component({
-  selector: 'app-modal-especificacion',
-  templateUrl: './modal-especificacion.component.html',
-  styleUrls: ['./modal-especificacion.component.css'],
+    selector: 'app-modal-especificacion',
+    templateUrl: './modal-especificacion.component.html',
+    styleUrls: ['./modal-especificacion.component.css'],
+    standalone: false
 })
 export class ModalEspecificacionComponent implements OnInit {
   allowedKeys = [

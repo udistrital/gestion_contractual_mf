@@ -10,15 +10,16 @@
         <div class="row">
           <h2 style="color: var(--md-primary-700)">{{ title }}</h2>
         </div>
-        <button
-          *ngIf="mostrarBotonRegresar"
-          mat-stroked-button
-          color="primary"
-          style="border: 1px solid var(--md-primary-500)"
-          (click)="emitirEventoRegresar()"
-        >
-          <mat-icon>toll</mat-icon>Regresar
-        </button>
+        @if (mostrarBotonRegresar) {
+          <button
+            mat-stroked-button
+            color="primary"
+            style="border: 1px solid var(--md-primary-500)"
+            (click)="emitirEventoRegresar()"
+            >
+            <mat-icon>toll</mat-icon>Regresar
+          </button>
+        }
       </div>
       <!-- Renderiza el template proporcionado -->
       <ng-container *ngTemplateOutlet="contenido"></ng-container>

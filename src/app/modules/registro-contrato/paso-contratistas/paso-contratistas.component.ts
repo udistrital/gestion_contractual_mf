@@ -110,9 +110,10 @@ interface ContratistaResponse {
 }
 
 @Component({
-  selector: 'app-paso-contratistas',
-  templateUrl: './paso-contratistas.component.html',
-  styleUrls: ['./paso-contratistas.component.css'],
+    selector: 'app-paso-contratistas',
+    templateUrl: './paso-contratistas.component.html',
+    styleUrls: ['./paso-contratistas.component.css'],
+    standalone: false
 })
 export class PasoContratistasComponent implements OnInit, OnDestroy {
   @Output() nextStep = new EventEmitter<void>();

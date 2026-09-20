@@ -1,24 +1,19 @@
-import {ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR, ReactiveFormsModule} from "@angular/forms";
+import {ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {Component, forwardRef, Input, OnInit} from "@angular/core";
-import {QuillEditorComponent} from "ngx-quill";
 import Italic from "quill/formats/italic";
 
 @Component({
-  selector: 'app-editor-enriquecido',
-  standalone: true,
-  imports: [
-    QuillEditorComponent,
-    ReactiveFormsModule
-  ],
-  templateUrl: './editor-enriquecido.component.html',
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EditorEnriquecidoComponent),
-      multi: true
-    }
-  ],
-  styles: [`
+    selector: 'app-editor-enriquecido',
+    standalone: false,
+    templateUrl: './editor-enriquecido.component.html',
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EditorEnriquecidoComponent),
+            multi: true
+        }
+    ],
+    styles: [`
     quill-editor {
       height: 200px;
       width: 100%;

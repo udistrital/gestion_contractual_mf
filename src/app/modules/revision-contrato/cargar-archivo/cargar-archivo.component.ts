@@ -7,9 +7,10 @@ import { DocumentoContrato } from 'src/app/types/types';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 
 @Component({
-  selector: 'app-cargar-archivo',
-  templateUrl: './cargar-archivo.component.html',
-  styleUrl: './cargar-archivo.component.css',
+    selector: 'app-cargar-archivo',
+    templateUrl: './cargar-archivo.component.html',
+    styleUrl: './cargar-archivo.component.css',
+    standalone: false
 })
 export class CargarArchivoComponent {
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;

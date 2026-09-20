@@ -1,0 +1,24 @@
+<mat-accordion [multi]="true">
+  @for (cdp of cdpData; track cdp) {
+    <mat-expansion-panel
+      [expanded]="true"
+      >
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Número de Disponibilidad: {{ cdp.numero_disponibilidad }}
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      @switch (tipo) {
+        @case ('justificacion') {
+          <div class="cdp-content">{{ cdp.justificacion }}</div>
+        }
+        @case ('descripcion') {
+          <div class="cdp-content">{{ cdp.descripcion }}</div>
+        }
+        @case ('observaciones') {
+          <div class="cdp-content">{{ cdp.observaciones }}</div>
+        }
+      }
+    </mat-expansion-panel>
+  }
+</mat-accordion>

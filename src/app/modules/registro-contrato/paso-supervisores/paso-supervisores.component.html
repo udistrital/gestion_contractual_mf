@@ -23,7 +23,7 @@
               [items]="sedes"
               [control]="form.get('solicitante.sede')"
               [required]="true"
-            >
+              >
             </app-searchable-select>
             <app-searchable-select
               icon="account_balance"
@@ -31,7 +31,7 @@
               [items]="getDependenciasSolicitante()"
               [control]="form.get('solicitante.dependencia')"
               [required]="true"
-            >
+              >
             </app-searchable-select>
           </div>
           <div class="btn-container">
@@ -40,271 +40,297 @@
               color="primary"
               (click)="guardarSolicitante()"
               [disabled]="form.get('solicitante')?.invalid || loading"
-            >
-              <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+              >
+              @if (loading) {
+                <mat-spinner diameter="20"></mat-spinner>
+              }
               <span>Guardar Solicitante</span>
             </button>
-            <mat-icon class="success-icon" *ngIf="solicitanteSaved"
-              >check_circle</mat-icon
-            >
+            @if (solicitanteSaved) {
+              <mat-icon class="success-icon"
+                >check_circle</mat-icon
+                >
+              }
+            </div>
           </div>
-        </div>
 
-        <!-- Datos del Supervisor -->
-        <div class="border">
-          <div class="title">
-            <h3>Datos del Supervisor</h3>
-          </div>
-          <div formArrayName="supervisores">
-            <div
-              *ngFor="
-                let supervisorGroup of getSupervisoresFormArray().controls;
-                let i = index
-              "
-              [formGroupName]="i"
-            >
-              <h4>Supervisor {{ i + 1 }}</h4>
-              <div class="form-grid2">
-                <mat-form-field appearance="outline">
-                  <mat-label>Sede:</mat-label>
-                  <mat-icon matPrefix>location_city</mat-icon>
-                  <mat-select formControlName="sede">
-                    <mat-option *ngFor="let sede of sedes" [value]="sede.Id">
-                      {{ sede.Nombre }}
-                    </mat-option>
-                  </mat-select>
-                  <mat-error
-                    *ngIf="supervisorGroup.get('sede')?.hasError('required')"
+          <!-- Datos del Supervisor -->
+          <div class="border">
+            <div class="title">
+              <h3>Datos del Supervisor</h3>
+            </div>
+            <div formArrayName="supervisores">
+              @for (
+                supervisorGroup of getSupervisoresFormArray().controls; track
+                supervisorGroup; let i = $index) {
+                <div
+                  [formGroupName]="i"
                   >
-                    Este campo es requerido
-                  </mat-error>
-                </mat-form-field>
+                  <h4>Supervisor {{ i + 1 }}</h4>
+                  <div class="form-grid2">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Sede:</mat-label>
+                      <mat-icon matPrefix>location_city</mat-icon>
+                      <mat-select formControlName="sede">
+                        @for (sede of sedes; track sede) {
+                          <mat-option [value]="sede.Id">
+                            {{ sede.Nombre }}
+                          </mat-option>
+                        }
+                      </mat-select>
+                      @if (supervisorGroup.get('sede')?.hasError('required')) {
+                        <mat-error
+                          >
+                          Este campo es requerido
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Dependencia:</mat-label>
+                      <mat-icon matPrefix>account_balance</mat-icon>
+                      <mat-select
+                        formControlName="dependencia"
+                        [disabled]="!supervisorGroup.get('sede')?.value"
+                        >
+                        @for (dep of getDependenciasSupervisor(i); track dep) {
+                          <mat-option
+                            [value]="dep.id"
+                            >
+                            {{ dep.nombre }}
+                          </mat-option>
+                        }
+                      </mat-select>
+                      @if (
+                        supervisorGroup.get('dependencia')?.hasError('required')
+                        ) {
+                        <mat-error
+                          >
+                          Este campo es requerido
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Supervisor:</mat-label>
+                      <mat-icon matPrefix>person</mat-icon>
+                      <input matInput formControlName="nombre" />
+                      @if (supervisorGroup.get('nombre')?.hasError('required')) {
+                        <mat-error
+                          >
+                          Este campo es requerido
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Cargo:</mat-label>
+                      <mat-icon matPrefix>work</mat-icon>
+                      <input matInput formControlName="cargo" />
+                      @if (supervisorGroup.get('cargo')?.hasError('required')) {
+                        <mat-error
+                          >
+                          Este campo es requerido
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Código de Verificación:</mat-label>
+                      <mat-icon matPrefix>verified</mat-icon>
+                      <input matInput formControlName="codigoVerificacion" />
+                      @if (
+                        supervisorGroup
+                        .get('codigoVerificacion')
+                        ?.hasError('required')
+                        ) {
+                        <mat-error
+                          >
+                          Este campo es requerido
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Tipo de Control:</mat-label>
+                      <mat-icon matPrefix>settings</mat-icon>
+                      <mat-select formControlName="tipoControl">
+                        <mat-option value="tecnico">Técnico</mat-option>
+                        <mat-option value="administrativo"
+                          >Administrativo</mat-option
+                          >
+                          <mat-option value="financiero">Financiero</mat-option>
+                        </mat-select>
+                        @if (
+                          supervisorGroup.get('tipoControl')?.hasError('required')
+                          ) {
+                          <mat-error
+                            >
+                            Este campo es requerido
+                          </mat-error>
+                        }
+                      </mat-form-field>
+                    </div>
+                    <div class="btn-container">
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        (click)="eliminarSupervisor(i)"
+                        [disabled]="getSupervisoresFormArray().length === 1"
+                        >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+              <div class="btn-container">
+                <button
+                  mat-mini-fab
+                  color="primary"
+                  (click)="agregarSupervisor()"
+                  matTooltip="Agregar Supervisor"
+                  >
+                  <mat-icon>add</mat-icon>
+                </button>
+
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="guardarSupervisores()"
+                  [disabled]="getSupervisoresFormArray().invalid || loading">
+                  <div class="d-flex align-items-center gap-2">
+                    @if (loading) {
+                      <mat-spinner diameter="20"></mat-spinner>
+                    }
+                    @if (!loading) {
+                      <mat-icon>save</mat-icon>
+                    }
+                    <span>Guardar Supervisores</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Lugar de Ejecución -->
+            <div class="border" formGroupName="lugarEjecucion">
+              <div class="title">
+                <h3>Lugar de Ejecución</h3>
+              </div>
+              <div class="form-grid3">
+                <app-searchable-select
+                  icon="public"
+                  label="País"
+                  [items]="pais"
+                  [control]="form.get('lugarEjecucion.pais')"
+                  [required]="true"
+                  >
+                </app-searchable-select>
+
+                <app-searchable-select
+                  label="Departamento"
+                  icon="map"
+                  [items]="departamento"
+                  [control]="form.get('lugarEjecucion.departamento')"
+                  [required]="true"
+                  >
+                </app-searchable-select>
+
+                <app-searchable-select
+                  label="Municipio/Ciudad"
+                  icon="location_city"
+                  [items]="municipioCiudad"
+                  [control]="form.get('lugarEjecucion.municipioCiudad')"
+                  [required]="true"
+                  >
+                </app-searchable-select>
+
+                <app-searchable-select
+                  icon="domain"
+                  label="Sede"
+                  [items]="sedes"
+                  [control]="form.get('lugarEjecucion.sede')"
+                  [required]="true"
+                  >
+                </app-searchable-select>
                 <mat-form-field appearance="outline">
                   <mat-label>Dependencia:</mat-label>
                   <mat-icon matPrefix>account_balance</mat-icon>
                   <mat-select
                     formControlName="dependencia"
-                    [disabled]="!supervisorGroup.get('sede')?.value"
-                  >
-                    <mat-option
-                      *ngFor="let dep of getDependenciasSupervisor(i)"
-                      [value]="dep.id"
+                    [disabled]="!form.get('lugarEjecucion.sede')?.value"
                     >
-                      {{ dep.nombre }}
-                    </mat-option>
+                    @for (dep of getDependenciasLugarEjecucion(); track dep) {
+                      <mat-option
+                        [value]="dep.id"
+                        >
+                        {{ dep.nombre }}
+                      </mat-option>
+                    }
                   </mat-select>
-                  <mat-error
-                    *ngIf="
-                      supervisorGroup.get('dependencia')?.hasError('required')
-                    "
-                  >
-                    Este campo es requerido
-                  </mat-error>
+                  @if (
+                    form.get('lugarEjecucion.dependencia')?.hasError('required')
+                    ) {
+                    <mat-error
+                      >
+                      Este campo es requerido
+                    </mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Supervisor:</mat-label>
-                  <mat-icon matPrefix>person</mat-icon>
-                  <input matInput formControlName="nombre" />
-                  <mat-error
-                    *ngIf="supervisorGroup.get('nombre')?.hasError('required')"
-                  >
-                    Este campo es requerido
-                  </mat-error>
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                  <mat-label>Cargo:</mat-label>
-                  <mat-icon matPrefix>work</mat-icon>
-                  <input matInput formControlName="cargo" />
-                  <mat-error
-                    *ngIf="supervisorGroup.get('cargo')?.hasError('required')"
-                  >
-                    Este campo es requerido
-                  </mat-error>
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                  <mat-label>Código de Verificación:</mat-label>
-                  <mat-icon matPrefix>verified</mat-icon>
-                  <input matInput formControlName="codigoVerificacion" />
-                  <mat-error
-                    *ngIf="
-                      supervisorGroup
-                        .get('codigoVerificacion')
-                        ?.hasError('required')
-                    "
-                  >
-                    Este campo es requerido
-                  </mat-error>
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                  <mat-label>Tipo de Control:</mat-label>
-                  <mat-icon matPrefix>settings</mat-icon>
-                  <mat-select formControlName="tipoControl">
-                    <mat-option value="tecnico">Técnico</mat-option>
-                    <mat-option value="administrativo"
-                    >Administrativo</mat-option
-                    >
-                    <mat-option value="financiero">Financiero</mat-option>
-                  </mat-select>
-                  <mat-error
-                    *ngIf="
-                      supervisorGroup.get('tipoControl')?.hasError('required')
-                    "
-                  >
-                    Este campo es requerido
-                  </mat-error>
+                  <mat-label>Dirección:</mat-label>
+                  <mat-icon matPrefix>home</mat-icon>
+                  <input matInput formControlName="direccion" />
+                  @if (
+                    form.get('lugarEjecucion.direccion')?.hasError('required')
+                    ) {
+                    <mat-error
+                      >
+                      Este campo es requerido
+                    </mat-error>
+                  }
                 </mat-form-field>
               </div>
               <div class="btn-container">
                 <button
-                  mat-icon-button
-                  color="warn"
-                  (click)="eliminarSupervisor(i)"
-                  [disabled]="getSupervisoresFormArray().length === 1"
-                >
-                  <mat-icon>delete</mat-icon>
+                  mat-raised-button
+                  color="primary"
+                  (click)="guardarLugarEjecucion()"
+                  [disabled]="form.get('lugarEjecucion')?.invalid || loading"
+                  >
+                  @if (loading) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  }
+                  <span>Guardar Lugar de Ejecución</span>
+                </button>
+                @if (lugarEjecucionSaved) {
+                  <mat-icon class="success-icon"
+                    >check_circle</mat-icon
+                    >
+                  }
+                </div>
+              </div>
+
+              <!-- Botones de navegación -->
+              <div class="btn-container">
+                <button
+                  mat-stroked-button
+                  style="border: 1px solid var(--md-primary-500)"
+                  color="primary"
+                  matStepperPrevious
+                  >
+                  <mat-icon>arrow_back</mat-icon>
+                  Volver
+                </button>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="guardarYContinuar()"
+                  [disabled]="!solicitanteSaved || !lugarEjecucionSaved || loading"
+                  >
+                  <mat-icon>save</mat-icon>
+                  @if (loading) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  }
+                  <span>Guardar y Continuar</span>
                 </button>
               </div>
-            </div>
-          </div>
-          <div class="btn-container">
-            <button
-              mat-mini-fab
-              color="primary"
-              (click)="agregarSupervisor()"
-              matTooltip="Agregar Supervisor"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
-
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="guardarSupervisores()"
-              [disabled]="getSupervisoresFormArray().invalid || loading">
-              <div class="d-flex align-items-center gap-2">
-                <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-                <mat-icon *ngIf="!loading">save</mat-icon>
-                <span>Guardar Supervisores</span>
-              </div>
-            </button>
+            </form>
           </div>
         </div>
-
-        <!-- Lugar de Ejecución -->
-        <div class="border" formGroupName="lugarEjecucion">
-          <div class="title">
-            <h3>Lugar de Ejecución</h3>
-          </div>
-          <div class="form-grid3">
-            <app-searchable-select
-              icon="public"
-              label="País"
-              [items]="pais"
-              [control]="form.get('lugarEjecucion.pais')"
-              [required]="true"
-            >
-            </app-searchable-select>
-
-            <app-searchable-select
-              label="Departamento"
-              icon="map"
-              [items]="departamento"
-              [control]="form.get('lugarEjecucion.departamento')"
-              [required]="true"
-            >
-            </app-searchable-select>
-
-            <app-searchable-select
-              label="Municipio/Ciudad"
-              icon="location_city"
-              [items]="municipioCiudad"
-              [control]="form.get('lugarEjecucion.municipioCiudad')"
-              [required]="true"
-            >
-            </app-searchable-select>
-
-            <app-searchable-select
-              icon="domain"
-              label="Sede"
-              [items]="sedes"
-              [control]="form.get('lugarEjecucion.sede')"
-              [required]="true"
-            >
-            </app-searchable-select>
-            <mat-form-field appearance="outline">
-              <mat-label>Dependencia:</mat-label>
-              <mat-icon matPrefix>account_balance</mat-icon>
-              <mat-select
-                formControlName="dependencia"
-                [disabled]="!form.get('lugarEjecucion.sede')?.value"
-              >
-                <mat-option
-                  *ngFor="let dep of getDependenciasLugarEjecucion()"
-                  [value]="dep.id"
-                >
-                  {{ dep.nombre }}
-                </mat-option>
-              </mat-select>
-              <mat-error
-                *ngIf="
-                  form.get('lugarEjecucion.dependencia')?.hasError('required')
-                "
-              >
-                Este campo es requerido
-              </mat-error>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Dirección:</mat-label>
-              <mat-icon matPrefix>home</mat-icon>
-              <input matInput formControlName="direccion" />
-              <mat-error
-                *ngIf="
-                  form.get('lugarEjecucion.direccion')?.hasError('required')
-                "
-              >
-                Este campo es requerido
-              </mat-error>
-            </mat-form-field>
-          </div>
-          <div class="btn-container">
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="guardarLugarEjecucion()"
-              [disabled]="form.get('lugarEjecucion')?.invalid || loading"
-            >
-              <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-              <span>Guardar Lugar de Ejecución</span>
-            </button>
-            <mat-icon class="success-icon" *ngIf="lugarEjecucionSaved"
-              >check_circle</mat-icon
-            >
-          </div>
-        </div>
-
-        <!-- Botones de navegación -->
-        <div class="btn-container">
-          <button
-            mat-stroked-button
-            style="border: 1px solid var(--md-primary-500)"
-            color="primary"
-            matStepperPrevious
-          >
-            <mat-icon>arrow_back</mat-icon>
-            Volver
-          </button>
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="guardarYContinuar()"
-            [disabled]="!solicitanteSaved || !lugarEjecucionSaved || loading"
-          >
-            <mat-icon>save</mat-icon>
-            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-            <span>Guardar y Continuar</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+      </div>

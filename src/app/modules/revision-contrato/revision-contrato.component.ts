@@ -23,9 +23,10 @@ import { forkJoin } from 'rxjs';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 
 @Component({
-  selector: 'app-revision-contrato',
-  templateUrl: './revision-contrato.component.html',
-  styleUrls: ['./revision-contrato.component.css'],
+    selector: 'app-revision-contrato',
+    templateUrl: './revision-contrato.component.html',
+    styleUrls: ['./revision-contrato.component.css'],
+    standalone: false
 })
 export class RevisionContratoComponent {
   isLoading = false;

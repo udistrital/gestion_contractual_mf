@@ -1,7 +1,8 @@
 import { Directive, ElementRef, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 
 @Directive({
-  selector: '[appInView]'
+    selector: '[appInView]',
+    standalone: false
 })
 export class InViewDirective implements OnInit, OnDestroy {
   @Output() inView: EventEmitter<boolean> = new EventEmitter<boolean>();

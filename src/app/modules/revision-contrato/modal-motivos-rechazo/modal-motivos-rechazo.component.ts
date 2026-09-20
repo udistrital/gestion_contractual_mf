@@ -8,9 +8,10 @@ import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-cr
 import { EstadoContrato } from 'src/app/types/types';
 
 @Component({
-  selector: 'app-modal-motivos-rechazo',
-  templateUrl: './modal-motivos-rechazo.component.html',
-  styleUrls: ['./modal-motivos-rechazo.component.css'],
+    selector: 'app-modal-motivos-rechazo',
+    templateUrl: './modal-motivos-rechazo.component.html',
+    styleUrls: ['./modal-motivos-rechazo.component.css'],
+    standalone: false
 })
 export class ModalMotivosRechazoComponent implements OnInit {
   formObservaciones!: FormGroup;

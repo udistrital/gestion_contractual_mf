@@ -14,9 +14,10 @@ import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 
 @Component({
-  selector: 'app-pdf-viewer-modal',
-  templateUrl: './pdf-viewer-modal.component.html',
-  styleUrls: ['./pdf-viewer-modal.component.css'],
+    selector: 'app-pdf-viewer-modal',
+    templateUrl: './pdf-viewer-modal.component.html',
+    styleUrls: ['./pdf-viewer-modal.component.css'],
+    standalone: false
 })
 export class PdfViewerModalComponent implements OnInit {
   @ViewChild('pdfCanvas', { static: true })

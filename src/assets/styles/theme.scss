@@ -1,10 +1,15 @@
 @use "@angular/material" as mat;
 
-@include mat.core();
+@use "bootstrap/scss/bootstrap-grid";
+@use "sweetalert.scss";
+@use "estilos-generales.scss";
+@use "responsive/input-form-field.scss";
+@use "quill/dist/quill.core.css";
+@forward "quill/dist/quill.snow.css";
 
-@import "bootstrap/scss/bootstrap-grid";
-@import "sweetalert.scss";
-@import "./estilos-generales.scss";
+@include mat.elevation-classes();
+@include mat.app-background();
+
 * {
   font-family: "Raleway", "Open Sans", sans-serif;
 }
@@ -84,15 +89,15 @@ $md-warning: (
   ),
 );
 
-$light-theme: mat.define-light-theme(
+$light-theme: mat.m2-define-light-theme(
   (
     color: (
-      primary: mat.define-palette($md-primary, 500),
-      accent: mat.define-palette($md-accent, 500),
-      warn: mat.define-palette($md-warning, 500),
+      primary: mat.m2-define-palette($md-primary, 500),
+      accent: mat.m2-define-palette($md-accent, 500),
+      warn: mat.m2-define-palette($md-warning, 500),
     ),
     typography:
-      mat.define-typography-config(
+      mat.m2-define-typography-config(
         $font-family: "Open Sans",
       ),
     desity: 0,

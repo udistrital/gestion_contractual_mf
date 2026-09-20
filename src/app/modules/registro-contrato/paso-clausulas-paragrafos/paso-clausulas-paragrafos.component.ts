@@ -42,9 +42,10 @@ interface Paragrafo {
 }
 
 @Component({
-  selector: 'app-paso-clausulas-paragrafos',
-  templateUrl: './paso-clausulas-paragrafos.component.html',
-  styleUrls: ['./paso-clausulas-paragrafos.component.css'],
+    selector: 'app-paso-clausulas-paragrafos',
+    templateUrl: './paso-clausulas-paragrafos.component.html',
+    styleUrls: ['./paso-clausulas-paragrafos.component.css'],
+    standalone: false
 })
 export class PasoClausulasParagrafosComponent {
   @Output() nextStep = new EventEmitter<void>();

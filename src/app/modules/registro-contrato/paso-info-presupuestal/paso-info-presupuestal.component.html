@@ -19,12 +19,13 @@
             <mat-form-field appearance="outline">
               <mat-label>Vigencia:</mat-label>
               <mat-select formControlName="vigencia">
-                <mat-option
-                  *ngFor="let vigencia of vigencias"
-                  [value]="vigencia.value"
-                >
-                  {{ vigencia.viewValue }}
-                </mat-option>
+                @for (vigencia of vigencias; track vigencia) {
+                  <mat-option
+                    [value]="vigencia.value"
+                    >
+                    {{ vigencia.viewValue }}
+                  </mat-option>
+                }
               </mat-select>
               <mat-icon matPrefix>event</mat-icon>
             </mat-form-field>
@@ -33,7 +34,7 @@
               icon="list_alt"
               [items]="cdps"
               [control]="form.get('cdp')"
-            >
+              >
             </app-searchable-select>
             <mat-form-field appearance="outline">
               <mat-label>Valor Acumulado:</mat-label>
@@ -43,59 +44,62 @@
           </div>
 
           <div class="table-container rounded-table table-scroll">
-            <table
-              mat-table
-              [dataSource]="selectedCDP"
-              *ngIf="selectedCDP.length != 0 && !isLoading"
-              class="custom-table"
-            >
-              <ng-container
-                *ngFor="let columna of cdpConstructorTabla"
-                [matColumnDef]="columna.columnDef"
-              >
-                <th mat-header-cell *matHeaderCellDef>
-                  <b>{{ columna.header }}</b>
-                </th>
-
-                <td
-                  mat-cell
-                  *matCellDef="let element; let i = index"
-                  [ngClass]="{ 'even-row': i % 2 === 0 }"
+            @if (selectedCDP.length != 0 && !isLoading) {
+              <table
+                mat-table
+                [dataSource]="selectedCDP"
+                class="custom-table"
                 >
+                @for (columna of cdpConstructorTabla; track columna) {
                   <ng-container
-                    *ngIf="columna.columnDef as colDef"
-                    [ngSwitch]="colDef"
-                  >
-                    <div *ngSwitchCase="'acciones'">
-                      <button
-                        mat-icon-button
-                        color="warn"
-                        (click)="eliminarCDP(element)"
-                        matTooltip="Eliminar CDP"
+                    [matColumnDef]="columna.columnDef"
+                    >
+                    <th mat-header-cell *matHeaderCellDef>
+                      <b>{{ columna.header }}</b>
+                    </th>
+                    <td
+                      mat-cell
+                      *matCellDef="let element; let i = index"
+                      [class.even-row]="i % 2 === 0"
                       >
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    </div>
-
-                    <span *ngSwitchDefault>{{ columna.cell(element) }}</span>
+                      @if (columna.columnDef; as colDef) {
+                        @switch (colDef) {
+                          @case ('acciones') {
+                            <div>
+                              <button
+                                mat-icon-button
+                                color="warn"
+                                (click)="eliminarCDP(element)"
+                                matTooltip="Eliminar CDP"
+                                >
+                                <mat-icon>delete</mat-icon>
+                              </button>
+                            </div>
+                          }
+                          @default {
+                            <span>{{ columna.cell(element) }}</span>
+                          }
+                        }
+                      }
+                    </td>
                   </ng-container>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="tablaCdpColumnas"></tr>
-              <tr mat-row *matRowDef="let row; columns: tablaCdpColumnas"></tr>
-            </table>
+                }
+                <tr mat-header-row *matHeaderRowDef="tablaCdpColumnas"></tr>
+                <tr mat-row *matRowDef="let row; columns: tablaCdpColumnas"></tr>
+              </table>
+            }
           </div>
 
           <div class="btn-container">
-            <button
-              *ngIf="selectedCDP.length != 0"
-              mat-raised-button
-              (click)="guardarListaCDP()"
-              color="primary"
-            >
-              Guardar
-            </button>
+            @if (selectedCDP.length != 0) {
+              <button
+                mat-raised-button
+                (click)="guardarListaCDP()"
+                color="primary"
+                >
+                Guardar
+              </button>
+            }
           </div>
         </div>
         <div class="border">
@@ -106,9 +110,11 @@
             <mat-form-field appearance="outline">
               <mat-label>Tipo de Moneda:</mat-label>
               <mat-select formControlName="tipoMoneda">
-                <mat-option *ngFor="let moneda of monedas" [value]="moneda.Id">
-                  {{ moneda.Nombre }}
-                </mat-option>
+                @for (moneda of monedas; track moneda) {
+                  <mat-option [value]="moneda.Id">
+                    {{ moneda.Nombre }}
+                  </mat-option>
+                }
               </mat-select>
               <mat-icon matPrefix>attach_money</mat-icon>
             </mat-form-field>
@@ -118,143 +124,150 @@
                 matInput
                 formControlName="valorContrato"
                 (keydown)="onlyNumbers($event)"
-              />
-              <mat-icon matPrefix>money</mat-icon>
-            </mat-form-field>
-            <div>
-              <p>
-                Asegúrate de escoger la opción correcta, ya que esta acción no
-                se puede deshacer.
-              </p>
-              <mat-checkbox>Reversar saldos</mat-checkbox>
-            </div>
-            <mat-form-field appearance="outline">
-              <mat-label>Ordenador Gasto:</mat-label>
-              <mat-select formControlName="ordenadorGasto">
-                <mat-option
-                  *ngFor="let ordenador of ordenadores"
-                  [value]="ordenador.id"
-                >
-                  {{ ordenador.rol }}
-                </mat-option>
-              </mat-select>
-              <mat-icon matPrefix>person</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Nombre Ordenador:</mat-label>
-              <input matInput formControlName="nombreOrdenador" />
-              <mat-icon matPrefix>badge</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Tipo Gasto:</mat-label>
-              <mat-select formControlName="tipoGasto">
-                <mat-option *ngFor="let gasto of gastos" [value]="gasto.Id">
-                  {{ gasto.Nombre }}
-                </mat-option>
-              </mat-select>
-              <mat-icon matPrefix>category</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Origen Recursos:</mat-label>
-              <mat-select formControlName="origenRecurso">
-                <mat-option
-                  *ngFor="let origen_recurso of origen_recursos"
-                  [value]="origen_recurso.Id"
-                >
-                  {{ origen_recurso.Nombre }}
-                </mat-option>
-              </mat-select>
-              <mat-icon matPrefix>source</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Origen Presupuesto:</mat-label>
-              <mat-select formControlName="origenPresupuesto">
-                <mat-option
-                  *ngFor="let origen_presupuesto of origen_presupuestos"
-                  [value]="origen_presupuesto.Id"
-                >
-                  {{ origen_presupuesto.Nombre }}
-                </mat-option>
-              </mat-select>
-              <mat-icon matPrefix>account_balance</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Tema Gasto Inversión:</mat-label>
-              <mat-select formControlName="temaGasto">
-                <mat-option
-                  *ngFor="let tema_gasto of tema_gasto"
-                  [value]="tema_gasto.Id"
-                >
-                  {{ tema_gasto.Nombre }}
-                </mat-option>
-              </mat-select>
-              <mat-icon matPrefix>trending_up</mat-icon>
-            </mat-form-field>
-            <ng-container *ngIf="showCambioMonedaFields">
-              <mat-form-field appearance="outline">
-                <mat-label>Valor Moneda Extranjera:</mat-label>
-                <input
-                  matInput
-                  formControlName="monedaExtranjera"
-                  (keydown)="onlyNumbers($event)"
                 />
-                <mat-icon matPrefix>euro</mat-icon>
+                <mat-icon matPrefix>money</mat-icon>
+              </mat-form-field>
+              <div>
+                <p>
+                  Asegúrate de escoger la opción correcta, ya que esta acción no
+                  se puede deshacer.
+                </p>
+                <mat-checkbox>Reversar saldos</mat-checkbox>
+              </div>
+              <mat-form-field appearance="outline">
+                <mat-label>Ordenador Gasto:</mat-label>
+                <mat-select formControlName="ordenadorGasto">
+                  @for (ordenador of ordenadores; track ordenador) {
+                    <mat-option
+                      [value]="ordenador.id"
+                      >
+                      {{ ordenador.rol }}
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-icon matPrefix>person</mat-icon>
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Valor de Tasa Cambio:</mat-label>
-                <input
-                  matInput
-                  formControlName="tasaCambio"
-                  (keydown)="onlyNumbers($event)"
-                />
-                <mat-icon matPrefix>currency_exchange</mat-icon>
+                <mat-label>Nombre Ordenador:</mat-label>
+                <input matInput formControlName="nombreOrdenador" />
+                <mat-icon matPrefix>badge</mat-icon>
               </mat-form-field>
-            </ng-container>
-            <mat-form-field appearance="outline">
-              <mat-label>Medio de Pago:</mat-label>
-              <mat-select formControlName="medioPago">
-                <mat-option
-                  *ngFor="let medios_pago of medios_pago"
-                  [value]="medios_pago.Id"
-                >
-                  {{ medios_pago.Nombre }}
-                </mat-option>
-              </mat-select>
-              <mat-icon matPrefix>credit_card</mat-icon>
-            </mat-form-field>
-            <mat-checkbox formControlName="clausulaRegistroPresupuestal">
-              Sujeto a Registro Presupuestal (Hasta Agotar Presupuesto)
-            </mat-checkbox>
-          </div>
-          <div class="full-width-field">
-            <div class="title-box">Forma de Pago:</div>
-            <app-editor-enriquecido
-              formControlName="formaPago"
-              placeholder="Ingrese la forma de pago"
-            ></app-editor-enriquecido>
+              <mat-form-field appearance="outline">
+                <mat-label>Tipo Gasto:</mat-label>
+                <mat-select formControlName="tipoGasto">
+                  @for (gasto of gastos; track gasto) {
+                    <mat-option [value]="gasto.Id">
+                      {{ gasto.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-icon matPrefix>category</mat-icon>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Origen Recursos:</mat-label>
+                <mat-select formControlName="origenRecurso">
+                  @for (origen_recurso of origen_recursos; track origen_recurso) {
+                    <mat-option
+                      [value]="origen_recurso.Id"
+                      >
+                      {{ origen_recurso.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-icon matPrefix>source</mat-icon>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Origen Presupuesto:</mat-label>
+                <mat-select formControlName="origenPresupuesto">
+                  @for (origen_presupuesto of origen_presupuestos; track origen_presupuesto) {
+                    <mat-option
+                      [value]="origen_presupuesto.Id"
+                      >
+                      {{ origen_presupuesto.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-icon matPrefix>account_balance</mat-icon>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Tema Gasto Inversión:</mat-label>
+                <mat-select formControlName="temaGasto">
+                  @for (tema_gasto of tema_gasto; track tema_gasto) {
+                    <mat-option
+                      [value]="tema_gasto.Id"
+                      >
+                      {{ tema_gasto.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-icon matPrefix>trending_up</mat-icon>
+              </mat-form-field>
+              @if (showCambioMonedaFields) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Valor Moneda Extranjera:</mat-label>
+                  <input
+                    matInput
+                    formControlName="monedaExtranjera"
+                    (keydown)="onlyNumbers($event)"
+                    />
+                    <mat-icon matPrefix>euro</mat-icon>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Valor de Tasa Cambio:</mat-label>
+                    <input
+                      matInput
+                      formControlName="tasaCambio"
+                      (keydown)="onlyNumbers($event)"
+                      />
+                      <mat-icon matPrefix>currency_exchange</mat-icon>
+                    </mat-form-field>
+                  }
+                  <mat-form-field appearance="outline">
+                    <mat-label>Medio de Pago:</mat-label>
+                    <mat-select formControlName="medioPago">
+                      @for (medios_pago of medios_pago; track medios_pago) {
+                        <mat-option
+                          [value]="medios_pago.Id"
+                          >
+                          {{ medios_pago.Nombre }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    <mat-icon matPrefix>credit_card</mat-icon>
+                  </mat-form-field>
+                  <mat-checkbox formControlName="clausulaRegistroPresupuestal">
+                    Sujeto a Registro Presupuestal (Hasta Agotar Presupuesto)
+                  </mat-checkbox>
+                </div>
+                <div class="full-width-field">
+                  <div class="title-box">Forma de Pago:</div>
+                  <app-editor-enriquecido
+                    formControlName="formaPago"
+                    placeholder="Ingrese la forma de pago"
+                  ></app-editor-enriquecido>
+                </div>
+              </div>
+              <div class="btn-container">
+                <button
+                  mat-stroked-button
+                  style="border: 1px solid var(--md-primary-500)"
+                  color="primary"
+                  matStepperPrevious
+                  >
+                  <mat-icon>arrow_back</mat-icon>
+                  Volver
+                </button>
+                <button
+                  mat-raised-button
+                  (click)="guardarYContinuar()"
+                  color="primary"
+                  [disabled]="!form.valid || isLoading"
+                  >
+                  <mat-icon>save</mat-icon>
+                  Guardar y Continuar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-        <div class="btn-container">
-          <button
-            mat-stroked-button
-            style="border: 1px solid var(--md-primary-500)"
-            color="primary"
-            matStepperPrevious
-          >
-            <mat-icon>arrow_back</mat-icon>
-            Volver
-          </button>
-          <button
-            mat-raised-button
-            (click)="guardarYContinuar()"
-            color="primary"
-            [disabled]="!form.valid || isLoading"
-          >
-            <mat-icon>save</mat-icon>
-            Guardar y Continuar
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+      </div>

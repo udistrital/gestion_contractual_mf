@@ -11,16 +11,16 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import {
-  MatProgressSpinnerModule,
-  MatProgressSpinner,
-} from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @NgModule({
-  declarations: [],
   exports: [
     MatFormFieldModule,
     MatCardModule,
@@ -32,17 +32,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatIconModule,
     MatDividerModule,
     MatMenuModule,
+    MatCheckboxModule,
     MatPaginatorModule,
     MatSortModule,
     MatTableModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
     MatDialogModule,
-    MatPaginatorModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-    MatCardModule,
+    MatExpansionModule,
+    MatStepperModule,
+    MatSnackBarModule,
+    
   ],
 })
 export class MaterialModule {}

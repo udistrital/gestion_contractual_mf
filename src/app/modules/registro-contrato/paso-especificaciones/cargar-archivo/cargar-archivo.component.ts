@@ -6,9 +6,10 @@ import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 
 @Component({
-  selector: 'app-cargar-archivo',
-  templateUrl: './cargar-archivo.component.html',
-  styleUrl: './cargar-archivo.component.css',
+    selector: 'app-cargar-archivo',
+    templateUrl: './cargar-archivo.component.html',
+    styleUrl: './cargar-archivo.component.css',
+    standalone: false
 })
 export class CargarArchivoComponent {
   archivo: File | null = null;

@@ -20,9 +20,10 @@ interface CDP {
 }
 
 @Component({
-  selector: 'app-paso-obligaciones',
-  templateUrl: './paso-obligaciones.component.html',
-  styleUrls: ['./paso-obligaciones.component.css'],
+    selector: 'app-paso-obligaciones',
+    templateUrl: './paso-obligaciones.component.html',
+    styleUrls: ['./paso-obligaciones.component.css'],
+    standalone: false
 })
 export class PasoObligacionesComponent implements OnInit, OnDestroy {
   @Output() nextStep = new EventEmitter<void>();

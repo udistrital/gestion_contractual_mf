@@ -26,63 +26,65 @@
             class="file-name-input"
             readonly
             aria-label="Nombre del archivo seleccionado"
-          />
-          <button
-            type="button"
-            mat-raised-button
-            color="primary"
-            class="file-upload-button"
-            (click)="fileInput.click()"
-          >
-            <mat-icon>upload</mat-icon>
-            <span>Seleccionar PDF</span>
-          </button>
+            />
+            <button
+              type="button"
+              mat-raised-button
+              color="primary"
+              class="file-upload-button"
+              (click)="fileInput.click()"
+              >
+              <mat-icon>upload</mat-icon>
+              <span>Seleccionar PDF</span>
+            </button>
+          </div>
+          <input
+            #fileInput
+            type="file"
+            (change)="onFileSelected($event)"
+            accept=".pdf"
+            style="display: none"
+            />
+          </div>
+          @if (errorMessage) {
+            <p class="error-message">
+              <mat-icon>error</mat-icon>
+              <span>{{ errorMessage }}</span>
+            </p>
+          }
         </div>
-        <input
-          #fileInput
-          type="file"
-          (change)="onFileSelected($event)"
-          accept=".pdf"
-          style="display: none"
-        />
-      </div>
-      <p *ngIf="errorMessage" class="error-message">
-        <mat-icon>error</mat-icon>
-        <span>{{ errorMessage }}</span>
-      </p>
-    </div>
-    <div class="btn-container">
-      <button
-        mat-stroked-button
-        style="border: 1px solid var(--md-primary-500)"
-        color="primary"
-        matStepperPrevious
-      >
-        <mat-icon>arrow_back</mat-icon>
-        Volver
-      </button>
-      <button
-        mat-stroked-button
+        <div class="btn-container">
+          <button
+            mat-stroked-button
+            style="border: 1px solid var(--md-primary-500)"
+            color="primary"
+            matStepperPrevious
+            >
+            <mat-icon>arrow_back</mat-icon>
+            Volver
+          </button>
+          <button
+            mat-stroked-button
         style="
           border: 1px solid var(--md-primary-500);
           background-color: var(--md-primary-50);
         "
-        color="primary"
-        (click)="openPdfViewer()"
-        [disabled]="!pdfFile"
-      >
-        Ver
-        <mat-icon>visibility</mat-icon>
-      </button>
-      <button
-        mat-raised-button
-        type="submit"
-        color="primary"
-        [disabled]="!form.valid || !pdfFile"
-      >
-        <mat-icon>save</mat-icon>
-        Guardar y Registrar
-      </button>
-    </div>
-  </div>
-</form>
+            color="primary"
+            (click)="openPdfViewer()"
+            [disabled]="!pdfFile"
+            >
+            Ver
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button
+            mat-raised-button
+            type="submit"
+            color="primary"
+            [disabled]="!form.valid || !pdfFile"
+            >
+            <mat-icon>save</mat-icon>
+            Guardar y Registrar
+          </button>
+        </div>
+      </div>
+    </form>

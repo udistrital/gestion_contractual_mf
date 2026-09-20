@@ -14,12 +14,12 @@
         <div class="border">
           <div class="full-width-field">
             <div class="title-box">Justificación:</div>
-            <ng-container *ngIf="!hasSingleCDP">
+            @if (!hasSingleCDP) {
               <app-cdp-list
                 [cdpData]="cdpData"
                 tipo="justificacion"
               ></app-cdp-list>
-            </ng-container>
+            }
             <app-editor-enriquecido
               formControlName="justificacion"
               [placeholder]="
@@ -32,12 +32,12 @@
 
           <div class="full-width-field">
             <div class="title-box">Objeto del Contrato:</div>
-            <ng-container *ngIf="!hasSingleCDP">
+            @if (!hasSingleCDP) {
               <app-cdp-list
                 [cdpData]="cdpData"
                 tipo="descripcion"
               ></app-cdp-list>
-            </ng-container>
+            }
             <app-editor-enriquecido
               formControlName="objetoContrato"
               [placeholder]="
@@ -50,12 +50,12 @@
 
           <div class="full-width-field">
             <div class="title-box">Actividades:</div>
-            <ng-container *ngIf="!hasSingleCDP">
+            @if (!hasSingleCDP) {
               <app-cdp-list
                 [cdpData]="cdpData"
                 tipo="observaciones"
               ></app-cdp-list>
-            </ng-container>
+            }
             <app-editor-enriquecido
               formControlName="actividades"
               [placeholder]="
@@ -72,7 +72,7 @@
               style="border: 1px solid var(--md-primary-500)"
               color="primary"
               matStepperPrevious
-            >
+              >
               <mat-icon>arrow_back</mat-icon>
               Volver
             </button>
@@ -81,7 +81,7 @@
               matStepperNext
               color="primary"
               [disabled]="form.invalid"
-            >
+              >
               <mat-icon>save</mat-icon>
               Guardar y Continuar
             </button>

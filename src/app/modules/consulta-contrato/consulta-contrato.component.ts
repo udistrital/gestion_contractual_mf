@@ -36,17 +36,18 @@ export const FORMATO_LOCAL_FECHA = {
 };
 
 @Component({
-  selector: 'app-consulta-contrato',
-  templateUrl: './consulta-contrato.component.html',
-  styleUrls: ['./consulta-contrato.component.css'],
-  providers: [
-    {
-      provide: DateAdapter,
-      useClass: MomentDateAdapter,
-      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
-    },
-    { provide: MAT_DATE_FORMATS, useValue: FORMATO_LOCAL_FECHA },
-  ],
+    selector: 'app-consulta-contrato',
+    templateUrl: './consulta-contrato.component.html',
+    styleUrls: ['./consulta-contrato.component.css'],
+    providers: [
+        {
+            provide: DateAdapter,
+            useClass: MomentDateAdapter,
+            deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
+        },
+        { provide: MAT_DATE_FORMATS, useValue: FORMATO_LOCAL_FECHA },
+    ],
+    standalone: false
 })
 export class ConsultaContratoComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
