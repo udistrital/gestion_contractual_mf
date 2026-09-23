@@ -17,6 +17,8 @@ export const environment = {
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
   ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ordenador_supervisor_mid/v1/',
 
+  TERCEROS_CRUD: "https://autenticacion.portaloas.udistrital.edu.co/apioas/terceros_crud/v1/",
+
   TIPO_COMPROMISO_ID: '111',
   TIPO_CONTRATO_ID: '112',
   PERFIL_CONTRATISTA_ID: '113',
