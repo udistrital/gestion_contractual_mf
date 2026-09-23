@@ -1,6 +1,5 @@
 import {ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {Component, forwardRef, Input, OnInit} from "@angular/core";
-import Italic from "quill/formats/italic";
 
 @Component({
     selector: 'app-editor-enriquecido',
@@ -31,6 +30,7 @@ export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor 
   
   private initialValue: string = '';
   private isInitialized: boolean = false;
+  protected Italic: any;
 
   constructor(private fb: FormBuilder) {
     this.editorForm = this.fb.group({
@@ -38,7 +38,14 @@ export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor 
     });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    try {
+      const { default: italicFormat } = await import("quill/formats/italic");
+      this.Italic = italicFormat;
+    } catch (error) {
+      console.error("No se pudo cargar el formato Italic dinámicamente", error);
+    }
+
     const editorContent = this.editorForm.get('editorContent');
     if (editorContent) {
       editorContent.valueChanges.subscribe((value) => {
@@ -74,6 +81,4 @@ export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor 
   setDisabledState?(isDisabled: boolean): void {
     isDisabled ? this.editorForm.disable() : this.editorForm.enable();
   }
-
-  protected readonly Italic = Italic;
 }
