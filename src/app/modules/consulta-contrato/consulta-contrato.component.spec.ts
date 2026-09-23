@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { ParametrosService } from 'src/app/services/parametros.service';
 import { ConsultaContratoComponent } from './consulta-contrato.component';
 
 describe('ConsultaContratoComponent', () => {
@@ -8,7 +8,8 @@ describe('ConsultaContratoComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ConsultaContratoComponent]
+      declarations: [ConsultaContratoComponent],
+      providers: [ParametrosService]
     });
     fixture = TestBed.createComponent(ConsultaContratoComponent);
     component = fixture.componentInstance;

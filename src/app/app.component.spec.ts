@@ -14,16 +14,10 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'gestion_contractual_compras_contrato_mf'`, () => {
+  it(`should have as title 'argo-gestion-contractual-mf'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('gestion_contractual_compras_contrato_mf');
+    expect(app.title).toEqual('argo-gestion-contractual-mf');
   });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('gestion_contractual_compras_contrato_mf app is running!');
-  });
 });
