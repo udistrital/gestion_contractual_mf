@@ -24,8 +24,8 @@ const routes: Routes = [
     component: RevisionContratoComponent,
   },
   {
-    path: 'actas',
-    canActivate: [authGuard],
+    path: 'actas/registrar',
+    //canActivate: [authGuard],
     component: RegistroActasComponent,
   }
 ];
