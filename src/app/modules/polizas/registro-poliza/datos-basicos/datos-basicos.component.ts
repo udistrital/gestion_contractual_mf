@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PolizasService } from '../../../services/polizas.service';
+import { PolizasService } from '../../../../services/polizas.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -41,14 +41,14 @@ export class DatosBasicosComponent implements OnInit {
   onSubmit() {
     if (this.polizaForm.valid) {
       this.polizasService.postPoliza(this.polizaForm.value).subscribe({
-        next: (response) => {
+        next: (response: any) => {
           Swal.fire({
             icon: 'success',
             title: 'Éxito',
             text: 'Póliza guardada exitosamente',
           });
         },
-        error: (error) => {
+        error: (error: any) => {
           Swal.fire({
             icon: 'error',
             title: 'Error',

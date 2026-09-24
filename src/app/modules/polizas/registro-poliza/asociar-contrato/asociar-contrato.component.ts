@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
+import { ContratoGeneralCrudService } from '../../../../services/contrato-general-crud.service';
 
 @Component({
   selector: 'app-asociar-contrato',
@@ -79,7 +79,7 @@ export class AsociarContratoComponent implements OnInit, OnDestroy {
     this.hasError = false;
 
     this.contratoGeneralCrudService.getContratosPorVigencia(year).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response && response.Data) {
           this.consecutivo = response.Data.map((id: number) => ({
             value: id.toString(),
@@ -88,7 +88,7 @@ export class AsociarContratoComponent implements OnInit, OnDestroy {
         }
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         this.isLoading = false;
         this.hasError = true;
         this.showErrorMessage(

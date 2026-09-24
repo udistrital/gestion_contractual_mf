@@ -7,11 +7,11 @@ import {
   FormArray,
 } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
-import { PolizasService } from '../../../services/polizas.service';
-import { ParametrosService } from '../../../services/parametros.service';
+import { PolizasService } from '../../../../services/polizas.service';
+import { ParametrosService } from '../../../../services/parametros.service';
 import { Subscription } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../../../environments/environment';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface Amparo {
@@ -84,13 +84,13 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
         .get(`parametro?query=TipoParametroId:${environment.AMPARO_ID}&limit=0`)
         .pipe(
           map((response: any) => response.Data as AmparoParametro[]),
-          catchError((error) => {
+          catchError((error: any) => {
             console.error('Error loading amparos parametros:', error);
             this.showErrorMessage('Error al cargar los parámetros de amparos');
             return [];
           })
         )
-        .subscribe((amparos) => {
+        .subscribe((amparos: AmparoParametro[]) => {
           this.amparosParametros = amparos;
           if (this.contratoId) {
             this.loadAmparos();
@@ -106,13 +106,13 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
       this.polizasService
         .getAmparosContratoMid(this.contratoId)
         .pipe(
-          map((response) => {
+          map((response: any) => {
             if (!response || !response.Data || response.Data.length === 0) {
               throw new Error('NO_AMPAROS');
             }
             return response.Data;
           }),
-          catchError((error) => {
+          catchError((error: any) => {
             if (
               error.status === 404 ||
               error.status === 400 ||
@@ -130,7 +130,7 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
             return [];
           })
         )
-        .subscribe((amparos) => {
+        .subscribe((amparos: any) => {
           this.amparosDisponibles = amparos;
           this.updateForm();
         })
