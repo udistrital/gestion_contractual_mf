@@ -48,12 +48,12 @@ El Root contiene la lógica de Argo
 3. Instalar las dependencias:
 
    ```bash
-   pnpm install
+   npm install
    ```
 
 4. Iniciar el Root:
    ```bash
-   pnpm run start
+   npm run start
    ```
 
 ### Core

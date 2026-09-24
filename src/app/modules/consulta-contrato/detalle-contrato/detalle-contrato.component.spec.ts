@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { DetalleContratoComponent } from './detalle-contrato.component';
 
 describe('DetalleContratoComponent', () => {
@@ -8,7 +8,8 @@ describe('DetalleContratoComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DetalleContratoComponent]
+      declarations: [DetalleContratoComponent],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
     

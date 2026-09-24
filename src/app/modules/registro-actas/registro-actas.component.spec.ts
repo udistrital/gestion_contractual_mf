@@ -1,17 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { GuardarInfoComponent } from './guardar-info.component';
+import { RegistroActasComponent } from './registro-actas.component';
 
-describe('GuardarInfoComponent', () => {
-  let component: GuardarInfoComponent;
-  let fixture: ComponentFixture<GuardarInfoComponent>;
+describe('RegistroActasComponent', () => {
+  let component: RegistroActasComponent;
+  let fixture: ComponentFixture<RegistroActasComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [GuardarInfoComponent],
+      imports: [RegistroActasComponent],
       schemas: [NO_ERRORS_SCHEMA],
+      declarations: []
     });
-    fixture = TestBed.createComponent(GuardarInfoComponent);
+    fixture = TestBed.createComponent(RegistroActasComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
