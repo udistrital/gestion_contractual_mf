@@ -15,9 +15,9 @@ import { UbicacionService } from './services/ubicacion.service';
 import { GestorDocumentalService } from './services/gestor-documental.service';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
 import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
-import { PolizasModule } from './modules/polizas/polizas.module';
 import { SpinnerIntercerptor } from './core/intercerptors/spinner.interceptor';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
+import { RegistroActasModule } from './modules/registro-actas/registro-actas.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -27,7 +27,7 @@ import { MAT_DATE_FORMATS, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@an
     ConsultaContratoModule,
     RegistroContratoModule,
     RevisionContratoModule,
-    PolizasModule,
+    RegistroActasModule,
   ],
   providers: [
     ParametrosService,
