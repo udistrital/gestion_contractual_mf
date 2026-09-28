@@ -1,0 +1,203 @@
+<plantilla-tarjeta-contenedora
+  [title]="'Registrar Acta de Inicio'"
+  [contenido]="contenidoDePlantilla"
+></plantilla-tarjeta-contenedora>
+
+<ng-template #contenidoDePlantilla>
+  <form [formGroup]="form">
+    <div class="row mt-5">
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Vigencia</mat-label>
+        <mat-icon matPrefix>event</mat-icon>
+        <mat-select formControlName="vigencia">
+          <mat-option [value]="'2023'">2023</mat-option>
+          <mat-option [value]="'2024'">2024</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Consecutivo Contrato</mat-label>
+        <mat-icon matPrefix>assignment</mat-icon>
+        <mat-select formControlName="consecutivoContrato">
+          <mat-option [value]="'CON-001'">CON-001</mat-option>
+          <mat-option [value]="'CON-002'">CON-002</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Fecha Suscripción</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerSuscripcion"
+          formControlName="fechaSuscripcion"
+        />
+        <mat-datepicker-toggle
+          matIconSuffix
+          [for]="pickerSuscripcion"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #pickerSuscripcion></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <mat-divider class="my-4"></mat-divider>
+
+    <h3 class="my-3">Contrato</h3>
+    <div class="row">
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Tipo Documento</mat-label>
+        <mat-icon matPrefix>description</mat-icon>
+        <mat-select formControlName="tipoDocumento"></mat-select>
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Número Documento</mat-label>
+        <mat-icon matPrefix>badge</mat-icon>
+        <input matInput formControlName="numeroDocumento" />
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Nombre Contratista</mat-label>
+        <mat-icon matPrefix>person</mat-icon>
+        <input matInput formControlName="nombreContratista" />
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Valor Contrato</mat-label>
+        <mat-icon matPrefix>monetization_on</mat-icon>
+        <input matInput formControlName="valorContrato" />
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Supervisor</mat-label>
+        <mat-icon matPrefix>supervisor_account</mat-icon>
+        <input matInput formControlName="supervisor" />
+      </mat-form-field>
+    </div>
+
+    <mat-divider class="my-4"></mat-divider>
+
+    <h3 class="my-3">Objeto</h3>
+    <div class="row">
+      <mat-form-field appearance="outline" class="col-12">
+        <mat-label>Descripción Objeto de Contrato</mat-label>
+        <mat-icon matPrefix>notes</mat-icon>
+        <textarea
+          matInput
+          formControlName="objeto"
+          rows="3"
+          placeholder="Descripción Objeto de Contrato"
+          style="resize: none"
+        ></textarea>
+      </mat-form-field>
+    </div>
+
+    <mat-divider class="my-4"></mat-divider>
+
+    <h3 class="my-3">Póliza</h3>
+    <div class="row">
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Número de Póliza</mat-label>
+        <mat-icon matPrefix>policy</mat-icon>
+        <input matInput formControlName="numeroPoliza" />
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Fecha de Expedición</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerExpedicion"
+          formControlName="fechaExpedicion"
+        />
+        <mat-datepicker-toggle
+          matIconSuffix
+          [for]="pickerExpedicion"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #pickerExpedicion></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Fecha de Aprobación</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerAprobacionPoliza"
+          formControlName="fechaAprobacionPoliza"
+        />
+        <mat-datepicker-toggle
+          matIconSuffix
+          [for]="pickerAprobacionPoliza"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #pickerAprobacionPoliza></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <mat-divider class="my-4"></mat-divider>
+
+    <h3 class="my-3">Registro Presupuestal</h3>
+    <div class="row">
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Número Registro Presupuestal</mat-label>
+        <mat-icon matPrefix>receipt</mat-icon>
+        <input matInput formControlName="numeroRegistroPresupuestal" />
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Valor Registro Presupuestal</mat-label>
+        <mat-icon matPrefix>attach_money</mat-icon>
+        <input matInput formControlName="valorRegistroPresupuestal" />
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Fecha de Aprobación</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerAprobacionRP"
+          formControlName="fechaAprobacionRP"
+        />
+        <mat-datepicker-toggle
+          matIconSuffix
+          [for]="pickerAprobacionRP"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #pickerAprobacionRP></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <mat-divider class="my-4"></mat-divider>
+
+    <h3 class="my-3">Acta de Inicio</h3>
+    <div class="row">
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Plazo</mat-label>
+        <mat-icon matPrefix>timer</mat-icon>
+        <input matInput formControlName="plazo" />
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Fecha de Inicio</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerInicio"
+          formControlName="fechaInicio"
+        />
+        <mat-datepicker-toggle
+          matIconSuffix
+          [for]="pickerInicio"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #pickerInicio></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+        <mat-label>Fecha de Terminación</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerTerminacion"
+          formControlName="fechaTerminacion"
+        />
+        <mat-datepicker-toggle
+          matIconSuffix
+          [for]="pickerTerminacion"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #pickerTerminacion></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+      <button
+        mat-raised-button
+        color="primary"
+        class="width-100-md"
+        style="color: #ffffff"
+      >
+        <mat-icon>note_add</mat-icon>
+        Registrar Acta
+      </button>
+    </div>
+  </form>
+</ng-template>
