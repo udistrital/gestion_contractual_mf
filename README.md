@@ -24,6 +24,8 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
   - `/contratos/registrar`: Registro paso a paso de contratos mediante stepper.
   - `/contratos/consultar`: Consulta y filtrado avanzado de contratos institucionales.
   - `/contratos/:idContrato/documentos`: Revisión y gestión documental asociada a un contrato.
+- **Gestión de Actas de Inicio (Migrado desde `acta_inicio_mf`):**
+  - `/contratos/actas/registrar`: Registro de actas de inicio vinculadas a la contratación institucional.
 - **Gestión de Pólizas (Migrado desde `poliza_mf`):**
   - `/contratos/polizas/registrar`: Registro de pólizas, asociación a contratos y configuración de amparos.
   - `/contratos/polizas/consultar`: Consulta y visualización del estado de pólizas por contrato.
@@ -38,6 +40,7 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
 | `GESTION_CONTRACTUAL_MID_SERVICE` | Microservicio MID de contratación (`localhost:8081`) |
 | `POLIZAS_CRUD_SERVICE` | Microservicio CRUD de pólizas (`localhost:3119`) |
 | `POLIZAS_MID_SERVICE` | Microservicio MID de pólizas y amparos (`localhost:3118`) |
+| `TERCEROS_CRUD` | Microservicio CRUD de terceros e identificación (`/apioas/terceros_crud/v1/`) |
 | `GESTOR_DOCUMENTAL_SERVICE` | API del Gestor Documental MID v1 |
 
 ## Ejecución del Proyecto
