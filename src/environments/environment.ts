@@ -10,13 +10,16 @@ export const environment = {
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/presupuesto_contractual_mid/',
   CLAUSULAS_PARAGRAFOS_SERVICE:
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/clausulas_paragrafos_crud/',
-  GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:8080/',
-  GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:8081/',
-  POLIZAS_CRUD_SERVICE: 'http://localhost:3119/',
-  POLIZAS_MID_SERVICE: 'http://localhost:3118/',
+  GESTION_CONTRACTUAL_CRUD_SERVICE:
+    'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestion_contractual_crud/',
+  GESTION_CONTRACTUAL_MID_SERVICE:
+    'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestion_contractual_mid/',
+  MINUTA_CONTRACTUAL_MID_SERVICE:
+    'https://autenticacion.portaloas.udistrital.edu.co/apioas/minuta_contractual_mid/',
   GESTOR_DOCUMENTAL_SERVICE:
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
-  ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ordenador_supervisor_mid/v1/',
+  ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE:
+    'https://autenticacion.portaloas.udistrital.edu.co/apioas/ordenador_supervisor_mid/v1/',
 
   TERCEROS_CRUD: "https://autenticacion.portaloas.udistrital.edu.co/apioas/terceros_crud/v1/",
 
