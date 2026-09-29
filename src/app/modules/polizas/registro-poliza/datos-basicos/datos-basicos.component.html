@@ -1,0 +1,104 @@
+<form [formGroup]="polizaForm" (ngSubmit)="onSubmit()">
+  <h3 class="my-3">Datos Básicos de la Póliza</h3>
+
+  <div class="row">
+    <mat-form-field appearance="outline" class="col-12">
+      <mat-label>Número de póliza</mat-label>
+      <mat-icon matPrefix>receipt</mat-icon>
+      <input matInput formControlName="numero_poliza" required />
+    </mat-form-field>
+  </div>
+
+  <div class="row">
+    <!-- Fecha Inicial -->
+    <mat-form-field appearance="outline" class="col-12 col-md-6">
+      <mat-label>Fecha Inicial</mat-label>
+      <input
+        matInput
+        [matDatepicker]="pickerInicial"
+        formControlName="fecha_inicio"
+        required
+      />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="pickerInicial"
+      ></mat-datepicker-toggle>
+      <mat-datepicker #pickerInicial></mat-datepicker>
+    </mat-form-field>
+
+    <!-- Fecha Final -->
+    <mat-form-field appearance="outline" class="col-12 col-md-6">
+      <mat-label>Fecha Final</mat-label>
+      <input
+        matInput
+        [matDatepicker]="pickerFinal"
+        formControlName="fecha_fin"
+        required
+      />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="pickerFinal"
+      ></mat-datepicker-toggle>
+      <mat-datepicker #pickerFinal></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="col-12 col-md-6">
+      <mat-label>Fecha Expedición</mat-label>
+      <input
+        matInput
+        [matDatepicker]="pickerExpedicion"
+        formControlName="fecha_expedicion"
+        required
+      />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="pickerExpedicion"
+      ></mat-datepicker-toggle>
+      <mat-datepicker #pickerExpedicion></mat-datepicker>
+    </mat-form-field>
+
+    <!-- Fecha Aprobación -->
+    <mat-form-field appearance="outline" class="col-12 col-md-6">
+      <mat-label>Fecha Aprobación</mat-label>
+      <input
+        matInput
+        [matDatepicker]="pickerAprobacion"
+        formControlName="fecha_aprobacion"
+        required
+      />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="pickerAprobacion"
+      ></mat-datepicker-toggle>
+      <mat-datepicker #pickerAprobacion></mat-datepicker>
+    </mat-form-field>
+  </div>
+
+  <div class="row">
+    <mat-form-field appearance="outline" class="col-12">
+      <mat-label>Entidad Aseguradora</mat-label>
+      <mat-icon matPrefix>business</mat-icon>
+      <mat-select formControlName="entidad_aseguradora_id" required>
+        @for (entidad of entidadesAseguradoras; track entidad.id) {
+          <mat-option [value]="entidad.id">
+            {{ entidad.name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="row">
+    <mat-form-field appearance="outline" class="col-12">
+      <mat-label>Descripción</mat-label>
+      <mat-icon matPrefix>description</mat-icon>
+      <textarea
+        matInput
+        formControlName="descripcion"
+        required
+        rows="4"
+        style="resize: none"
+      ></textarea>
+    </mat-form-field>
+  </div>
+</form>

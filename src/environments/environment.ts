@@ -13,6 +13,7 @@ export const environment = {
   GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:8080/',
   GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:8081/',
   POLIZAS_CRUD_SERVICE: 'http://localhost:3119/',
+  POLIZAS_MID_SERVICE: 'http://localhost:3118/',
   GESTOR_DOCUMENTAL_SERVICE:
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
   ORDENADORES_SUPERVISORES_CONTRATACION_MID_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/ordenador_supervisor_mid/v1/',

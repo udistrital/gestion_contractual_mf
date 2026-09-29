@@ -5,6 +5,8 @@ import { RegistroContratoComponent } from './modules/registro-contrato/registro-
 import { ConsultaContratoComponent } from './modules/consulta-contrato/consulta-contrato.component';
 import { RevisionContratoComponent } from './modules/revision-contrato/revision-contrato.component';
 import { RegistroActasComponent } from './modules/registro-actas/registro-actas.component';
+import { RegistroPolizaComponent } from './modules/polizas/registro-poliza/registro-poliza.component';
+import { VisualizarPolizaComponent } from './modules/polizas/visualizar-poliza/visualizar-poliza.component';
 import { authGuard } from 'src/_guards/auth.guard';
 
 const routes: Routes = [
@@ -27,6 +29,21 @@ const routes: Routes = [
     path: 'actas/registrar',
     canActivate: [authGuard],
     component: RegistroActasComponent,
+  },
+  {
+    path: 'polizas/registrar',
+    canActivate: [authGuard],
+    component: RegistroPolizaComponent,
+  },
+  {
+    path: 'polizas/consultar',
+    canActivate: [authGuard],
+    component: VisualizarPolizaComponent,
+  },
+  {
+    path: 'polizas/listado',
+    canActivate: [authGuard],
+    component: VisualizarPolizaComponent,
   }
 ];
 

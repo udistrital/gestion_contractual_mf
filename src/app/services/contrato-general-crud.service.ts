@@ -225,4 +225,9 @@ export class ContratoGeneralCrudService {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.patch(`supervisores/${id}`, data);
   }
+
+  getContratosPorVigencia(year: string | null): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`contratos-generales/vigencia/${year}`);
+  }
 }
