@@ -94,10 +94,56 @@ export interface ParametroResponse {
   Activo?: boolean;
 }
 
-export interface AmparoResponse {
-  suficiencia: number;
+/** DTO para crear/actualizar un amparo en gestion_contractual_crud (amparos-polizas). */
+export interface AmparoPolizaDto {
+  id?: number;
+  contrato_general_id: number;
   amparo_id: number;
+  poliza_id?: number | null;
+  tipo_valor_amparo_id?: number;
+  suficiencia?: number;
+  valor?: number;
+  descripcion?: string;
+  fecha_inicio?: string;
+  fecha_fin?: string;
+  activo?: boolean;
+}
+
+/** Fila de amparos-polizas tal como la devuelve el CRUD (numéricos como string). */
+export interface AmparoPoliza {
+  id: number;
+  contrato_general_id: number;
+  poliza_id: number | null;
+  amparo_id: number;
+  tipo_valor_amparo_id: number;
+  suficiencia: string | number;
+  valor: string | number | null;
   descripcion: string;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  activo: boolean;
+  fecha_creacion?: string;
+  fecha_modificacion?: string;
+}
+
+/** @deprecated usar AmparoPolizaDto */
+export type AmparoResponse = AmparoPolizaDto;
+
+export interface Poliza {
+  id: number;
+  contrato_general_id: number;
+  numero_poliza: string | null;
+  entidad_aseguradora_id: number | null;
+  descripcion: string | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  fecha_expedicion: string | null;
+  fecha_aprobacion: string | null;
+  usuario_id?: number | null;
+  usuario_legado?: string | null;
+  activo: boolean;
+  fecha_creacion?: string;
+  fecha_modificacion?: string;
 }
 
 export interface SimpleItem {
