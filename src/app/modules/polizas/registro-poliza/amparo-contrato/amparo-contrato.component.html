@@ -49,7 +49,7 @@
         <ng-container matColumnDef="tipo_valor_amparo">
           <th mat-header-cell *matHeaderCellDef>TIPO</th>
           <td mat-cell *matCellDef="let element">
-            {{ element.tipo_valor_amparo_id === 1 ? "Porcentaje" : "SMLV" }}
+            {{ element.tipo_valor_amparo_id === 1 ? "SMLV" : "Porcentaje" }}
           </td>
         </ng-container>
 
@@ -57,7 +57,7 @@
           <th mat-header-cell *matHeaderCellDef>SUFICIENCIA</th>
           <td mat-cell *matCellDef="let element">
             {{ element.suficiencia
-            }}{{ element.tipo_valor_amparo_id === 1 ? "%" : " SMLV" }}
+            }}{{ element.tipo_valor_amparo_id === 1 ? " SMLV" : "%" }}
           </td>
         </ng-container>
 
@@ -93,13 +93,13 @@
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="fecha_final">
+        <ng-container matColumnDef="fecha_fin">
           <th mat-header-cell *matHeaderCellDef>FECHA FINAL</th>
           <td mat-cell *matCellDef="let element; let i = index">
             <mat-form-field appearance="outline">
               <input
                 matInput
-                [formControl]="getFormControl(i, 'fecha_final')"
+                [formControl]="getFormControl(i, 'fecha_fin')"
                 [matDatepicker]="pickerFinal"
                 placeholder="DD/MM/YYYY"
               />
@@ -174,7 +174,13 @@
     <mat-icon>visibility</mat-icon>
     Ver
   </button>
-  <button mat-raised-button color="primary" class="width-100-sm">
+  <button
+    mat-raised-button
+    color="primary"
+    class="width-100-sm"
+    [disabled]="!polizaId || amparosFormArray.length === 0 || isRegistrando"
+    (click)="registrarAmparos()"
+  >
     <mat-icon>save</mat-icon>
     Registrar
   </button>
