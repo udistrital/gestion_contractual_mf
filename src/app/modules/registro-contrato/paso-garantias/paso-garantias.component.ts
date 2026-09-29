@@ -11,7 +11,7 @@ import { PolizasService } from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import { firstValueFrom } from 'rxjs';
-import { AmparoResponse, ApiResponse } from '../../../types/types';
+import { AmparoPolizaDto } from '../../../types/types';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
@@ -29,7 +29,8 @@ export class PasoGarantiasComponent implements OnInit {
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
   dataSource: MatTableDataSource<FormGroup>;
   contratoGeneralId: number | null = null;
-  formId: number | null = null;
+  /** Ids de amparo-poliza ya guardados para el contrato, tal como se cargaron. */
+  private idsOriginales: number[] = [];
   isLoading = false;
 
   constructor(
@@ -54,96 +55,111 @@ export class PasoGarantiasComponent implements OnInit {
   }
 
   private async loadSavedData(): Promise<void> {
-    console.log('Loading saved data...');
     try {
-      // Cargar ID del contrato
       const infoGeneral = localStorage.getItem('paso-info-general');
-      if (infoGeneral) {
-        const contratoData = JSON.parse(infoGeneral);
-        this.contratoGeneralId = contratoData.id;
-
-        if (this.contratoGeneralId) {
-          const response = await firstValueFrom(
-            this.polizasService.getAmparos(this.contratoGeneralId)
-          );
-
-          if (
-            response.Status === '200' &&
-            response.Data &&
-            response.Data.length > 0
-          ) {
-            while (this.filasFormArray.length !== 0) {
-              this.filasFormArray.removeAt(0);
-            }
-
-            response.Data.forEach((amparo: any) => {
-              const filaFormGroup = this.crearFilaFormGroup();
-              filaFormGroup.patchValue({
-                amparo: amparo.amparo_id,
-                suficienciaPorcentaje:
-                  amparo.tipo_valor_amparo_id === 2 ? amparo.suficiencia : '',
-                suficienciaSalarios:
-                  amparo.tipo_valor_amparo_id === 1 ? amparo.suficiencia : '',
-                descripcion: amparo.descripcion,
-              });
-
-              this.configurarAmparoListener(filaFormGroup);
-              this.filasFormArray.push(filaFormGroup);
-            });
-
-            this.formId = this.contratoGeneralId;
-            this.actualizarDataSource();
-          } else {
-            this.agregarFila();
-          }
-        }
+      if (!infoGeneral) {
+        this.agregarFila();
+        return;
       }
 
-      const savedForm = localStorage.getItem('paso-garantias');
-      if (savedForm) {
-        const parsedForm = JSON.parse(savedForm);
-        this.formId = parsedForm.id;
+      const contratoData = JSON.parse(infoGeneral);
+      this.contratoGeneralId = contratoData.id;
+
+      if (!this.contratoGeneralId) {
+        this.agregarFila();
+        return;
+      }
+
+      const response = await firstValueFrom(
+        this.polizasService.getAmparosPorContrato(this.contratoGeneralId)
+      );
+
+      if (response.Status === 200 && response.Data && response.Data.length > 0) {
+        while (this.filasFormArray.length !== 0) {
+          this.filasFormArray.removeAt(0);
+        }
+
+        this.idsOriginales = response.Data.map((amparo: any) => amparo.id);
+
+        response.Data.forEach((amparo: any) => {
+          const filaFormGroup = this.crearFilaFormGroup();
+          filaFormGroup.patchValue({
+            id: amparo.id,
+            amparo: amparo.amparo_id,
+            suficienciaPorcentaje:
+              amparo.tipo_valor_amparo_id === 2 ? Number(amparo.suficiencia) : '',
+            suficienciaSalarios:
+              amparo.tipo_valor_amparo_id === 1 ? Number(amparo.suficiencia) : '',
+            descripcion: amparo.descripcion,
+          });
+
+          this.configurarAmparoListener(filaFormGroup);
+          this.filasFormArray.push(filaFormGroup);
+        });
+
+        this.actualizarDataSource();
+      } else {
+        this.idsOriginales = [];
+        this.agregarFila();
       }
     } catch (error) {
       console.error('Error loading saved data:', error);
-      localStorage.removeItem('paso-garantias');
+      this.idsOriginales = [];
       this.agregarFila();
     }
   }
 
+  /**
+   * Guarda las garantías con un diff por fila contra `idsOriginales`: filas
+   * nuevas se crean en lote, filas existentes se actualizan una a una y las
+   * filas quitadas por el usuario se eliminan (soft delete en el CRUD).
+   */
   async guardarYContinuar() {
     if (!this.form.valid) {
       this.markFormGroupTouched(this.form);
       return;
     }
 
-    try {
-      this.isLoading = true;
-      const formData = this.prepareFormData();
-
-      if (!this.contratoGeneralId) {
-        throw new Error('No se ha encontrado información del contrato');
-      }
-
-      let response;
-
-      if (this.formId) {
-        response = await firstValueFrom(
-          this.polizasService.putAmparos(this.contratoGeneralId, formData)
-        );
-      } else {
-        response = await firstValueFrom(
-          this.polizasService.postAmparos(formData)
-        );
-      }
-
-      localStorage.setItem(
-        'paso-garantias',
-        JSON.stringify({
-          ...formData,
-          id: this.contratoGeneralId,
-        })
+    if (!this.contratoGeneralId) {
+      await this.alertService.showErrorAlert(
+        'No se ha encontrado información del contrato',
+        'Error al guardar'
       );
+      return;
+    }
+
+    this.isLoading = true;
+    try {
+      const filas = this.prepareFormData();
+      const nuevas = filas.filter((fila) => !fila.id);
+      const existentes = filas.filter((fila) => !!fila.id);
+      const idsActuales = existentes.map((fila) => fila.id as number);
+      const idsEliminados = this.idsOriginales.filter(
+        (id) => !idsActuales.includes(id)
+      );
+
+      if (nuevas.length > 0) {
+        const bodyNuevas = nuevas.map(({ id, ...resto }) => resto);
+        const response = await firstValueFrom(
+          this.polizasService.postAmparos(bodyNuevas)
+        );
+        if (response.Success === false) {
+          throw new Error(
+            response.Message || 'Algunos amparos no pudieron ser creados'
+          );
+        }
+      }
+
+      for (const fila of existentes) {
+        const { id, ...resto } = fila;
+        await firstValueFrom(this.polizasService.putAmparo(id as number, resto));
+      }
+
+      for (const id of idsEliminados) {
+        await firstValueFrom(this.polizasService.deleteAmparo(id));
+      }
+
+      await this.loadSavedData();
 
       this.alertService.showSuccessAlert(
         'La información de garantías se ha guardado correctamente',
@@ -168,6 +184,7 @@ export class PasoGarantiasComponent implements OnInit {
 
   crearFilaFormGroup(): FormGroup {
     return this._formBuilder.group({
+      id: [null],
       amparo: ['', Validators.required],
       suficienciaPorcentaje: ['', Validators.required],
       suficienciaSalarios: [{ value: '', disabled: true }],
@@ -303,30 +320,10 @@ export class PasoGarantiasComponent implements OnInit {
 
   onSubmit() {
     if (this.form.valid) {
-      const formData = this.prepareFormData();
-      this.sendDataToApi(formData);
+      this.guardarYContinuar();
     } else {
       this.markFormGroupTouched(this.form);
     }
-  }
-
-  sendDataToApi(data: AmparoResponse[]) {
-    this.polizasService.postAmparos(data).subscribe({
-      next: (response: ApiResponse<any>) => {
-        this.alertService.showSuccessAlert(
-          `El amparo se ha enviado correctamente. IDs: ${response.Data.map(
-            (obj: { id: any }) => obj.id
-          ).join(', ')}`,
-          'Amparo enviado correctamente'
-        );
-      },
-      error: (error: any) => {
-        this.alertService.showErrorAlert(
-          'Ocurrió un error al enviar el amparo. Por favor, inténtelo de nuevo.',
-          'Error al enviar amparo'
-        );
-      },
-    });
   }
 
   markFormGroupTouched(formGroup: FormGroup | FormArray) {
@@ -339,16 +336,20 @@ export class PasoGarantiasComponent implements OnInit {
     });
   }
 
-  prepareFormData() {
+  /** Arma el DTO de cada fila. `id` se conserva para el diff, no se envía al CRUD. */
+  prepareFormData(): (AmparoPolizaDto & { id: number | null })[] {
     return this.filasFormArray.controls.map((control) => {
       const formGroup = control as FormGroup;
       return {
+        id: formGroup.get('id')?.value ?? null,
         amparo_id: formGroup.get('amparo')?.value,
-        suficiencia: formGroup.get('suficienciaSalarios')?.enabled
-          ? formGroup.get('suficienciaSalarios')?.value
-          : formGroup.get('suficienciaPorcentaje')?.value,
+        suficiencia: Number(
+          formGroup.get('suficienciaSalarios')?.enabled
+            ? formGroup.get('suficienciaSalarios')?.value
+            : formGroup.get('suficienciaPorcentaje')?.value
+        ),
         descripcion: formGroup.get('descripcion')?.value,
-        contrato_general_id: this.contratoGeneralId,
+        contrato_general_id: this.contratoGeneralId as number,
         tipo_valor_amparo_id: formGroup.get('suficienciaSalarios')?.enabled
           ? 1
           : 2,
