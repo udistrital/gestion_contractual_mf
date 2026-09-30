@@ -7,6 +7,7 @@ import { AsociarContratoComponent } from './registro-poliza/asociar-contrato/aso
 import { DatosBasicosComponent } from './registro-poliza/datos-basicos/datos-basicos.component';
 import { AmparoContratoComponent } from './registro-poliza/amparo-contrato/amparo-contrato.component';
 import { VisualizarPolizaComponent } from './visualizar-poliza/visualizar-poliza.component';
+import { ModalDetallePolizaComponent } from './visualizar-poliza/modal-detalle-poliza/modal-detalle-poliza.component';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { VisualizarPolizaComponent } from './visualizar-poliza/visualizar-poliza
     AsociarContratoComponent,
     DatosBasicosComponent,
     AmparoContratoComponent,
-    VisualizarPolizaComponent
+    VisualizarPolizaComponent,
+    ModalDetallePolizaComponent
   ],
   imports: [
     CommonModule,

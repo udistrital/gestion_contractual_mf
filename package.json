@@ -10,7 +10,9 @@
     "build:prod": "ng build --progress --configuration=production",
     "build:test": "ng build --progress --configuration=development",
     "build:single-spa:gestion_contractual_mf": "ng build gestion_contractual_mf --configuration production",
-    "serve:single-spa:gestion_contractual_mf": "ng s --project gestion_contractual_mf --disable-host-check --port 4201 --live-reload false"
+    "serve:single-spa:gestion_contractual_mf": "ng s --project gestion_contractual_mf --disable-host-check --port 4201 --live-reload false",
+    "test:integracion": "playwright test -c playwright.integracion.config.ts",
+    "test:e2e": "playwright test -c playwright.config.ts"
   },
   "private": true,
   "dependencies": {
@@ -43,6 +45,7 @@
     "@angular/build": "^21.2.24",
     "@angular/cli": "^21.2.24",
     "@angular/compiler-cli": "^21.2.23",
+    "@playwright/test": "^1.63.0",
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^30.0.0",
     "jest": "^30.0.0",

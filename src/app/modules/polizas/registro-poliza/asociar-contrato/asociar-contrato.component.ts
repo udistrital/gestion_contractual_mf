@@ -21,6 +21,7 @@ export class AsociarContratoComponent implements OnInit, OnDestroy {
   isLoading = false;
   private subscriptions: Subscription[] = [];
   selectedContratoId: string | null = null;
+  polizaId: number | null = null;
   hasError = false;
 
   constructor(
@@ -45,6 +46,7 @@ export class AsociarContratoComponent implements OnInit, OnDestroy {
       this.subscriptions.push(
         consecutivoControl.valueChanges.subscribe((value) => {
           this.hasError = false;
+          this.polizaId = null;
           if (value) {
             this.selectedContratoId = value.toString();
           } else {
@@ -105,6 +107,10 @@ export class AsociarContratoComponent implements OnInit, OnDestroy {
       verticalPosition: 'top',
       panelClass: ['error-snackbar'],
     });
+  }
+
+  onPolizaGuardada(polizaId: number) {
+    this.polizaId = polizaId;
   }
 
   ngOnDestroy() {
