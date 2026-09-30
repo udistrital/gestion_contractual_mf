@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject} from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -11,18 +11,27 @@ export class ImplicitAutenticationService {
   timeActiveAlert: number = 4000;
   isLogin = false;
 
-  private userSubject = new BehaviorSubject({});
+  private readonly userSubject = new BehaviorSubject({});
   public user$ = this.userSubject.asObservable();
 
-  private menuSubject = new BehaviorSubject({});
+  private readonly menuSubject = new BehaviorSubject({});
   public menu$ = this.menuSubject.asObservable();
 
-  private logoutSubject = new BehaviorSubject('');
+  private readonly logoutSubject = new BehaviorSubject('');
   public logout$ = this.logoutSubject.asObservable();
 
   constructor() {
     const user: any = localStorage.getItem('user');
-    this.userSubject.next(JSON.parse(atob(user)));
+    if (user) {
+      try {
+        this.userSubject.next(JSON.parse(atob(user)));
+      } catch (e) {
+        console.error('Error al decodificar el usuario del localStorage', e);
+        this.userSubject.next({});
+      }
+    } else {
+      this.userSubject.next({});
+    }
   }
 
   public getPayload(): any {
