@@ -3,7 +3,6 @@ import {
   AMPARO_CALIDAD,
   AMPARO_CUMPLIMIENTO,
   CONTRATO_ID,
-  CRUD_URL,
   MID_URL,
   PREFIJO,
   crearAmparos,
@@ -17,8 +16,10 @@ import {
 
 /**
  * Pruebas de integración de #352: verifican el contrato HTTP entre el MF y
- * gestion_contractual_crud / gestion_contractual_mid con los servicios reales.
- * Cada prueba arma la misma URL y el mismo cuerpo que `PolizasService`.
+ * gestion_contractual_mid con los servicios reales. Desde #360 el MF consume
+ * `polizas` y `amparos-polizas` a través del MID, que reenvía a
+ * gestion_contractual_crud. Cada prueba arma la misma URL y el mismo cuerpo
+ * que `PolizasService`.
  *
  * Las pruebas son secuenciales: comparten el estado del contrato sandbox.
  */
@@ -39,7 +40,7 @@ test.afterAll(async () => {
   await api.dispose();
 });
 
-test.describe('amparos-polizas (gestion_contractual_crud)', () => {
+test.describe('amparos-polizas (vía gestion_contractual_mid)', () => {
   test('lista vacía para un contrato sin amparos (getAmparosPorContrato)', async () => {
     expect(await listarAmparos(api)).toEqual([]);
   });
@@ -64,7 +65,7 @@ test.describe('amparos-polizas (gestion_contractual_crud)', () => {
   });
 
   test('PUT por id actualiza un amparo (putAmparo)', async () => {
-    const res = await api.put(`${CRUD_URL}/amparos-polizas/${amparoIds[0]}`, {
+    const res = await api.put(`${MID_URL}/amparos-polizas/${amparoIds[0]}`, {
       data: { suficiencia: 25, descripcion: `${PREFIJO}editado` },
     });
     expect(res.status(), await res.text()).toBe(200);
@@ -76,19 +77,19 @@ test.describe('amparos-polizas (gestion_contractual_crud)', () => {
 
   test('POST sin contrato_general_id responde 400', async () => {
     const { contrato_general_id, ...sinContrato } = cuerpoAmparo(AMPARO_CUMPLIMIENTO);
-    const res = await api.post(`${CRUD_URL}/amparos-polizas`, { data: [sinContrato] });
+    const res = await api.post(`${MID_URL}/amparos-polizas`, { data: [sinContrato] });
     expect(res.status()).toBeGreaterThanOrEqual(400);
     expect(res.status()).toBeLessThan(500);
   });
 });
 
-test.describe('polizas (gestion_contractual_crud)', () => {
+test.describe('polizas (vía gestion_contractual_mid)', () => {
   test('el contrato sandbox aún no tiene póliza (getPolizaPorContrato)', async () => {
     expect(await obtenerPoliza(api)).toBeNull();
   });
 
   test('POST crea la póliza con fechas ISO 8601 (postPoliza)', async () => {
-    const res = await api.post(`${CRUD_URL}/polizas`, {
+    const res = await api.post(`${MID_URL}/polizas`, {
       data: {
         contrato_general_id: CONTRATO_ID,
         numero_poliza: `${PREFIJO}POL-1`,
@@ -110,13 +111,13 @@ test.describe('polizas (gestion_contractual_crud)', () => {
   });
 
   test('PUT actualiza la póliza en lugar de duplicarla (putPoliza)', async () => {
-    const res = await api.put(`${CRUD_URL}/polizas/${polizaId}`, {
+    const res = await api.put(`${MID_URL}/polizas/${polizaId}`, {
       data: { descripcion: 'Póliza editada' },
     });
     expect(res.status(), await res.text()).toBe(200);
 
     const lista = await api.get(
-      `${CRUD_URL}/polizas?query=${idsQuery(CONTRATO_ID)}&limit=0`
+      `${MID_URL}/polizas?query=${idsQuery(CONTRATO_ID)}&limit=0`
     );
     const activas = (await lista.json()).Data as any[];
     expect(activas).toHaveLength(1);
@@ -124,7 +125,7 @@ test.describe('polizas (gestion_contractual_crud)', () => {
   });
 
   test('POST con fecha no ISO responde 400', async () => {
-    const res = await api.post(`${CRUD_URL}/polizas`, {
+    const res = await api.post(`${MID_URL}/polizas`, {
       data: { contrato_general_id: CONTRATO_ID, numero_poliza: `${PREFIJO}X`, fecha_fin: '15/12/2026' },
     });
     expect(res.status()).toBe(400);
@@ -133,7 +134,7 @@ test.describe('polizas (gestion_contractual_crud)', () => {
 
 test.describe('vinculación amparo ↔ póliza (registrarAmparos)', () => {
   test('PUT con poliza_id, valor y fechas vincula el amparo', async () => {
-    const res = await api.put(`${CRUD_URL}/amparos-polizas/${amparoIds[0]}`, {
+    const res = await api.put(`${MID_URL}/amparos-polizas/${amparoIds[0]}`, {
       data: {
         poliza_id: polizaId,
         valor: 17000000,
@@ -151,7 +152,7 @@ test.describe('vinculación amparo ↔ póliza (registrarAmparos)', () => {
 
   test('PUT con poliza_id de otro contrato responde 400', async () => {
     const otraPoliza = 1; // póliza del contrato 1, distinto del sandbox
-    const res = await api.put(`${CRUD_URL}/amparos-polizas/${amparoIds[1]}`, {
+    const res = await api.put(`${MID_URL}/amparos-polizas/${amparoIds[1]}`, {
       data: { poliza_id: otraPoliza },
     });
     expect(res.status()).toBe(400);
@@ -160,7 +161,7 @@ test.describe('vinculación amparo ↔ póliza (registrarAmparos)', () => {
   });
 
   test('PUT con poliza_id null desvincula el amparo', async () => {
-    const res = await api.put(`${CRUD_URL}/amparos-polizas/${amparoIds[0]}`, {
+    const res = await api.put(`${MID_URL}/amparos-polizas/${amparoIds[0]}`, {
       data: { poliza_id: null },
     });
     expect(res.status(), await res.text()).toBe(200);
@@ -171,7 +172,7 @@ test.describe('vinculación amparo ↔ póliza (registrarAmparos)', () => {
 
 test.describe('amparos-contratos (gestion_contractual_mid)', () => {
   test('devuelve amparos con nombre resuelto y poliza_id (getAmparosContratoMid)', async () => {
-    await api.put(`${CRUD_URL}/amparos-polizas/${amparoIds[0]}`, { data: { poliza_id: polizaId } });
+    await api.put(`${MID_URL}/amparos-polizas/${amparoIds[0]}`, { data: { poliza_id: polizaId } });
 
     const res = await api.get(`${MID_URL}/amparos-contratos/${CONTRATO_ID}`);
     expect(res.status(), await res.text()).toBe(200);
@@ -188,7 +189,7 @@ test.describe('amparos-contratos (gestion_contractual_mid)', () => {
 
 test.describe('borrado lógico (deleteAmparo)', () => {
   test('DELETE oculta el amparo del listado activo', async () => {
-    const res = await api.delete(`${CRUD_URL}/amparos-polizas/${amparoIds[1]}`);
+    const res = await api.delete(`${MID_URL}/amparos-polizas/${amparoIds[1]}`);
     expect(res.status(), await res.text()).toBe(200);
 
     const ids = (await listarAmparos(api)).map((a) => a.id);

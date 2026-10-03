@@ -28,14 +28,14 @@ describe('PolizasService', () => {
     httpMock.verify();
   });
 
-  it('consulta los amparos activos del contrato en gestion_contractual_crud', () => {
+  it('consulta los amparos activos del contrato en gestion_contractual_mid', () => {
     service.getAmparosPorContrato(10).subscribe();
 
     const query = encodeURIComponent(
       JSON.stringify({ contrato_general_id: 10, activo: true })
     );
     const req = httpMock.expectOne(
-      `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}amparos-polizas?query=${query}&limit=0&sortBy=id&orderBy=ASC`
+      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}amparos-polizas?query=${query}&limit=0&sortBy=id&orderBy=ASC`
     );
     expect(req.request.method).toBe('GET');
     req.flush({ Success: true, Status: 200, Message: '', Data: [] });
@@ -46,7 +46,7 @@ describe('PolizasService', () => {
     service.postAmparos(amparos).subscribe();
 
     const req = httpMock.expectOne(
-      `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}amparos-polizas`
+      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}amparos-polizas`
     );
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(amparos);
@@ -57,7 +57,7 @@ describe('PolizasService', () => {
     service.putAmparo(5, { poliza_id: 1 }).subscribe();
 
     const req = httpMock.expectOne(
-      `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}amparos-polizas/5`
+      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}amparos-polizas/5`
     );
     expect(req.request.method).toBe('PUT');
     req.flush({ Success: true, Status: 200, Message: '', Data: null });
@@ -67,7 +67,7 @@ describe('PolizasService', () => {
     service.deleteAmparo(5).subscribe();
 
     const req = httpMock.expectOne(
-      `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}amparos-polizas/5`
+      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}amparos-polizas/5`
     );
     expect(req.request.method).toBe('DELETE');
     req.flush({ Success: true, Status: 200, Message: '', Data: null });
@@ -80,7 +80,7 @@ describe('PolizasService', () => {
       JSON.stringify({ contrato_general_id: 10, activo: true })
     );
     const req = httpMock.expectOne(
-      `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}polizas?query=${query}&limit=1`
+      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}polizas?query=${query}&limit=1`
     );
     expect(req.request.method).toBe('GET');
     req.flush({ Success: true, Status: 200, Message: '', Data: [] });
@@ -91,7 +91,7 @@ describe('PolizasService', () => {
     service.postPoliza(poliza).subscribe();
 
     const req = httpMock.expectOne(
-      `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}polizas`
+      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}polizas`
     );
     expect(req.request.method).toBe('POST');
     req.flush({ Success: true, Status: 201, Message: '', Data: { id: 1 } });
@@ -101,7 +101,7 @@ describe('PolizasService', () => {
     service.putPoliza(1, { descripcion: 'x' }).subscribe();
 
     const req = httpMock.expectOne(
-      `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}polizas/1`
+      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}polizas/1`
     );
     expect(req.request.method).toBe('PUT');
     req.flush({ Success: true, Status: 200, Message: '', Data: { id: 1 } });
@@ -127,7 +127,7 @@ describe('PolizasService', () => {
       );
       httpMock
         .expectOne(
-          `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}amparos-polizas?query=${query}&limit=0&sortBy=id&orderBy=ASC`
+          `${environment.GESTION_CONTRACTUAL_MID_SERVICE}amparos-polizas?query=${query}&limit=0&sortBy=id&orderBy=ASC`
         )
         .flush({ Success: true, Status: 200, Message: '', Data: null });
 
@@ -143,7 +143,7 @@ describe('PolizasService', () => {
       );
       httpMock
         .expectOne(
-          `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}polizas?query=${query}&limit=1`
+          `${environment.GESTION_CONTRACTUAL_MID_SERVICE}polizas?query=${query}&limit=1`
         )
         .flush({ Success: true, Status: 200, Message: '', Data: [] });
 
@@ -176,7 +176,7 @@ describe('PolizasService', () => {
       });
 
       httpMock
-        .expectOne(`${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}amparos-polizas`)
+        .expectOne(`${environment.GESTION_CONTRACTUAL_MID_SERVICE}amparos-polizas`)
         .flush({ message: 'bad request' }, { status: 400, statusText: 'Bad Request' });
     });
 
@@ -192,7 +192,7 @@ describe('PolizasService', () => {
       });
 
       httpMock
-        .expectOne(`${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}amparos-polizas/5`)
+        .expectOne(`${environment.GESTION_CONTRACTUAL_MID_SERVICE}amparos-polizas/5`)
         .flush({ message: 'not found' }, { status: 404, statusText: 'Not Found' });
     });
 
@@ -208,7 +208,7 @@ describe('PolizasService', () => {
       });
 
       httpMock
-        .expectOne(`${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}amparos-polizas/5`)
+        .expectOne(`${environment.GESTION_CONTRACTUAL_MID_SERVICE}amparos-polizas/5`)
         .flush({ message: 'server error' }, { status: 500, statusText: 'Server Error' });
     });
 
@@ -221,7 +221,7 @@ describe('PolizasService', () => {
       });
 
       httpMock
-        .expectOne(`${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}polizas`)
+        .expectOne(`${environment.GESTION_CONTRACTUAL_MID_SERVICE}polizas`)
         .flush({ message: 'bad request' }, { status: 400, statusText: 'Bad Request' });
     });
 
@@ -234,7 +234,7 @@ describe('PolizasService', () => {
       });
 
       httpMock
-        .expectOne(`${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}polizas/1`)
+        .expectOne(`${environment.GESTION_CONTRACTUAL_MID_SERVICE}polizas/1`)
         .flush({ message: 'not found' }, { status: 404, statusText: 'Not Found' });
     });
   });

@@ -3,7 +3,8 @@ import { APIRequestContext, expect } from '@playwright/test';
 /**
  * Utilidades compartidas por las pruebas de integración y E2E de pólizas y
  * amparos (#352). Las URLs de las peticiones replican las que arma
- * `src/app/services/polizas.service.ts`.
+ * `src/app/services/polizas.service.ts`: desde #360 van a gestion_contractual_mid.
+ * La limpieza sigue directo en el CRUD porque el MID no expone DELETE /polizas.
  */
 
 export const CRUD_URL = (process.env.CRUD_URL ?? 'http://localhost:8080').replace(/\/$/, '');
@@ -28,14 +29,14 @@ export const idsQuery = (contratoId: number) =>
 
 export async function listarAmparos(api: APIRequestContext, contratoId = CONTRATO_ID) {
   const res = await api.get(
-    `${CRUD_URL}/amparos-polizas?query=${idsQuery(contratoId)}&limit=0&sortBy=id&orderBy=ASC`
+    `${MID_URL}/amparos-polizas?query=${idsQuery(contratoId)}&limit=0&sortBy=id&orderBy=ASC`
   );
   expect(res.status()).toBe(200);
   return (await res.json()).Data as any[];
 }
 
 export async function obtenerPoliza(api: APIRequestContext, contratoId = CONTRATO_ID) {
-  const res = await api.get(`${CRUD_URL}/polizas?query=${idsQuery(contratoId)}&limit=1`);
+  const res = await api.get(`${MID_URL}/polizas?query=${idsQuery(contratoId)}&limit=1`);
   expect(res.status()).toBe(200);
   return ((await res.json()).Data as any[])[0] ?? null;
 }
@@ -53,7 +54,7 @@ export function cuerpoAmparo(amparoId: number, extra: Record<string, unknown> = 
 
 /** Crea amparos sin póliza (como lo hace el paso Garantías) y devuelve sus ids. */
 export async function crearAmparos(api: APIRequestContext, amparoIds: number[]) {
-  const res = await api.post(`${CRUD_URL}/amparos-polizas`, {
+  const res = await api.post(`${MID_URL}/amparos-polizas`, {
     data: amparoIds.map((id) => cuerpoAmparo(id)),
   });
   expect(res.status(), await res.text()).toBe(201);
