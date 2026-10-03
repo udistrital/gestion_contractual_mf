@@ -95,8 +95,6 @@ export class PdfViewerModalComponent implements OnInit {
     const documentoContrato: DocumentoContrato = {
       tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
       contrato_general_id,
-      usuario_id,
-      usuario_rol,
       documento_id,
       documento_enlace,
     };
