@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 // @ts-ignore
-import Swal from 'sweetalert2';
+import Swal, { SweetAlertResult } from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root',
@@ -22,8 +22,8 @@ export class AlertService {
     });
   }
 
-  showSuccessAlert(text: string, title: string = 'Operación exitosa') {
-    Swal.fire({
+  showSuccessAlert(text: string, title: string = 'Operación exitosa'): Promise<SweetAlertResult> {
+    return Swal.fire({
       icon: 'success',
       title: title,
       text: text,
@@ -49,7 +49,7 @@ export class AlertService {
     });
   }
 
-  showConfirmAlert(text: string, title: string = 'Atención'): Promise<any> {
+  showConfirmAlert(text: string, title: string = 'Atención'): Promise<SweetAlertResult> {
     return Swal.fire({
       title: title,
       text: text,

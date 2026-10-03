@@ -144,7 +144,7 @@ export class ContratoGeneralCrudService {
 
   postDocumentoContrato(documento: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.post('documentos-contrato', documento);
+    return this.requestManager.post('documentos-contratos', documento);
   }
 
   getContratos(params: any): Observable<any> {
