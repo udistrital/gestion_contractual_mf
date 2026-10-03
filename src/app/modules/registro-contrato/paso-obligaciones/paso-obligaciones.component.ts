@@ -1,7 +1,10 @@
 import { Component, EventEmitter, Output, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CdpsService } from "../../../services/cdps.service";
+import { CdpsService } from "src/app/services/cdps.service";
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { AlertService } from 'src/app/services/alert.service';
 import { Subscription } from "rxjs";
+import { ContratoGeneral } from 'src/app/types/types';
 
 interface CDP {
   vigencia: string;
@@ -33,10 +36,13 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
   cdpData: CDP[] = [];
   private cdpSubscription: Subscription = new Subscription();
   private previousCDPCount: number = 0;
+  contratoGeneralId: number | null = null;
 
   constructor(
     private _formBuilder: FormBuilder,
-    private cdpService: CdpsService
+    private cdpService: CdpsService,
+    private contratoService: ContratoGeneralCrudService,
+    private alertService: AlertService
   ) {
     this.form = this._formBuilder.group({
       justificacion: ['', Validators.required],
@@ -46,6 +52,7 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.loadContratoData();
     this.loadCDPData();
     this.cdpSubscription = this.cdpService.cdp$.subscribe(data => {
       this.cdpData = data;
@@ -57,6 +64,15 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
     if (this.cdpSubscription) {
       this.cdpSubscription.unsubscribe();
     }
+  }
+
+  loadContratoData() {
+    const contratoGeneral = localStorage.getItem('paso-info-general');
+    if (contratoGeneral) {
+      const parsedContrato: ContratoGeneral = JSON.parse(contratoGeneral);
+      this.contratoGeneralId = parsedContrato.id;
+    }
+
   }
 
   loadCDPData() {
@@ -77,6 +93,15 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
     } else if (currentCDPCount >= 2 || currentCDPCount === 0) {
       // Reiniciar los editores si hay 2 o más CDPs, o si el arreglo está vacío
       this.resetForm();
+      const savedData = localStorage.getItem('paso-obligaciones');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        this.form.patchValue({
+          justificacion: parsedData.justificacion || '',
+          objetoContrato: parsedData.objeto || '',
+          actividades: parsedData.actividades || ''
+        });
+      }
     }
 
     this.previousCDPCount = currentCDPCount;
@@ -101,5 +126,27 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
 
   get hasSingleCDP(): boolean {
     return this.cdpData.length === 1;
+  }
+
+  guardarObligaciones() {
+    if (this.form.valid && this.contratoGeneralId) {
+      const obligacionesData = {
+        justificacion: this.form.get('justificacion')?.value,
+        objeto: this.form.get('objetoContrato')?.value,
+        actividades: this.form.get('actividades')?.value
+      };
+      this.contratoService.put(this.contratoGeneralId, obligacionesData).subscribe({
+        next: (response) => {
+          if (response.Success) {
+            localStorage.setItem('paso-obligaciones', JSON.stringify(obligacionesData));
+            this.alertService.showSuccessAlert('Obligaciones guardadas exitosamente.');
+            this.stepCompleted.emit(true);
+            this.nextStep.emit();
+          }
+        }
+      });
+    } else {
+      this.alertService.showErrorAlert('Por favor, complete todos los campos requeridos antes de guardar.');
+    }
   }
 }
