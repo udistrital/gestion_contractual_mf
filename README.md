@@ -34,16 +34,16 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
 
 ### Endpoints de Pólizas y Amparos
 
-Las pólizas y los amparos se consumen únicamente de `gestion_contractual_crud` y `gestion_contractual_mid` mediante `src/app/services/polizas.service.ts`. Ya no se usan `poliza_crud` ni `poliza_mid`.
+Las pólizas y los amparos se consumen únicamente de `gestion_contractual_mid` mediante `src/app/services/polizas.service.ts`, siguiendo la arquitectura OAS (MF → MID → CRUD). El MID reenvía `polizas` y `amparos-polizas` a `gestion_contractual_crud` con la misma ruta, query, body y respuesta (#360). Ya no se usan `poliza_crud` ni `poliza_mid`.
 
 | Servicio | Método y endpoint | Uso |
 |---|---|---|
-| CRUD | `GET amparos-polizas?query={"contrato_general_id":id,"activo":true}&limit=0` | Listar los amparos de un contrato |
-| CRUD | `POST amparos-polizas` (arreglo) | Crear amparos en lote |
-| CRUD | `PUT amparos-polizas/:id` | Editar un amparo o vincularlo (`poliza_id`) a una póliza |
-| CRUD | `DELETE amparos-polizas/:id` | Borrado lógico de un amparo |
-| CRUD | `GET polizas?query={"contrato_general_id":id,"activo":true}&limit=1` | Consultar la póliza de un contrato |
-| CRUD | `POST polizas` / `PUT polizas/:id` | Crear o actualizar la póliza |
+| MID | `GET amparos-polizas?query={"contrato_general_id":id,"activo":true}&limit=0&sortBy=id&orderBy=ASC` | Listar los amparos de un contrato |
+| MID | `POST amparos-polizas` (arreglo) | Crear amparos en lote (201, o 206 si la creación es parcial) |
+| MID | `PUT amparos-polizas/:id` | Editar un amparo o vincularlo (`poliza_id`) a una póliza |
+| MID | `DELETE amparos-polizas/:id` | Borrado lógico de un amparo |
+| MID | `GET polizas?query={"contrato_general_id":id,"activo":true}&limit=1` | Consultar la póliza de un contrato |
+| MID | `POST polizas` / `PUT polizas/:id` | Crear o actualizar la póliza |
 | MID | `GET amparos-contratos/:id` | Amparos de un contrato con el nombre del parámetro |
 
 Documentación detallada de la migración y de las pruebas: [`docs/integracion-polizas-352.md`](docs/integracion-polizas-352.md).
@@ -54,7 +54,7 @@ Documentación detallada de la migración y de las pruebas: [`docs/integracion-p
 |---|---|
 | `PARAMETROS_SERVICE` | API de parámetros institucionales OAS |
 | `GESTION_CONTRACTUAL_CRUD_SERVICE` | Microservicio CRUD de contratos (`localhost:8080`) |
-| `GESTION_CONTRACTUAL_MID_SERVICE` | Microservicio MID de contratación (`localhost:8081`). Pólizas y amparos se consumen aquí (`amparos-contratos/:id`) y en `GESTION_CONTRACTUAL_CRUD_SERVICE` (`polizas`, `amparos-polizas`) |
+| `GESTION_CONTRACTUAL_MID_SERVICE` | Microservicio MID de contratación (`localhost:8081`). Pólizas y amparos se consumen aquí (`polizas`, `amparos-polizas`, `amparos-contratos/:id`) |
 | `TERCEROS_CRUD` | Microservicio CRUD de terceros e identificación (`/apioas/terceros_crud/v1/`) |
 | `GESTOR_DOCUMENTAL_SERVICE` | API del Gestor Documental MID v1 |
 
@@ -202,7 +202,7 @@ curl -s -o /dev/null -w "%{http_code}\n" localhost:8081   # MID
 
 ### Integración (Playwright, sin navegador)
 
-Verifican el contrato HTTP entre el MF y los servicios reales de pólizas y amparos. Requieren `gestion_contractual_crud` en `:8080` y `gestion_contractual_mid` en `:8081`.
+Verifican el contrato HTTP entre el MF y los servicios reales de pólizas y amparos. Las operaciones de negocio van a `gestion_contractual_mid` (`:8081`), que reenvía a `gestion_contractual_crud` (`:8080`). La limpieza de datos de prueba borra la póliza directo en el CRUD, porque el MID no expone `DELETE polizas/:id`.
 
 ```bash
 pnpm run test:integracion
@@ -223,8 +223,8 @@ Las pruebas de integración y E2E escriben en la base de datos de desarrollo sob
 |---|---|---|
 | `E2E_CONTRATO_ID` | `13` | Contrato de pruebas. Debe existir y no tener póliza ni amparos propios |
 | `E2E_VIGENCIA` | `2026` | Vigencia del contrato de pruebas |
-| `CRUD_URL` | `http://localhost:8080` | URL de `gestion_contractual_crud` |
-| `MID_URL` | `http://localhost:8081` | URL de `gestion_contractual_mid` |
+| `CRUD_URL` | `http://localhost:8080` | URL de `gestion_contractual_crud` (solo limpieza de datos de prueba) |
+| `MID_URL` | `http://localhost:8081` | URL de `gestion_contractual_mid` (pólizas y amparos) |
 | `ROOT_URL` | `http://localhost:4200` | URL del root (solo E2E) |
 
 ## Estado CI
