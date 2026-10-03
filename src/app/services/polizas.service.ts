@@ -3,10 +3,11 @@ import { RequestManager } from '../managers/requestManager';
 import { Observable } from 'rxjs';
 
 /**
- * Consume pólizas y amparos en gestion_contractual_crud (endpoints
- * `polizas` y `amparos-polizas`) y gestion_contractual_mid (endpoint
- * `amparos-contratos`). Actualización #352: antes se consumían los CRUD/MID
- * externos de pólizas (poliza_crud, poliza_mid).
+ * Consume pólizas y amparos a través de gestion_contractual_mid (endpoints
+ * `polizas`, `amparos-polizas` y `amparos-contratos`). El MID reenvía a
+ * gestion_contractual_crud con las mismas rutas, query, body y respuesta.
+ * Actualización #360: antes `polizas` y `amparos-polizas` se consumían
+ * directo en gestion_contractual_crud (#352).
  */
 @Injectable({
   providedIn: 'root',
@@ -14,10 +15,10 @@ import { Observable } from 'rxjs';
 export class PolizasService {
   constructor(private requestManager: RequestManager) {}
 
-  // --- amparos-polizas (gestion_contractual_crud) ---
+  // --- amparos-polizas (gestion_contractual_mid) ---
 
   getAmparosPorContrato(contratoGeneralId: number): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     const query = encodeURIComponent(
       JSON.stringify({ contrato_general_id: contratoGeneralId, activo: true })
     );
@@ -27,24 +28,24 @@ export class PolizasService {
   }
 
   postAmparos(amparos: any[]): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     return this.requestManager.post('amparos-polizas', amparos);
   }
 
   putAmparo(id: number, amparo: any): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     return this.requestManager.put(`amparos-polizas/${id}`, amparo);
   }
 
   deleteAmparo(id: number): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     return this.requestManager.delete('amparos-polizas', id);
   }
 
-  // --- polizas (gestion_contractual_crud) ---
+  // --- polizas (gestion_contractual_mid) ---
 
   getPolizaPorContrato(contratoGeneralId: number): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     const query = encodeURIComponent(
       JSON.stringify({ contrato_general_id: contratoGeneralId, activo: true })
     );
@@ -52,12 +53,12 @@ export class PolizasService {
   }
 
   postPoliza(poliza: any): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     return this.requestManager.post('polizas', poliza);
   }
 
   putPoliza(id: number, poliza: any): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
     return this.requestManager.put(`polizas/${id}`, poliza);
   }
 
