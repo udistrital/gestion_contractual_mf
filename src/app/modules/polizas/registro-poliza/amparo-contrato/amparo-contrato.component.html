@@ -170,9 +170,12 @@
     "
     color="primary"
     class="width-100-sm"
+    matTooltip="Ver borrador del acta de aprobación"
+    [disabled]="!polizaId || amparosFormArray.length === 0 || generandoBorrador"
+    (click)="verBorrador()"
   >
     <mat-icon>visibility</mat-icon>
-    Ver
+    {{ generandoBorrador ? 'Generando...' : 'Ver' }}
   </button>
   <button
     mat-raised-button
