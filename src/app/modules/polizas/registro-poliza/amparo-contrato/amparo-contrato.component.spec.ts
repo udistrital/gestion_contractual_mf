@@ -5,6 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { AmparoContratoComponent } from './amparo-contrato.component';
 import { PolizasService } from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { AlertService } from 'src/app/services/alert.service';
 import {
   commonPolizasTestImports,
   commonPolizasTestSchemas,
@@ -16,6 +17,7 @@ describe('AmparoContratoComponent', () => {
   let fixture: ComponentFixture<AmparoContratoComponent>;
   let polizasService: jest.Mocked<Partial<PolizasService>>;
   let parametrosService: jest.Mocked<Partial<ParametrosService>>;
+  let alertService: jest.Mocked<Partial<AlertService>>;
   let snackBar: ReturnType<typeof mockMatSnackBar>;
 
   const amparoBase = {
@@ -34,9 +36,22 @@ describe('AmparoContratoComponent', () => {
     polizasService = {
       getAmparosContratoMid: jest.fn().mockReturnValue(of({ Data: [] })),
       putAmparo: jest.fn().mockReturnValue(of({ Success: true })),
+      getActaAprobacionPoliza: jest
+        .fn()
+        .mockReturnValue(of({ Success: true, Status: 200, Data: 'QUNUQQ==' })),
+      subirActa: jest
+        .fn()
+        .mockReturnValue(
+          of({ Status: '200', res: { Id: 10, Enlace: 'enlace-nuxeo' } })
+        ),
+      registrarDocumentoActa: jest.fn().mockReturnValue(of({ Success: true })),
     };
     parametrosService = {
       get: jest.fn().mockReturnValue(of({ Data: [] })),
+    };
+    // El registro pide confirmación porque además guarda el acta de aprobación
+    alertService = {
+      showConfirmAlert: jest.fn().mockResolvedValue({ isConfirmed: true }),
     };
     snackBar = mockMatSnackBar();
 
@@ -47,6 +62,7 @@ describe('AmparoContratoComponent', () => {
       providers: [
         { provide: PolizasService, useValue: polizasService },
         { provide: ParametrosService, useValue: parametrosService },
+        { provide: AlertService, useValue: alertService },
         { provide: MatSnackBar, useValue: snackBar },
       ],
     }).compileComponents();
@@ -306,6 +322,82 @@ describe('AmparoContratoComponent', () => {
         expect.anything()
       );
       expect(component.isRegistrando).toBe(false);
+    });
+
+    it('cancelar la confirmación no registra amparos ni genera el acta', async () => {
+      (polizasService.getAmparosContratoMid as jest.Mock).mockReturnValue(
+        of({ Data: [{ ...amparoBase, id: 1, poliza_id: 1 }] })
+      );
+      component.polizaId = 1;
+      component.contratoId = '5';
+      component.amparosFormArray.at(0).patchValue({
+        valor: '100',
+        fecha_inicio: new Date(),
+        fecha_fin: new Date(),
+      });
+      (alertService.showConfirmAlert as jest.Mock).mockResolvedValue({
+        isConfirmed: false,
+      });
+
+      await component.registrarAmparos();
+
+      expect(alertService.showConfirmAlert).toHaveBeenCalled();
+      expect(polizasService.putAmparo).not.toHaveBeenCalled();
+      expect(polizasService.getActaAprobacionPoliza).not.toHaveBeenCalled();
+      expect(component.isRegistrando).toBe(false);
+    });
+
+    it('genera el acta, la sube al gestor documental y la registra en el contrato', async () => {
+      (polizasService.getAmparosContratoMid as jest.Mock).mockReturnValue(
+        of({ Data: [{ ...amparoBase, id: 1, poliza_id: 1 }] })
+      );
+      component.polizaId = 1;
+      component.contratoId = '5';
+      component.amparosFormArray.at(0).patchValue({
+        valor: '100',
+        fecha_inicio: new Date(),
+        fecha_fin: new Date(),
+      });
+
+      await component.registrarAmparos();
+
+      expect(polizasService.getActaAprobacionPoliza).toHaveBeenCalledWith(5);
+      expect(polizasService.subirActa).toHaveBeenCalledWith(5, 'QUNUQQ==');
+      expect(polizasService.registrarDocumentoActa).toHaveBeenCalledWith(
+        5,
+        10,
+        'enlace-nuxeo'
+      );
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'Póliza registrada y acta de aprobación guardada',
+        'Cerrar',
+        expect.anything()
+      );
+    });
+
+    it('si falla la subida al gestor documental avisa que los amparos sí quedaron registrados', async () => {
+      (polizasService.getAmparosContratoMid as jest.Mock).mockReturnValue(
+        of({ Data: [{ ...amparoBase, id: 1, poliza_id: 1 }] })
+      );
+      component.polizaId = 1;
+      component.contratoId = '5';
+      component.amparosFormArray.at(0).patchValue({
+        valor: '100',
+        fecha_inicio: new Date(),
+        fecha_fin: new Date(),
+      });
+      (polizasService.subirActa as jest.Mock).mockReturnValue(
+        of({ Status: '500' })
+      );
+
+      await component.registrarAmparos();
+
+      expect(polizasService.registrarDocumentoActa).not.toHaveBeenCalled();
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'Amparos registrados, pero no se pudo guardar el acta en el gestor documental',
+        'Cerrar',
+        expect.anything()
+      );
     });
   });
 

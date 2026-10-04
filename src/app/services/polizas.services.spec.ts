@@ -5,6 +5,7 @@ import {
 } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { PolizasService } from './polizas.service';
+import { GestorDocumentalService } from './gestor-documental.service';
 import { environment } from '../../environments/environment';
 
 jest.mock('sweetalert2', () => ({
@@ -18,7 +19,11 @@ describe('PolizasService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        GestorDocumentalService,
+      ],
     });
     service = TestBed.inject(PolizasService);
     httpMock = TestBed.inject(HttpTestingController);
