@@ -392,6 +392,10 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.contratoGeneralId) {
+      this.cargarContratoGeneral();
+    }
+
     const datosContratista: ContratistaCRUD = {
       numero_documento: this.datosContratista.proveedor.numero_documento,
       tipo_persona_id: this.datosContratista.proveedor.tipo_persona_id,
