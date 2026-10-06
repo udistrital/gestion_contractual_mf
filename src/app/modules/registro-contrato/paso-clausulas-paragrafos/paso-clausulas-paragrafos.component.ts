@@ -86,7 +86,9 @@ export class PasoClausulasParagrafosComponent {
     this.roles = this.rolService.getRol();
     this.getIdUsuario();
     this.getContratoGeneralId();
-    this.getEstadoActual();
+    if (this.contratoGeneralId) {
+      this.getEstadoActual();
+    }
     this.cargarIndices();
   }
 
@@ -113,7 +115,7 @@ export class PasoClausulasParagrafosComponent {
   }
 
   getEstadoActual() {
-    this.contratoGeneralCrudService.getEstadoActual(1).subscribe({
+    this.contratoGeneralCrudService.getEstadoActual(this.contratoGeneralId).subscribe({
       next: (response: any) => {
         if (response.id) {
           this.estadoInternoActual = response.estado_interno_parametro_id || 0;
@@ -1014,6 +1016,14 @@ export class PasoClausulasParagrafosComponent {
   }
 
   async openPdfViewer() {
+    if (!this.contratoGeneralId) {
+      this.getContratoGeneralId();
+      if (!this.contratoGeneralId) {
+        this.alertService.showErrorAlert(
+          'No se ha guardado el contrato general. Por favor, complete la información general antes de continuar.'
+        )
+      }
+    }
     const base64: ApiResponse<string> = await lastValueFrom(this.minutasMidService.getMinuta(this.contratoGeneralId));
     const file = this.base64ToBlob(base64.Data, 'application/pdf');
     const datos = {

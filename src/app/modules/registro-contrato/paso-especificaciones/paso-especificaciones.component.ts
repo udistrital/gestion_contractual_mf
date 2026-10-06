@@ -38,6 +38,7 @@ export class PasoEspecificacionesComponent {
   ) {}
 
   ngOnInit() {
+    this.getContratoGeneralId();
     this.getEspecificaciones();
   }
 
@@ -45,6 +46,14 @@ export class PasoEspecificacionesComponent {
     console.error(message, error);
     this.alertService.showErrorAlert(message);
     if (callback) callback();
+  }
+
+  getContratoGeneralId() {
+    const contratoGeneral = localStorage.getItem('paso-info-general');
+    if (contratoGeneral) {
+      const parsedContrato: any = JSON.parse(contratoGeneral);
+      this.contrato_general_id = parsedContrato.id;
+    }
   }
 
   getDataResponse(data: any): EspecificacionTecnica {
@@ -89,6 +98,7 @@ export class PasoEspecificacionesComponent {
 
   crearEspecificacion(especificacion: EspecificacionTecnica) {
     const { id, ...especificacionSinId } = especificacion;
+    this.getContratoGeneralId();
     this.contratoGeneralCrudService
       .postEspecificacionTecnica({
         ...especificacionSinId,
@@ -202,6 +212,7 @@ export class PasoEspecificacionesComponent {
   }
 
   abrirModalCargarArchivo(): void {
+    this.getContratoGeneralId();
     const dialog = this.dialog.open(CargarArchivoComponent, {
       width: '800px',
       data: { contrato_general_id: this.contrato_general_id },
