@@ -344,9 +344,9 @@ export class PasoGarantiasComponent implements OnInit {
       const formGroup = control as FormGroup;
       return {
         amparo_id: formGroup.get('amparo')?.value,
-        suficiencia: formGroup.get('suficienciaSalarios')?.enabled
+        suficiencia: Number(formGroup.get('suficienciaSalarios')?.enabled
           ? formGroup.get('suficienciaSalarios')?.value
-          : formGroup.get('suficienciaPorcentaje')?.value,
+          : formGroup.get('suficienciaPorcentaje')?.value),
         descripcion: formGroup.get('descripcion')?.value,
         contrato_general_id: this.contratoGeneralId,
         tipo_valor_amparo_id: formGroup.get('suficienciaSalarios')?.enabled
