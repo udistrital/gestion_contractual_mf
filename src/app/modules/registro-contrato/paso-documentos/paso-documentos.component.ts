@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { AlertService } from 'src/app/services/alert.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
     selector: 'app-paso-documentos',
@@ -89,7 +90,7 @@ export class PasoDocumentosComponent implements OnInit {
 
       const payload = [
         {
-          IdTipoDocumento: 1,
+          IdTipoDocumento: environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.DOCUMENTOS_PRECONTRACTUALES,
           nombre: this.pdfFile!.name,
           descripcion: 'Documento del Contratista',
           metadatos: {},
@@ -101,6 +102,7 @@ export class PasoDocumentosComponent implements OnInit {
         .postAny('/document/uploadAnyFormat', payload)
         .subscribe({
           next: (response) => {
+            // Guardar en documentos-contratos
             this.alertService.showSuccessAlert('Documento subido exitosamente');
           },
           error: (error) => {

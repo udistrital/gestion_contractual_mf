@@ -14,12 +14,14 @@ import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { MatStepper } from '@angular/material/stepper';
 import { NgZone } from '@angular/core';
-import { base64 } from 'src/assets/base64';
 import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import  { MinutasMidService } from 'src/app/services/minuta-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { rolPorEstado } from 'src/app/utils/rolesEstados';
+import { lastValueFrom } from 'rxjs';
+import { ApiResponse } from 'src/app/types/types';
 
 interface Indice {
   Id: string;
@@ -57,6 +59,7 @@ export class PasoClausulasParagrafosComponent {
   form: FormGroup;
   indices: Indice[] = [];
   contratoId: number = 9512;
+  contratoGeneralId: number = 0;
   tipoContratoId: number = 1;
   reversionSaldo: boolean = false;
   aplicaPoliza: boolean = true;
@@ -71,6 +74,7 @@ export class PasoClausulasParagrafosComponent {
     private rolService: RolService,
     private userService: UserService,
     private clausulasParagrafosService: ClausulasParagrafosService,
+    private minutasMidService: MinutasMidService,
     private parametrosService: ParametrosService,
     private stepper: MatStepper,
     private zone: NgZone
@@ -81,7 +85,10 @@ export class PasoClausulasParagrafosComponent {
   ngOnInit(): void {
     this.roles = this.rolService.getRol();
     this.getIdUsuario();
-    this.getEstadoActual();
+    this.getContratoGeneralId();
+    if (this.contratoGeneralId) {
+      this.getEstadoActual();
+    }
     this.cargarIndices();
   }
 
@@ -93,6 +100,14 @@ export class PasoClausulasParagrafosComponent {
     return rolEncontrado || '';
   }
 
+  getContratoGeneralId() {
+    const contratoGeneral = localStorage.getItem('paso-info-general');
+    if (contratoGeneral) {
+      const parsedContrato: any = JSON.parse(contratoGeneral);
+      this.contratoGeneralId = parsedContrato.id;
+    }
+  }
+
   getIdUsuario() {
     this.userService.getPersonaId().then((usuario_id) => {
       this.usuario_id = usuario_id;
@@ -100,7 +115,7 @@ export class PasoClausulasParagrafosComponent {
   }
 
   getEstadoActual() {
-    this.contratoGeneralCrudService.getEstadoActual(1).subscribe({
+    this.contratoGeneralCrudService.getEstadoActual(this.contratoGeneralId).subscribe({
       next: (response: any) => {
         if (response.id) {
           this.estadoInternoActual = response.estado_interno_parametro_id || 0;
@@ -1000,13 +1015,22 @@ export class PasoClausulasParagrafosComponent {
     return new Blob(byteArrays, { type: contentType });
   }
 
-  openPdfViewer(): void {
-    const file = this.base64ToBlob(base64, 'application/pdf');
+  async openPdfViewer() {
+    if (!this.contratoGeneralId) {
+      this.getContratoGeneralId();
+      if (!this.contratoGeneralId) {
+        this.alertService.showErrorAlert(
+          'No se ha guardado el contrato general. Por favor, complete la información general antes de continuar.'
+        )
+      }
+    }
+    const base64: ApiResponse<string> = await lastValueFrom(this.minutasMidService.getMinuta(this.contratoGeneralId));
+    const file = this.base64ToBlob(base64.Data, 'application/pdf');
     const datos = {
-      base64,
+      base64: base64.Data,
       nombre: `MINUTA ${this.contratoId}`,
-      descripcion: `Cargue de minuta firmada, contrato general id ${this.contratoId}`,
-      contrato_general_id: this.contratoId,
+      descripcion: `Cargue de minuta firmada, contrato general id ${this.contratoGeneralId}`,
+      contrato_general_id: this.contratoGeneralId,
       usuario_id: this.usuarioId,
       usuario_rol: this.getRolPorEstado(),
     };

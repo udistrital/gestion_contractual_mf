@@ -12,13 +12,13 @@ import { distinctUntilChanged, filter, finalize } from 'rxjs/operators';
 import {
   DependenciaContratoMidResponse,
   SedeContratoMidResponse, SupervisorResponse, SupervisorToSave,
-} from '../../../types/types';
-import { ContratoGeneralMidService } from '../../../services/contrato-general-mid.service';
-import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
+} from 'src/app/types/types';
+import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { AlertService } from 'src/app/services/alert.service';
 import {
   OrdenadoresSupervisoresContratacionMidService
-} from "../../../services/ordenadores-supervisores-contratacion-mid.service";
+} from "src/app/services/ordenadores-supervisores-contratacion-mid.service";
 import {firstValueFrom} from "rxjs";
 
 @Component({
@@ -212,11 +212,11 @@ export class PasoSupervisoresComponent implements OnInit {
     try {
       this.loading = true;
       const lugarData = {
-        paisId: this.form.get('lugarEjecucion.pais')?.value,
-        ciudadId: this.form.get('lugarEjecucion.municipioCiudad')?.value,
-        municipioId: this.form.get('lugarEjecucion.departamento')?.value,
-        sedeId: this.form.get('lugarEjecucion.sede')?.value,
-        dependenciaId: this.form.get('lugarEjecucion.dependencia')?.value,
+        pais_id: this.form.get('lugarEjecucion.pais')?.value,
+        ciudad_id: this.form.get('lugarEjecucion.municipioCiudad')?.value,
+        municipio_id: this.form.get('lugarEjecucion.departamento')?.value,
+        sede_id: this.form.get('lugarEjecucion.sede')?.value,
+        dependencia_id: this.form.get('lugarEjecucion.dependencia')?.value,
         direccion: this.form.get('lugarEjecucion.direccion')?.value,
         contrato_general_id: this.contratoGeneralId,
       };

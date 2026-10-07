@@ -81,7 +81,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   documentoIdentidadOrdenador: string | null = null;
   cargoIdOrdenador: number | null = null;
-  idSikarcaOrdenador: number | null = null;
+  idSicapitalOrdenador: number | null = null;
+  ordenadorGastoId: string | undefined = undefined;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -90,7 +91,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     private cdRef: ChangeDetectorRef,
     private cdpsService: CdpsService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
-    private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService
+    private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService,
   ) {}
 
   ngOnInit() {
@@ -146,7 +147,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
           valorContrato: parsedForm.valor_pesos,
           origenRecurso: parsedForm.origen_recursos_id,
           clausulaRegistroPresupuestal: parsedForm.clausula_registro_presupuestal,
-          formaPago: parsedForm.forma_pago,
+          formaPago: parsedForm.modo_pago,
         };
 
         console.log('Loading values into form:', formValues);
@@ -170,6 +171,10 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     }
   }
 
+  private setOrdenadorGuardado() {
+    this.form.get('ordenadorGasto')?.setValue(this.ordenadorGastoId || null)
+  }
+
   async guardarYContinuar() {
     if (!this.form.valid) {
       this.form.markAllAsTouched();
@@ -189,7 +194,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         valor_pesos: this.form.get('valorContrato')?.value,
         origen_recursos_id: this.form.get('origenRecurso')?.value,
         clausula_registro_presupuestal: this.form.get('clausulaRegistroPresupuestal')?.value,
-        forma_pago: this.form.get('formaPago')?.value,
+        modo_pago: this.form.get('formaPago')?.value,
       };
 
       // Obtener el ID del contrato del localStorage
@@ -205,13 +210,13 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         throw new Error('No se ha encontrado el ID del contrato');
       }
 
-      const ordenadorGastoId = this.form.get('ordenadorGasto')?.value;
+      this.ordenadorGastoId = this.form.get('ordenadorGasto')?.value?.toString();
 
       // Preparar datos para el POST de OrdenadorContrato
       const ordenadorContratoData: OrdenadorContratoData = {
-        ordenador_argo_id: ordenadorGastoId ? Number(ordenadorGastoId) : 0,
-        ordenador_sikarca_id: this.idSikarcaOrdenador
-          ? Number(this.idSikarcaOrdenador)
+        ordenador_argo_id: this.ordenadorGastoId ? Number(this.ordenadorGastoId) : 0,
+        ordenador_sicapital_id: this.idSicapitalOrdenador
+          ? Number(this.idSicapitalOrdenador)
           : 0,
         documento_identidad: this.documentoIdentidadOrdenador || '',
         cargo_id: this.cargoIdOrdenador || 0,
@@ -527,8 +532,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     this.ordenadoresSupervisoresMidService
       .getRolOrdenadores()
       .subscribe((Response: any) => {
-        if (Response.Status == '200') {
+        if (Response.Status === 200) {
           this.ordenadores = Response.Data;
+          this.setOrdenadorGuardado();
         }
       });
   }
@@ -538,7 +544,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       .getOrdenadorActuales(rol)
       .subscribe(async (Response: any) => {
         console.log('Respuesta de ordenadores', Response);
-        if (Response.Status == '200') {
+        if (Response.Status === 200) {
           this.form
             .get('nombreOrdenador')
             ?.setValue(Response.Data[0].nombre_ordenador);
