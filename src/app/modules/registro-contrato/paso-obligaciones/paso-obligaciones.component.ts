@@ -129,6 +129,9 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
   }
 
   guardarObligaciones() {
+    if (!this.contratoGeneralId) {
+      this.loadContratoData();
+    }
     if (this.form.valid && this.contratoGeneralId) {
       const obligacionesData = {
         justificacion: this.form.get('justificacion')?.value,
