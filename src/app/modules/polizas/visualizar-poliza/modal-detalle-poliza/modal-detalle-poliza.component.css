@@ -1,0 +1,37 @@
+.container-principal {
+  padding: 20px 25px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.close-button {
+  padding: 0;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container-title {
+  margin: 25px 0 10px 0;
+  padding: 8px;
+  background-color: #731514;
+  border-radius: 5px;
+  color: white;
+}
+
+.loading-shade {
+  padding: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.datos-poliza p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #393939;
+}

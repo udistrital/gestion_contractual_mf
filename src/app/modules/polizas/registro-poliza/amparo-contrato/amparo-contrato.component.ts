@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, OnChanges, Input, SimpleChanges } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -9,7 +9,7 @@ import {
 import { MatTableDataSource } from '@angular/material/table';
 import { PolizasService } from '../../../../services/polizas.service';
 import { ParametrosService } from '../../../../services/parametros.service';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environment';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -19,9 +19,10 @@ interface Amparo {
   descripcion: string;
   tipo_valor_amparo_id: number;
   suficiencia: string;
-  valor: string;
+  poliza_id: number | null;
+  valor: string | null;
   fecha_inicio: Date | null;
-  fecha_final: Date | null;
+  fecha_fin: Date | null;
   amparo: string | null;
 }
 
@@ -37,7 +38,7 @@ interface AmparoParametro {
   styleUrls: ['./amparo-contrato.component.css'],
   standalone: false,
 })
-export class AmparoContratoComponent implements OnInit, OnDestroy {
+export class AmparoContratoComponent implements OnInit, OnChanges, OnDestroy {
   @Input() set contratoId(value: string | null) {
     this._contratoId = value;
     if (value) {
@@ -49,8 +50,15 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
   }
   private _contratoId: string | null = null;
 
+  /** Póliza a la que se vinculan los amparos. Sin ella no se puede registrar. */
+  @Input() polizaId: number | null = null;
+
   form: FormGroup;
   amparosDisponibles: Amparo[] = [];
+  /** Todos los amparos activos del contrato, tal como los devuelve el MID. */
+  private todosLosAmparos: Amparo[] = [];
+  /** Ids ya vinculados a `polizaId` al momento de cargar, para el diff al registrar. */
+  private idsVinculadosOriginales: number[] = [];
   displayedColumns = [
     'id',
     'amparo',
@@ -58,10 +66,11 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
     'suficiencia',
     'valor',
     'fecha_inicio',
-    'fecha_final',
+    'fecha_fin',
     'acciones',
   ];
   dataSource: MatTableDataSource<Amparo>;
+  isRegistrando = false;
   private subscription: Subscription = new Subscription();
   private amparosParametros: AmparoParametro[] = [];
 
@@ -110,7 +119,7 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
             if (!response || !response.Data || response.Data.length === 0) {
               throw new Error('NO_AMPAROS');
             }
-            return response.Data;
+            return response.Data as Amparo[];
           }),
           catchError((error: any) => {
             if (
@@ -130,11 +139,39 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
             return [];
           })
         )
-        .subscribe((amparos: any) => {
-          this.amparosDisponibles = amparos;
-          this.updateForm();
+        .subscribe((amparos: Amparo[]) => {
+          this.todosLosAmparos = amparos;
+          this.aplicarSeparacionPorPoliza();
         })
     );
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['polizaId'] && !changes['polizaId'].firstChange) {
+      this.aplicarSeparacionPorPoliza();
+    }
+  }
+
+  /**
+   * Separa los amparos del contrato entre los ya vinculados a `polizaId`
+   * (precargados en la tabla) y los disponibles para agregar.
+   */
+  private aplicarSeparacionPorPoliza() {
+    this.updateForm();
+
+    if (this.polizaId) {
+      const vinculados = this.todosLosAmparos.filter(
+        (a) => a.poliza_id === this.polizaId
+      );
+      this.idsVinculadosOriginales = vinculados.map((a) => a.id);
+      vinculados.forEach((amparo) => this.addAmparoToForm(amparo));
+      this.amparosDisponibles = this.todosLosAmparos.filter(
+        (a) => a.poliza_id !== this.polizaId
+      );
+    } else {
+      this.idsVinculadosOriginales = [];
+      this.amparosDisponibles = [...this.todosLosAmparos];
+    }
   }
 
   private showErrorMessage(message: string) {
@@ -143,6 +180,14 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
       horizontalPosition: 'center',
       verticalPosition: 'top',
       panelClass: ['error-snackbar'],
+    });
+  }
+
+  private showInfoMessage(message: string) {
+    this.snackBar.open(message, 'Cerrar', {
+      duration: 4000,
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
     });
   }
 
@@ -169,6 +214,7 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
       id: [amparo.id],
       descripcion: [amparo.descripcion],
       tipo_valor_amparo: [
+        // 1 = SMLV, 2 = Porcentaje (ver amparo-poliza.entity.ts)
         amparo.tipo_valor_amparo_id === 1 ? 'SMLV' : 'Porcentaje',
       ],
       suficiencia: [amparo.suficiencia],
@@ -177,8 +223,8 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
         amparo.fecha_inicio ? new Date(amparo.fecha_inicio) : null,
         Validators.required,
       ],
-      fecha_final: [
-        amparo.fecha_final ? new Date(amparo.fecha_final) : null,
+      fecha_fin: [
+        amparo.fecha_fin ? new Date(amparo.fecha_fin) : null,
         Validators.required,
       ],
       amparo: [amparo.amparo || '', Validators.required],
@@ -207,6 +253,66 @@ export class AmparoContratoComponent implements OnInit, OnDestroy {
 
   getFormControl(index: number, controlName: string): FormControl {
     return this.amparosFormArray.at(index).get(controlName) as FormControl;
+  }
+
+  /**
+   * Vincula a `polizaId` los amparos que quedaron en la tabla y desvincula
+   * (poliza_id: null) los que estaban vinculados y el usuario quitó.
+   */
+  async registrarAmparos() {
+    if (!this.polizaId) {
+      this.showErrorMessage('Primero guarde los datos básicos de la póliza');
+      return;
+    }
+
+    if (this.amparosFormArray.invalid) {
+      this.amparosFormArray.markAllAsTouched();
+      return;
+    }
+
+    this.isRegistrando = true;
+    try {
+      const filas = this.amparosFormArray.value as Array<{
+        id: number;
+        valor: string;
+        fecha_inicio: Date | string;
+        fecha_fin: Date | string;
+      }>;
+      const idsActuales = filas.map((fila) => fila.id);
+      const idsDesvinculados = this.idsVinculadosOriginales.filter(
+        (id) => !idsActuales.includes(id)
+      );
+
+      for (const fila of filas) {
+        await firstValueFrom(
+          this.polizasService.putAmparo(fila.id, {
+            poliza_id: this.polizaId,
+            valor: Number(fila.valor),
+            fecha_inicio: this.toIsoDate(fila.fecha_inicio),
+            fecha_fin: this.toIsoDate(fila.fecha_fin),
+          })
+        );
+      }
+
+      for (const id of idsDesvinculados) {
+        await firstValueFrom(
+          this.polizasService.putAmparo(id, { poliza_id: null })
+        );
+      }
+
+      this.showInfoMessage('Amparos registrados correctamente para la póliza');
+      this.loadAmparos();
+    } catch (error) {
+      this.showErrorMessage('Ocurrió un error al registrar los amparos');
+    } finally {
+      this.isRegistrando = false;
+    }
+  }
+
+  private toIsoDate(value: Date | string | null): string | null {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    return date.toISOString();
   }
 
   ngOnInit() {

@@ -101,4 +101,16 @@
       ></textarea>
     </mat-form-field>
   </div>
+
+  <div class="row btn-container">
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="!polizaForm.valid || isLoading"
+    >
+      <mat-icon>save</mat-icon>
+      {{ polizaId ? 'Actualizar póliza' : 'Guardar póliza' }}
+    </button>
+  </div>
 </form>
