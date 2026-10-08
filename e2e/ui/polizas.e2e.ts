@@ -56,6 +56,33 @@ async function aislarServiciosExternos(ctx: BrowserContext) {
   await ctx.route(/\/v1\/parametro(\?|$)/, (route) =>
     route.fulfill({ json: { Success: true, Status: '200', Data: [] } })
   );
+  await aislarGuardadoDelActa(ctx);
+}
+
+/**
+ * Al registrar los amparos se genera el acta (minuta mid), se sube al gestor documental
+ * y se registra en `documentos-contratos` (#360). Esta prueba valida el flujo de la
+ * pantalla, no esos servicios: se simulan para no escribir en el gestor ni en Nuxeo.
+ * Las llamadas quedan en `llamadasGuardadoActa` para verificar el orden.
+ */
+const llamadasGuardadoActa: string[] = [];
+
+async function aislarGuardadoDelActa(ctx: BrowserContext) {
+  await ctx.route(/\/acta-poliza\/contratos\/\d+$/, (route) => {
+    llamadasGuardadoActa.push('GET acta-poliza');
+    return route.fulfill({ json: { Success: true, Status: 200, Data: 'JVBERi0xLjQK' } });
+  });
+  await ctx.route(/\/document\/upload$/, (route) => {
+    llamadasGuardadoActa.push('POST document/upload');
+    return route.fulfill({
+      json: { Status: '200', res: { Id: 1, Enlace: '00000000-0000-4000-8000-000000000000' } },
+    });
+  });
+  await ctx.route(/\/documentos-contratos$/, (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    llamadasGuardadoActa.push('POST documentos-contratos');
+    return route.fulfill({ status: 201, json: { Success: true, Status: 201, Data: {} } });
+  });
 }
 
 async function seleccionar(pagina: Page, formControlName: string, opcion: string | RegExp) {
@@ -142,9 +169,24 @@ test('registrar póliza: vincula amparos a la póliza con valor y fechas', async
 
   await expect(registrar).toBeEnabled();
   await registrar.click();
-  await expect(page.locator('.mat-mdc-snack-bar-container')).toContainText(
-    'Amparos registrados correctamente para la póliza'
+
+  // Registrar pide confirmación porque además genera y guarda el acta (#360).
+  await expect(page.locator('.swal2-popup')).toContainText(
+    '¿Registrar los amparos y guardar el acta?'
   );
+  await page.locator('.swal2-confirm').click();
+
+  // El snackbar de "Amparos registrados..." sigue saliendo un instante: se filtra por texto.
+  await expect(
+    page
+      .locator('.mat-mdc-snack-bar-container')
+      .filter({ hasText: 'Póliza registrada y acta de aprobación guardada' })
+  ).toBeVisible();
+  expect(llamadasGuardadoActa).toEqual([
+    'GET acta-poliza',
+    'POST document/upload',
+    'POST documentos-contratos',
+  ]);
 
   const poliza = await obtenerPoliza(api);
   const amparos = await listarAmparos(api);
@@ -188,9 +230,12 @@ test('registrar póliza: quitar un amparo vinculado lo desvincula', async () => 
   await nueva.locator('input[placeholder="DD/MM/YYYY"]').nth(0).fill('01/15/2026');
   await nueva.locator('input[placeholder="DD/MM/YYYY"]').nth(1).fill('12/15/2026');
   await page.getByRole('button', { name: /Registrar$/ }).click();
-  await expect(page.locator('.mat-mdc-snack-bar-container')).toContainText(
-    'Amparos registrados correctamente'
-  );
+  await page.locator('.swal2-confirm').click();
+  await expect(
+    page
+      .locator('.mat-mdc-snack-bar-container')
+      .filter({ hasText: 'Póliza registrada y acta de aprobación guardada' })
+  ).toBeVisible();
 
   const poliza = await obtenerPoliza(api);
   const amparos = await listarAmparos(api);
