@@ -13,6 +13,8 @@ import { Subscription, firstValueFrom } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environment';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AlertService } from '../../../../services/alert.service';
+import { abrirVentanaPdf, mostrarPdfEnVentana } from '../../../../utils/visor-pdf';
 
 interface Amparo {
   id: number;
@@ -71,6 +73,7 @@ export class AmparoContratoComponent implements OnInit, OnChanges, OnDestroy {
   ];
   dataSource: MatTableDataSource<Amparo>;
   isRegistrando = false;
+  generandoBorrador = false;
   private subscription: Subscription = new Subscription();
   private amparosParametros: AmparoParametro[] = [];
 
@@ -78,7 +81,8 @@ export class AmparoContratoComponent implements OnInit, OnChanges, OnDestroy {
     private fb: FormBuilder,
     private polizasService: PolizasService,
     private parametrosService: ParametrosService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private alertService: AlertService
   ) {
     this.form = this.fb.group({
       amparoSeleccionado: [''],
@@ -257,7 +261,9 @@ export class AmparoContratoComponent implements OnInit, OnChanges, OnDestroy {
 
   /**
    * Vincula a `polizaId` los amparos que quedaron en la tabla y desvincula
-   * (poliza_id: null) los que estaban vinculados y el usuario quitó.
+   * (poliza_id: null) los que estaban vinculados y el usuario quitó. Con los
+   * mismos datos genera el acta de aprobación y la guarda, así que antes se
+   * pide confirmación.
    */
   async registrarAmparos() {
     if (!this.polizaId) {
@@ -269,6 +275,15 @@ export class AmparoContratoComponent implements OnInit, OnChanges, OnDestroy {
       this.amparosFormArray.markAllAsTouched();
       return;
     }
+
+    const confirmacion = await this.alertService.showConfirmAlert(
+      'Se registrarán los amparos y, con estos mismos datos, se generará el ' +
+        'acta de aprobación de la póliza, que quedará guardada en el gestor ' +
+        'documental y asociada al contrato. Si desea revisarla antes, use el ' +
+        'botón "Ver" para la previsualización del acta.',
+      '¿Registrar los amparos y guardar el acta?'
+    );
+    if (!confirmacion?.isConfirmed) return;
 
     this.isRegistrando = true;
     try {
@@ -302,10 +317,108 @@ export class AmparoContratoComponent implements OnInit, OnChanges, OnDestroy {
 
       this.showInfoMessage('Amparos registrados correctamente para la póliza');
       this.loadAmparos();
+      await this.guardarActaAprobacion();
     } catch (error) {
       this.showErrorMessage('Ocurrió un error al registrar los amparos');
     } finally {
       this.isRegistrando = false;
+    }
+  }
+
+  /**
+   * Muestra un borrador del acta de aprobación con los amparos tal como están
+   * en la tabla (aún sin registrar), en una ventana con el visor del navegador.
+   */
+  verBorrador() {
+    if (!this.polizaId) {
+      this.showErrorMessage('Primero guarde los datos básicos de la póliza');
+      return;
+    }
+    if (this.amparosFormArray.invalid) {
+      this.amparosFormArray.markAllAsTouched();
+      this.showErrorMessage(
+        'Hay amparos incompletos (nombre, valor o fechas). Revíselos para ver el borrador'
+      );
+      return;
+    }
+
+    const ventana = abrirVentanaPdf('Borrador del acta de aprobación');
+    if (!ventana) {
+      this.showErrorMessage(
+        'El navegador bloqueó la ventana emergente. Permítala e intente de nuevo.'
+      );
+      return;
+    }
+
+    const filas = (this.amparosFormArray.value as any[]).map((fila) => ({
+      id: fila.id,
+      valor: Number(fila.valor),
+      fecha_inicio: this.toIsoDate(fila.fecha_inicio),
+      fecha_fin: this.toIsoDate(fila.fecha_fin),
+    }));
+
+    this.generandoBorrador = true;
+    this.polizasService
+      .getBorradorActaAprobacion(Number(this.contratoId), filas)
+      .subscribe({
+        next: (response: any) => {
+          this.generandoBorrador = false;
+          if (!response?.Success || !response?.Data) {
+            ventana.close();
+            this.showErrorMessage(
+              response?.Message || 'No fue posible generar el borrador del acta'
+            );
+            return;
+          }
+          mostrarPdfEnVentana(ventana, response.Data);
+        },
+        error: () => {
+          this.generandoBorrador = false;
+          ventana.close();
+          this.showErrorMessage('Error al generar el borrador del acta');
+        },
+      });
+  }
+
+  /**
+   * Genera el acta definitiva con la póliza y amparos ya registrados, la sube
+   * al gestor documental y la registra en el contrato.
+   */
+  private async guardarActaAprobacion() {
+    const contratoId = Number(this.contratoId);
+    try {
+      const acta: any = await firstValueFrom(
+        this.polizasService.getActaAprobacionPoliza(contratoId)
+      );
+      if (!acta?.Success || !acta?.Data) {
+        this.showErrorMessage(
+          `Amparos registrados, pero no se generó el acta: ${acta?.Message || 'error desconocido'}`
+        );
+        return;
+      }
+
+      const subida: any = await firstValueFrom(
+        this.polizasService.subirActa(contratoId, acta.Data)
+      );
+      if (subida?.Status !== '200' || !subida?.res?.Id) {
+        this.showErrorMessage(
+          'Amparos registrados, pero no se pudo guardar el acta en el gestor documental'
+        );
+        return;
+      }
+
+      await firstValueFrom(
+        this.polizasService.registrarDocumentoActa(
+          contratoId,
+          subida.res.Id,
+          subida.res.Enlace
+        )
+      );
+      this.showInfoMessage('Póliza registrada y acta de aprobación guardada');
+    } catch (error) {
+      this.showErrorMessage(
+        'Amparos registrados, pero ocurrió un error al guardar el acta de aprobación'
+      );
     }
   }
 

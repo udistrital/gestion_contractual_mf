@@ -18,6 +18,14 @@
         <p><b>Vigencia:</b> {{ poliza.fecha_inicio | date:'dd/MM/yyyy' }} — {{ poliza.fecha_fin | date:'dd/MM/yyyy' }}</p>
         <p><b>Expedición:</b> {{ poliza.fecha_expedicion | date:'dd/MM/yyyy' }}</p>
         <p><b>Aprobación:</b> {{ poliza.fecha_aprobacion | date:'dd/MM/yyyy' }}</p>
+        <button
+          mat-flat-button
+          color="primary"
+          [disabled]="generandoActa"
+          (click)="verActaAprobacion()"
+        >
+          {{ generandoActa ? 'Consultando acta...' : 'Ver acta de aprobación' }}
+        </button>
       </div>
     } @else {
       <p>Este contrato aún no tiene póliza registrada.</p>

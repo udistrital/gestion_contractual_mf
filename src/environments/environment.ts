@@ -88,6 +88,9 @@ export const environment = {
 
   TIPO_DOCUMENTO_ID_PARAMETROS: {
     MINUTA: 6805,
+    // TODO(#360): reemplazar por el id del parámetro del acta de aprobación de
+    // póliza cuando exista (el tipo 133 solo tiene Minuta y Documentos precontractuales)
+    ACTA_APROBACION_POLIZA: 176,
     DOCUMENTOS_PRECONTRACTUALES: 6716,
   },
   TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL: {
