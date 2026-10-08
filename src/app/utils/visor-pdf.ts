@@ -25,6 +25,12 @@ export function mostrarPdfEnVentana(ventana: Window, base64: string): void {
     new Blob([bytes], { type: 'application/pdf' })
   );
   ventana.location.href = url;
-  // Se libera la URL luego de que la ventana haya cargado el documento
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  // El botón "Descargar" del visor vuelve a pedir esta URL, así que debe seguir
+  // viva mientras la ventana esté abierta; se libera al cerrarla.
+  const vigilante = setInterval(() => {
+    if (ventana.closed) {
+      URL.revokeObjectURL(url);
+      clearInterval(vigilante);
+    }
+  }, 5000);
 }
