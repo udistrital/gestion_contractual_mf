@@ -6,7 +6,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
-import { ContratoGeneralMidService } from '../../services/contrato-general-mid.service';
+import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
 import { MatDialog } from '@angular/material/dialog';

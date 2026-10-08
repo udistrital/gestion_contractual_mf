@@ -12,7 +12,7 @@ import {
   ValidationErrors,
   AbstractControl,
 } from '@angular/forms';
-import { ProveedoresService } from '../../../services/proveedores.service';
+import { ProveedoresService } from 'src/app/services/proveedores.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';

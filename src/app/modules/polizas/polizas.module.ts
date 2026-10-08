@@ -1,5 +1,4 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { SharedModule } from '../../shared/shared.module';
 
 import { RegistroPolizaComponent } from './registro-poliza/registro-poliza.component';
@@ -7,6 +6,7 @@ import { AsociarContratoComponent } from './registro-poliza/asociar-contrato/aso
 import { DatosBasicosComponent } from './registro-poliza/datos-basicos/datos-basicos.component';
 import { AmparoContratoComponent } from './registro-poliza/amparo-contrato/amparo-contrato.component';
 import { VisualizarPolizaComponent } from './visualizar-poliza/visualizar-poliza.component';
+import { PolizasRoutingModule } from './polizas-routing.module';
 
 @NgModule({
   declarations: [
@@ -17,8 +17,8 @@ import { VisualizarPolizaComponent } from './visualizar-poliza/visualizar-poliza
     VisualizarPolizaComponent
   ],
   imports: [
-    CommonModule,
-    SharedModule
+    SharedModule,
+    PolizasRoutingModule
   ],
   exports: [
     RegistroPolizaComponent,

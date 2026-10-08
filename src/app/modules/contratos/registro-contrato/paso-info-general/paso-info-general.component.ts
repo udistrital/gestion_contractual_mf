@@ -9,8 +9,8 @@ import {
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
-import { ContratoGeneralMidService } from '../../../services/contrato-general-mid.service';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { AlertService } from 'src/app/services/alert.service';
 import {
