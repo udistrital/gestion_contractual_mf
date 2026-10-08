@@ -8,9 +8,9 @@ describe('RegistroActasComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [RegistroActasComponent],
+      imports: [],
       schemas: [NO_ERRORS_SCHEMA],
-      declarations: []
+      declarations: [RegistroActasComponent]
     });
     fixture = TestBed.createComponent(RegistroActasComponent);
     component = fixture.componentInstance;

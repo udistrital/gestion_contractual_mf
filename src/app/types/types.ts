@@ -73,8 +73,8 @@ export interface EspecificacionTecnica {
 export interface DocumentoContrato {
   contrato_general_id: number;
   tipo_documento_id: number;
-  usuario_id: number;
-  usuario_rol: string;
+  usuario_id?: number;
+  usuario_rol?: string;
   documento_id: number;
   documento_enlace: string;
 }
@@ -176,7 +176,7 @@ export interface CDPData {
 export interface OrdenadorContratoData {
   tercero_id?: number;
   ordenador_argo_id: number;
-  ordenador_sikarca_id: number;
+  ordenador_sicapital_id: number;
   resolucion?: string;
   documento_identidad: string;
   cargo_id: number;

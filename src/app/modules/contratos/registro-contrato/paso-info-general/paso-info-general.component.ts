@@ -1,0 +1,682 @@
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { ParametrosService } from 'src/app/services/parametros.service';
+import { environment } from 'src/environments/environment';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { RolService } from 'src/app/services/rol.service';
+import { AlertService } from 'src/app/services/alert.service';
+import {
+  ApiResponse,
+  EstadoContrato,
+  ParametroListResponse,
+  ParametroResponse,
+  SimpleItem,
+} from 'src/app/types/types';
+
+@Component({
+    selector: 'app-paso-info-general',
+    templateUrl: './paso-info-general.component.html',
+    styleUrls: ['./paso-info-general.component.css'],
+    standalone: false
+})
+export class PasoInfoGeneralComponent implements OnInit {
+  @Input() viewMode: boolean = false; //Determina si el paso es de creación o visualización
+  @Output() stepCompleted = new EventEmitter<boolean>();
+  @Output() nextStep = new EventEmitter<void>();
+  @Output() tipoCompromisoChange = new EventEmitter<string>();
+  @Output() aplicaPolizaChange = new EventEmitter<string>();
+
+  roles: string[] = [];
+  showContratoFields = false;
+  showConvenioFields = false;
+  isLoading = false;
+  loadedData: boolean = false;
+  maxDate: Date = new Date();
+  formId: number | null = null;
+
+  private initialFormValue: any;
+  private formSaved: boolean = false;
+
+  constructor(
+    private alertService: AlertService,
+    private fb: FormBuilder,
+    private rolService: RolService,
+    private parametrosService: ParametrosService,
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private contratoGeneralMidService: ContratoGeneralMidService,
+    private cdRef: ChangeDetectorRef
+  ) {}
+
+  formInfoGeneral = this.fb.group({
+    unidadEjecutoraId: ['', Validators.required],
+    tipoCompromisoId: ['', Validators.required],
+    tipoContratoId: ['', Validators.required],
+    perfilContratistaId: [''],
+    fechaSuscripcionEstudios: [''],
+    aplicaPoliza: [''],
+    vigenciaConvenio: [''],
+    convenio: [''],
+    nombreConvenio: [''],
+    modalidadSeleccionId: ['', Validators.required],
+    tipologiaEspecificaId: ['', Validators.required],
+    regimenContratacionId: ['', Validators.required],
+    procedimientoId: ['', Validators.required],
+    plazoEjecucion: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
+    unidadEjecucionId: ['', Validators.required],
+  });
+
+  //Parametros (Opciones)
+  tiposCompromisos: ParametroResponse[] = [];
+  tiposContratos: ParametroResponse[] = [];
+  modalidadesSeleccion: ParametroResponse[] = [];
+  tipologiasEspecificas: ParametroResponse[] = [];
+  regimenesContratacion: ParametroResponse[] = [];
+  procedimientos: ParametroResponse[] = [];
+  unidadesEjecucion: ParametroResponse[] = [];
+  // orden-contrato
+  perfilesContratista: ParametroResponse[] = [];
+
+  unidadesEjecutoras: SimpleItem[] = [];
+
+  aplicaPoliza: { value: string; viewValue: string }[] = [
+    { value: '0', viewValue: 'No' },
+    { value: '1', viewValue: 'Si' },
+  ];
+
+  // convenio
+  vigenciasConvenio: ParametroResponse[] = [];
+  convenios: ParametroResponse[] = [];
+
+  //Estado
+  estado_id: number | null = null;
+  estado_interno_id: number | null = null;
+
+  ngOnInit(): void {
+    this.roles = this.rolService.getRol();
+    if (this.viewMode) {
+      this.formInfoGeneral.disable();
+      this.loadInfoDataMid();
+    } else {
+      this.loadInitialData();
+      this.processRoles();
+      this.setuptipoCompromisoId();
+      this.setuptipoContratoId();
+      this.setupAplicaPoliza();
+
+      this.initialFormValue = this.formInfoGeneral.value;
+      this.formInfoGeneral.valueChanges.subscribe(() => {
+        this.formSaved = false;
+      });
+    }
+    this.formInfoGeneral.statusChanges.subscribe(() => {
+      this.stepCompleted.emit(this.formInfoGeneral.valid);
+    });
+  }
+
+  private setuptipoCompromisoId() {
+    this.formInfoGeneral
+      .get('tipoCompromisoId')
+      ?.valueChanges.subscribe((id_compromiso) => {
+        if (id_compromiso) {
+          //Emite el evento para que el padre sepa que se seleccionó un tipo de compromiso
+          this.tipoCompromisoChange.emit(id_compromiso.toString());
+
+          this.CargartipoContratoIds(id_compromiso);
+          this.showFieldsBasedOnCompromiso(id_compromiso);
+          if (id_compromiso) {
+            this.CargartipologiaEspecificaId(id_compromiso);
+
+            const idCompromisoStr = id_compromiso.toString();
+            const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
+
+            const perfilCompromisoControl =
+              this.formInfoGeneral.get('aplicaPoliza');
+            if (idCompromisoStr === perfilCompromisoIdStr) {
+              perfilCompromisoControl?.setValidators(Validators.required);
+              perfilCompromisoControl?.enable();
+            } else {
+              perfilCompromisoControl?.clearValidators();
+              perfilCompromisoControl?.disable();
+            }
+            perfilCompromisoControl?.updateValueAndValidity();
+
+            this.cdRef.detectChanges();
+          }
+        }
+      });
+  }
+
+  private setuptipoContratoId() {
+    this.formInfoGeneral
+      .get('tipoContratoId')
+      ?.valueChanges.subscribe((id_contrato) => {
+        if (id_contrato) {
+          this.CargartipologiaEspecificaId(id_contrato);
+
+          const idContratoStr = id_contrato.toString();
+          const tipoContratoIdIdStr = environment.CONTRATO_PSPAG_ID.toString();
+
+          const perfilContratistaControl = this.formInfoGeneral.get(
+            'perfilContratistaId'
+          );
+          const fechaSuscripcionControl = this.formInfoGeneral.get(
+            'fechaSuscripcionEstudios'
+          );
+
+          if (idContratoStr === tipoContratoIdIdStr) {
+            this.CargarPerfilContratista(id_contrato);
+            perfilContratistaControl?.setValidators(Validators.required);
+            perfilContratistaControl?.enable();
+
+            fechaSuscripcionControl?.setValidators(Validators.required);
+            fechaSuscripcionControl?.enable();
+          } else {
+            perfilContratistaControl?.clearValidators();
+            perfilContratistaControl?.disable();
+
+            fechaSuscripcionControl?.clearValidators();
+            fechaSuscripcionControl?.disable();
+          }
+          perfilContratistaControl?.updateValueAndValidity();
+
+          this.cdRef.detectChanges();
+        }
+      });
+  }
+
+  private loadSavedData(): void {
+    console.log('Loading info general data data...');
+    try {
+      this.isLoading = true;
+      const savedForm = localStorage.getItem('paso-info-general');
+      if (savedForm) {
+        const parsedForm = JSON.parse(savedForm);
+        this.formInfoGeneral.patchValue(parsedForm);
+        this.formId = parsedForm.id || null;
+      }
+    } catch (error) {
+      console.error('Error loading saved data:', error);
+      localStorage.removeItem('contrato-general');
+    }
+    this.isLoading = false;
+  }
+
+  private loadInitialData(): void {
+    console.log('Loading initial data...');
+    this.isLoading = true;
+    Promise.all([
+      this.CargarEstado(),
+      this.CargarEstadoInterno(),
+      this.CargarCompromisos(),
+      this.CargarmodalidadSeleccionId(),
+      this.CargarregimenContratacionId(),
+      this.CargarprocedimientoId(),
+      this.CargarunidadEjecucionId(),
+    ])
+      .then(() => {
+        this.isLoading = false;
+        this.loadedData = true;
+        this.cdRef.detectChanges();
+      })
+      .catch(this.handleError);
+  }
+
+  private processRoles(): void {
+    const defaultOptions = [
+      {
+        Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+        Nombre: 'Rectoría',
+      },
+      {
+        Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+        Nombre: 'IDEXUD',
+      },
+    ];
+
+    const filteredRoles = this.roles.filter(
+      (role) => role.includes('RECTOR') || role.includes('IDEXUD')
+    );
+
+    if (filteredRoles.length === 0) {
+      this.unidadesEjecutoras = defaultOptions;
+      this.formInfoGeneral.patchValue({
+        unidadEjecutoraId: defaultOptions[0].Id.toString()
+      });
+      return;
+    }
+
+    const mappedItems = filteredRoles
+      .map((role) => {
+        if (role.includes('RECTOR')) {
+          return {
+            Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+            Nombre: 'Rectoría',
+          };
+        }
+        if (role.includes('IDEXUD')) {
+          return {
+            Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+            Nombre: 'IDEXUD',
+          };
+        }
+        return null;
+      })
+      .filter((item): item is SimpleItem => item !== null);
+
+    const uniqueMap = new Map(mappedItems.map((item) => [item.Id, item]));
+    this.unidadesEjecutoras = Array.from(uniqueMap.values());
+
+    if (this.unidadesEjecutoras.length === 1) {
+      this.formInfoGeneral.patchValue({
+        unidadEjecutoraId: this.unidadesEjecutoras[0].Id.toString()
+      });
+    }
+  }
+
+  //Generales
+
+  CargarEstado() {
+    return new Promise((resolve, reject) => {
+      this.parametrosService
+        .get(`parametro/${environment.ESTADOS_GENERALES.POR_SUSCRIBIR}`)
+        .subscribe({
+          next: (Response: any) => {
+            if (Response.Status == '200') {
+              this.estado_id = Response.Data.Id;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
+    });
+  }
+
+  CargarEstadoInterno() {
+    return new Promise((resolve, reject) => {
+      this.parametrosService
+        .get(`parametro/${environment.ESTADOS_INTERNOS.BORRADOR}`)
+        .subscribe({
+          next: (Response: any) => {
+            if (Response.Status == '200') {
+              this.estado_interno_id = Response.Data.Id;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
+    });
+  }
+
+  CargarCompromisos() {
+    return new Promise((resolve, reject) => {
+      this.parametrosService
+        .get<ParametroListResponse>(
+          `parametro?query=TipoParametroId:${environment.TIPO_COMPROMISO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+        )
+        .subscribe({
+          next: (Response) => {
+            if (Response.Status == '200') {
+              this.tiposCompromisos = Response.Data;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
+    });
+  }
+
+  setupAplicaPoliza() {
+    this.formInfoGeneral
+      .get('aplicaPoliza')
+      ?.valueChanges.subscribe((value) => {
+        if (value) {
+          this.aplicaPolizaChange.emit(value.toString());
+        }
+      });
+  }
+
+  CargarmodalidadSeleccionId() {
+    this.parametrosService
+      .get<ParametroListResponse>(
+        `parametro?query=TipoParametroId:${environment.MODALIDAD_SELECCION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+      )
+      .subscribe((Response) => {
+        if (Response.Status == '200') {
+          this.modalidadesSeleccion = Response.Data;
+        }
+      });
+  }
+
+  CargarregimenContratacionId() {
+    this.parametrosService
+      .get<ParametroListResponse>(
+        `parametro?query=TipoParametroId:${environment.REGIMEN_CONTRATACION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+      )
+      .subscribe((Response) => {
+        if (Response.Status == '200') {
+          this.regimenesContratacion = Response.Data;
+        }
+      });
+  }
+
+  CargarprocedimientoId() {
+    this.parametrosService
+      .get<ParametroListResponse>(
+        `parametro?query=TipoParametroId:${environment.PROCEDIMIENTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+      )
+      .subscribe((Response) => {
+        if (Response.Status == '200') {
+          this.procedimientos = Response.Data;
+        }
+      });
+  }
+
+  CargarunidadEjecucionId() {
+    this.parametrosService
+      .get<ParametroListResponse>(
+        `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUCION_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+      )
+      .subscribe((Response) => {
+        if (Response.Status == '200') {
+          this.unidadesEjecucion = Response.Data;
+        }
+      });
+  }
+
+  //Especificos
+  showFieldsBasedOnCompromiso(id_compromiso: string) {
+    const idCompromisoStr = id_compromiso.toString();
+
+    this.showContratoFields =
+      idCompromisoStr === environment.CONTRATO_ID ||
+      idCompromisoStr === environment.ORDEN_ID;
+    this.showConvenioFields = idCompromisoStr === environment.CONVENIO_ID;
+
+    const convenioFields = ['vigenciaConvenio', 'convenio', 'nombreConvenio'];
+
+    [
+      ...convenioFields,
+      'perfilContratistaId',
+      'aplicaPoliza',
+      'fechaSuscripcionEstudios',
+    ].forEach((field) => {
+      const control = this.formInfoGeneral.get(field);
+      if (control) {
+        control.reset();
+        if (this.showConvenioFields && convenioFields.includes(field)) {
+          control.setValidators(Validators.required);
+          control.enable();
+        } else {
+          control.clearValidators();
+          control.disable();
+        }
+        control.updateValueAndValidity();
+      }
+    });
+
+    this.cdRef.detectChanges();
+  }
+
+  CargartipoContratoIds(id_compromiso: string) {
+    this.parametrosService
+      .get<ParametroListResponse>(
+        `parametro?query=ParametroPadreId:${id_compromiso}&TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+      )
+      .subscribe((Response) => {
+        if (Response.Status == '200') {
+          this.tiposContratos = Response.Data;
+        }
+      });
+  }
+
+  CargartipologiaEspecificaId(id_contrato: string) {
+    this.parametrosService
+      .get<ParametroListResponse>(
+        `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.TIPOLOGIA_ESPECIFICA_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+      )
+      .subscribe((Response) => {
+        if (Response.Status == '200') {
+          this.tipologiasEspecificas = Response.Data;
+          console.log('Tipologia Especifica:', this.tipologiasEspecificas); //TODO: Inconsistencia con mid.
+        }
+      });
+  }
+
+  CargarPerfilContratista(id_contrato: string) {
+    if (id_contrato == environment.CONTRATO_PSPAG_ID) {
+      this.parametrosService
+        .get<ParametroListResponse>(
+          `parametro?query=ParametroPadreId:${id_contrato}&TipoParametroId:${environment.PERFIL_CONTRATISTA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        )
+        .subscribe((Response) => {
+          if (Response.Status == '200') {
+            this.perfilesContratista = Response.Data;
+          }
+        });
+    }
+  }
+
+  // Método para manejar la entrada de solo números
+  validateOnlyNumbers(event: KeyboardEvent) {
+    const allowedKeys = [
+      'Backspace',
+      'Tab',
+      'End',
+      'Home',
+      'ArrowLeft',
+      'ArrowRight',
+      'Delete',
+    ];
+    const pattern = /^[0-9]$/;
+
+    if (!allowedKeys.includes(event.key) && !pattern.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  loadInfoDataMid() {
+    this.isLoading = true;
+
+    const getOperation = this.contratoGeneralMidService.get('29'); //Id quemado para la prueba.
+
+    getOperation.subscribe({
+      next: async (response: ApiResponse<any>) => {
+        this.isLoading = false;
+
+        console.log('Response:', response.Data);
+
+        this.updateFormAndSelects(response.Data);
+        this.loadedData = true;
+      },
+      error: async (error) => {
+        console.log('Error:', error);
+        this.isLoading = false;
+        this.alertService.showErrorAlert(
+          'Ocurrió un error al obtener los datos',
+          'Error al obtener los datos'
+        );
+      },
+    });
+  }
+
+  updateFormAndSelects(data: any) {
+    this.formInfoGeneral.patchValue(data);
+
+    this.tiposCompromisos = this.createDynamicOption(data.tipoCompromisoId);
+    this.tiposContratos = this.createDynamicOption(data.tipoContratoId);
+    this.modalidadesSeleccion = this.createDynamicOption(
+      data.modalidadSeleccionId
+    );
+    this.tipologiasEspecificas = this.createDynamicOption(
+      data.tipologiaEspecificaId
+    );
+    this.regimenesContratacion = this.createDynamicOption(
+      data.regimenContratacionId
+    );
+    this.procedimientos = this.createDynamicOption(data.procedimientoId);
+    this.unidadesEjecucion = this.createDynamicOption(data.unidadEjecucionId);
+  }
+
+  createDynamicOption(value: string | number): ParametroResponse[] {
+    if (value === null || value === undefined) return [];
+    return [{ Id: value, Nombre: value.toString() }];
+  }
+
+  guardarYContinuar() {
+    const formData = this.formInfoGeneral.value;
+    const unidad_ejecutora_id = String(formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id);
+
+    // Obtener el consecutivo del contrato
+    this.contratoGeneralMidService
+      .postConsecutivo({ unidad_ejecutora_id })
+      .subscribe({
+        next: (response: ApiResponse<any>) => {
+          if (response.Success && response.Status === 200) {
+            this.guardarContrato(response.Data, parseInt(unidad_ejecutora_id, 10));
+          } else {
+            this.alertService.showErrorAlert(
+              'Error al generar consecutivo de contrato',
+              'Por favor, intente de nuevo'
+            );
+          }
+        },
+        error: (error) => {
+          console.log(error);
+          this.alertService.showErrorAlert(
+            'Error al generar consecutivo de contrato',
+            'Por favor, intente de nuevo'
+          );
+        },
+      });
+  }
+
+  guardarContrato(consecutivo: string, unidad_ejecutora_id: number) {
+    if (this.viewMode) return;
+
+    if (this.formInfoGeneral.invalid) {
+      this.formInfoGeneral.markAllAsTouched();
+      return;
+    }
+
+    const formData = this.formInfoGeneral.value;
+
+    this.isLoading = true;
+
+    const formParsed = {
+      tipo_compromiso_id: formData.tipoCompromisoId,
+      tipo_contrato_id: formData.tipoContratoId,
+      perfil_contratista_id: formData.perfilContratistaId,
+      fecha_suscripcion_estudios: formData.fechaSuscripcionEstudios,
+      aplica_poliza: formData.aplicaPoliza,
+      vigencia_convenio: formData.vigenciaConvenio,
+      convenio: formData.convenio,
+      nombre_convenio: formData.nombreConvenio,
+      modalidad_seleccion_id: formData.modalidadSeleccionId,
+      tipologia_especifica_id: formData.tipologiaEspecificaId,
+      regimen_contratacion_id: formData.regimenContratacionId,
+      procedimiento_id: formData.procedimientoId,
+      plazo_ejecucion: formData.plazoEjecucion,
+      unidad_ejecucion_id: formData.unidadEjecucionId,
+      unidad_ejecutora_id: formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id,
+    };
+
+    const saveOperation = this.formId
+      ? this.contratoGeneralCrudService.put(this.formId, formParsed)
+      : this.contratoGeneralCrudService.post({
+          ...formParsed,
+          consecutivo_elaboracion: consecutivo,
+        });
+
+    saveOperation.subscribe({
+      next: async (response: ApiResponse<any>) => {
+        this.isLoading = false;
+
+        await this.guardarEstado(response.Data.id);
+
+        this.alertService.showSuccessAlert(
+          'Los datos se guardaron correctamente. IDs: ' + response.Data.id,
+          'Datos guardados'
+        );
+
+        localStorage.setItem(
+          `paso-info-general`,
+          JSON.stringify({ ...formData, id: response.Data.id })
+        );
+
+        this.initialFormValue = this.formInfoGeneral.value;
+        this.formSaved = true;
+        this.nextStep.emit();
+      },
+      error: async (error) => {
+        console.log('Error:', error);
+        this.isLoading = false;
+        this.alertService.showErrorAlert(
+          'Ocurrió un error al guardar los datos',
+          'Error al guardar los datos'
+        );
+      },
+    });
+  }
+
+  private async guardarEstado(contratoId: number) {
+    if (this.estado_id === null || this.estado_interno_id === null) return;
+
+    const rol =
+      this.roles.find((item) => item.includes('ABOGADO')) || 'ABOGADO';
+    const estado: EstadoContrato = {
+      contrato_general_id: contratoId,
+      usuario_id: 1,
+      usuario_rol: rol,
+      estado_parametro_id: this.estado_id,
+      estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR,
+    };
+
+    this.contratoGeneralCrudService.postEstadoContrato(estado).subscribe({
+      next: (response: any) => {
+        console.log('Estado guardado correctamente', response);
+        return response;
+      },
+      error: (error: any) => {
+        console.error('Error al guardar estado', error);
+        throw new Error('Error al guardar estado');
+      },
+    });
+  }
+
+  async onInView(inView: boolean) {
+    if (inView) {
+      this.loadSavedData();
+    } else {
+      console.log('Step Info General - out of view');
+    }
+  }
+
+  private async handleError(error: any): Promise<void> {
+    console.log('Error:', error);
+    this.isLoading = false;
+    this.alertService.showErrorAlert(
+      'Ocurrió un error al cargar los datos iniciales',
+      'Error al cargar los datos iniciales'
+    );
+  }
+}

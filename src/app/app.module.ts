@@ -4,30 +4,28 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ParametrosService } from './services/parametros.service';
 import { RequestManager } from './managers/requestManager';
-import { RegistroContratoModule } from './modules/registro-contrato/registro-contrato.module';
 import {
   provideHttpClient,
   withInterceptors,
 } from '@angular/common/http';
-import { ConsultaContratoModule } from './modules/consulta-contrato/consulta-contrato.module';
 import { FileService } from './services/file.service';
 import { UbicacionService } from './services/ubicacion.service';
 import { GestorDocumentalService } from './services/gestor-documental.service';
 import { OrdenadoresSupervisoresContratacionMidService } from './services/ordenadores-supervisores-contratacion-mid.service';
-import { RevisionContratoModule } from './modules/revision-contrato/revision-contrato.module';
 import { PolizasModule } from './modules/polizas/polizas.module';
 import { SpinnerIntercerptor } from './core/intercerptors/spinner.interceptor';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { RegistroActasModule } from './modules/registro-actas/registro-actas.module';
+import { ContratosModule } from './modules/contratos/contratos.module';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [AppComponent],
   imports: [
     AppRoutingModule,
+    SharedModule,
     BrowserModule,
-    ConsultaContratoModule,
-    RegistroContratoModule,
-    RevisionContratoModule,
+    ContratosModule,
     RegistroActasModule,
     PolizasModule,
   ],

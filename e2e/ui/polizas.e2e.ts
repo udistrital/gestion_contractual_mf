@@ -24,9 +24,9 @@ test.describe.configure({ mode: 'serial' });
 const NUMERO_POLIZA = `${PREFIJO}POL-UI`;
 const menuPermitido = Buffer.from(
   JSON.stringify([
-    { Url: '/contratos/polizas/registrar' },
-    { Url: '/contratos/polizas/consultar' },
-    { Url: '/contratos/polizas/listado' },
+    { Url: '/polizas/registrar' },
+    { Url: '/polizas/consultar' },
+    { Url: '/polizas/listado' },
   ])
 ).toString('base64');
 const usuario = Buffer.from(
@@ -122,7 +122,7 @@ test.afterAll(async () => {
 });
 
 test('registrar póliza: guarda los datos básicos y el botón pasa a "Actualizar"', async () => {
-  await page.goto('/contratos/polizas/registrar');
+  await page.goto('/polizas/registrar');
   await expect(page.getByText('Asociar Contratos')).toBeVisible();
 
   await seleccionar(page, 'vigencia', VIGENCIA);
@@ -199,7 +199,7 @@ test('registrar póliza: vincula amparos a la póliza con valor y fechas', async
 });
 
 test('registrar póliza: al volver al contrato precarga póliza y amparo, y edita sin duplicar', async () => {
-  await page.goto('/contratos/polizas/registrar');
+  await page.goto('/polizas/registrar');
   await seleccionar(page, 'vigencia', VIGENCIA);
   await seleccionar(page, 'consecutivo', String(CONTRATO_ID));
 
@@ -244,7 +244,7 @@ test('registrar póliza: quitar un amparo vinculado lo desvincula', async () => 
 });
 
 test('consultar pólizas: el contrato aparece con póliza y su detalle abre en el modal', async () => {
-  await page.goto('/contratos/polizas/consultar');
+  await page.goto('/polizas/consultar');
   const fila = page
     .getByRole('row')
     .filter({ has: page.getByRole('cell', { name: String(CONTRATO_ID), exact: true }) });
@@ -273,7 +273,7 @@ test('autorización: sin menú con la ruta, el authGuard bloquea el acceso', asy
   const sinPermisos = await browser.newContext();
   await aislarServiciosExternos(sinPermisos);
   const p = await sinPermisos.newPage();
-  await p.goto('/contratos/polizas/registrar');
+  await p.goto('/polizas/registrar');
   await expect(p.locator('.swal2-popup')).toContainText('No tiene permisos para realizar esta acción');
   await expect(p.getByText('Asociar Contratos')).toHaveCount(0);
   await sinPermisos.close();

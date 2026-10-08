@@ -3,7 +3,6 @@ import { RegistroPolizaComponent } from './registro-poliza.component';
 import { PlantillaTarjetaContenedoraComponent } from '../../../shared/templates/plantilla-tarjeta-contenedora/plantilla-tarjeta-contenedora.component';
 import { MaterialModule } from '../../../shared/modules/material.module';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
@@ -14,7 +13,7 @@ describe('RegistroPolizaComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [RegistroPolizaComponent, PlantillaTarjetaContenedoraComponent],
-      imports: [CommonModule, MaterialModule, ReactiveFormsModule, NoopAnimationsModule],
+      imports: [MaterialModule, ReactiveFormsModule, NoopAnimationsModule],
       schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
 

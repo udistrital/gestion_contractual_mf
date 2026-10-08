@@ -27,9 +27,9 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
 - **Gestión de Actas de Inicio (Migrado desde `acta_inicio_mf`):**
   - `/contratos/actas/registrar`: Registro de actas de inicio vinculadas a la contratación institucional.
 - **Gestión de Pólizas (Migrado desde `poliza_mf`):**
-  - `/contratos/polizas/registrar`: Registro de pólizas, asociación a contratos y configuración de amparos.
-  - `/contratos/polizas/consultar`: Consulta y visualización del estado de pólizas por contrato.
-  - `/contratos/polizas/listado`: Listado tabular de pólizas y amparos registrados.
+  - `/polizas/registrar`: Registro de pólizas, asociación a contratos y configuración de amparos.
+  - `/polizas/consultar`: Consulta y visualización del estado de pólizas por contrato.
+  - `/polizas/listado`: Listado tabular de pólizas y amparos registrados.
   - Paso **Garantías** del registro de contrato (`/contratos/registrar`): creación, edición y eliminación de los amparos del contrato.
 
 ### Endpoints de Pólizas y Amparos

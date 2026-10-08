@@ -8,6 +8,7 @@ import { DatosBasicosComponent } from './registro-poliza/datos-basicos/datos-bas
 import { AmparoContratoComponent } from './registro-poliza/amparo-contrato/amparo-contrato.component';
 import { VisualizarPolizaComponent } from './visualizar-poliza/visualizar-poliza.component';
 import { ModalDetallePolizaComponent } from './visualizar-poliza/modal-detalle-poliza/modal-detalle-poliza.component';
+import { PolizasRoutingModule } from './polizas-routing.module';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { ModalDetallePolizaComponent } from './visualizar-poliza/modal-detalle-p
   ],
   imports: [
     CommonModule,
-    SharedModule
+    SharedModule,
+    PolizasRoutingModule
   ],
   exports: [
     RegistroPolizaComponent,
