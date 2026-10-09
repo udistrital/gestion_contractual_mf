@@ -177,7 +177,7 @@ pnpm run test
 
 Las pruebas de integración y E2E usan servicios reales, no mocks. Antes de correrlas verifica:
 
-1. **VPN institucional activa.** `gestion_contractual_mid` consume `ENDP_PARAMETROS_CRUD` (red institucional). Sin VPN, `GET amparos-contratos/:id` responde `500 Error al consultar amparos del contrato` y falla la prueba de integración `amparos-contratos`.
+1. **VPN institucional activa.** `gestion_contractual_mid` consume `ENDP_PARAMETROS_CRUD` (red institucional). Sin VPN, `GET amparos-contratos/:id` tarda ~27 s y responde `500 Error al consultar amparos del contrato`; falla la prueba de integración `amparos-contratos` y el E2E de registrar póliza, porque el select de amparos (`E2E-amparo 6602`) nunca se llena.
 2. **Servicios levantados en local:**
 
    | Servicio | Puerto | Necesario para |
@@ -187,9 +187,27 @@ Las pruebas de integración y E2E usan servicios reales, no mocks. Antes de corr
    | `gestion_contractual_mf` (`pnpm run start`) | `:4201` | Solo E2E |
    | Root single-spa (`gestion_contractual_compras_root_mf`) | `:4200` | Solo E2E |
 
-   Si el MF (`:4201`) no está arriba, el root no monta la vista y las pruebas E2E fallan con `getByText('Asociar Contratos')` no encontrado.
-3. **Google Chrome instalado** (solo E2E; la config usa `channel: 'chrome'`).
-4. **Contrato de pruebas disponible** (ver variables `E2E_*` más abajo).
+   Si el MF (`:4201`) no está arriba, el root no monta la vista y las pruebas E2E fallan con `getByText('Asociar Contratos')` no encontrado. Si el root no está arriba, fallan con `net::ERR_CONNECTION_REFUSED` en `localhost:4200`.
+3. **Base de datos del CRUD arriba.** `gestion_contractual_crud` lee su `.env` (por defecto Postgres en `localhost:5433`). Sin la BD, cualquier consulta responde `400 Error en los parámetros de consulta:` (mensaje vacío) y fallan los `GET` de la prueba.
+4. **El MF debe apuntar a los servicios locales** (solo E2E). `pnpm run start` usa la configuración `local` de Angular, que lee `src/environments/environment.ts`. Para que la pantalla llame a tu CRUD y MID, cambia ahí, solo en tu máquina y sin commitear:
+
+   ```ts
+   GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:8080/',
+   GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:8081/',
+   ```
+
+   Si no lo haces, el MF consulta el CRUD remoto (`autenticacion.portaloas...`), responde `401` y el select de consecutivos queda vacío (`getByRole('option', { name: '13' })` no aparece).
+5. **El root debe enrutar `/polizas` al MF de contratos.** En `gestion_contractual_compras_root_mf/src/microfrontend-layout.html` la ruta `polizas` apunta a `@udistrital/argo-poliza-mf` (`:4203`), un MF que no corre en local. Las rutas de pólizas viven en este MF (`PolizasModule`), así que para E2E cambia, solo en tu máquina y sin commitear:
+
+   ```html
+   <route path="polizas">
+     <application name="@udistrital/argo-gestion-contractual-mf"></application>
+   </route>
+   ```
+
+   Si no lo haces, la página muestra `Uncaught runtime errors: Script error.` y en consola `application '@udistrital/argo-poliza-mf' died in status LOADING_SOURCE_CODE: Error loading http://localhost:4203/main.js`.
+6. **Google Chrome instalado** (solo E2E; la config usa `channel: 'chrome'`).
+7. **Contrato de pruebas disponible** (ver variables `E2E_*` más abajo).
 
 Comprobación rápida de los servicios:
 
