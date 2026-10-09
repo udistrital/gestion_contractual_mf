@@ -162,9 +162,18 @@ describe('PasoGarantiasComponent', () => {
         throwError(() => new Error('network error'))
       );
 
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
       await runLoadSavedData();
 
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error loading saved data:',
+        expect.any(Error)
+      );
       expect(component.filasFormArray.length).toBe(1);
+      consoleErrorSpy.mockRestore();
     });
   });
 
