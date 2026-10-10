@@ -10,16 +10,18 @@
         <mat-label>Vigencia</mat-label>
         <mat-icon matPrefix>event</mat-icon>
         <mat-select formControlName="vigencia">
-          <mat-option [value]="'2023'">2023</mat-option>
-          <mat-option [value]="'2024'">2024</mat-option>
+          @for (vigencia of vigencias; track vigencia) {
+            <mat-option [value]="vigencia">{{ vigencia }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
         <mat-label>Consecutivo Contrato</mat-label>
         <mat-icon matPrefix>assignment</mat-icon>
         <mat-select formControlName="consecutivoContrato">
-          <mat-option [value]="'CON-001'">CON-001</mat-option>
-          <mat-option [value]="'CON-002'">CON-002</mat-option>
+          @for (contrato of contratosActivos; track contrato) {
+            <mat-option [value]="contrato.toString()">{{ contrato }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
@@ -49,7 +51,10 @@
       <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
         <mat-label>Número Documento</mat-label>
         <mat-icon matPrefix>badge</mat-icon>
-        <input matInput formControlName="numeroDocumento" />
+        <input matInput formControlName="numeroDocumento" (keyup.enter)="buscarContratista()" />
+        <button mat-icon-button matSuffix type="button" matTooltip="Consultar contratista" (click)="buscarContratista()">
+          <mat-icon>search</mat-icon>
+        </button>
       </mat-form-field>
       <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
         <mat-label>Nombre Contratista</mat-label>
@@ -188,9 +193,41 @@
       </mat-form-field>
     </div>
 
+    @if (camposFaltantes.length) {
+      <mat-divider class="my-4"></mat-divider>
+      <h3 class="my-3">Datos adicionales de la plantilla</h3>
+      <div class="row">
+        @for (campo of camposFaltantes; track campo) {
+          <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
+            <mat-label>{{ campo }}</mat-label>
+            <input matInput [(ngModel)]="variables[campo]" [ngModelOptions]="{ standalone: true }" />
+          </mat-form-field>
+        }
+      </div>
+    }
+
+    @if (!rolActa) {
+      <p class="mt-3">Su rol no tiene permiso para registrar el acta de inicio.</p>
+    }
+
+    @if (prerrequisitosPendientes.length) {
+      <ul class="mt-3">
+        @for (pendiente of prerrequisitosPendientes; track pendiente) {
+          <li>Pendiente: {{ pendiente }}</li>
+        }
+      </ul>
+    }
+
     <div class="d-flex justify-content-end mt-3">
+      <button mat-stroked-button type="button" class="me-2" (click)="previsualizarActa()">
+        <mat-icon>visibility</mat-icon>
+        Vista previa
+      </button>
       <button
         mat-raised-button
+        type="button"
+        (click)="registrarActaInicio()"
+        [disabled]="prerrequisitosPendientes.length > 0 || !rolActa"
         color="primary"
         class="width-100-md"
         style="color: #ffffff"
