@@ -46,7 +46,11 @@
       <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
         <mat-label>Tipo Documento</mat-label>
         <mat-icon matPrefix>description</mat-icon>
-        <mat-select formControlName="tipoDocumento"></mat-select>
+        <mat-select formControlName="tipoDocumento">
+          @for (tipo of tiposDocumento; track tipo) {
+            <mat-option [value]="tipo">{{ tipo }}</mat-option>
+          }
+        </mat-select>
       </mat-form-field>
       <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
         <mat-label>Número Documento</mat-label>

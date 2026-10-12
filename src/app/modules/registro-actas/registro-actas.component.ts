@@ -11,6 +11,28 @@ import { RegistroActasService } from './registro-actas.service';
 // Roles que pueden registrar el acta de inicio (los mismos de minuta_contractual_mid)
 const ROLES_ACTA_INICIO = ['ABOGADO_CONTRATACION_RECTOR', 'ABOGADO_CONTRATACION_IDEXUD', 'CONTRATISTA'];
 
+// Tipos de documento de persona natural y jurídica
+const TIPOS_DOCUMENTO = [
+  'Cédula de ciudadanía',
+  'NIT',
+  'Cédula de extranjería',
+  'Tarjeta de identidad',
+  'Pasaporte',
+  'Permiso por protección temporal (PPT)',
+];
+
+// Títulos de los campos de la plantilla que se llenan a mano
+const TITULOS_CAMPOS: { [campo: string]: string } = {
+  numero_acta: 'Número de acta',
+  valor_disponibilidad: 'Valor disponibilidad presupuestal',
+  valor_anticipo: 'Valor anticipo',
+  nombre_interventor: 'Nombre del interventor',
+  localizacion_proyecto: 'Localización del proyecto',
+  nombre_facultad: 'Facultad',
+  ciudad_expedicion_supervisor: 'Ciudad de expedición del documento del supervisor',
+  ciudad_expedicion_contratista: 'Ciudad de expedición del documento del contratista',
+};
+
 @Component({
   selector: 'app-registro-actas',
   templateUrl: './registro-actas.component.html',
@@ -47,6 +69,7 @@ export class RegistroActasComponent implements OnInit {
   variables: { [campo: string]: string } = {};
   prerrequisitosPendientes: string[] = [];
   rolActa: string | undefined;
+  tiposDocumento = TIPOS_DOCUMENTO;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -73,6 +96,7 @@ export class RegistroActasComponent implements OnInit {
     this.form.get('consecutivoContrato')?.valueChanges.subscribe((value) => {
       if (value) this.cargarDatosActa(Number(value));
     });
+
     this.form.get('fechaInicio')?.valueChanges.subscribe((value) => {
       console.log('Fecha de inicio seleccionada:', value);
     });
@@ -113,7 +137,7 @@ export class RegistroActasComponent implements OnInit {
 
   // Contratos de la vigencia, filtrados por el contratista si ya se consultó
   cargarContratos() {
-    const { vigencia, numeroDocumento } = this.form.value;
+    const { vigencia, numeroDocumento } = this.form.getRawValue();
     this.contratosActivos = [];
     this.form.get('consecutivoContrato')?.setValue('', { emitEvent: false });
     if (!vigencia) return;
@@ -164,6 +188,12 @@ export class RegistroActasComponent implements OnInit {
       },
       error: () => this.snackBar.open('Error al consultar el contrato', 'Cerrar', { duration: 2000 }),
     });
+  }
+
+  // Título legible de un campo de la plantilla
+  tituloCampo(campo: string): string {
+    const titulo = TITULOS_CAMPOS[campo] ?? campo.replace(/_/g, ' ');
+    return titulo.charAt(0).toUpperCase() + titulo.slice(1);
   }
 
   // Datos del formulario para la plantilla del acta
