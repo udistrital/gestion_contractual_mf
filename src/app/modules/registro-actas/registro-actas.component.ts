@@ -120,7 +120,7 @@ export class RegistroActasComponent implements OnInit {
   
   // Contratista consultado en Ágora (proveedores_mid) por número de documento
   buscarContratista() {
-    const documento = this.form.value.numeroDocumento;
+    const documento = String(this.form.value.numeroDocumento ?? '').replace(/\D/g, '');
     if (!documento) return;
     this.proveedoresService.get(`contratistas?id=${documento}`).subscribe({
       next: (response: any) => {
@@ -137,7 +137,8 @@ export class RegistroActasComponent implements OnInit {
 
   // Contratos de la vigencia, filtrados por el contratista si ya se consultó
   cargarContratos() {
-    const { vigencia, numeroDocumento } = this.form.getRawValue();
+    const { vigencia } = this.form.getRawValue();
+    const numeroDocumento = String(this.form.getRawValue().numeroDocumento ?? '').replace(/\D/g, '');
     this.contratosActivos = [];
     this.form.get('consecutivoContrato')?.setValue('', { emitEvent: false });
     if (!vigencia) return;
