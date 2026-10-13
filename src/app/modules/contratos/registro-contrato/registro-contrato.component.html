@@ -1,5 +1,5 @@
 <plantilla-tarjeta-contenedora
-  [title]="'Registrar Contrato'"
+  [title]="!editMode() ? 'Registrar Contrato' : 'Editar Contrato'"
   [contenido]="contenidoDePlantilla"
 ></plantilla-tarjeta-contenedora>
 
@@ -23,10 +23,12 @@
           </ng-template>
           <app-paso-info-general
             #pasoInfoGeneral
+            [contratoGeneral]="contratoGeneral"
             (stepCompleted)="stepCompleted(0, $event)"
             (nextStep)="goToNextStep()"
             (tipoCompromisoChange)="onTipoCompromisoChange($event)"
             (aplicaPolizaChange)="onAplicaPolizaChange($event)"
+            (contratoGuardado)="onContratoGuardado($event)"
             >
           </app-paso-info-general>
         </mat-step>
@@ -41,7 +43,9 @@
           </ng-template>
           <app-paso-info-presupuestal
             #pasoInfoPresupuestal
+            [contratoGeneral]="contratoGeneral"
             (stepCompleted)="stepCompleted(1, $event)"
+            (contratoGuardado)="cargarContratoGeneral()"
             (nextStep)="goToNextStep()"
             />
           </mat-step>

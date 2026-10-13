@@ -1,13 +1,42 @@
 export interface ContratoGeneral {
-  id: number;
-  vigencia: string;
-  tipoContratoId: string;
-  // tipo_persona: string;
-  // numero_contrato: string;
-  contratista: any;
-  fechaCreacion: string | null;
-  // fecha_aprobado: string | null;
-  estados: any;
+  id?: number;
+  tipo_compromiso_id?: number;
+  tipo_contrato_id?: number;
+  perfil_contratista_id?: number;
+  fecha_suscripcion_estudios?: Date;
+  aplica_poliza?: boolean;
+  modalidad_seleccion_id?: number;
+  tipo_control_id?: number;
+  tipologia_especifica_id?: number;
+  regimen_contratacion_id?: number;
+  procedimiento_id?: number;
+  plazo_ejecucion?: number;
+  unidad_ejecucion_id?: number;
+  tipo_moneda_id?: number;
+  valor_pesos?: number;
+  tipo_gasto_id?: number;
+  origen_recursos_id?: number;
+  origen_presupuestos_id?: number;
+  tema_gasto_inversion_id?: number;
+  valor_contrato_me?: number;
+  valor_tasa_cambio?: number;
+  medio_pago_id?: number;
+  clausula_registro_presupuestal?: boolean;
+  modo_pago?: string;
+  objeto?: string;
+  justificacion?: string;
+  actividades?: string;
+  condiciones?: string;
+  observaciones?: string;
+  vigencia?: string;
+  consecutivo_elaboracion?: string;
+  fecha_inicial?: Date;
+  fecha_final?: Date;
+  usuario_legado?: string;
+  numero_contrato?: string;
+  unidad_ejecutora_id: number;
+  estados?: any;
+  contratista?: any;
 }
 
 export interface CDPContratoCRUD {
@@ -87,7 +116,7 @@ export interface ParametroListResponse {
 }
 
 export interface ParametroResponse {
-  Id: number | string;
+  Id: number;
   Nombre: string;
   Descripcion?: string;
   CodigoAbreviacion?: string;
@@ -134,7 +163,7 @@ export interface OrdenadorContratoData {
   resolucion?: string;
   documento_identidad: string;
   cargo_id: number;
-  contrato_general_id: number;
+  contrato_general_id?: number;
 }
 
 export interface CDPItem {

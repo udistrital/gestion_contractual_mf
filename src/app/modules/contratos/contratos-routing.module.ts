@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { RegistroContratoComponent } from './registro-contrato/registro-contrato.component';
 import { ConsultaContratoComponent } from './consulta-contrato/consulta-contrato.component';
 import { RevisionContratoComponent } from './revision-contrato/revision-contrato.component';
+import { EditarContratoComponent } from './consulta-contrato/editar-contrato/editar-contrato.component';
 import { authGuard } from 'src/_guards/auth.guard';
 
 const routes: Routes = [
@@ -15,6 +16,11 @@ const routes: Routes = [
     path: 'consultar',
     canActivate: [authGuard],
     component: ConsultaContratoComponent,
+  },
+  {
+    path: 'editar/:contratoId',
+    canActivate: [authGuard],
+    component: EditarContratoComponent,
   },
   {
     path: 'documentos/:contratoId',

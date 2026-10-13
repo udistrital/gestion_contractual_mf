@@ -216,6 +216,11 @@ export class ContratoGeneralCrudService {
     );
   }
 
+  gerOrdenadorGuardado(contratoId: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`ordenador-contrato/contrato/${contratoId}`)
+  }
+
   postSupervisor(data: SupervisorToSave): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post(`supervisores`, data);
