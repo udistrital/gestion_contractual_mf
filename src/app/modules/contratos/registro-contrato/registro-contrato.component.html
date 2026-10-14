@@ -111,23 +111,15 @@
                     </mat-step>
                   }
 
-                  <mat-step>
-                    <ng-template matStepLabel>
-                      <p>Paso</p>
-                      <b style="color: var(--primary)">Cláusulas y Parágrafos</b>
-                    </ng-template>
-                    <app-paso-clausulas-paragrafos
-                      (stepCompleted)="stepCompleted(7, $event)"
-                      />
-                    </mat-step>
-
                     <mat-step>
                       <ng-template matStepLabel>
                         <p>Paso</p>
-                        <b style="color: var(--primary)">Documentos Contratista</b>
+                        <b style="color: var(--primary)">Cláusulas y Parágrafos</b>
                       </ng-template>
-                      <app-paso-documentos (stepCompleted)="stepCompleted(8, $event)" />
-                    </mat-step>
+                      <app-paso-clausulas-paragrafos
+                        (stepCompleted)="stepCompleted(7, $event)"
+                        />
+                      </mat-step>
                   </mat-stepper>
                 </div>
               </div>

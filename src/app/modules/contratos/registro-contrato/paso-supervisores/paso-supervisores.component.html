@@ -207,105 +207,6 @@
               </div>
             </div>
 
-            <!-- Lugar de Ejecución -->
-            <div class="border" formGroupName="lugarEjecucion">
-              <div class="title">
-                <h3>Lugar de Ejecución</h3>
-              </div>
-              <div class="form-grid3">
-                <app-searchable-select
-                  icon="public"
-                  label="País"
-                  [items]="pais"
-                  [control]="form.get('lugarEjecucion.pais')"
-                  [required]="true"
-                  >
-                </app-searchable-select>
-
-                <app-searchable-select
-                  label="Departamento"
-                  icon="map"
-                  [items]="departamento"
-                  [control]="form.get('lugarEjecucion.departamento')"
-                  [required]="true"
-                  >
-                </app-searchable-select>
-
-                <app-searchable-select
-                  label="Municipio/Ciudad"
-                  icon="location_city"
-                  [items]="municipioCiudad"
-                  [control]="form.get('lugarEjecucion.municipioCiudad')"
-                  [required]="true"
-                  >
-                </app-searchable-select>
-
-                <app-searchable-select
-                  icon="domain"
-                  label="Sede"
-                  [items]="sedes"
-                  [control]="form.get('lugarEjecucion.sede')"
-                  [required]="true"
-                  >
-                </app-searchable-select>
-                <mat-form-field appearance="outline">
-                  <mat-label>Dependencia:</mat-label>
-                  <mat-icon matPrefix>account_balance</mat-icon>
-                  <mat-select
-                    formControlName="dependencia"
-                    [disabled]="!form.get('lugarEjecucion.sede')?.value"
-                    >
-                    @for (dep of getDependenciasLugarEjecucion(); track dep) {
-                      <mat-option
-                        [value]="dep.id"
-                        >
-                        {{ dep.nombre }}
-                      </mat-option>
-                    }
-                  </mat-select>
-                  @if (
-                    form.get('lugarEjecucion.dependencia')?.hasError('required')
-                    ) {
-                    <mat-error
-                      >
-                      Este campo es requerido
-                    </mat-error>
-                  }
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                  <mat-label>Dirección:</mat-label>
-                  <mat-icon matPrefix>home</mat-icon>
-                  <input matInput formControlName="direccion" />
-                  @if (
-                    form.get('lugarEjecucion.direccion')?.hasError('required')
-                    ) {
-                    <mat-error
-                      >
-                      Este campo es requerido
-                    </mat-error>
-                  }
-                </mat-form-field>
-              </div>
-              <div class="btn-container">
-                <button
-                  mat-raised-button
-                  color="primary"
-                  (click)="guardarLugarEjecucion()"
-                  [disabled]="form.get('lugarEjecucion')?.invalid || loading"
-                  >
-                  @if (loading) {
-                    <mat-spinner diameter="20"></mat-spinner>
-                  }
-                  <span>Guardar Lugar de Ejecución</span>
-                </button>
-                @if (lugarEjecucionSaved) {
-                  <mat-icon class="success-icon"
-                    >check_circle</mat-icon
-                    >
-                  }
-                </div>
-              </div>
-
               <!-- Botones de navegación -->
               <div class="btn-container">
                 <button
@@ -321,7 +222,7 @@
                   mat-raised-button
                   color="primary"
                   (click)="guardarYContinuar()"
-                  [disabled]="!solicitanteSaved || !lugarEjecucionSaved || loading"
+                  [disabled]="!solicitanteSaved || loading"
                   >
                   <mat-icon>save</mat-icon>
                   @if (loading) {

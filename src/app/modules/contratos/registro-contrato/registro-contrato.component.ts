@@ -58,7 +58,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   showEspecificacionesTecnicas = false;
   showAplicaPoliza = false;
   stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(
-    new Array(9).fill(false)
+    new Array(8).fill(false)
   );
 
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
