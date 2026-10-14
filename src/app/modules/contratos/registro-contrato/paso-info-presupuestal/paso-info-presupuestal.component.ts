@@ -14,7 +14,7 @@ import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ApiResponse, CDP, CDPContratoCRUD, CDPData, CDPItem, ContratoGeneral, OrdenadorContratoData, ParametroListResponse } from 'src/app/types/types';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
-import { cdpConstructorTabla } from './paso-info-presupuestal.utilidades';
+import { cdpConstructorTabla, numeroALetras } from './paso-info-presupuestal.utilidades';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
@@ -50,8 +50,39 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     tasaCambio: [0],
     medioPago: [0, Validators.required],
     clausulaRegistroPresupuestal: [false, Validators.required],
+    reversarSaldos: [false],
     formaPago: ['', Validators.required],
   });
+
+  get valorTotalAcumulado(): number {
+    return this.selectedCDP.reduce((sum, row) => {
+      const valor =
+        row.valor_a_tomar !== undefined && row.valor_a_tomar !== null && row.valor_a_tomar !== ''
+          ? this.parseNumero(row.valor_a_tomar)
+          : this.parseNumero(row.valor_contratacion);
+      return sum + valor;
+    }, 0);
+  }
+
+  get valorContratoNum(): number {
+    const val = this.form.get('valorContrato')?.value;
+    return this.parseNumero(val);
+  }
+
+  get porcentajeCobertura(): string {
+    const estimado = this.valorContratoNum;
+    if (estimado <= 0) return '100.0';
+    const porcentaje = (this.valorTotalAcumulado / estimado) * 100;
+    return porcentaje.toFixed(1);
+  }
+
+  get coberturaSuficiente(): boolean {
+    return this.valorTotalAcumulado >= this.valorContratoNum;
+  }
+
+  get valorEnLetras(): string {
+    return numeroALetras(this.valorContratoNum);
+  }
 
   monedas: any[] = [];
   gastos: any[] = [];
@@ -266,7 +297,12 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     );
     const localCDPs = this.cdpsService.getLocalCDP();
     if (localCDPs && localCDPs.length > 0) {
-      this.selectedCDP = localCDPs;
+      this.selectedCDP = localCDPs.map((cdp: CDP) => {
+        if (cdp.valor_a_tomar === undefined || cdp.valor_a_tomar === null) {
+          cdp.valor_a_tomar = this.parseNumero(cdp.valor_contratacion);
+        }
+        return cdp;
+      });
       this.updateValorAcumulado();
       this.removeSelectedCDPsFromList();
     }
@@ -359,10 +395,13 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         next: (response: any) => {
           if (response.Status === 200) {
             const newCDP = response.Data[0]; //La respuesta puede retornar varias veces el mismo CDP
-            this.selectedCDP = [...this.selectedCDP, newCDP];
-            this.updateValorAcumulado();
-            this.removeSelectedCDPsFromList();
-            this.form.get('cdp')?.reset();
+            if (newCDP) {
+              newCDP.valor_a_tomar = this.parseNumero(newCDP.valor_contratacion);
+              this.selectedCDP = [...this.selectedCDP, newCDP];
+              this.updateValorAcumulado();
+              this.removeSelectedCDPsFromList();
+              this.form.get('cdp')?.reset();
+            }
           } else {
             console.error('Error loading row data:', response.Message);
           }
@@ -404,6 +443,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
           fecha_registro: new Date(),
           vigencia_cdp: parseInt(cdp.vigencia),
           contrato_general_id: contratoId,
+          valor_a_tomar: this.parseNumero(cdp.valor_a_tomar ?? cdp.valor_contratacion),
         })
       );
 
@@ -423,12 +463,40 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     }
   }
 
+  parseNumero(valor: any): number {
+    if (valor === null || valor === undefined) return 0;
+    if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
+    const limpio = valor.toString().replace(/[^0-9.-]+/g, '');
+    const num = parseFloat(limpio);
+    return isNaN(num) ? 0 : num;
+  }
+
+  onValorTomarChange(element: CDP) {
+    const max = this.parseNumero(element.valor_contratacion);
+    let valor = this.parseNumero(element.valor_a_tomar);
+
+    if (valor < 0) {
+      element.valor_a_tomar = 0;
+      valor = 0;
+    } else if (valor > max) {
+      this.alertService.showAlert(
+        `El valor a tomar no puede exceder el total aprobado del CDP ($ ${max.toLocaleString('es-CO')}).`,
+        'Límite de CDP excedido'
+      );
+      element.valor_a_tomar = max;
+      valor = max;
+    }
+
+    this.updateValorAcumulado();
+    this.cdpsService.updateLocalCDP(this.selectedCDP);
+  }
+
   updateValorAcumulado() {
     const valorAcumulado = this.selectedCDP.reduce((sum, row) => {
       const valor =
-        typeof row.valor_contratacion === 'string'
-          ? parseFloat(row.valor_contratacion)
-          : row.valor_contratacion || 0;
+        row.valor_a_tomar !== undefined && row.valor_a_tomar !== null && row.valor_a_tomar !== ''
+          ? this.parseNumero(row.valor_a_tomar)
+          : this.parseNumero(row.valor_contratacion);
       return sum + valor;
     }, 0);
 

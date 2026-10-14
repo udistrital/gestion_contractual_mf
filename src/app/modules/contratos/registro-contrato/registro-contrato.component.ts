@@ -58,8 +58,11 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   showEspecificacionesTecnicas = false;
   showAplicaPoliza = false;
   stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(
-    new Array(8).fill(false)
+    new Array(7).fill(false)
   );
+
+  pasoInfoGeneralValido = false;
+  pasoInfoPresupuestalValido = false;
 
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly alertService = inject(AlertService);
@@ -99,13 +102,28 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     this.cargarContratoGeneral();
   }
 
+  onPasoInfoGeneralCompleted(isCompleted: boolean) {
+    this.pasoInfoGeneralValido = isCompleted;
+    this.verificarPaso1Completo();
+  }
+
+  onPasoInfoPresupuestalCompleted(isCompleted: boolean) {
+    this.pasoInfoPresupuestalValido = isCompleted;
+    this.verificarPaso1Completo();
+  }
+
+  private verificarPaso1Completo() {
+    const isStep1Valid = this.pasoInfoGeneralValido && this.pasoInfoPresupuestalValido;
+    this.stepCompleted(0, isStep1Valid);
+  }
+
   onTipoCompromisoChange(tipoCompromisoId: string) {
     this.showEspecificacionesTecnicas =
       tipoCompromisoId === environment.ORDEN_ID.toString();
 
     if (!this.showEspecificacionesTecnicas) {
       const currentSteps = this.stepsCompleted.value;
-      currentSteps[6] = true;
+      currentSteps[4] = true;
       this.stepsCompleted.next(currentSteps);
     }
   }
@@ -114,7 +132,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     this.showAplicaPoliza = aplicaPoliza == '1'; // 1 = Si, 0 = No
     if (!this.showAplicaPoliza) {
       const currentSteps = this.stepsCompleted.value;
-      currentSteps[7] = true;
+      currentSteps[5] = true;
       this.stepsCompleted.next(currentSteps);
     }
   }
@@ -128,8 +146,8 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.stepper.selectionChange.subscribe((event) => {
-      if (event.previouslySelectedIndex === 3 && event.selectedIndex !== 3) {
-        this.pasoContratistas.onStepLeave();
+      if (event.previouslySelectedIndex === 2 && event.selectedIndex !== 2) {
+        this.pasoContratistas?.onStepLeave();
       }
     });
     this.steps.toArray().forEach((step, index) => {

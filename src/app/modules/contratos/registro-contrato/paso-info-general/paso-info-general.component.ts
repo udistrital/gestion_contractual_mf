@@ -48,7 +48,52 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   formId: number | null = null;
 
   private initialFormValue: any;
-  private formSaved: boolean = false;
+  formSaved: boolean = false;
+
+  get estimacionTermino(): string {
+    const fechaVal = this.formInfoGeneral?.get('fechaSuscripcionEstudios')?.value;
+    const plazoVal = this.formInfoGeneral?.get('plazoEjecucion')?.value;
+    const unidadId = this.formInfoGeneral?.get('unidadEjecucionId')?.value;
+
+    const plazo = parseInt(plazoVal as any, 10);
+    if (!fechaVal || isNaN(plazo) || plazo <= 0 || !unidadId) {
+      return 'Pendiente de cálculo';
+    }
+
+    const fechaBase = new Date(fechaVal);
+    if (isNaN(fechaBase.getTime())) {
+      return 'Pendiente de cálculo';
+    }
+
+    const unidad = this.unidadesEjecucion.find((u) => u.Id === unidadId);
+    const nombreUnidad = (unidad?.Nombre || '').toUpperCase();
+
+    if (nombreUnidad.includes('MES')) {
+      fechaBase.setMonth(fechaBase.getMonth() + plazo);
+    } else if (nombreUnidad.includes('DÍA') || nombreUnidad.includes('DIA')) {
+      fechaBase.setDate(fechaBase.getDate() + plazo);
+    } else if (nombreUnidad.includes('AÑO') || nombreUnidad.includes('ANO')) {
+      fechaBase.setFullYear(fechaBase.getFullYear() + plazo);
+    } else {
+      fechaBase.setMonth(fechaBase.getMonth() + plazo);
+    }
+
+    const meses = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
+    return `${fechaBase.getDate()} ${meses[fechaBase.getMonth()]} ${fechaBase.getFullYear()}`;
+  }
 
   private readonly alertService = inject(AlertService);
   private readonly fb = inject(FormBuilder);
