@@ -7,9 +7,16 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
+.banner-flex-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .banner-icon-box {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
   border-radius: 8px;
   background-color: #801313;
   color: #ffffff;
@@ -20,9 +27,13 @@
 }
 
 .banner-icon-box mat-icon {
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .banner-title {
@@ -100,6 +111,26 @@
   padding: 18px 20px;
 }
 
+/* Solicitante Actions Row */
+.solicitante-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e6e8ea;
+}
+
+.solicitante-saved-pill {
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* Botón Institucional Vino Tinto */
 .btn-institucional-wine {
   background-color: #801313 !important;
@@ -125,12 +156,27 @@
   cursor: not-allowed;
 }
 
+.btn-flex-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* Supervisor Entry Container */
 .supervisor-entry-box {
   background-color: #fafbfc;
   border: 1px solid #e6e8ea;
   border-radius: 8px;
   padding: 16px;
+}
+
+.supervisor-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e6e8ea;
 }
 
 .supervisor-subheading {
@@ -154,12 +200,17 @@
   font-weight: 600;
 }
 
-/* Tarjeta de Detalle del Supervisor Verificado */
-.supervisor-verified-card {
-  background-color: #ffffff;
-  border: 1px solid #e0e3e5;
-  border-radius: 8px;
-  padding: 12px 14px;
+/* Tarjeta de Detalle del Supervisor Verificado en Grid */
+.supervisor-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .supervisor-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .detail-tile {
@@ -217,6 +268,23 @@
 
 .text-wine {
   color: #801313;
+}
+
+/* Acciones Supervisores */
+.supervisores-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #e6e8ea;
+}
+
+.supervisores-left-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-agregar-supervisor {

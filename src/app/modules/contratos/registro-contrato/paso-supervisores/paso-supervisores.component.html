@@ -1,7 +1,7 @@
 <div appInView (inView)="onInView($event)">
   <!-- Banner Contextual Superior del Paso 2 -->
   <div class="banner-contextual mb-4">
-    <div class="d-flex align-items-start align-items-md-center gap-3">
+    <div class="banner-flex-group">
       <div class="banner-icon-box">
         <mat-icon>supervised_user_circle</mat-icon>
       </div>
@@ -50,11 +50,11 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3 border-top">
+        <div class="solicitante-actions-row">
           @if (solicitanteSaved) {
-            <span class="text-success small d-inline-flex align-items-center gap-1 font-weight-bold">
+            <span class="solicitante-saved-pill">
               <mat-icon class="icon-small">check_circle</mat-icon>
-              Solicitante guardado
+              <span>Solicitante guardado</span>
             </span>
           }
           <button
@@ -63,16 +63,18 @@
             class="btn-institucional-wine"
             (click)="guardarSolicitante()"
             [disabled]="form.get('solicitante')?.invalid || loading">
-            @if (loading) {
-              <mat-spinner diameter="18"></mat-spinner>
-            }
-            @if (!loading && !solicitanteSaved) {
-              <mat-icon>save</mat-icon>
-            }
-            @if (!loading && solicitanteSaved) {
-              <mat-icon>check</mat-icon>
-            }
-            <span>{{ solicitanteSaved ? 'Actualizar Solicitante' : 'Guardar Solicitante' }}</span>
+            <div class="btn-flex-center">
+              @if (loading) {
+                <mat-spinner diameter="18"></mat-spinner>
+              }
+              @if (!loading && !solicitanteSaved) {
+                <mat-icon>save</mat-icon>
+              }
+              @if (!loading && solicitanteSaved) {
+                <mat-icon>check</mat-icon>
+              }
+              <span>{{ solicitanteSaved ? 'Actualizar Solicitante' : 'Guardar Solicitante' }}</span>
+            </div>
           </button>
         </div>
       </div>
@@ -97,10 +99,10 @@
             supervisorGroup of getSupervisoresFormArray().controls; track
             supervisorGroup; let i = $index) {
             <div [formGroupName]="i" class="supervisor-entry-box mb-4">
-              <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+              <div class="supervisor-header-row">
                 <span class="supervisor-subheading">
                   <mat-icon class="subheading-icon">person</mat-icon>
-                  Supervisor Designado {{ i + 1 }}
+                  <span>Supervisor Designado {{ i + 1 }}</span>
                 </span>
                 @if (getSupervisoresFormArray().length > 1) {
                   <button
@@ -154,42 +156,34 @@
                 </div>
               </div>
 
-              <!-- Supervisor Verified Detail Card (3 items) -->
-              <div class="supervisor-verified-card mb-3">
-                <div class="row g-3">
-                  <div class="col-12 col-md-4">
-                    <div class="detail-tile">
-                      <span class="detail-label">Nombre Completo</span>
-                      <span class="detail-val text-truncate" [title]="supervisorGroup.get('nombre')?.value">
-                        {{ supervisorGroup.get('nombre')?.value || 'Seleccione sede y dependencia...' }}
-                      </span>
-                      @if (supervisorGroup.get('nombre')?.value) {
-                        <span class="detail-pill-success">
-                          <span class="pill-dot"></span> Funcionario de Carrera / Activo
-                        </span>
-                      }
-                    </div>
-                  </div>
+              <!-- Supervisor Verified Detail Card (3 items en Grid) -->
+              <div class="supervisor-detail-grid mb-3">
+                <div class="detail-tile">
+                  <span class="detail-label">Nombre Completo</span>
+                  <span class="detail-val text-truncate" [title]="supervisorGroup.get('nombre')?.value">
+                    {{ supervisorGroup.get('nombre')?.value || 'Seleccione sede y dependencia...' }}
+                  </span>
+                  @if (supervisorGroup.get('nombre')?.value) {
+                    <span class="detail-pill-success">
+                      <span class="pill-dot"></span> Funcionario de Carrera / Activo
+                    </span>
+                  }
+                </div>
 
-                  <div class="col-12 col-md-4">
-                    <div class="detail-tile">
-                      <span class="detail-label">Cargo Institucional</span>
-                      <span class="detail-val text-truncate" [title]="supervisorGroup.get('cargo')?.value">
-                        {{ supervisorGroup.get('cargo')?.value || 'Pendiente de consulta' }}
-                      </span>
-                      <span class="detail-caption">Planta de Personal</span>
-                    </div>
-                  </div>
+                <div class="detail-tile">
+                  <span class="detail-label">Cargo Institucional</span>
+                  <span class="detail-val text-truncate" [title]="supervisorGroup.get('cargo')?.value">
+                    {{ supervisorGroup.get('cargo')?.value || 'Pendiente de consulta' }}
+                  </span>
+                  <span class="detail-caption">Planta de Personal</span>
+                </div>
 
-                  <div class="col-12 col-md-4">
-                    <div class="detail-tile">
-                      <span class="detail-label">Código / Registro</span>
-                      <span class="detail-val font-mono text-wine">
-                        {{ supervisorGroup.get('codigoVerificacion')?.value ? ('EMP-UD-' + supervisorGroup.get('codigoVerificacion')?.value) : (supervisorGroup.get('nombre')?.value ? 'REG-ACTIVO' : '---') }}
-                      </span>
-                      <span class="detail-caption">Estado: Verificado</span>
-                    </div>
-                  </div>
+                <div class="detail-tile">
+                  <span class="detail-label">Código / Registro</span>
+                  <span class="detail-val font-mono text-wine">
+                    {{ supervisorGroup.get('codigoVerificacion')?.value ? ('EMP-UD-' + supervisorGroup.get('codigoVerificacion')?.value) : (supervisorGroup.get('nombre')?.value ? 'REG-ACTIVO' : '---') }}
+                  </span>
+                  <span class="detail-caption">Estado: Verificado</span>
                 </div>
               </div>
 
@@ -226,8 +220,8 @@
         </div>
 
         <!-- Acciones del Bloque 2 -->
-        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 pt-3 border-top">
-          <div class="d-flex align-items-center gap-2">
+        <div class="supervisores-actions-row">
+          <div class="supervisores-left-action">
             <button
               type="button"
               mat-stroked-button
@@ -246,7 +240,7 @@
             class="btn-institucional-wine"
             (click)="guardarSupervisores()"
             [disabled]="getSupervisoresFormArray().invalid || loading">
-            <div class="d-flex align-items-center gap-2">
+            <div class="btn-flex-center">
               @if (loading) {
                 <mat-spinner diameter="18"></mat-spinner>
               }

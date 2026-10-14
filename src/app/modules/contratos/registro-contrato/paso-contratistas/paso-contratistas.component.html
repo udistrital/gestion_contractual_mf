@@ -15,7 +15,7 @@
 
     <div class="bloque-body">
       <!-- Modalidad y Personería Jurídica -->
-      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 pb-3 mb-3 border-bottom">
+      <div class="modalidad-header-row">
         <div>
           <span class="modalidad-title">Modalidad de Contratación y Personería</span>
           <p class="modalidad-subtitle">Seleccione la clasificación contractual para la búsqueda de registro oficial</p>
@@ -39,7 +39,7 @@
       <!-- Buscador por documento -->
       @if (mostrarConsulta) {
         <div class="search-panel mb-4">
-          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-1 mb-2">
+          <div class="search-header-row">
             <label class="search-label">
               <span>Documento de Identidad (C.C. / C.E. / NIT)</span>
               <span class="text-error">*</span>
@@ -67,7 +67,7 @@
               class="btn-consultar-contratista"
               (click)="buscarContratista()"
               [disabled]="loading || !form.get('documentoContratista')?.value">
-              <div class="d-flex align-items-center gap-2">
+              <div class="btn-content-flex">
                 @if (loading) {
                   <mat-spinner diameter="18"></mat-spinner>
                   <span>Consultando...</span>
@@ -91,13 +91,13 @@
         @if (success && datosContratista) {
           <div class="verified-card mb-3">
             <!-- Header de la tarjeta verificada -->
-            <div class="verified-card-top pb-3 mb-3 border-bottom">
-              <div class="d-flex align-items-center gap-3">
+            <div class="verified-card-top">
+              <div class="verified-person-group">
                 <div class="verified-avatar">
                   <mat-icon>verified</mat-icon>
                 </div>
-                <div>
-                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="verified-person-text">
+                  <div class="verified-name-row">
                     <span class="verified-name">{{ contratistaObject.nombre }}</span>
                     <span class="verified-chip-doc">
                       {{ contratistaObject.tipo === 'Jurídica' ? 'NIT' : 'DOC' }}: {{ contratistaObject.documento }}
@@ -119,63 +119,51 @@
             </div>
 
             <!-- 3 Columnas Info Principal -->
-            <div class="row g-3">
-              <div class="col-12 col-md-4">
-                <div class="verified-info-cell">
-                  <span class="cell-label">Correo Notificaciones</span>
-                  <span class="cell-val text-truncate" [title]="contratistaObject.correo">
-                    {{ contratistaObject.correo || 'No registrado' }}
-                  </span>
-                  <span class="cell-subtext-success">RUT Oficial DIAN Actualizado</span>
-                </div>
+            <div class="verified-info-grid">
+              <div class="verified-info-cell">
+                <span class="cell-label">Correo Notificaciones</span>
+                <span class="cell-val text-truncate" [title]="contratistaObject.correo">
+                  {{ contratistaObject.correo || 'No registrado' }}
+                </span>
+                <span class="cell-subtext-success">RUT Oficial DIAN Actualizado</span>
               </div>
 
-              <div class="col-12 col-md-4">
-                <div class="verified-info-cell">
-                  <span class="cell-label">Ciudad de Contacto</span>
-                  <span class="cell-val">
-                    {{ contratistaObject.ciudad_contacto || 'Bogotá D.C.' }}
-                  </span>
-                  <span class="cell-subtext">Sede / Jurisdicción</span>
-                </div>
+              <div class="verified-info-cell">
+                <span class="cell-label">Ciudad de Contacto</span>
+                <span class="cell-val">
+                  {{ contratistaObject.ciudad_contacto || 'Bogotá D.C.' }}
+                </span>
+                <span class="cell-subtext">Sede / Jurisdicción</span>
               </div>
 
-              <div class="col-12 col-md-4">
-                <div class="verified-info-cell">
-                  <span class="cell-label">Domicilio Fiscal</span>
-                  <span class="cell-val text-truncate" [title]="contratistaObject.direccion">
-                    {{ contratistaObject.direccion || 'No registrada' }}
-                  </span>
-                  <span class="cell-subtext">Dirección Notificación</span>
-                </div>
+              <div class="verified-info-cell">
+                <span class="cell-label">Domicilio Fiscal</span>
+                <span class="cell-val text-truncate" [title]="contratistaObject.direccion">
+                  {{ contratistaObject.direccion || 'No registrada' }}
+                </span>
+                <span class="cell-subtext">Dirección Notificación</span>
               </div>
             </div>
 
             <!-- Representante Legal si aplica (Persona Jurídica) -->
             @if (contratistaObject.representante_legal) {
-              <div class="rl-panel mt-3 pt-3 border-top">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                  <mat-icon class="text-secondary" style="font-size: 18px; width: 18px; height: 18px;">gavel</mat-icon>
+              <div class="rl-panel">
+                <div class="rl-header">
+                  <mat-icon class="rl-icon">gavel</mat-icon>
                   <span class="rl-title">Representante Legal Acreditado</span>
                 </div>
-                <div class="row g-3">
-                  <div class="col-12 col-md-5">
-                    <div class="verified-info-cell">
-                      <span class="cell-label">Nombre Representante</span>
-                      <span class="cell-val">{{ contratistaObject.representante_legal }}</span>
-                    </div>
+                <div class="rl-info-grid">
+                  <div class="verified-info-cell">
+                    <span class="cell-label">Nombre Representante</span>
+                    <span class="cell-val">{{ contratistaObject.representante_legal }}</span>
                   </div>
-                  <div class="col-12 col-md-4">
-                    <div class="verified-info-cell">
-                      <span class="cell-label">Documento RL</span>
-                      <span class="cell-val font-mono">{{ contratistaObject.documento_rl }}</span>
-                    </div>
+                  <div class="verified-info-cell">
+                    <span class="cell-label">Documento RL</span>
+                    <span class="cell-val font-mono">{{ contratistaObject.documento_rl }}</span>
                   </div>
-                  <div class="col-12 col-md-3">
-                    <div class="verified-info-cell">
-                      <span class="cell-label">Lugar de Expedición</span>
-                      <span class="cell-val">{{ contratistaObject.lugar_expedicion_rl || 'Bogotá D.C.' }}</span>
-                    </div>
+                  <div class="verified-info-cell">
+                    <span class="cell-label">Lugar de Expedición</span>
+                    <span class="cell-val">{{ contratistaObject.lugar_expedicion_rl || 'Bogotá D.C.' }}</span>
                   </div>
                 </div>
               </div>
@@ -188,7 +176,7 @@
 
   <!-- Barra de Navegación Inferior Institucional (Bottom Dock) -->
   <div class="bottom-dock-container mb-4">
-    <div class="d-flex align-items-center gap-2">
+    <div class="dock-left">
       <button
         type="button"
         mat-stroked-button
@@ -199,7 +187,7 @@
       </button>
     </div>
 
-    <div class="d-flex align-items-center gap-3">
+    <div class="dock-right">
       <span class="dock-indicator">Paso 2 de 5</span>
       <button
         type="button"
