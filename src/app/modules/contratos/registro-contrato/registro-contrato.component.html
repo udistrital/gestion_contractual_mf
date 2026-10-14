@@ -72,7 +72,9 @@
                   <p>Paso</p>
                   <b style="color: var(--primary)">Información Contratista</b>
                 </ng-template>
-                <app-paso-contratistas (stepCompleted)="stepCompleted(3, $event)" />
+                <app-paso-contratistas
+                  [contratoGeneral]="contratoGeneral"
+                  (stepCompleted)="stepCompleted(3, $event)" />
               </mat-step>
 
               <mat-step>

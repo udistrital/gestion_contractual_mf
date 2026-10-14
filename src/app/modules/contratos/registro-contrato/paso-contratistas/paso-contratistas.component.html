@@ -45,13 +45,12 @@
               mat-raised-button
               color="primary"
               (click)="buscarContratista()"
-              [disabled]="loading"
               >
               <mat-icon>search</mat-icon>
               <!-- Icono de búsqueda en el botón -->
               Buscar
             </button>
-            @if (success) {
+            @if (datosContratista) {
               <div>
                 <h3>Información del Contratista</h3>
                 @if (datosContratista) {
@@ -92,39 +91,27 @@
           </div>
         </div>
       }
-    </div>
+  </div>
 
-    <div class="btn-container">
-      <button
-        mat-stroked-button
-        style="border: 1px solid var(--md-primary-500)"
-        color="primary"
-        matStepperPrevious
-        >
-        <mat-icon>arrow_back</mat-icon>
-        Volver
-      </button>
-      <button
-        mat-raised-button
-        color="primary"
-        [disabled]="!form.valid"
-        (click)="guardarYContinuar()"
-        >
-        <mat-icon>save</mat-icon>
-        <!-- Icono para el botón Guardar y Continuar -->
-        Guardar y Continuar
-      </button>
-    </div>
-  </form>
-
-  @if (loading) {
-    <div class="loading-overlay">
-      <div class="spinner-container">
-        <mat-progress-spinner
-          mode="indeterminate"
-          diameter="50"
-        ></mat-progress-spinner>
-        <p>Buscando contratista...</p>
-      </div>
-    </div>
-  }
+  <div class="btn-container">
+    <button
+      mat-stroked-button
+      style="border: 1px solid var(--md-primary-500)"
+      color="primary"
+      matStepperPrevious
+      >
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="!form.valid"
+      (click)="guardarYContinuar()"
+      >
+      <mat-icon>save</mat-icon>
+      <!-- Icono para el botón Guardar y Continuar -->
+      Guardar y Continuar
+    </button>
+  </div>
+</form>

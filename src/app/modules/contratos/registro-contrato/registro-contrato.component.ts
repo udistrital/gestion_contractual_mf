@@ -127,11 +127,6 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.stepper.selectionChange.subscribe((event) => {
-      if (event.previouslySelectedIndex === 3 && event.selectedIndex !== 3) {
-        this.pasoContratistas.onStepLeave();
-      }
-    });
     this.steps.toArray().forEach((step, index) => {
       step.label = `Paso ${index + 1}`;
     });

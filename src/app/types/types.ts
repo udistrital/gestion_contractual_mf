@@ -203,3 +203,91 @@ export interface SupervisorToSave {
   dependencia_id: string;
   contrato_general_id: number;
 }
+
+export interface Proveedor {
+  id_proveedor: string;
+  ciudad_expedicion_documento: string;
+  id_ciudad_contacto: string;
+  direccion: string;
+  numero_documento: string;
+  nombre_estado: string;
+  numero_cuenta_bancaria: string;
+  id_estado: string;
+  nombre_completo_proveedor: string;
+  ciudad_contacto: string;
+  web: string;
+  fecha_registro: string;
+  correo: string;
+  id_entidad_bancaria: string;
+  tipo_persona: string;
+  tipo_persona_id: number;
+  tipo_cuenta_bancaria: string;
+  fecha_ultima_modificacion: string;
+  contratos: Contrato[];
+}
+
+export interface Representante {
+  segundo_apellido: string;
+  tipo_documento: string;
+  ciudad_expedicion_documento: string;
+  genero: string;
+  numero_documento: string;
+  primer_apellido: string;
+  segundo_nombre: string;
+  digito_verificacion: string;
+  id_tipo_documento: string;
+  id_ciudad_expedicion_documento: string;
+  primer_nombre: string;
+  id_proveedor_juridico: string;
+}
+
+export interface DatosContratista {
+  proveedor: Proveedor;
+  representante?: Representante;
+  contratos: Contrato[];
+}
+
+export interface ProveedorObject {
+  tipo: string;
+  nombre: string;
+  documento: string;
+  ciudad_contacto: string;
+  direccion: string;
+  correo: string;
+  lugar_expedicion?: string;
+  representante_legal?: string;
+  documento_rl?: string;
+  lugar_expedicion_rl?: string;
+  contratos?: Contrato[];
+  ultimoContrato?: {
+    tipo: string;
+    estado: string;
+    numero: string;
+    vigencia: string;
+  };
+}
+
+interface TipoContrato {
+  id: string;
+  nombre: string;
+}
+
+interface ContratoEstado {
+  id: string;
+  nombre: string;
+}
+
+interface Contrato {
+  tipo_contrato: TipoContrato;
+  estado_contrato: ContratoEstado;
+}
+
+export interface ContratistaResponse {
+  id: string;
+  numero_documento: string;
+  tipo_persona_id: number;
+  activo: boolean;
+  fecha_creacion: string;
+  fecha_modificacion: string | null;
+  contrato_general_id: number;
+}
