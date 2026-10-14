@@ -212,7 +212,9 @@ export class PasoEspecificacionesComponent implements OnInit {
 
   openModalEspecificacion(especificacion?: EspecificacionTecnica): void {
     const dialog = this.dialog.open(ModalEspecificacionComponent, {
-      width: '70vw',
+      width: '680px',
+      maxWidth: '95vw',
+      autoFocus: false,
       data: { especificacion },
     });
 

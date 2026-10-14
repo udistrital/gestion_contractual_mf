@@ -1,68 +1,154 @@
-<mat-card class="container-principal">
-  <button mat-icon-button class="close-button" [mat-dialog-close]>
-    <mat-icon color="primary" class="btn">close</mat-icon>
-  </button>
+<div class="modal-especificacion-container">
+  <!-- 1. Cabecera Institucional del Modal -->
+  <div class="modal-header">
+    <div class="header-info">
+      <div class="header-icon-badge">
+        <mat-icon>{{ isEdicion ? 'edit_note' : 'add_task' }}</mat-icon>
+      </div>
+      <div class="header-titles">
+        <h2 class="modal-title">
+          {{ isEdicion ? 'Editar Especificación Técnica' : 'Añadir Especificación Técnica' }}
+        </h2>
+        <p class="modal-subtitle">
+          Defina la descripción, cantidad requerida y el valor unitario pactado para el ítem.
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      mat-icon-button
+      class="close-button"
+      [mat-dialog-close]="null"
+      aria-label="Cerrar ventana"
+      title="Cerrar"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
 
-  <h2>
-    {{ this.data && this.data.especificacion ? "Editar" : "Añadir" }}
-    Especificación
-  </h2>
-  <h4 class="container-title">ESPECIFICACIÓN TÉCNICA</h4>
-
-  <form [formGroup]="formEspecificacion">
-    <div class="form-row">
-      <mat-form-field class="descripcion-field">
-        <mat-label>Descripción especificación técnica</mat-label>
-        <input matInput formControlName="descripcion" />
+  <!-- 2. Cuerpo del Formulario con Campos Claramente Identificados -->
+  <form [formGroup]="formEspecificacion" class="modal-form-body">
+    <!-- Campo: Descripción Técnica -->
+    <div class="form-field-row full-width">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Descripción Técnica del Ítem o Servicio</mat-label>
+        <mat-icon matPrefix class="field-icon">description</mat-icon>
+        <textarea
+          matInput
+          formControlName="descripcion"
+          rows="3"
+          placeholder="Ej: Licencia anual de software para servidores, incluye soporte técnico 24/7 y actualizaciones preventivas."
+          required
+        ></textarea>
+        @if (formEspecificacion.get('descripcion')?.invalid && formEspecificacion.get('descripcion')?.touched) {
+          <mat-error>La descripción técnica es obligatoria (mínimo 3 caracteres)</mat-error>
+        }
       </mat-form-field>
-      <mat-form-field class="cantidad-field">
-        <mat-label>Cantidad</mat-label>
+    </div>
+
+    <!-- Campos: Cantidad y Valor Unitario -->
+    <div class="form-grid-2">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Cantidad Requerida</mat-label>
+        <mat-icon matPrefix class="field-icon">format_list_numbered</mat-icon>
         <input
           type="number"
           matInput
           formControlName="cantidad"
+          placeholder="Ej: 10"
+          min="1"
           step="1"
           (keydown)="validarNumero($event)"
+          required
         />
+        <span matTextSuffix class="unit-suffix">Uds.</span>
+        @if (formEspecificacion.get('cantidad')?.invalid && formEspecificacion.get('cantidad')?.touched) {
+          <mat-error>Ingrese una cantidad entera mayor a 0</mat-error>
+        }
       </mat-form-field>
-    </div>
-    <div class="form-row">
-      <mat-form-field class="valor-unitario-field">
-        <mat-label>Valor Unitario</mat-label>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Valor Unitario (COP)</mat-label>
+        <mat-icon matPrefix class="field-icon">attach_money</mat-icon>
         <input
           type="number"
           matInput
           formControlName="valor_unitario"
+          placeholder="Ej: 500000"
+          min="0.01"
           step="0.01"
-          (keydown)="
-            validarNumeroConDecimales($event, $any($event.target).value)
-          "
+          (keydown)="validarNumeroConDecimales($event, $any($event.target).value)"
+          required
         />
+        <span matTextSuffix class="unit-suffix">COP</span>
+        @if (formEspecificacion.get('valor_unitario')?.invalid && formEspecificacion.get('valor_unitario')?.touched) {
+          <mat-error>Ingrese un valor unitario mayor a 0</mat-error>
+        }
       </mat-form-field>
-      <mat-form-field class="valor-total-field">
-        <mat-label>Valor Total</mat-label>
+    </div>
+
+    <!-- Campo: Valor Total y Tarjeta de Resumen en Vivo -->
+    <div class="form-grid-2 align-start">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Valor Total Estimado (COP)</mat-label>
+        <mat-icon matPrefix class="field-icon">calculate</mat-icon>
         <input
           type="number"
           matInput
           formControlName="valor_total"
+          placeholder="Ej: 5000000"
+          min="0.01"
           step="0.01"
-          (keydown)="
-            validarNumeroConDecimales($event, $any($event.target).value)
-          "
+          (keydown)="validarNumeroConDecimales($event, $any($event.target).value)"
+          required
         />
+        <span matTextSuffix class="unit-suffix">COP</span>
+        <mat-hint>Calculado: Cantidad × Valor Unitario</mat-hint>
+        @if (formEspecificacion.get('valor_total')?.invalid && formEspecificacion.get('valor_total')?.touched) {
+          <mat-error>Ingrese un valor total válido</mat-error>
+        }
       </mat-form-field>
+
+      <!-- Tarjeta Resumen Visual -->
+      <div class="card-calculo-vivo">
+        <div class="calculo-vivo-head">
+          <mat-icon>receipt_long</mat-icon>
+          <span>Desglose Económico del Ítem</span>
+        </div>
+        <div class="calculo-vivo-formula">
+          <span class="calc-part">{{ cantidadActual | number }} uds</span>
+          <span class="calc-op">×</span>
+          <span class="calc-part">{{ valorUnitarioActual | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+        <div class="calculo-vivo-total">
+          <span class="calc-total-label">Subtotal:</span>
+          <strong class="calc-total-val">{{ valorTotalActual | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+      </div>
     </div>
   </form>
 
-  <mat-dialog-actions align="end">
+  <!-- 3. Acciones del Modal -->
+  <div class="modal-actions">
     <button
+      type="button"
+      mat-stroked-button
+      class="btn-modal-cancel"
+      [mat-dialog-close]="null"
+    >
+      <mat-icon>close</mat-icon>
+      <span>Cancelar</span>
+    </button>
+    <button
+      type="button"
       mat-raised-button
       color="primary"
-      id="btn-rechazar"
+      class="btn-modal-save"
       (click)="guardarEspecificacion()"
       [disabled]="!guardarHabilitado || !formEspecificacion.valid"
     >
-      Guardar y Cerrar
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ isEdicion ? 'Actualizar Especificación' : 'Guardar Especificación' }}</span>
     </button>
-  </mat-dialog-actions>
-</mat-card>
+  </div>
+</div>
