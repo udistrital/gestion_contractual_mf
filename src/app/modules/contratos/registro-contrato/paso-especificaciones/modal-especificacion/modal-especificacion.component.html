@@ -89,24 +89,19 @@
 
     <!-- Campo: Valor Total y Tarjeta de Resumen en Vivo -->
     <div class="form-grid-2 align-start">
-      <mat-form-field appearance="outline" class="w-100">
+      <mat-form-field appearance="outline" class="w-100 field-readonly">
         <mat-label>Valor Total Estimado (COP)</mat-label>
         <mat-icon matPrefix class="field-icon">calculate</mat-icon>
         <input
           type="number"
           matInput
           formControlName="valor_total"
-          placeholder="Ej: 5000000"
-          min="0.01"
-          step="0.01"
-          (keydown)="validarNumeroConDecimales($event, $any($event.target).value)"
-          required
+          placeholder="0"
+          readonly
+          tabindex="-1"
         />
         <span matTextSuffix class="unit-suffix">COP</span>
-        <mat-hint>Calculado: Cantidad × Valor Unitario</mat-hint>
-        @if (formEspecificacion.get('valor_total')?.invalid && formEspecificacion.get('valor_total')?.touched) {
-          <mat-error>Ingrese un valor total válido</mat-error>
-        }
+        <mat-hint>Calculado automáticamente: Cantidad × Valor Unitario</mat-hint>
       </mat-form-field>
 
       <!-- Tarjeta Resumen Visual -->

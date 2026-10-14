@@ -119,6 +119,16 @@
   margin-left: 4px;
 }
 
+.field-readonly ::ng-deep .mat-mdc-text-field-wrapper {
+  background-color: #f8fafc !important;
+}
+
+.field-readonly input {
+  cursor: default !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+
 /* ==========================================================================
    Tarjeta de Desglose Económico
    ========================================================================== */

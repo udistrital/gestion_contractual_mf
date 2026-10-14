@@ -126,7 +126,7 @@ export class ModalEspecificacionComponent implements OnInit {
 
   guardarEspecificacion() {
     if (this.formEspecificacion.valid) {
-      const especificacionGuardada = this.formEspecificacion.value;
+      const especificacionGuardada = this.formEspecificacion.getRawValue();
       this.dialogRef.close(especificacionGuardada);
     }
   }
