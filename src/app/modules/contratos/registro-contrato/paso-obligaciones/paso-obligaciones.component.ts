@@ -70,7 +70,7 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
     const contratoGeneral = localStorage.getItem('paso-info-general');
     if (contratoGeneral) {
       const parsedContrato: ContratoGeneral = JSON.parse(contratoGeneral);
-      this.contratoGeneralId = parsedContrato.id;
+      this.contratoGeneralId = parsedContrato.id!;
     }
 
   }

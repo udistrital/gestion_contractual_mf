@@ -3,7 +3,6 @@ import { VisualizarPolizaComponent, ContratoPoliza } from './visualizar-poliza.c
 import { PlantillaTarjetaContenedoraComponent } from '../../../shared/templates/plantilla-tarjeta-contenedora/plantilla-tarjeta-contenedora.component';
 import { MaterialModule } from '../../../shared/modules/material.module';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { CommonModule } from '@angular/common';
 
 describe('VisualizarPolizaComponent', () => {
   let component: VisualizarPolizaComponent;
@@ -12,7 +11,7 @@ describe('VisualizarPolizaComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [VisualizarPolizaComponent, PlantillaTarjetaContenedoraComponent],
-      imports: [CommonModule, MaterialModule, NoopAnimationsModule]
+      imports: [MaterialModule, NoopAnimationsModule]
     }).compileComponents();
 
     fixture = TestBed.createComponent(VisualizarPolizaComponent);

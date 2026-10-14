@@ -7,12 +7,12 @@ import { DocumentoContrato } from 'src/app/types/types';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 
 @Component({
-    selector: 'app-cargar-archivo',
+    selector: 'app-subir-archivo',
     templateUrl: './cargar-archivo.component.html',
     styleUrl: './cargar-archivo.component.css',
     standalone: false
 })
-export class CargarArchivoComponent {
+export class SubirArchivoComponent {
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;
 
   archivo: File | null = null;
@@ -21,7 +21,7 @@ export class CargarArchivoComponent {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
-    public dialogRef: MatDialogRef<CargarArchivoComponent>,
+    public dialogRef: MatDialogRef<SubirArchivoComponent>,
     private gestorDocumentalService: GestorDocumentalService,
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService

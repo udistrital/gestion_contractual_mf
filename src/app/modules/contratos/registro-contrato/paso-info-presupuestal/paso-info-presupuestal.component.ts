@@ -1,9 +1,9 @@
 import {
   ChangeDetectorRef,
   Component,
-  EventEmitter,
+  input,
   OnInit,
-  Output,
+  output,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { finalize, firstValueFrom, Subject } from 'rxjs';
@@ -11,8 +11,8 @@ import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import { CdpsService } from 'src/app/services/cdps.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
-import { ContratoGeneralCrudService } from '../../../services/contrato-general-crud.service';
-import {CDP, CDPContratoCRUD, CDPData, CDPItem, OrdenadorContratoData, SimpleItem} from '../../../types/types';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { ApiResponse, CDP, CDPContratoCRUD, CDPData, CDPItem, ContratoGeneral, OrdenadorContratoData, ParametroListResponse } from 'src/app/types/types';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
 import { cdpConstructorTabla } from './paso-info-presupuestal.utilidades';
 import { AlertService } from 'src/app/services/alert.service';
@@ -24,11 +24,13 @@ import { AlertService } from 'src/app/services/alert.service';
     standalone: false
 })
 export class PasoInfoPresupuestalComponent implements OnInit {
-  @Output() stepCompleted = new EventEmitter<boolean>();
-  @Output() nextStep = new EventEmitter<void>();
+  stepCompleted = output<boolean>();
+  nextStep = output<void>();
+  cdpGuardado = output<CDP[]>();
+  contratoGuardado = output<void>();
 
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
-  contratoGeneralId: number | null = null;
+  contratoGeneral = input<ContratoGeneral>();
 
   firstTime = true;
 
@@ -36,17 +38,17 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     vigencia: [''],
     cdp: [''],
     valorAcumulado: [{ value: 0, disabled: true }],
-    tipoMoneda: ['', Validators.required],
+    tipoMoneda: [0, Validators.required],
     valorContrato: ['', Validators.required],
-    ordenadorGasto: ['', Validators.required],
+    ordenadorGasto: [0, Validators.required],
     nombreOrdenador: [{ value: '', disabled: true }, [Validators.required]],
-    tipoGasto: ['', Validators.required],
-    origenRecurso: ['', Validators.required],
-    origenPresupuesto: ['', Validators.required],
-    temaGasto: ['', Validators.required],
-    monedaExtranjera: ['', Validators.required],
-    tasaCambio: [''],
-    medioPago: ['', Validators.required],
+    tipoGasto: [0, Validators.required],
+    origenRecurso: [0, Validators.required],
+    origenPresupuesto: [0, Validators.required],
+    temaGasto: [0, Validators.required],
+    monedaExtranjera: [0, Validators.required],
+    tasaCambio: [0],
+    medioPago: [0, Validators.required],
     clausulaRegistroPresupuestal: [false, Validators.required],
     formaPago: ['', Validators.required],
   });
@@ -74,15 +76,13 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   ordenadores: any[] = [];
   nombreOrdenador: any[] = [];
 
-  private formId: number | null = null;
-
   cdpConstructorTabla: any;
   tablaCdpColumnas: any;
 
   documentoIdentidadOrdenador: string | null = null;
   cargoIdOrdenador: number | null = null;
   idSicapitalOrdenador: number | null = null;
-  ordenadorGastoId: string | undefined = undefined;
+  ordenadorGastoId: number | null = null;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -98,14 +98,17 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     this.cargarCDPs();
     this.setupVigenciaListener();
     this.setupCdpListener();
-    this.CargarMonedas();
-    this.CargarGastos();
-    this.CargarOrigenRecursos();
-    this.CargarOrigenPresupuesto();
-    this.CargarTemaGasto();
-    this.CargarMediosPago();
-    this.CargarRolOrdenadores();
-    this.loadSavedData();
+    Promise.all([
+      this.CargarMonedas(),
+      this.CargarGastos(),
+      this.CargarOrigenRecursos(),
+      this.CargarOrigenPresupuesto(),
+      this.CargarTemaGasto(),
+      this.CargarMediosPago(),
+      this.CargarRolOrdenadores(),
+    ]).then(() => {
+      this.loadSavedData();
+    });
 
     this.form.get('tipoMoneda')?.valueChanges.subscribe((id_moneda) => {
       if (id_moneda) {
@@ -131,48 +134,42 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   }
 
   private loadSavedData(): void {
-    console.log('Loading saved data...');
     try {
-      const savedForm = localStorage.getItem('paso-info-presupuestal');
-      if (savedForm) {
-        const parsedForm = JSON.parse(savedForm);
-        this.formId = parsedForm.id;
-
+      const contratoGeneral = this.contratoGeneral();
+      if (contratoGeneral) {
         const formValues = {
-          tipoGasto: parsedForm.tipo_gasto_id,
-          origenPresupuesto: parsedForm.origen_presupuestos_id,
-          temaGasto: parsedForm.tema_gasto_inversion_id,
-          medioPago: parsedForm.medio_pago_id,
-          tipoMoneda: parsedForm.tipo_moneda_id,
-          valorContrato: parsedForm.valor_pesos,
-          origenRecurso: parsedForm.origen_recursos_id,
-          clausulaRegistroPresupuestal: parsedForm.clausula_registro_presupuestal,
-          formaPago: parsedForm.modo_pago,
+          tipoGasto: contratoGeneral.tipo_gasto_id,
+          origenPresupuesto: contratoGeneral.origen_presupuestos_id,
+          temaGasto: contratoGeneral.tema_gasto_inversion_id,
+          medioPago: contratoGeneral.medio_pago_id,
+          tipoMoneda: contratoGeneral.tipo_moneda_id,
+          valorContrato: contratoGeneral.valor_pesos?.toString(),
+          origenRecurso: contratoGeneral.origen_recursos_id,
+          clausulaRegistroPresupuestal: contratoGeneral.clausula_registro_presupuestal,
+          formaPago: contratoGeneral.modo_pago,
         };
 
-        console.log('Loading values into form:', formValues);
+        this.contratoGeneralCrudService.gerOrdenadorGuardado(contratoGeneral.id as number).subscribe({
+          next: (response: ApiResponse<OrdenadorContratoData>) => {
+            this.ordenadorGastoId = response.Data.ordenador_argo_id;
+            this.setOrdenadorGuardado();
+          }
+        });
+
         this.form.patchValue(formValues);
 
-        this.contratoGeneralId = parsedForm.id;
-
-        if (this.contratoGeneralId) {
-          this.cargarCDPsContrato(this.contratoGeneralId);
+        if (contratoGeneral.id) {
+          this.cargarCDPsContrato(contratoGeneral.id);
         }
       }
 
-      const infoGeneral = localStorage.getItem('paso-info-general');
-      if (infoGeneral) {
-        const contratoData = JSON.parse(infoGeneral);
-        this.contratoGeneralId = contratoData.id;
-      }
     } catch (error) {
       console.error('Error loading saved data:', error);
-      localStorage.removeItem('paso-info-presupuestal');
     }
   }
 
   private setOrdenadorGuardado() {
-    this.form.get('ordenadorGasto')?.setValue(this.ordenadorGastoId || null)
+    this.form.get('ordenadorGasto')?.setValue(this.ordenadorGastoId)
   }
 
   async guardarYContinuar() {
@@ -197,20 +194,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         modo_pago: this.form.get('formaPago')?.value,
       };
 
-      // Obtener el ID del contrato del localStorage
-      const infoGeneral = localStorage.getItem('paso-info-general');
-      if (!infoGeneral) {
-        throw new Error('No se ha encontrado información general del contrato');
-      }
+      const contratoId = this.contratoGeneral()?.id as number;
 
-      const contratoData = JSON.parse(infoGeneral);
-      const contratoId = contratoData.id;
-
-      if (!contratoId) {
-        throw new Error('No se ha encontrado el ID del contrato');
-      }
-
-      this.ordenadorGastoId = this.form.get('ordenadorGasto')?.value?.toString();
+      this.ordenadorGastoId = this.form.get('ordenadorGasto')?.value as number;
 
       // Preparar datos para el POST de OrdenadorContrato
       const ordenadorContratoData: OrdenadorContratoData = {
@@ -224,24 +210,15 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       };
 
       // Realizar el POST al endpoint de OrdenadorContrato
-      const ordenadorContratoResponse = await firstValueFrom(
+      await firstValueFrom(
         this.contratoGeneralCrudService.postOrdenadorContrato(
           ordenadorContratoData
         )
       );
 
       // Actualizar en el backend la información presupuestal
-      const response = await firstValueFrom(
+      await firstValueFrom(
         this.contratoGeneralCrudService.put(contratoId, formData)
-      );
-
-      // Guardar en localStorage
-      localStorage.setItem(
-        'paso-info-presupuestal',
-        JSON.stringify({
-          ...formData,
-          id: contratoId,
-        })
       );
 
       this.alertService.showSuccessAlert(
@@ -249,6 +226,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
         'Datos guardados'
       );
 
+      this.contratoGuardado.emit();
       this.nextStep.emit();
     } catch (error) {
       console.error('Error saving data:', error);
@@ -405,7 +383,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   }
 
   async guardarListaCDP() {
-    if (!this.contratoGeneralId) {
+    const contratoId = this.contratoGeneral()?.id as number;
+    if (!contratoId) {
       this.alertService.showErrorAlert(
         'No se ha encontrado información general del contrato. PIP3'
       );
@@ -424,7 +403,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
           numero_cdp_id: parseInt(cdp.numero_disponibilidad),
           fecha_registro: new Date(),
           vigencia_cdp: parseInt(cdp.vigencia),
-          contrato_general_id: this.contratoGeneralId,
+          contrato_general_id: contratoId,
         })
       );
 
@@ -457,97 +436,154 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   }
 
   CargarMonedas() {
-    this.parametrosService
-      .get(
+    return new Promise((resolve, reject) => {
+      this.parametrosService.get<ParametroListResponse>(
         `parametro?query=TipoParametroId:${environment.TIPO_MONEDA},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.monedas = Response.Data;
+      .subscribe({
+        next: (response: ParametroListResponse) => {
+          if (response.Status == '200') {
+            this.monedas = response.Data;
+            resolve(true);
+          } else {
+            reject('Error en la respuesta del servidor');
+          }
+        },
+        error: (error) => {
+          reject(error);
         }
       });
+    });
   }
 
-  CargarGastos() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.TIPO_GASTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.gastos = Response.Data;
-        }
-      });
+  CargarGastos(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.parametrosService
+        .get<ParametroListResponse>(
+          `parametro?query=TipoParametroId:${environment.TIPO_GASTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+        )
+        .subscribe({
+          next: (response: ParametroListResponse) => {
+            if (response.Status == '200') {
+              this.gastos = response.Data;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => reject(error),
+        });
+    });
   }
 
-  CargarOrigenRecursos() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.ORIGEN_RECURSOS_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.origen_recursos = Response.Data;
-        }
-      });
+  CargarOrigenRecursos(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.parametrosService
+        .get<ParametroListResponse>(
+          `parametro?query=TipoParametroId:${environment.ORIGEN_RECURSOS_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+        )
+        .subscribe({
+          next: (response: ParametroListResponse) => {
+            if (response.Status == '200') {
+              this.origen_recursos = response.Data;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => reject(error),
+        });
+    });
   }
 
-  CargarOrigenPresupuesto() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.ORIGEN_PRESUPUESTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.origen_presupuestos = Response.Data;
-        }
-      });
+  CargarOrigenPresupuesto(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.parametrosService
+        .get<ParametroListResponse>(
+          `parametro?query=TipoParametroId:${environment.ORIGEN_PRESUPUESTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+        )
+        .subscribe({
+          next: (response: ParametroListResponse) => {
+            if (response.Status == '200') {
+              this.origen_presupuestos = response.Data;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => reject(error),
+        });
+    });
   }
 
-  CargarTemaGasto() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.TEMA_GASTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.tema_gasto = Response.Data;
-        }
-      });
+  CargarTemaGasto(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.parametrosService
+        .get<ParametroListResponse>(
+          `parametro?query=TipoParametroId:${environment.TEMA_GASTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
+        )
+        .subscribe({
+          next: (response: ParametroListResponse) => {
+            if (response.Status == '200') {
+              this.tema_gasto = response.Data;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => reject(error),
+        });
+    });
   }
 
-  CargarMediosPago() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.MEDIO_PAGO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response.Status == '200') {
-          this.medios_pago = Response.Data;
-        }
-      });
+  CargarMediosPago(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.parametrosService
+        .get<ParametroListResponse>(
+          `parametro?query=TipoParametroId:${environment.MEDIO_PAGO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
+        )
+        .subscribe({
+          next: (response: ParametroListResponse) => {
+            if (response.Status == '200') {
+              this.medios_pago = response.Data;
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => reject(error),
+        });
+    });
   }
 
-  CargarRolOrdenadores() {
-    this.ordenadoresSupervisoresMidService
-      .getRolOrdenadores()
-      .subscribe((Response: any) => {
-        if (Response.Status === 200) {
-          this.ordenadores = Response.Data;
-          this.setOrdenadorGuardado();
-        }
-      });
+  CargarRolOrdenadores(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.ordenadoresSupervisoresMidService
+        .getRolOrdenadores()
+        .subscribe({
+          next: (response: any) => {
+            if (response.Status === 200) {
+              this.ordenadores = response.Data;
+              this.setOrdenadorGuardado();
+              resolve(true);
+            } else {
+              reject('Error en la respuesta del servidor');
+            }
+          },
+          error: (error) => reject(error),
+        });
+    });
   }
 
   CargarOrdenadorActuales(rol: number) {
     this.ordenadoresSupervisoresMidService
       .getOrdenadorActuales(rol)
-      .subscribe(async (Response: any) => {
-        console.log('Respuesta de ordenadores', Response);
-        if (Response.Status === 200) {
+      .subscribe(async (response: any) => {
+        console.log('Respuesta de ordenadores', response);
+        if (response.Status === 200) {
           this.form
             .get('nombreOrdenador')
-            ?.setValue(Response.Data[0].nombre_ordenador);
+            ?.setValue(response.Data[0].nombre_ordenador);
         } else {
           this.form.get('ordenadorGasto')?.reset();
           this.form.get('nombreOrdenador')?.reset();
@@ -558,7 +594,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
       });
   }
 
-  CambioMoneda(id_moneda: string) {
+  CambioMoneda(id_moneda: number) {
     const idMonedaStr = id_moneda.toString();
 
     this.showCambioMonedaFields =
@@ -611,8 +647,9 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   }
 
   async eliminarCDP(cdpAEliminar: CDP) {
+    const contratoId = this.contratoGeneral()?.id as number;
     try {
-      if (this.contratoGeneralId) {
+      if (contratoId) {
         const cdpContrato = this.cdpsContrato.find(
           (c) =>
             c.numero_cdp_id === parseInt(cdpAEliminar.numero_disponibilidad)

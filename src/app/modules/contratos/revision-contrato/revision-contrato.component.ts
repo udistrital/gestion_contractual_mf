@@ -18,7 +18,7 @@ import {
   flujoEstados,
   rolPorEstado,
 } from 'src/app/utils/rolesEstados';
-import { CargarArchivoComponent } from './cargar-archivo/cargar-archivo.component';
+import { SubirArchivoComponent } from './cargar-archivo/cargar-archivo.component';
 import { forkJoin } from 'rxjs';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 
@@ -193,7 +193,7 @@ export class RevisionContratoComponent {
   }
 
   abrirModalCargarArchivo(): void {
-    const dialog = this.dialog.open(CargarArchivoComponent, {
+    const dialog = this.dialog.open(SubirArchivoComponent, {
       width: '800px',
       data: {
         textos: this.textos,

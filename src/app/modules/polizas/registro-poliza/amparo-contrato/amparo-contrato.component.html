@@ -7,12 +7,14 @@
       <mat-form-field appearance="outline" class="col-12 col-md-6 col-lg-4">
         <mat-label>Seleccionar Amparo</mat-label>
         <mat-select formControlName="amparoSeleccionado">
-          <mat-option
-            *ngFor="let amparo of amparosDisponibles"
-            [value]="amparo.id"
-          >
-            {{ amparo.descripcion }}
-          </mat-option>
+          @for(amparo of amparosDisponibles; track amparo) {
+            <mat-option
+              [value]="amparo.id"
+            >
+              {{ amparo.descripcion }}
+            </mat-option>
+
+          }
         </mat-select>
       </mat-form-field>
       <div class="col-12 col-md-6 col-lg-3 center-md">

@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { CargarArchivoComponent } from './cargar-archivo.component';
+import { SubirArchivoComponent } from './cargar-archivo.component';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 
 describe('CargarArchivoComponent', () => {
-  let component: CargarArchivoComponent;
-  let fixture: ComponentFixture<CargarArchivoComponent>;
+  let component: SubirArchivoComponent;
+  let fixture: ComponentFixture<SubirArchivoComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CargarArchivoComponent],
+      declarations: [SubirArchivoComponent],
       providers: [
         GestorDocumentalService,
         { provide: MAT_DIALOG_DATA, useValue: {} },
@@ -19,7 +19,7 @@ describe('CargarArchivoComponent', () => {
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CargarArchivoComponent);
+    fixture = TestBed.createComponent(SubirArchivoComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

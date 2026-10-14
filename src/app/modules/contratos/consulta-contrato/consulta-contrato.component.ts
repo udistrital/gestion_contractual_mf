@@ -5,8 +5,8 @@ import { environment } from 'src/environments/environment';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { Router } from '@angular/router';
-import { ContratoGeneralMidService } from '../../services/contrato-general-mid.service';
+import { Router, ActivatedRoute } from '@angular/router';
+import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
 import { MatDialog } from '@angular/material/dialog';
@@ -88,7 +88,8 @@ export class ConsultaContratoComponent implements OnInit {
     private parametrosService: ParametrosService,
     private contratoMidService: ContratoGeneralMidService,
     private rolService: RolService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
   form = this._formBuilder.group({
@@ -165,23 +166,23 @@ export class ConsultaContratoComponent implements OnInit {
   realizarAccion(contrato: ContratoGeneral, accion: string) {
     switch (accion) {
       case 'Ver Contrato':
-        this.router.navigate(['/registrar']);
+        this.router.navigate(['registrar']);
         break;
       case 'Editar Contrato':
-        this.router.navigate(['/registrar']);
+        this.router.navigate(['editar', contrato.id], { relativeTo: this.route.parent});
         break;
       case 'Enviar Aprobación Jefe OC':
         console.log('Enviar Aprobación Jefe OC');
         break;
       case 'Ver Historial':
-        this.openModalObservaciones(contrato.id);
+        this.openModalObservaciones(contrato.id!);
         break;
       case 'Declinar':
         console.log('Declinar');
         break;
       case 'Revisar Contrato':
       case 'Ver Documentos':
-        this.router.navigate([`/${contrato.id}/documentos`]);
+        this.router.navigate(['documentos', contrato.id], { relativeTo: this.route.parent});
         break;
       default:
         break;
