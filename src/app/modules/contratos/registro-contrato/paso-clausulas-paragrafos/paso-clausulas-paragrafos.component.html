@@ -1,159 +1,427 @@
-<div class="d-flex align-items-center fondo-acento-50 mb-4 mt-lg">
-  <div>
-    <mat-icon>library_books</mat-icon>
-  </div>
-  <div class="mx-3">
-    <h2>Cláusulas y Parágrafos</h2>
-    Términos y condiciones
-  </div>
-</div>
-<form [formGroup]="form">
-  <div class="border">
-    <div formArrayName="clausulas">
-      @for (clausula of clausulas.controls; track clausula; let i = $index) {
-        <div
-          [formGroupName]="i"
-          class="clausula-container"
-          >
-          <div class="form-grid2">
-            <div class="clausula-select">
-              <mat-form-field appearance="outline">
-                <mat-label>Cláusula</mat-label>
-                <mat-icon matPrefix>library_books</mat-icon>
-                <mat-select
-                  formControlName="index"
-                  [disabled]="!isClausulaEditable(i)"
-                  >
-                  @for (indice of indices; track indice) {
-                    <mat-option [value]="indice.Id">
-                      {{ indice.Nombre }}
-                    </mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-            </div>
-            <div class="form-grid1">
-              <mat-form-field appearance="outline">
-                <mat-label>Nombre</mat-label>
-                <mat-icon matPrefix>edit</mat-icon>
-                <input matInput formControlName="nombre" />
-              </mat-form-field>
-              <div class="editor-container">
-                @if (isClausulaEditable(i)) {
-                  <app-editor-enriquecido
-                    formControlName="descripcion"
-                    placeholder="Ingresa la descripción de la cláusula."
-                  ></app-editor-enriquecido>
-                } @else {
-                  <div
-                    class="read-only-content"
-                    [innerHTML]="clausula.get('descripcion')?.value"
-                  ></div>
-                }
-                @if (clausulas.length > 1 && isClausulaEditable(i)) {
-                  <button
-                    mat-icon-button
-                    color="warn"
-                    (click)="eliminarClausula(i)"
-                    >
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                }
-              </div>
-            </div>
-          </div>
-          <div formArrayName="paragrafos" class="paragrafo-container">
-            @for (
-              paragrafo of getParagrafos(clausula).controls; track
-              paragrafo; let j = $index) {
-              <div
-                [formGroupName]="j"
-                class="paragrafo-item"
-                >
-                <div class="paragrafo-label">
-                  <p>{{ paragrafo.get("nombre")?.value }}</p>
-                </div>
-                <div class="paragrafo-content">
-                  @if (isParagrafoEditable(i, j)) {
-                    <app-editor-enriquecido
-                      formControlName="descripcion"
-                      placeholder="Ingresa la descripción del parágrafo."
-                    ></app-editor-enriquecido>
-                  } @else {
-                    <div
-                      class="read-only-content"
-                      [innerHTML]="paragrafo.get('descripcion')?.value"
-                    ></div>
-                  }
-                  @if (isParagrafoEditable(i, j)) {
-                    <button
-                      mat-icon-button
-                      color="warn"
-                      (click)="eliminarParagrafo(i, j)"
-                      >
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="guardarClausula(i)"
-            [disabled]="!isClausulaModificada(i) || !isClausulaEditable(i)"
-            >
-            <mat-icon>save</mat-icon>
-            Guardar Cláusula
-          </button>
-          <div class="btn-container3">
-            @if (isClausulaEditable(i)) {
-              <button
-                mat-raised-button
-                color="primary"
-                (click)="agregarParagrafo(i)"
-                >
-                <mat-icon>add</mat-icon>
-                Agregar Parágrafo
-              </button>
-            }
-          </div>
+<div class="paso-clausulas-container">
+  <!-- Cabecera Superior Contextual y Acceso Rápido -->
+  <div class="banner-contextual mb-4">
+    <div class="banner-main-row">
+      <div class="banner-flex-group">
+        <div class="banner-icon-box">
+          <mat-icon>gavel</mat-icon>
         </div>
-      }
-    </div>
-    <div class="d-flex justify-content-center">
-      <button mat-raised-button color="primary" (click)="agregarClausula()">
-        <mat-icon>add</mat-icon>
-        Agregar Cláusula
-      </button>
+        <div>
+          <div class="banner-title-row">
+            <h2 class="banner-title">Paso 4: Clausulado Contractual y Parágrafos</h2>
+            <span class="banner-tag-norma">Estatuto Acuerdo 003 / 2015</span>
+          </div>
+          <p class="banner-subtitle">
+            Navegue por el árbol contractual en el panel izquierdo y configure o valide la redacción de la cláusula seleccionada a la derecha. Todo ajuste impacta en tiempo real la minuta preliminar.
+          </p>
+        </div>
+      </div>
+      <div class="banner-actions">
+        <button
+          type="button"
+          mat-stroked-button
+          class="banner-action-btn preview-btn"
+          (click)="openPdfViewer()"
+          title="Ver vista previa de la minuta preliminar"
+        >
+          <mat-icon>visibility</mat-icon>
+          <span>Vista Previa de Minuta</span>
+        </button>
+
+        <button
+          type="button"
+          mat-raised-button
+          class="banner-action-btn save-quick-btn"
+          (click)="guardarClausula(clausulaSeleccionadaIndex)"
+          [disabled]="!isClausulaModificada(clausulaSeleccionadaIndex) || !isClausulaEditable(clausulaSeleccionadaIndex)"
+          title="Guardar cambios de la cláusula activa"
+        >
+          <mat-icon>save</mat-icon>
+          <span>Guardar Cláusula</span>
+        </button>
+
+        <button
+          type="button"
+          mat-raised-button
+          class="banner-action-btn add-btn"
+          (click)="agregarClausula()"
+          title="Agregar una nueva cláusula especial"
+        >
+          <mat-icon>add_circle</mat-icon>
+          <span>+ Cláusula Especial</span>
+        </button>
+      </div>
     </div>
   </div>
-  <div class="btn-container mt-5">
-    <button
-      mat-stroked-button
-      style="border: 1px solid var(--md-primary-500)"
-      color="primary"
-      matStepperPrevious
-      >
-      <mat-icon>arrow_back</mat-icon>
-      Volver
-    </button>
-    <button
-      mat-stroked-button
-      style="
-        border: 1px solid var(--md-primary-500);
-        background-color: var(--md-primary-50);
-      "
-      color="primary"
-      (click)="openPdfViewer()"
-      >
-      Ver
-      <mat-icon>visibility</mat-icon>
-    </button>
-    <button mat-raised-button color="primary" (click)="guardarYContinuar()">
-      <mat-icon>save</mat-icon>
-      Guardar y Continuar
-    </button>
-  </div>
-</form>
+
+  <!-- Formulario Principal: Vista Tipo Explorador (Dos Columnas) -->
+  <form [formGroup]="form">
+    <div class="explorador-layout mb-4">
+      <!-- PANEL IZQUIERDO: Árbol o listado navegable -->
+      <aside class="panel-izquierdo-arbol">
+        <div class="panel-arbol-header">
+          <div class="panel-arbol-titulo">
+            <mat-icon>account_tree</mat-icon>
+            <span>Estructura del Contrato</span>
+          </div>
+          <span class="panel-arbol-badge">{{ clausulas.length }} cláusulas</span>
+        </div>
+
+        <!-- Buscador rápido de cláusulas -->
+        <div class="arbol-search-box">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="filtroClausulas"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Buscar cláusula o parágrafo..."
+          />
+          @if (filtroClausulas) {
+            <button
+              type="button"
+              class="search-clear-btn"
+              (click)="limpiarFiltro()"
+              title="Limpiar búsqueda"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </div>
+
+        <!-- Contenedor con scroll para los ítems del árbol -->
+        <div class="arbol-items-scroller">
+          @if (clausulasFiltradas.length === 0) {
+            <div class="arbol-empty-search">
+              <mat-icon>search_off</mat-icon>
+              <p>No se encontraron cláusulas coincidentes.</p>
+            </div>
+          } @else {
+            @for (item of clausulasFiltradas; track item.index) {
+              <div
+                class="arbol-clausula-node"
+                [class.active-node]="item.index === clausulaSeleccionadaIndex"
+              >
+                <!-- Fila de la Cláusula -->
+                <div
+                  class="arbol-item-row"
+                  [class.active]="item.index === clausulaSeleccionadaIndex"
+                  (click)="seleccionarClausula(item.index)"
+                  role="button"
+                  tabindex="0"
+                  [attr.aria-label]="getTituloClausula(item.index)"
+                >
+                  <span class="arbol-item-num">{{ (item.index + 1).toString().padStart(2, '0') }}</span>
+
+                  <div class="arbol-item-info">
+                    <div class="arbol-item-title">
+                      {{ getIndiceNombre(item.control.get('index')?.value) || 'Cláusula ' + (item.index + 1) }}
+                    </div>
+                    <div class="arbol-item-subtitle" [title]="item.control.get('nombre')?.value || 'Sin título'">
+                      {{ item.control.get('nombre')?.value || 'Sin título' }}
+                    </div>
+                  </div>
+
+                  <div class="arbol-item-badges">
+                    @if (isClausulaModificada(item.index)) {
+                      <span class="arbol-dot-modified" title="Cambios sin guardar"></span>
+                    }
+                    @if (!isClausulaEditable(item.index)) {
+                      <mat-icon class="arbol-lock-icon" title="Inalterable / Predeterminada">lock</mat-icon>
+                    }
+                    @if (getParagrafos(item.control).length > 0) {
+                      <span class="arbol-paragrafo-pill" title="Parágrafos en esta cláusula">
+                        P: {{ getParagrafos(item.control).length }}
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Sub-árbol de Parágrafos de la Cláusula -->
+                @if (getParagrafos(item.control).length > 0) {
+                  <div class="arbol-subitems-tree">
+                    @for (paragrafo of getParagrafos(item.control).controls; track $index; let pIdx = $index) {
+                      <div
+                        class="arbol-paragrafo-item"
+                        [class.active-subitem]="item.index === clausulaSeleccionadaIndex"
+                        (click)="seleccionarClausula(item.index)"
+                        role="button"
+                        tabindex="0"
+                      >
+                        <mat-icon class="paragrafo-tree-icon">subdirectory_arrow_right</mat-icon>
+                        <span class="paragrafo-tree-name">
+                          {{ paragrafo.get('nombre')?.value || 'Parágrafo ' + (pIdx + 1) }}
+                        </span>
+                        @if (paragrafo.get('es_editable')?.value && (paragrafo.get('descripcion')?.dirty ?? false)) {
+                          <span class="arbol-dot-modified" title="Parágrafo modificado sin guardar"></span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Pie del Panel Izquierdo: Acción Agregar Cláusula -->
+        <div class="panel-arbol-footer">
+          <button
+            type="button"
+            class="btn-arbol-add"
+            (click)="agregarClausula()"
+            title="Agregar una nueva cláusula especial"
+          >
+            <mat-icon>add_circle_outline</mat-icon>
+            <span>+ Cláusula Especial</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- PANEL DERECHO: Vista Detallada y Formulario de Edición -->
+      <main class="panel-derecho-detalle">
+        <div formArrayName="clausulas" class="clausula-detalle-wrapper">
+          @if (clausulas.length === 0) {
+            <div class="panel-vacio-detalle">
+              <mat-icon class="vacio-icon">description</mat-icon>
+              <h3 class="vacio-titulo">Ninguna cláusula seleccionada</h3>
+              <p class="vacio-subtitulo">
+                Seleccione una cláusula del árbol en el panel izquierdo para ver su contenido detallado y gestionarla.
+              </p>
+            </div>
+          } @else {
+            @for (clausula of clausulas.controls; track $index; let i = $index) {
+              @if (i === clausulaSeleccionadaIndex) {
+                <div
+                  [formGroupName]="i"
+                  class="clausula-card"
+                >
+                  <!-- Cabecera Vino Tinto de la Cláusula Seleccionada -->
+                  <div class="clausula-card-header">
+                    <div class="clausula-header-title-box">
+                      <span class="clausula-num-badge">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                      <mat-icon class="clausula-icon">description</mat-icon>
+                      <h3 class="clausula-title-text">
+                        {{ getIndiceNombre(clausula.get('index')?.value) || 'Cláusula ' + (i + 1) }}: {{ clausula.get('nombre')?.value || 'Sin título' }}
+                      </h3>
+                    </div>
+
+                    <div class="clausula-header-actions">
+                      @if (isClausulaModificada(i)) {
+                        <span class="clausula-badge modified" title="Hay cambios pendientes de guardar">
+                          <span class="dot-modificado"></span>
+                          <span>Sin guardar</span>
+                        </span>
+                      }
+
+                      @if (!isClausulaEditable(i)) {
+                        <span class="clausula-badge inalterable">
+                          <mat-icon class="badge-icon">lock</mat-icon>
+                          <span>Inalterable / Predeterminada</span>
+                        </span>
+                      } @else {
+                        <span class="clausula-badge editable">
+                          <mat-icon class="badge-icon">edit</mat-icon>
+                          <span>Editable</span>
+                        </span>
+                        <button
+                          type="button"
+                          class="header-btn-action"
+                          (click)="agregarParagrafo(i)"
+                          title="Agregar parágrafo a esta cláusula"
+                        >
+                          <mat-icon>add</mat-icon>
+                          <span>Parágrafo</span>
+                        </button>
+                        @if (clausulas.length > 1) {
+                          <button
+                            type="button"
+                            class="header-btn-action delete"
+                            (click)="eliminarClausula(i)"
+                            title="Eliminar esta cláusula"
+                          >
+                            <mat-icon>delete</mat-icon>
+                            <span>Eliminar</span>
+                          </button>
+                        }
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Cuerpo del Formulario de la Cláusula -->
+                  <div class="clausula-card-body">
+                    <!-- Selectores de Metadatos si es Editable -->
+                    @if (isClausulaEditable(i)) {
+                      <div class="clausula-meta-fields mb-3">
+                        <div class="meta-field-item index-field">
+                          <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Índice / Numeración</mat-label>
+                            <mat-icon matPrefix>format_list_numbered</mat-icon>
+                            <mat-select formControlName="index">
+                              @for (indice of indices; track indice.Id) {
+                                <mat-option [value]="indice.Id">
+                                  {{ indice.Nombre }}
+                                </mat-option>
+                              }
+                            </mat-select>
+                          </mat-form-field>
+                        </div>
+
+                        <div class="meta-field-item name-field">
+                          <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Título de la Cláusula</mat-label>
+                            <mat-icon matPrefix>edit</mat-icon>
+                            <input matInput formControlName="nombre" placeholder="Ej: Objeto del Contrato" />
+                          </mat-form-field>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Editor Enriquecido o Vista de Solo Lectura -->
+                    <div class="editor-container mb-3">
+                      @if (isClausulaEditable(i)) {
+                        <app-editor-enriquecido
+                          formControlName="descripcion"
+                          placeholder="Ingresa la redacción oficial de la cláusula..."
+                        ></app-editor-enriquecido>
+                      } @else {
+                        <div
+                          class="read-only-content"
+                          [innerHTML]="clausula.get('descripcion')?.value"
+                        ></div>
+                      }
+                    </div>
+
+                    <!-- Sección de Parágrafos -->
+                    <div formArrayName="paragrafos" class="paragrafos-section">
+                      @if (getParagrafos(clausula).controls.length > 0) {
+                        <div class="paragrafos-wrapper mb-3">
+                          <div class="paragrafos-header">
+                            <mat-icon>segment</mat-icon>
+                            <span>Parágrafos de la Cláusula ({{ getParagrafos(clausula).controls.length }})</span>
+                          </div>
+
+                          @for (paragrafo of getParagrafos(clausula).controls; track paragrafo; let j = $index) {
+                            <div [formGroupName]="j" class="paragrafo-card mb-2">
+                              <div class="paragrafo-card-top">
+                                <div class="paragrafo-tag">
+                                  <mat-icon>subdirectory_arrow_right</mat-icon>
+                                  <span>{{ paragrafo.get("nombre")?.value || 'Parágrafo ' + (j + 1) }}</span>
+                                </div>
+                                @if (isParagrafoEditable(i, j)) {
+                                  <button
+                                    type="button"
+                                    class="btn-delete-paragrafo"
+                                    (click)="eliminarParagrafo(i, j)"
+                                    title="Eliminar este parágrafo"
+                                  >
+                                    <mat-icon>delete</mat-icon>
+                                    <span>Eliminar</span>
+                                  </button>
+                                }
+                              </div>
+
+                              <div class="paragrafo-card-content">
+                                @if (isParagrafoEditable(i, j)) {
+                                  <app-editor-enriquecido
+                                    formControlName="descripcion"
+                                    placeholder="Redacción del parágrafo..."
+                                  ></app-editor-enriquecido>
+                                } @else {
+                                  <div
+                                    class="read-only-content paragrafo-read-only"
+                                    [innerHTML]="paragrafo.get('descripcion')?.value"
+                                  ></div>
+                                }
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Barra de Acciones al pie de la Cláusula -->
+                    <div class="clausula-card-footer">
+                      <div class="footer-left">
+                        @if (isClausulaEditable(i)) {
+                          <button
+                            type="button"
+                            mat-stroked-button
+                            class="btn-add-paragrafo-inline"
+                            (click)="agregarParagrafo(i)"
+                          >
+                            <mat-icon>add</mat-icon>
+                            <span>+ Agregar Parágrafo</span>
+                          </button>
+                        }
+                      </div>
+
+                      <div class="footer-right">
+                        <button
+                          type="button"
+                          mat-raised-button
+                          color="primary"
+                          class="btn-guardar-clausula"
+                          (click)="guardarClausula(i)"
+                          [disabled]="!isClausulaModificada(i) || !isClausulaEditable(i)"
+                        >
+                          <mat-icon>save</mat-icon>
+                          <span>Guardar Cláusula</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          }
+        </div>
+      </main>
+    </div>
+
+    <!-- Wizard Action Dock Footer -->
+    <div class="dock-footer">
+      <div class="dock-left-group">
+        <button
+          type="button"
+          mat-stroked-button
+          color="primary"
+          matStepperPrevious
+          class="dock-btn-back"
+        >
+          <mat-icon>arrow_back</mat-icon>
+          <span>Volver: Estructura y Necesidad</span>
+        </button>
+      </div>
+
+      <div class="dock-center-group">
+        <button
+          type="button"
+          mat-stroked-button
+          class="dock-btn-preview"
+          (click)="openPdfViewer()"
+        >
+          <mat-icon>visibility</mat-icon>
+          <span>Vista Previa Minuta</span>
+        </button>
+        <div class="dock-step-indicator">
+          <span class="dock-step-badge">Paso 4 de 5</span>
+          <span class="dock-step-name">Clausulado y Parágrafos</span>
+        </div>
+      </div>
+
+      <div class="dock-right-group">
+        <button
+          type="button"
+          mat-raised-button
+          color="primary"
+          class="dock-btn-continue"
+          (click)="guardarYContinuar()"
+        >
+          <span>Guardar y Continuar</span>
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

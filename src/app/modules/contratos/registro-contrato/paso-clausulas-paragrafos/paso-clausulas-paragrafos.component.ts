@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
 import {
@@ -66,6 +66,10 @@ export class PasoClausulasParagrafosComponent {
   undadEjecutora: number = environment.UNIDADES_EJECUTORAS.RECTORIA;
   usuarioId: number = 25;
 
+  // Estado para la vista tipo Explorador / Dos columnas
+  clausulaSeleccionadaIndex: number = 0;
+  filtroClausulas: string = '';
+
   constructor(
     private alertService: AlertService,
     private fb: FormBuilder,
@@ -77,7 +81,8 @@ export class PasoClausulasParagrafosComponent {
     private minutasMidService: MinutasMidService,
     private parametrosService: ParametrosService,
     private stepper: MatStepper,
-    private zone: NgZone
+    private zone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({ clausulas: this.fb.array([]) });
   }
@@ -129,6 +134,91 @@ export class PasoClausulasParagrafosComponent {
 
   get clausulas(): FormArray {
     return this.form.get('clausulas') as FormArray;
+  }
+
+  get clausulaActual(): FormGroup | null {
+    if (
+      this.clausulaSeleccionadaIndex >= 0 &&
+      this.clausulaSeleccionadaIndex < this.clausulas.length
+    ) {
+      return this.clausulas.at(this.clausulaSeleccionadaIndex) as FormGroup;
+    }
+    return null;
+  }
+
+  get clausulasFiltradas(): { control: AbstractControl; index: number }[] {
+    const query = (this.filtroClausulas || '').trim().toLowerCase();
+    return this.clausulas.controls
+      .map((control, index) => ({ control, index }))
+      .filter(({ control, index }) => {
+        if (!query) return true;
+        const nombre = (control.get('nombre')?.value || '').toLowerCase();
+        const descripcion = (control.get('descripcion')?.value || '').toLowerCase();
+        const indice = this.getIndiceNombre(control.get('index')?.value).toLowerCase();
+        const numStr = `clausula ${index + 1}`;
+        return (
+          nombre.includes(query) ||
+          descripcion.includes(query) ||
+          indice.includes(query) ||
+          numStr.includes(query)
+        );
+      });
+  }
+
+  limpiarFiltro(): void {
+    this.filtroClausulas = '';
+  }
+
+  getTituloClausula(index: number): string {
+    const clausula = this.clausulas.at(index);
+    if (!clausula) return `Cláusula ${index + 1}`;
+    const indiceNombre = this.getIndiceNombre(clausula.get('index')?.value);
+    const nombre = clausula.get('nombre')?.value;
+    if (indiceNombre && nombre) {
+      return `${indiceNombre}: ${nombre}`;
+    }
+    return indiceNombre || nombre || `Cláusula ${index + 1}`;
+  }
+
+  seleccionarClausula(index: number): void {
+    if (this.clausulaSeleccionadaIndex === index) {
+      return;
+    }
+
+    if (this.isClausulaModificada(this.clausulaSeleccionadaIndex)) {
+      const tituloActual = this.getTituloClausula(this.clausulaSeleccionadaIndex);
+      Swal.fire({
+        title: 'Cambios sin guardar',
+        text: `La ${tituloActual} tiene modificaciones sin guardar. ¿Desea guardarla antes de cambiar, o descartar los cambios?`,
+        icon: 'warning',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonColor: '#801313',
+        denyButtonColor: '#b71c1c',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Guardar y cambiar',
+        denyButtonText: 'Descartar y cambiar',
+        cancelButtonText: 'Permanecer aquí',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.ejecutarGuardarClausula(this.clausulaSeleccionadaIndex);
+          this.clausulaSeleccionadaIndex = index;
+          this.cdr.detectChanges();
+        } else if (result.isDenied) {
+          this.clausulaSeleccionadaIndex = index;
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.clausulaSeleccionadaIndex = index;
+      this.cdr.detectChanges();
+    }
+  }
+
+  getIndiceNombre(indiceId: string): string {
+    if (!indiceId || !this.indices) return '';
+    const indice = this.indices.find((i) => i.Id === indiceId);
+    return indice ? indice.Nombre : '';
   }
 
   private cargarIndices() {
@@ -356,13 +446,17 @@ export class PasoClausulasParagrafosComponent {
 
   isClausulaEditable(index: number): boolean {
     const clausula = this.clausulas.at(index);
+    if (!clausula) return false;
     return clausula.get('es_editable')?.value ?? false;
   }
 
   isParagrafoEditable(clausulaIndex: number, paragrafoIndex: number): boolean {
     const clausula = this.clausulas.at(clausulaIndex);
+    if (!clausula) return false;
     const paragrafos = this.getParagrafos(clausula);
+    if (!paragrafos) return false;
     const paragrafo = paragrafos.at(paragrafoIndex);
+    if (!paragrafo) return false;
     return paragrafo.get('es_editable')?.value ?? false;
   }
 
@@ -406,7 +500,7 @@ export class PasoClausulasParagrafosComponent {
       '¿Está seguro(a) de agregar la cláusula al contrato?',
       () => {
         const nuevoIndice = this.clausulas.length;
-        const indiceId = this.indices[nuevoIndice]?.Nombre || '';
+        const indiceId = this.indices[nuevoIndice]?.Id || '';
         this.clausulas.push(
           this.crearClausulaFormGroup(
             {
@@ -420,6 +514,8 @@ export class PasoClausulasParagrafosComponent {
           )
         );
         this.actualizarIndices();
+        this.clausulaSeleccionadaIndex = this.clausulas.length - 1;
+        this.cdr.detectChanges();
         this.alertService.showSuccessAlert('Cláusula agregada');
       }
     );
@@ -447,6 +543,10 @@ export class PasoClausulasParagrafosComponent {
 
           this.clausulas.removeAt(index);
           this.actualizarIndices();
+          if (this.clausulaSeleccionadaIndex >= this.clausulas.length) {
+            this.clausulaSeleccionadaIndex = Math.max(0, this.clausulas.length - 1);
+          }
+          this.cdr.detectChanges();
           this.actualizarContrato()
             .then(() => {
               this.alertService.showSuccessAlert('Cláusula eliminada');
@@ -618,6 +718,9 @@ export class PasoClausulasParagrafosComponent {
 
   isClausulaModificada(index: number): boolean {
     const clausula = this.clausulas.at(index) as FormGroup;
+    if (!clausula) {
+      return false;
+    }
     if (!clausula.get('es_editable')?.value) {
       return false;
     }
@@ -626,11 +729,13 @@ export class PasoClausulasParagrafosComponent {
     const descripcionClausulaModificada =
       clausula.get('descripcion')?.dirty ?? false;
     const paragrafos = this.getParagrafos(clausula);
-    const algunParagrafoModificado = paragrafos.controls.some(
-      (paragrafo) =>
-        paragrafo.get('es_editable')?.value &&
-        (paragrafo.get('descripcion')?.dirty ?? false)
-    );
+    const algunParagrafoModificado = paragrafos
+      ? paragrafos.controls.some(
+          (paragrafo) =>
+            paragrafo.get('es_editable')?.value &&
+            (paragrafo.get('descripcion')?.dirty ?? false)
+        )
+      : false;
     return (
       nombreModificado ||
       descripcionClausulaModificada ||
@@ -642,32 +747,44 @@ export class PasoClausulasParagrafosComponent {
     this.confirmarAccion(
       '¿Está seguro(a) que desea guardar la cláusula?',
       () => {
-        const clausula = this.clausulas.at(index) as FormGroup;
-        const clausulaId = clausula.get('id')?.value;
-        const esPredeterminada = clausula.get('predeterminado')?.value;
-        const nombreModificado = clausula.get('nombre')?.dirty;
-        const descripcionModificada = clausula.get('descripcion')?.dirty;
-
-        console.log('nombreModificado:' + nombreModificado);
-        console.log('descripcionModificada:' + descripcionModificada);
-
-        if (
-          (esPredeterminada || clausulaId === null) &&
-          (nombreModificado || descripcionModificada)
-        ) {
-          this.crearNuevaClausula(clausula);
-        } else if (
-          !esPredeterminada &&
-          clausulaId !== null &&
-          (nombreModificado || descripcionModificada)
-        ) {
-          this.actualizarClausulaExistente(clausula);
-        }
-
-        this.actualizarParagrafos(clausulaId, clausula);
-        this.alertService.showSuccessAlert('Cláusula guardada correctamente');
+        this.ejecutarGuardarClausula(index);
       }
     );
+  }
+
+  ejecutarGuardarClausula(index: number): void {
+    const clausula = this.clausulas.at(index) as FormGroup;
+    if (!clausula) return;
+    const clausulaId = clausula.get('id')?.value;
+    const esPredeterminada = clausula.get('predeterminado')?.value;
+    const nombreModificado = clausula.get('nombre')?.dirty;
+    const descripcionModificada = clausula.get('descripcion')?.dirty;
+
+    console.log('nombreModificado:' + nombreModificado);
+    console.log('descripcionModificada:' + descripcionModificada);
+
+    if (
+      (esPredeterminada || clausulaId === null) &&
+      (nombreModificado || descripcionModificada)
+    ) {
+      this.crearNuevaClausula(clausula);
+    } else if (
+      !esPredeterminada &&
+      clausulaId !== null &&
+      (nombreModificado || descripcionModificada)
+    ) {
+      this.actualizarClausulaExistente(clausula);
+    }
+
+    this.actualizarParagrafos(clausulaId, clausula);
+
+    // Reiniciar dirty en los controles guardados
+    clausula.markAsPristine();
+    this.getParagrafos(clausula).controls.forEach((paragrafo) =>
+      paragrafo.markAsPristine()
+    );
+
+    this.alertService.showSuccessAlert('Cláusula guardada correctamente');
   }
 
   private crearNuevaClausula(clausula: FormGroup) {
