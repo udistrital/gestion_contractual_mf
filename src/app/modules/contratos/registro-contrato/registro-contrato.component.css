@@ -1,11 +1,187 @@
-@media (min-width: 992px) {
-  ::ng-deep .mat-step-text-label {
-    white-space: normal;
-    overflow: visible;
-    font-size: 10pt;
+/* ==========================================================================
+   Ocultar cabecera por defecto de Angular Material Stepper
+   ========================================================================== */
+.custom-argo-stepper ::ng-deep .mat-horizontal-stepper-header-container,
+.custom-argo-stepper ::ng-deep .mat-vertical-stepper-header-container {
+  display: none !important;
+}
+
+.custom-argo-stepper ::ng-deep .mat-horizontal-content-container {
+  padding: 0 !important;
+}
+
+.custom-argo-stepper {
+  background: transparent !important;
+}
+
+/* ==========================================================================
+   Barra de Navegación del Stepper Institucional ARGO (conforme a Guía de Diseño)
+   ========================================================================== */
+.stepper-nav-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e3e5;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.stepper-nav-track {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  min-width: max-content;
+  width: 100%;
+}
+
+/* Píldora individual de cada paso */
+.step-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+  flex: 1;
+  min-width: 170px;
+}
+
+.step-pill:hover {
+  background-color: #f8fafc;
+}
+
+/* ==========================================================================
+   Estado ACTIVO (Paso en edición actual)
+   ========================================================================== */
+.step-pill.step-active {
+  background-color: #fdf4f4;
+  border-color: rgba(128, 19, 19, 0.3);
+  box-shadow: 0 1px 2px rgba(128, 19, 19, 0.08);
+}
+
+.step-pill.step-active .step-circle {
+  background-color: #801313;
+  color: #ffffff;
+  border-color: #801313;
+}
+
+.step-pill.step-active .step-sublabel {
+  color: #801313;
+  font-weight: 700;
+}
+
+.step-pill.step-active .step-title {
+  color: #801313;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Estado COMPLETADO (Pasos validados o ya superados)
+   ========================================================================== */
+.step-pill.step-completed .step-circle {
+  background-color: #057a55;
+  color: #ffffff;
+  border-color: #057a55;
+}
+
+.step-pill.step-completed .step-sublabel {
+  color: #057a55;
+  font-weight: 700;
+}
+
+.step-pill.step-completed .step-title {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Estado PENDIENTE / FUTURO (Pasos aún por diligenciar)
+   ========================================================================== */
+.step-pill.step-pending .step-circle {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+.step-pill.step-pending .step-sublabel {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.step-pill.step-pending .step-title {
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Círculo del Paso
+   ========================================================================== */
+.step-circle {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.step-circle-num {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.step-check-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Textos del Paso
+   ========================================================================== */
+.step-text-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-sublabel {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.step-title {
+  font-size: 12.5px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Ajustes Responsivos
+   ========================================================================== */
+@media (max-width: 992px) {
+  .stepper-nav-track {
+    gap: 0.5rem;
   }
 
-  .mt-lg {
-    margin-top: 10px;
+  .step-pill {
+    min-width: 150px;
+    padding: 0.4rem 0.65rem;
+  }
+
+  .step-title {
+    font-size: 11.5px;
   }
 }
