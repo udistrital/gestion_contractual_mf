@@ -80,7 +80,9 @@
               <b style="color: var(--primary)">Especificaciones Técnicas</b>
             </ng-template>
             <app-paso-especificaciones
+              [contratoGeneral]="contratoGeneral"
               (stepCompleted)="stepCompleted(3, $event)"
+              (nextStep)="goToNextStep()"
             >
             </app-paso-especificaciones>
           </mat-step>
@@ -92,7 +94,11 @@
               <p>Paso</p>
               <b style="color: var(--primary)">Garantías y Mecanismos de Cobertura del Riesgo</b>
             </ng-template>
-            <app-paso-garantias (stepCompleted)="stepCompleted(4, $event)" />
+            <app-paso-garantias
+              [contratoGeneral]="contratoGeneral"
+              (stepCompleted)="stepCompleted(4, $event)"
+              (nextStep)="goToNextStep()"
+            />
           </mat-step>
         }
 

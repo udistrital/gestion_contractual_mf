@@ -1,8 +1,8 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalEspecificacionComponent } from './modal-especificacion/modal-especificacion.component';
-import { EspecificacionTecnica } from 'src/app/types/types';
+import { ContratoGeneral, EspecificacionTecnica } from 'src/app/types/types';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { CargarArchivoComponent } from './cargar-archivo/cargar-archivo.component';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
@@ -14,7 +14,8 @@ import { environment } from 'src/environments/environment';
     styleUrls: ['./paso-especificaciones.component.css'],
     standalone: false
 })
-export class PasoEspecificacionesComponent {
+export class PasoEspecificacionesComponent implements OnInit {
+  @Input() contratoGeneral: ContratoGeneral | undefined;
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
@@ -30,6 +31,13 @@ export class PasoEspecificacionesComponent {
   especificaciones: EspecificacionTecnica[] = [];
   contrato_general_id = 1;
 
+  get valorTotalGeneral(): number {
+    return this.especificaciones.reduce(
+      (acc, curr) => acc + (Number(curr.valor_total) || 0),
+      0
+    );
+  }
+
   constructor(
     public dialog: MatDialog,
     private alertService: AlertService,
@@ -42,6 +50,11 @@ export class PasoEspecificacionesComponent {
     this.getEspecificaciones();
   }
 
+  guardarYContinuar() {
+    this.stepCompleted.emit(this.especificaciones.length > 0);
+    this.nextStep.emit();
+  }
+
   private handleError(message: string, error: any, callback?: () => void) {
     console.error(message, error);
     this.alertService.showErrorAlert(message);
@@ -49,6 +62,10 @@ export class PasoEspecificacionesComponent {
   }
 
   getContratoGeneralId() {
+    if (this.contratoGeneral?.id) {
+      this.contrato_general_id = this.contratoGeneral.id;
+      return;
+    }
     const contratoGeneral = localStorage.getItem('paso-info-general');
     if (contratoGeneral) {
       const parsedContrato: any = JSON.parse(contratoGeneral);

@@ -2,6 +2,7 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
+  Input,
   OnInit,
   Output,
 } from '@angular/core';
@@ -11,7 +12,7 @@ import { PolizasService } from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import { firstValueFrom } from 'rxjs';
-import { AmparoResponse, ApiResponse } from 'src/app/types/types';
+import { AmparoResponse, ApiResponse, ContratoGeneral } from 'src/app/types/types';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
@@ -21,6 +22,7 @@ import { AlertService } from 'src/app/services/alert.service';
     standalone: false
 })
 export class PasoGarantiasComponent implements OnInit {
+  @Input() contratoGeneral: ContratoGeneral | undefined;
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
@@ -49,54 +51,75 @@ export class PasoGarantiasComponent implements OnInit {
     this.cargarTipoAmparos();
     this.loadSavedData();
     this.form.statusChanges.subscribe(() => {
-      this.stepCompleted.emit(this.form.valid);
+      this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
     });
+  }
+
+  get totalAmparos(): number {
+    return this.filasFormArray.length;
+  }
+
+  get amparosValidos(): number {
+    return this.filasFormArray.controls.filter((c) => c.valid).length;
+  }
+
+  get estadoCobertura(): string {
+    if (this.filasFormArray.length === 0) {
+      return 'Sin amparos';
+    }
+    return this.form.valid ? 'Completo' : 'Incompleto';
   }
 
   private async loadSavedData(): Promise<void> {
     console.log('Loading saved data...');
     try {
-      // Cargar ID del contrato
-      const infoGeneral = localStorage.getItem('paso-info-general');
-      if (infoGeneral) {
-        const contratoData = JSON.parse(infoGeneral);
-        this.contratoGeneralId = contratoData.id;
+      // Priorizar el contratoGeneral recibido por Input
+      if (this.contratoGeneral && this.contratoGeneral.id) {
+        this.contratoGeneralId = this.contratoGeneral.id;
+      } else {
+        const infoGeneral = localStorage.getItem('paso-info-general');
+        if (infoGeneral) {
+          const contratoData = JSON.parse(infoGeneral);
+          this.contratoGeneralId = contratoData.id;
+        }
+      }
 
-        if (this.contratoGeneralId) {
-          const response = await firstValueFrom(
-            this.polizasService.getAmparos(this.contratoGeneralId)
-          );
+      if (this.contratoGeneralId) {
+        const response = await firstValueFrom(
+          this.polizasService.getAmparos(this.contratoGeneralId)
+        );
 
-          if (
-            response.Status === '200' &&
-            response.Data &&
-            response.Data.length > 0
-          ) {
-            while (this.filasFormArray.length !== 0) {
-              this.filasFormArray.removeAt(0);
-            }
+        if (
+          response.Status === '200' &&
+          response.Data &&
+          response.Data.length > 0
+        ) {
+          while (this.filasFormArray.length !== 0) {
+            this.filasFormArray.removeAt(0);
+          }
 
-            response.Data.forEach((amparo: any) => {
-              const filaFormGroup = this.crearFilaFormGroup();
-              filaFormGroup.patchValue({
-                amparo: amparo.amparo_id,
-                suficienciaPorcentaje:
-                  amparo.tipo_valor_amparo_id === 2 ? amparo.suficiencia : '',
-                suficienciaSalarios:
-                  amparo.tipo_valor_amparo_id === 1 ? amparo.suficiencia : '',
-                descripcion: amparo.descripcion,
-              });
-
-              this.configurarAmparoListener(filaFormGroup);
-              this.filasFormArray.push(filaFormGroup);
+          response.Data.forEach((amparo: any) => {
+            const filaFormGroup = this.crearFilaFormGroup();
+            filaFormGroup.patchValue({
+              amparo: amparo.amparo_id,
+              suficienciaPorcentaje:
+                amparo.tipo_valor_amparo_id === 2 ? amparo.suficiencia : '',
+              suficienciaSalarios:
+                amparo.tipo_valor_amparo_id === 1 ? amparo.suficiencia : '',
+              descripcion: amparo.descripcion,
             });
 
-            this.formId = this.contratoGeneralId;
-            this.actualizarDataSource();
-          } else {
-            this.agregarFila();
-          }
+            this.configurarAmparoListener(filaFormGroup);
+            this.filasFormArray.push(filaFormGroup);
+          });
+
+          this.formId = this.contratoGeneralId;
+          this.actualizarDataSource();
+        } else {
+          this.agregarFila();
         }
+      } else {
+        this.agregarFila();
       }
 
       const savedForm = localStorage.getItem('paso-garantias');
@@ -107,13 +130,27 @@ export class PasoGarantiasComponent implements OnInit {
     } catch (error) {
       console.error('Error loading saved data:', error);
       localStorage.removeItem('paso-garantias');
-      this.agregarFila();
+      if (this.filasFormArray.length === 0) {
+        this.agregarFila();
+      }
     }
   }
 
   async guardarYContinuar() {
+    if (this.filasFormArray.length === 0) {
+      this.alertService.showAlert(
+        'Debe registrar al menos un amparo o garantía para el contrato',
+        'Atención'
+      );
+      return;
+    }
+
     if (!this.form.valid) {
       this.markFormGroupTouched(this.form);
+      this.alertService.showAlert(
+        'Por favor complete todos los campos obligatorios de los amparos',
+        'Formulario incompleto'
+      );
       return;
     }
 
@@ -180,11 +217,13 @@ export class PasoGarantiasComponent implements OnInit {
     this.filasFormArray.push(nuevaFila);
     this.configurarAmparoListener(nuevaFila);
     this.actualizarDataSource();
+    this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
   }
 
   eliminarFila(index: number) {
     this.filasFormArray.removeAt(index);
     this.actualizarDataSource();
+    this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
     this.cdRef.detectChanges();
   }
 
