@@ -97,6 +97,7 @@
                       <b style="color: var(--primary)">Especificaciones Técnicas</b>
                     </ng-template>
                     <app-paso-especificaciones
+                    [contratoGeneral]="contratoGeneral"
                       (stepCompleted)="stepCompleted(5, $event)"
                       >
                     </app-paso-especificaciones>

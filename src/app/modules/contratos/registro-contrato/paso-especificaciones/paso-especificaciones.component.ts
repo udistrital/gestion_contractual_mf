@@ -1,8 +1,8 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, effect, EventEmitter, inject, input, output, Output } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalEspecificacionComponent } from './modal-especificacion/modal-especificacion.component';
-import { EspecificacionTecnica } from 'src/app/types/types';
+import { ApiResponse, ContratoGeneral, EspecificacionTecnica } from 'src/app/types/types';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { CargarArchivoComponent } from './cargar-archivo/cargar-archivo.component';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
@@ -15,8 +15,9 @@ import { environment } from 'src/environments/environment';
     standalone: false
 })
 export class PasoEspecificacionesComponent {
-  @Output() nextStep = new EventEmitter<void>();
-  @Output() stepCompleted = new EventEmitter<boolean>();
+  nextStep = output<void>();
+  stepCompleted = output<boolean>();
+  contratoGeneral = input<ContratoGeneral>()
 
   displayedColumns = [
     'item',
@@ -28,43 +29,23 @@ export class PasoEspecificacionesComponent {
   ];
   editando: boolean = false;
   especificaciones: EspecificacionTecnica[] = [];
-  contrato_general_id = 1;
 
-  constructor(
-    public dialog: MatDialog,
-    private alertService: AlertService,
-    private contratoGeneralCrudService: ContratoGeneralCrudService,
-    private gestorDocumentalService: GestorDocumentalService
-  ) {}
-
-  ngOnInit() {
-    this.getContratoGeneralId();
-    this.getEspecificaciones();
+  public readonly dialog = inject(MatDialog);
+  private readonly alertService = inject(AlertService);
+  private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
+  private readonly gestorDocumentalService = inject(GestorDocumentalService);
+  constructor() {
+    effect(() => {
+      if (this.contratoGeneral()) {
+        this.getEspecificaciones();
+      }
+    })
   }
 
   private handleError(message: string, error: any, callback?: () => void) {
     console.error(message, error);
     this.alertService.showErrorAlert(message);
     if (callback) callback();
-  }
-
-  getContratoGeneralId() {
-    const contratoGeneral = localStorage.getItem('paso-info-general');
-    if (contratoGeneral) {
-      const parsedContrato: any = JSON.parse(contratoGeneral);
-      this.contrato_general_id = parsedContrato.id;
-    }
-  }
-
-  getDataResponse(data: any): EspecificacionTecnica {
-    const { id, descripcion, cantidad, valor_unitario, valor_total } = data;
-    return {
-      id,
-      descripcion,
-      cantidad,
-      valor_unitario,
-      valor_total,
-    };
   }
 
   preguntarConfirmacionEliminacion(index: number) {
@@ -79,16 +60,11 @@ export class PasoEspecificacionesComponent {
 
   getEspecificaciones() {
     this.contratoGeneralCrudService
-      .getEspecificacionesTecnicas(this.contrato_general_id)
+      .getEspecificacionesTecnicas(this.contratoGeneral()?.id as number)
       .subscribe({
-        next: (response: {
-          Success: boolean;
-          Data: EspecificacionTecnica[];
-        }) => {
+        next: (response: ApiResponse<EspecificacionTecnica[]>) => {
           if (response.Success && response.Data.length > 0) {
-            this.especificaciones = response.Data.map((element) =>
-              this.getDataResponse(element)
-            );
+            this.especificaciones = response.Data;
           }
         },
         error: (error) =>
@@ -98,16 +74,15 @@ export class PasoEspecificacionesComponent {
 
   crearEspecificacion(especificacion: EspecificacionTecnica) {
     const { id, ...especificacionSinId } = especificacion;
-    this.getContratoGeneralId();
     this.contratoGeneralCrudService
       .postEspecificacionTecnica({
         ...especificacionSinId,
-        contrato_general_id: this.contrato_general_id,
+        contrato_general_id: this.contratoGeneral()?.id,
       })
       .subscribe({
-        next: (response: { Success: boolean; Data: EspecificacionTecnica }) => {
+        next: (response: ApiResponse<EspecificacionTecnica>) => {
           if (response.Success && response.Data.id) {
-            const nuevaEspecificacion = this.getDataResponse(response.Data);
+            const nuevaEspecificacion = response.Data;
             this.especificaciones = [
               ...this.especificaciones,
               nuevaEspecificacion,
@@ -132,9 +107,9 @@ export class PasoEspecificacionesComponent {
     this.contratoGeneralCrudService
       .putEspecificacionTecnica(especificacion.id, especificacionSinId)
       .subscribe({
-        next: (response: { Success: boolean; Data: EspecificacionTecnica }) => {
+        next: (response: ApiResponse<EspecificacionTecnica> ) => {
           if (response.Success && response.Data.id) {
-            const nuevaEspecificacion = this.getDataResponse(response.Data);
+            const nuevaEspecificacion = response.Data;
             const index = this.especificaciones.findIndex(
               (element) => element.id === especificacion.id
             );
@@ -165,10 +140,7 @@ export class PasoEspecificacionesComponent {
     this.contratoGeneralCrudService
       .deleteEspecificacionTecnica(especificacion.id)
       .subscribe({
-        next: (response: {
-          Success: boolean;
-          Data: EspecificacionTecnica[];
-        }) => {
+        next: (response: ApiResponse<EspecificacionTecnica[]>) => {
           if (response.Success && response.Data) {
             this.especificaciones.splice(index, 1);
             this.especificaciones = [...this.especificaciones];
@@ -212,10 +184,9 @@ export class PasoEspecificacionesComponent {
   }
 
   abrirModalCargarArchivo(): void {
-    this.getContratoGeneralId();
     const dialog = this.dialog.open(CargarArchivoComponent, {
       width: '800px',
-      data: { contrato_general_id: this.contrato_general_id },
+      data: { contrato_general_id: this.contratoGeneral()?.id },
     });
 
     dialog.afterClosed().subscribe(() => {
