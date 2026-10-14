@@ -221,6 +221,35 @@ export class PasoClausulasParagrafosComponent {
     return indice ? indice.Nombre : '';
   }
 
+  /**
+   * Retorna la lista de índices disponibles para una cláusula específica.
+   * Excluye aquellos índices que ya han sido seleccionados por OTRAS cláusulas,
+   * preservando únicamente los índices libres y el índice actualmente asignado a esta cláusula.
+   */
+  getIndicesDisponibles(clausulaIndex: number): Indice[] {
+    if (!this.indices || this.indices.length === 0) {
+      return [];
+    }
+
+    const clausulaActual = this.clausulas.at(clausulaIndex);
+    const indiceActualId = clausulaActual?.get('index')?.value?.toString();
+
+    const indicesOcupadosPorOtras = new Set<string>();
+    this.clausulas.controls.forEach((control, idx) => {
+      if (idx !== clausulaIndex) {
+        const val = control.get('index')?.value;
+        if (val !== null && val !== undefined && val !== '') {
+          indicesOcupadosPorOtras.add(val.toString());
+        }
+      }
+    });
+
+    return this.indices.filter((indice) => {
+      const idStr = indice.Id?.toString();
+      return idStr === indiceActualId || !indicesOcupadosPorOtras.has(idStr);
+    });
+  }
+
   private cargarIndices() {
     this.parametrosService
       .get(

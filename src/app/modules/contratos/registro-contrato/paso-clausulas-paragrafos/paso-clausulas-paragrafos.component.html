@@ -258,7 +258,7 @@
                             <mat-label>Índice / Numeración</mat-label>
                             <mat-icon matPrefix>format_list_numbered</mat-icon>
                             <mat-select formControlName="index">
-                              @for (indice of indices; track indice.Id) {
+                              @for (indice of getIndicesDisponibles(i); track indice.Id) {
                                 <mat-option [value]="indice.Id">
                                   {{ indice.Nombre }}
                                 </mat-option>
