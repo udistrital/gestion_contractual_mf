@@ -58,14 +58,18 @@
           />
         </mat-step>
 
-        <mat-step>
+        <mat-step
+          [stepControl]="pasoObligaciones.form"
+          [editable]="canProceedToStep(2) | async"
+        >
           <ng-template matStepLabel>
             <p>Paso</p>
-            <b style="color: var(--primary)">Obligaciones del Contrato</b>
+            <b style="color: var(--primary)">Estructura y Necesidad</b>
           </ng-template>
           <app-paso-obligaciones
             #pasoObligaciones
             (stepCompleted)="stepCompleted(2, $event)"
+            (nextStep)="goToNextStep()"
           />
         </mat-step>
 

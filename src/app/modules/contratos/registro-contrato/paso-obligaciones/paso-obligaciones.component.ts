@@ -22,6 +22,15 @@ interface CDP {
   estadocdp: string;
 }
 
+export interface ActividadEspecifica {
+  id: string;
+  numero: number;
+  titulo?: string;
+  descripcion: string;
+  entregables: string[];
+  plazo?: string;
+}
+
 @Component({
     selector: 'app-paso-obligaciones',
     templateUrl: './paso-obligaciones.component.html',
@@ -38,6 +47,15 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
   private previousCDPCount: number = 0;
   contratoGeneralId: number | null = null;
 
+  // Gestión estructurada de Actividades Específicas
+  actividadesList: ActividadEspecifica[] = [];
+  modalActividadAbierto: boolean = false;
+  modoEdicionActividad: boolean = false;
+  indiceEdicionActividad: number | null = null;
+  actividadEnEdicion: ActividadEspecifica = this.crearActividadVacia();
+  nuevoEntregableTexto: string = '';
+  mostrarParrafoCompilado: boolean = false;
+
   constructor(
     private _formBuilder: FormBuilder,
     private cdpService: CdpsService,
@@ -53,6 +71,7 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadContratoData();
+    this.cargarActividadesIniciales();
     this.loadCDPData();
     this.cdpSubscription = this.cdpService.cdp$.subscribe(data => {
       this.cdpData = data;
@@ -72,7 +91,6 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
       const parsedContrato: ContratoGeneral = JSON.parse(contratoGeneral);
       this.contratoGeneralId = parsedContrato.id!;
     }
-
   }
 
   loadCDPData() {
@@ -87,21 +105,20 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
       const cdp = this.cdpData[0];
       this.form.patchValue({
         justificacion: cdp.justificacion || '',
-        objetoContrato: cdp.descripcion || '',
-        actividades: cdp.observaciones || ''
+        objetoContrato: cdp.descripcion || ''
       });
+      this.actualizarParrafoCompilado();
     } else if (currentCDPCount >= 2 || currentCDPCount === 0) {
-      // Reiniciar los editores si hay 2 o más CDPs, o si el arreglo está vacío
       this.resetForm();
       const savedData = localStorage.getItem('paso-obligaciones');
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         this.form.patchValue({
           justificacion: parsedData.justificacion || '',
-          objetoContrato: parsedData.objeto || '',
-          actividades: parsedData.actividades || ''
+          objetoContrato: parsedData.objeto || ''
         });
       }
+      this.actualizarParrafoCompilado();
     }
 
     this.previousCDPCount = currentCDPCount;
@@ -117,10 +134,7 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
 
   onInView(inView: boolean) {
     if (inView) {
-      console.log('Step Obligaciones in view');
       this.loadCDPData();
-    } else {
-      console.log('Step Obligaciones out of view');
     }
   }
 
@@ -128,20 +142,222 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
     return this.cdpData.length === 1;
   }
 
+  reSincronizarSicapital() {
+    this.loadCDPData();
+    this.alertService.showAlert('Información re-sincronizada desde SICAPITAL / CDP.', 'Sincronización');
+  }
+
+  // =========================================================================
+  // Gestión de Actividades Específicas Estructuradas (JSON & Párrafo Compilado)
+  // =========================================================================
+
+  crearActividadVacia(): ActividadEspecifica {
+    return {
+      id: `act-${Date.now()}`,
+      numero: this.actividadesList.length + 1,
+      titulo: '',
+      descripcion: '',
+      entregables: [],
+      plazo: ''
+    };
+  }
+
+  cargarActividadesIniciales() {
+    const savedActivities = localStorage.getItem('paso-obligaciones-actividades');
+    if (savedActivities) {
+      try {
+        const parsed = JSON.parse(savedActivities);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.actividadesList = parsed;
+        } else {
+          this.actividadesList = [];
+        }
+      } catch {
+        this.actividadesList = [];
+      }
+    } else {
+      const savedObligaciones = localStorage.getItem('paso-obligaciones');
+      if (savedObligaciones) {
+        try {
+          const parsed = JSON.parse(savedObligaciones);
+          if (parsed.actividadesEstructuradas && Array.isArray(parsed.actividadesEstructuradas) && parsed.actividadesEstructuradas.length > 0) {
+            this.actividadesList = parsed.actividadesEstructuradas;
+          } else {
+            this.actividadesList = [];
+          }
+        } catch {
+          this.actividadesList = [];
+        }
+      } else {
+        this.actividadesList = [];
+      }
+    }
+    this.renumerarActividades();
+    this.actualizarParrafoCompilado();
+  }
+
+  guardarActividadesEnStorage() {
+    localStorage.setItem('paso-obligaciones-actividades', JSON.stringify(this.actividadesList));
+  }
+
+  renumerarActividades() {
+    this.actividadesList.forEach((act, idx) => {
+      act.numero = idx + 1;
+    });
+  }
+
+  formatearNumero(num: number): string {
+    return num.toString().padStart(2, '0');
+  }
+
+  generarParrafoActividades(): string {
+    if (!this.actividadesList || this.actividadesList.length === 0) {
+      return '';
+    }
+    return this.actividadesList
+      .map((act, index) => {
+        const num = (index + 1).toString().padStart(2, '0');
+        let parrafo = `${num}. ${act.descripcion.trim()}`;
+        if (act.entregables && act.entregables.length > 0) {
+          const entregablesTexto = act.entregables.filter(e => !!e.trim()).join('; ');
+          if (entregablesTexto) {
+            parrafo += ` Entregable(s): ${entregablesTexto}.`;
+          }
+        }
+        if (act.plazo && act.plazo.trim()) {
+          parrafo += ` Plazo/Periodicidad: ${act.plazo.trim()}.`;
+        }
+        return parrafo;
+      })
+      .join('\n\n');
+  }
+
+  actualizarParrafoCompilado() {
+    const parrafoCompilado = this.generarParrafoActividades();
+    this.form.patchValue({ actividades: parrafoCompilado });
+    this.guardarActividadesEnStorage();
+  }
+
+  abrirModalNuevaActividad() {
+    this.modoEdicionActividad = false;
+    this.indiceEdicionActividad = null;
+    this.actividadEnEdicion = this.crearActividadVacia();
+    this.nuevoEntregableTexto = '';
+    this.modalActividadAbierto = true;
+  }
+
+  abrirModalEditarActividad(index: number) {
+    this.modoEdicionActividad = true;
+    this.indiceEdicionActividad = index;
+    const act = this.actividadesList[index];
+    this.actividadEnEdicion = {
+      id: act.id,
+      numero: act.numero,
+      titulo: act.titulo || '',
+      descripcion: act.descripcion,
+      entregables: [...(act.entregables || [])],
+      plazo: act.plazo || ''
+    };
+    this.nuevoEntregableTexto = '';
+    this.modalActividadAbierto = true;
+  }
+
+  cerrarModalActividad() {
+    this.modalActividadAbierto = false;
+    this.indiceEdicionActividad = null;
+    this.nuevoEntregableTexto = '';
+  }
+
+  agregarEntregable() {
+    if (this.nuevoEntregableTexto && this.nuevoEntregableTexto.trim()) {
+      this.actividadEnEdicion.entregables.push(this.nuevoEntregableTexto.trim());
+      this.nuevoEntregableTexto = '';
+    }
+  }
+
+  removerEntregable(idx: number) {
+    this.actividadEnEdicion.entregables.splice(idx, 1);
+  }
+
+  guardarActividadEnEdicion() {
+    if (!this.actividadEnEdicion.descripcion || !this.actividadEnEdicion.descripcion.trim()) {
+      this.alertService.showErrorAlert('La descripción de la actividad es obligatoria.');
+      return;
+    }
+    // Si quedó texto sin agregar en el input de entregable, agregarlo
+    if (this.nuevoEntregableTexto && this.nuevoEntregableTexto.trim()) {
+      this.agregarEntregable();
+    }
+
+    if (this.modoEdicionActividad && this.indiceEdicionActividad !== null) {
+      this.actividadesList[this.indiceEdicionActividad] = {
+        ...this.actividadEnEdicion,
+        numero: this.indiceEdicionActividad + 1
+      };
+    } else {
+      this.actividadesList.push({
+        ...this.actividadEnEdicion,
+        numero: this.actividadesList.length + 1
+      });
+    }
+
+    this.renumerarActividades();
+    this.actualizarParrafoCompilado();
+    this.cerrarModalActividad();
+  }
+
+  eliminarActividad(index: number) {
+    this.actividadesList.splice(index, 1);
+    this.renumerarActividades();
+    this.actualizarParrafoCompilado();
+  }
+
+  moverActividad(index: number, direccion: 'arriba' | 'abajo') {
+    if (direccion === 'arriba' && index > 0) {
+      const temp = this.actividadesList[index];
+      this.actividadesList[index] = this.actividadesList[index - 1];
+      this.actividadesList[index - 1] = temp;
+    } else if (direccion === 'abajo' && index < this.actividadesList.length - 1) {
+      const temp = this.actividadesList[index];
+      this.actividadesList[index] = this.actividadesList[index + 1];
+      this.actividadesList[index + 1] = temp;
+    }
+    this.renumerarActividades();
+    this.actualizarParrafoCompilado();
+  }
+
+  toggleMostrarParrafoCompilado() {
+    this.mostrarParrafoCompilado = !this.mostrarParrafoCompilado;
+  }
+
+  // =========================================================================
+  // Guardado Final del Paso
+  // =========================================================================
+
   guardarObligaciones() {
     if (!this.contratoGeneralId) {
       this.loadContratoData();
     }
+    // Asegurar que el párrafo de actividades esté actualizado
+    this.actualizarParrafoCompilado();
+
     if (this.form.valid && this.contratoGeneralId) {
       const obligacionesData = {
         justificacion: this.form.get('justificacion')?.value,
         objeto: this.form.get('objetoContrato')?.value,
-        actividades: this.form.get('actividades')?.value
+        actividades: this.form.get('actividades')?.value,
+        actividadesEstructuradas: this.actividadesList
       };
-      this.contratoService.put(this.contratoGeneralId, obligacionesData).subscribe({
+
+      this.contratoService.put(this.contratoGeneralId, {
+        justificacion: obligacionesData.justificacion,
+        objeto: obligacionesData.objeto,
+        actividades: obligacionesData.actividades
+      }).subscribe({
         next: (response) => {
           if (response.Success) {
             localStorage.setItem('paso-obligaciones', JSON.stringify(obligacionesData));
+            this.guardarActividadesEnStorage();
             this.alertService.showSuccessAlert('Obligaciones guardadas exitosamente.');
             this.stepCompleted.emit(true);
             this.nextStep.emit();
@@ -153,3 +369,4 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
     }
   }
 }
+
