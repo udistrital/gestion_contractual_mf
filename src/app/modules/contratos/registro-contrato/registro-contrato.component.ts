@@ -23,6 +23,8 @@ import { ApiResponse, ContratoGeneral } from 'src/app/types/types';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { AlertService } from 'src/app/services/alert.service';
 
+export type TipoEstadoPaso = 'actual' | 'verde' | 'amarillo' | 'gris';
+
 export interface PasoDinamico {
   id: string;
   titulo: string;
@@ -64,6 +66,12 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   selectedIndex = 0;
   showEspecificacionesTecnicas = false;
   showAplicaPoliza = false;
+
+  // Estados de persistencia y avance
+  pasosGuardados = new Set<string>();
+  pasosConAlerta = new Set<string>();
+  pasosVisitados = new Set<string>();
+
   stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(
     new Array(6).fill(false)
   );
@@ -91,6 +99,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.manejarResponsiveStepper();
+    this.verificarPasosGuardadosIniciales();
   }
 
   /**
@@ -128,19 +137,93 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     }));
   }
 
-  isPasoCompletado(index: number): boolean {
-    if (this.selectedIndex > index) {
-      return true;
+  /**
+   * Determina el estado exacto del paso conforme a la regla de 4 estados:
+   * 1. 'actual' (ROJO): Paso actual en edición.
+   * 2. 'verde' (VERDE): Únicamente cuando el paso ha sido guardado con éxito.
+   * 3. 'amarillo' (AMARILLO): Alerta de que faltan campos o no se ha guardado el paso.
+   * 4. 'gris' (GRIS): Paso sin campos llenos / no iniciado.
+   */
+  getEstadoPaso(paso: PasoDinamico): TipoEstadoPaso {
+    if (this.selectedIndex === paso.index) {
+      return 'actual';
     }
-    const completedArr = this.stepsCompleted.value;
-    return !!completedArr[index];
+
+    if (this.pasosGuardados.has(paso.id)) {
+      return 'verde';
+    }
+
+    if (this.pasosConAlerta.has(paso.id) || this.pasosVisitados.has(paso.id)) {
+      return 'amarillo';
+    }
+
+    return 'gris';
   }
 
-  getSublabelPaso(index: number, numeroFormateado: string): string {
-    if (this.selectedIndex === index) {
-      return `PASO ${numeroFormateado} ACTIVO`;
+  getSublabelPaso(paso: PasoDinamico): string {
+    const estado = this.getEstadoPaso(paso);
+    switch (estado) {
+      case 'actual':
+        return `PASO ${paso.numeroFormateado} ACTIVO`;
+      case 'verde':
+        return `PASO ${paso.numeroFormateado} GUARDADO`;
+      case 'amarillo':
+        return `PASO ${paso.numeroFormateado} PENDIENTE`;
+      case 'gris':
+      default:
+        return `PASO ${paso.numeroFormateado}`;
     }
-    return `PASO ${numeroFormateado}`;
+  }
+
+  marcarPasoGuardado(pasoId: string) {
+    this.pasosGuardados.add(pasoId);
+    this.pasosConAlerta.delete(pasoId);
+  }
+
+  desmarcarPasoGuardado(pasoId: string) {
+    this.pasosGuardados.delete(pasoId);
+    if (this.pasosVisitados.has(pasoId)) {
+      this.pasosConAlerta.add(pasoId);
+    }
+  }
+
+  marcarPasoConAlerta(pasoId: string) {
+    if (!this.pasosGuardados.has(pasoId)) {
+      this.pasosConAlerta.add(pasoId);
+    }
+  }
+
+  onPresupuestalGuardado() {
+    this.marcarPasoGuardado('general');
+    this.cargarContratoGeneral();
+  }
+
+  onPasoEstructuraCompleted(isCompleted: boolean) {
+    this.stepCompleted(2, isCompleted);
+    if (isCompleted) {
+      this.marcarPasoGuardado('estructura');
+    }
+  }
+
+  onPasoEspecificacionesCompleted(isCompleted: boolean) {
+    this.stepCompleted(3, isCompleted);
+    if (isCompleted) {
+      this.marcarPasoGuardado('especificaciones');
+    }
+  }
+
+  onPasoGarantiasCompleted(isCompleted: boolean) {
+    this.stepCompleted(4, isCompleted);
+    if (isCompleted) {
+      this.marcarPasoGuardado('garantias');
+    }
+  }
+
+  onPasoClausulasCompleted(isCompleted: boolean) {
+    this.stepCompleted(5, isCompleted);
+    if (isCompleted) {
+      this.marcarPasoGuardado('clausulas');
+    }
   }
 
   /**
@@ -154,8 +237,26 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   }
 
   onStepSelectionChange(event: StepperSelectionEvent) {
-    this.selectedIndex = event.selectedIndex;
-    if (event.previouslySelectedIndex === 1 && event.selectedIndex !== 1) {
+    const prevIndex = event.previouslySelectedIndex;
+    const currIndex = event.selectedIndex;
+    this.selectedIndex = currIndex;
+
+    // Al salir de un paso previo, si no fue guardado con éxito, se marca en amarillo (alerta)
+    if (
+      prevIndex !== undefined &&
+      prevIndex >= 0 &&
+      prevIndex < this.pasosDinamicos.length
+    ) {
+      const prevPaso = this.pasosDinamicos[prevIndex];
+      if (prevPaso) {
+        this.pasosVisitados.add(prevPaso.id);
+        if (!this.pasosGuardados.has(prevPaso.id)) {
+          this.pasosConAlerta.add(prevPaso.id);
+        }
+      }
+    }
+
+    if (prevIndex === 1 && currIndex !== 1) {
       this.pasoContratistas?.onStepLeave();
     }
   }
@@ -174,6 +275,15 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
       next: (response: ApiResponse<ContratoGeneral>) => {
         if (response.Success && response.Data) {
           this.contratoGeneral = response.Data;
+          if (this.contratoGeneral.id) {
+            this.marcarPasoGuardado('general');
+          }
+          if (this.contratoGeneral.objeto || this.contratoGeneral.actividades) {
+            this.marcarPasoGuardado('estructura');
+          }
+          if (this.contratoGeneral.contratista) {
+            this.marcarPasoGuardado('responsables');
+          }
           if (this.contratoGeneral.tipo_compromiso_id) {
             this.onTipoCompromisoChange(
               this.contratoGeneral.tipo_compromiso_id.toString()
@@ -195,8 +305,33 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     });
   }
 
+  private verificarPasosGuardadosIniciales() {
+    if (localStorage.getItem('paso-info-general')) {
+      try {
+        const data = JSON.parse(
+          localStorage.getItem('paso-info-general') || '{}'
+        );
+        if (data.id) {
+          this.marcarPasoGuardado('general');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    if (
+      localStorage.getItem('paso-contratistas') ||
+      localStorage.getItem('paso-supervisores')
+    ) {
+      this.marcarPasoGuardado('responsables');
+    }
+    if (localStorage.getItem('paso-garantias')) {
+      this.marcarPasoGuardado('garantias');
+    }
+  }
+
   onContratoGuardado(contratoId: number) {
     this.contratoGeneralId.set(contratoId);
+    this.marcarPasoGuardado('general');
     this.cargarContratoGeneral();
   }
 
@@ -214,6 +349,9 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     const isStep1Valid =
       this.pasoInfoGeneralValido && this.pasoInfoPresupuestalValido;
     this.stepCompleted(0, isStep1Valid);
+    if (isStep1Valid && this.contratoGeneralId() > 0) {
+      this.marcarPasoGuardado('general');
+    }
   }
 
   onPasoSupervisoresCompleted(isCompleted: boolean) {
@@ -230,6 +368,9 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     const isStep2Valid =
       this.pasoSupervisoresValido && this.pasoContratistasValido;
     this.stepCompleted(1, isStep2Valid);
+    if (isStep2Valid) {
+      this.marcarPasoGuardado('responsables');
+    }
   }
 
   onTipoCompromisoChange(tipoCompromisoId: string) {
@@ -262,6 +403,17 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     const currentSteps = this.stepsCompleted.value;
     currentSteps[stepIndex] = isCompleted;
     this.stepsCompleted.next(currentSteps);
+
+    // Mapeo dinámico a pasoId según su índice
+    if (stepIndex === 2 && isCompleted) {
+      this.marcarPasoGuardado('estructura');
+    } else if (stepIndex === 3 && isCompleted) {
+      this.marcarPasoGuardado('especificaciones');
+    } else if (stepIndex === 4 && isCompleted) {
+      this.marcarPasoGuardado('garantias');
+    } else if (stepIndex === 5 && isCompleted) {
+      this.marcarPasoGuardado('clausulas');
+    }
   }
 
   canProceedToStep(stepIndex: number): Observable<boolean> {

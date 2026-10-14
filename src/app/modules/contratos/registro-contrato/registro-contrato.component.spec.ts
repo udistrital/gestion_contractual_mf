@@ -67,4 +67,49 @@ describe('RegistroContratoComponent', () => {
     expect(component.selectedIndex).toBe(0);
     expect(component.stepper.selectedIndex).toBe(0);
   });
+
+  describe('Lógica de los 4 estados del Stepper', () => {
+    it('debe marcar como "actual" el paso seleccionado activamente', () => {
+      component.selectedIndex = 0;
+      const paso0 = component.pasosDinamicos[0];
+      expect(component.getEstadoPaso(paso0)).toBe('actual');
+      expect(component.getSublabelPaso(paso0)).toBe('PASO 01 ACTIVO');
+    });
+
+    it('debe marcar como "gris" un paso no iniciado, sin campos llenos ni visitado', () => {
+      component.selectedIndex = 0;
+      const paso1 = component.pasosDinamicos[1];
+      expect(component.getEstadoPaso(paso1)).toBe('gris');
+      expect(component.getSublabelPaso(paso1)).toBe('PASO 02');
+    });
+
+    it('debe marcar como "verde" únicamente cuando el paso haya sido guardado satisfactoriamente', () => {
+      component.selectedIndex = 1;
+      component.marcarPasoGuardado('general');
+      const paso0 = component.pasosDinamicos[0];
+      expect(component.getEstadoPaso(paso0)).toBe('verde');
+      expect(component.getSublabelPaso(paso0)).toBe('PASO 01 GUARDADO');
+    });
+
+    it('debe marcar como "amarillo" (alerta) si el paso fue visitado o tiene alerta pero no ha sido guardado', () => {
+      component.selectedIndex = 1;
+      // Simulamos que el paso 0 fue visitado o dejado sin guardar
+      component.onStepSelectionChange({
+        previouslySelectedIndex: 0,
+        selectedIndex: 1,
+      } as any);
+
+      const paso0 = component.pasosDinamicos[0];
+      expect(component.getEstadoPaso(paso0)).toBe('amarillo');
+      expect(component.getSublabelPaso(paso0)).toBe('PASO 01 PENDIENTE');
+    });
+
+    it('debe permitir desmarcar un paso guardado si deja de ser válido', () => {
+      component.marcarPasoGuardado('estructura');
+      expect(component.pasosGuardados.has('estructura')).toBe(true);
+
+      component.desmarcarPasoGuardado('estructura');
+      expect(component.pasosGuardados.has('estructura')).toBe(false);
+    });
+  });
 });

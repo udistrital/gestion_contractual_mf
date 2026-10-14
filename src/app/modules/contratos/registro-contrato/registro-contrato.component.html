@@ -6,35 +6,43 @@
 <ng-template #contenidoDePlantilla>
   <div class="row">
     <div class="col-12">
-      <!-- 1. Barra de Navegación del Stepper Institucional ARGO (Conforme a Guía de Diseño) -->
+      <!-- 1. Barra de Navegación del Stepper Institucional ARGO (4 Estados y Diseño Fluido) -->
       <div class="stepper-nav-card">
         <div class="stepper-nav-track">
           @for (paso of pasosDinamicos; track paso.id; let idx = $index) {
             <div
               class="step-pill"
-              [class.step-active]="selectedIndex === idx"
-              [class.step-completed]="isPasoCompletado(idx) && selectedIndex !== idx"
-              [class.step-pending]="!isPasoCompletado(idx) && selectedIndex !== idx"
+              [class.step-state-actual]="getEstadoPaso(paso) === 'actual'"
+              [class.step-state-verde]="getEstadoPaso(paso) === 'verde'"
+              [class.step-state-amarillo]="getEstadoPaso(paso) === 'amarillo'"
+              [class.step-state-gris]="getEstadoPaso(paso) === 'gris'"
               (click)="irAlPaso(idx)"
               role="button"
               tabindex="0"
               [attr.aria-label]="paso.titulo"
             >
-              <!-- Círculo de Estado / Indicador Numérico -->
+              <!-- Círculo de Estado / Indicador Numérico o Icono -->
               <div class="step-circle">
-                @if (selectedIndex === idx) {
-                  <span class="step-circle-num">{{ idx + 1 }}</span>
-                } @else if (isPasoCompletado(idx)) {
-                  <mat-icon class="step-check-icon">check</mat-icon>
-                } @else {
-                  <span class="step-circle-num">{{ paso.numeroFormateado }}</span>
+                @switch (getEstadoPaso(paso)) {
+                  @case ('actual') {
+                    <span class="step-circle-num">{{ idx + 1 }}</span>
+                  }
+                  @case ('verde') {
+                    <mat-icon class="step-icon">check</mat-icon>
+                  }
+                  @case ('amarillo') {
+                    <mat-icon class="step-icon">priority_high</mat-icon>
+                  }
+                  @case ('gris') {
+                    <span class="step-circle-num">{{ paso.numeroFormateado }}</span>
+                  }
                 }
               </div>
 
-              <!-- Textos del Paso -->
+              <!-- Textos del Paso con Reducción Adaptativa -->
               <div class="step-text-wrap">
-                <span class="step-sublabel">{{ getSublabelPaso(idx, paso.numeroFormateado) }}</span>
-                <span class="step-title">{{ paso.titulo }}</span>
+                <span class="step-sublabel">{{ getSublabelPaso(paso) }}</span>
+                <span class="step-title" [title]="paso.titulo">{{ paso.titulo }}</span>
               </div>
             </div>
           }
@@ -64,7 +72,7 @@
               #pasoInfoPresupuestal
               [contratoGeneral]="contratoGeneral"
               (stepCompleted)="onPasoInfoPresupuestalCompleted($event)"
-              (contratoGuardado)="cargarContratoGeneral()"
+              (contratoGuardado)="onPresupuestalGuardado()"
               (nextStep)="goToNextStep()"
             />
           </mat-step>
@@ -86,7 +94,7 @@
           <mat-step [editable]="true">
             <app-paso-obligaciones
               #pasoObligaciones
-              (stepCompleted)="stepCompleted(2, $event)"
+              (stepCompleted)="onPasoEstructuraCompleted($event)"
               (nextStep)="goToNextStep()"
             />
           </mat-step>
@@ -96,7 +104,7 @@
             <mat-step [editable]="true">
               <app-paso-especificaciones
                 [contratoGeneral]="contratoGeneral"
-                (stepCompleted)="stepCompleted(3, $event)"
+                (stepCompleted)="onPasoEspecificacionesCompleted($event)"
                 (nextStep)="goToNextStep()"
               />
             </mat-step>
@@ -107,7 +115,7 @@
             <mat-step [editable]="true">
               <app-paso-garantias
                 [contratoGeneral]="contratoGeneral"
-                (stepCompleted)="stepCompleted(4, $event)"
+                (stepCompleted)="onPasoGarantiasCompleted($event)"
                 (nextStep)="goToNextStep()"
               />
             </mat-step>
@@ -116,7 +124,7 @@
           <!-- Paso Final: Clausulado y Parágrafos -->
           <mat-step [editable]="true">
             <app-paso-clausulas-paragrafos
-              (stepCompleted)="stepCompleted(5, $event)"
+              (stepCompleted)="onPasoClausulasCompleted($event)"
             />
           </mat-step>
         </mat-stepper>
