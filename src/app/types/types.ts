@@ -123,10 +123,12 @@ export interface ParametroResponse {
   Activo?: boolean;
 }
 
-export interface AmparoResponse {
+export interface Amparo {
   suficiencia: number;
-  amparo_id: number;
+  amparo_id?: number;
   descripcion: string;
+  contrato_general_id: number;
+  tipo_valor_amparo_id: number;
 }
 
 export interface SimpleItem {

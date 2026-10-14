@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { RequestManager } from '../managers/requestManager';
 import {Observable} from "rxjs";
+import { ApiResponse, Amparo } from '../types/types';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +22,7 @@ export class PolizasService {
     return this.requestManager.put('amparos-polizas/' + id, amparos);
   }
 
-  getAmparos(contratoId: number): Observable<any> {
+  getAmparos(contratoId: number): Observable<ApiResponse<Amparo[]>> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get('amparos-polizas/contrato/' + contratoId);
   }

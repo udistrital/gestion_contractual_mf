@@ -112,7 +112,10 @@
                         >Garantías y Mecanismos de Cobertura del Riesgo</b
                         >
                       </ng-template>
-                      <app-paso-garantias (stepCompleted)="stepCompleted(6, $event)" />
+                      <app-paso-garantias
+                        [contratoGeneral]="contratoGeneral"
+                        (stepCompleted)="stepCompleted(6, $event)"
+                      />
                     </mat-step>
                   }
 

@@ -1,9 +1,11 @@
 import {
   ChangeDetectorRef,
   Component,
-  EventEmitter,
+  effect,
+  inject,
+  input,
   OnInit,
-  Output,
+  output,
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
@@ -11,7 +13,7 @@ import { PolizasService } from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import { firstValueFrom } from 'rxjs';
-import { AmparoResponse, ApiResponse } from 'src/app/types/types';
+import { Amparo, ApiResponse, ContratoGeneral, ParametroListResponse, ParametroResponse } from 'src/app/types/types';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
@@ -21,93 +23,72 @@ import { AlertService } from 'src/app/services/alert.service';
     standalone: false
 })
 export class PasoGarantiasComponent implements OnInit {
-  @Output() nextStep = new EventEmitter<void>();
-  @Output() stepCompleted = new EventEmitter<boolean>();
+  nextStep = output<void>();
+  stepCompleted = output<boolean>();
+  contratoGeneral = input<ContratoGeneral>()
 
   form: FormGroup;
-  amparos: any[] = [];
+  datosExitentes = false;
+  amparos: ParametroResponse[] = [];
   displayedColumns = ['id', 'amparo', 'suficiencia', 'descripcion', 'acciones'];
   dataSource: MatTableDataSource<FormGroup>;
-  contratoGeneralId: number | null = null;
-  formId: number | null = null;
-  isLoading = false;
+
+  private readonly alertService = inject(AlertService);
+  private readonly _formBuilder = inject(FormBuilder);
+  private readonly parametrosService = inject(ParametrosService);
+  private readonly polizasService = inject(PolizasService);
+  private readonly cdRef = inject(ChangeDetectorRef);
 
   constructor(
-    private alertService: AlertService,
-    private _formBuilder: FormBuilder,
-    private parametrosService: ParametrosService,
-    private polizasService: PolizasService,
-    private cdRef: ChangeDetectorRef
   ) {
     this.form = this._formBuilder.group({
       filas: this._formBuilder.array([]),
     });
     this.dataSource = new MatTableDataSource<FormGroup>([]);
+    effect(() => {
+      if (this.contratoGeneral()) {
+        this.loadSavedData();
+      }
+    });
   }
 
   ngOnInit() {
     this.cargarTipoAmparos();
-    this.loadSavedData();
     this.form.statusChanges.subscribe(() => {
       this.stepCompleted.emit(this.form.valid);
     });
   }
 
   private async loadSavedData(): Promise<void> {
-    console.log('Loading saved data...');
-    try {
-      // Cargar ID del contrato
-      const infoGeneral = localStorage.getItem('paso-info-general');
-      if (infoGeneral) {
-        const contratoData = JSON.parse(infoGeneral);
-        this.contratoGeneralId = contratoData.id;
+    if (this.contratoGeneral()) {
+      const response = await firstValueFrom(
+        this.polizasService.getAmparos(this.contratoGeneral()?.id as number)
+      );
 
-        if (this.contratoGeneralId) {
-          const response = await firstValueFrom(
-            this.polizasService.getAmparos(this.contratoGeneralId)
-          );
-
-          if (
-            response.Status === '200' &&
-            response.Data &&
-            response.Data.length > 0
-          ) {
-            while (this.filasFormArray.length !== 0) {
-              this.filasFormArray.removeAt(0);
-            }
-
-            response.Data.forEach((amparo: any) => {
-              const filaFormGroup = this.crearFilaFormGroup();
-              filaFormGroup.patchValue({
-                amparo: amparo.amparo_id,
-                suficienciaPorcentaje:
-                  amparo.tipo_valor_amparo_id === 2 ? amparo.suficiencia : '',
-                suficienciaSalarios:
-                  amparo.tipo_valor_amparo_id === 1 ? amparo.suficiencia : '',
-                descripcion: amparo.descripcion,
-              });
-
-              this.configurarAmparoListener(filaFormGroup);
-              this.filasFormArray.push(filaFormGroup);
-            });
-
-            this.formId = this.contratoGeneralId;
-            this.actualizarDataSource();
-          } else {
-            this.agregarFila();
-          }
+      if (response.Success && response.Data.length > 0) {
+        while (this.filasFormArray.length !== 0) {
+          this.filasFormArray.removeAt(0);
         }
-      }
 
-      const savedForm = localStorage.getItem('paso-garantias');
-      if (savedForm) {
-        const parsedForm = JSON.parse(savedForm);
-        this.formId = parsedForm.id;
+        response.Data.forEach((amparo: any) => {
+          const filaFormGroup = this.crearFilaFormGroup();
+          filaFormGroup.patchValue({
+            amparo: amparo.amparo_id,
+            suficienciaPorcentaje:
+              amparo.tipo_valor_amparo_id === 2 ? amparo.suficiencia : '',
+            suficienciaSalarios:
+              amparo.tipo_valor_amparo_id === 1 ? amparo.suficiencia : '',
+            descripcion: amparo.descripcion,
+          });
+
+          this.configurarAmparoListener(filaFormGroup);
+          this.filasFormArray.push(filaFormGroup);
+        });
+        this.datosExitentes = true;
+        this.actualizarDataSource();
+      } else {
+        this.agregarFila();
       }
-    } catch (error) {
-      console.error('Error loading saved data:', error);
-      localStorage.removeItem('paso-garantias');
-      this.agregarFila();
     }
   }
 
@@ -117,49 +98,32 @@ export class PasoGarantiasComponent implements OnInit {
       return;
     }
 
-    try {
-      this.isLoading = true;
-      const formData = this.prepareFormData();
+    const formData = this.prepareFormData();
 
-      if (!this.contratoGeneralId) {
-        throw new Error('No se ha encontrado información del contrato');
-      }
+    if (!this.contratoGeneral()) {
+      this.alertService.showErrorAlert('No se ha encontrado información del contrato');
+    }
 
-      let response;
+    let response: ApiResponse<Amparo>;
 
-      if (this.formId) {
-        response = await firstValueFrom(
-          this.polizasService.putAmparos(this.contratoGeneralId, formData)
-        );
-      } else {
-        response = await firstValueFrom(
-          this.polizasService.postAmparos(formData)
-        );
-      }
-
-      localStorage.setItem(
-        'paso-garantias',
-        JSON.stringify({
-          ...formData,
-          id: this.contratoGeneralId,
-        })
+    if (this.datosExitentes) {
+      response = await firstValueFrom(
+        this.polizasService.putAmparos(this.contratoGeneral()?.id as number, formData)
       );
+    } else {
+      response = await firstValueFrom(
+        this.polizasService.postAmparos(formData)
+      );
+    }
 
+    if (response.Success) {
       this.alertService.showSuccessAlert(
         'La información de garantías se ha guardado correctamente',
         'Datos guardados'
       );
-
-      this.nextStep.emit();
-    } catch (error) {
-      await this.alertService.showErrorAlert(
-        'Ocurrió un error al guardar la información de garantías',
-        'Error al guardar'
-      );
-    } finally {
-      this.isLoading = false;
-      this.cdRef.detectChanges();
     }
+
+    this.nextStep.emit();
   }
 
   get filasFormArray(): FormArray {
@@ -291,10 +255,10 @@ export class PasoGarantiasComponent implements OnInit {
 
   cargarTipoAmparos() {
     this.parametrosService
-      .get(
+      .get<ParametroListResponse>(
         `parametro?query=TipoParametroId:${environment.AMPARO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
       )
-      .subscribe((Response: any) => {
+      .subscribe((Response: ParametroListResponse) => {
         if (Response.Status == '200') {
           this.amparos = Response.Data;
         }
@@ -310,7 +274,7 @@ export class PasoGarantiasComponent implements OnInit {
     }
   }
 
-  sendDataToApi(data: AmparoResponse[]) {
+  sendDataToApi(data: Amparo[]) {
     this.polizasService.postAmparos(data).subscribe({
       next: (response: ApiResponse<any>) => {
         this.alertService.showSuccessAlert(
@@ -339,7 +303,7 @@ export class PasoGarantiasComponent implements OnInit {
     });
   }
 
-  prepareFormData() {
+  prepareFormData(): Amparo[] {
     return this.filasFormArray.controls.map((control) => {
       const formGroup = control as FormGroup;
       return {
@@ -348,7 +312,7 @@ export class PasoGarantiasComponent implements OnInit {
           ? formGroup.get('suficienciaSalarios')?.value
           : formGroup.get('suficienciaPorcentaje')?.value),
         descripcion: formGroup.get('descripcion')?.value,
-        contrato_general_id: this.contratoGeneralId,
+        contrato_general_id: this.contratoGeneral()?.id as number,
         tipo_valor_amparo_id: formGroup.get('suficienciaSalarios')?.enabled
           ? 1
           : 2,
@@ -369,7 +333,7 @@ export class PasoGarantiasComponent implements OnInit {
 
   async onInView(inView: boolean) {
     if (inView) {
-      await this.loadSavedData();
+      //await this.loadSavedData();
     } else {
       console.log('Paso Garantías - out of view');
     }
