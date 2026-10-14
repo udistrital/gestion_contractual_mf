@@ -66,7 +66,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   private breakpointObserver = inject(BreakpointObserver);
   contratoGeneralId = model<number>(0);
-  editMode = model<boolean>(true);
+  editMode = model<boolean>(false);
   contratoGeneral: ContratoGeneral | undefined = undefined;
 
   constructor() {

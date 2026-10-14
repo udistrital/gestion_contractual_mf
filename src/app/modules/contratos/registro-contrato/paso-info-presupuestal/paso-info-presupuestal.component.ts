@@ -2,6 +2,7 @@ import {
   ChangeDetectorRef,
   Component,
   input,
+  OnDestroy,
   OnInit,
   output,
 } from '@angular/core';
@@ -23,7 +24,7 @@ import { AlertService } from 'src/app/services/alert.service';
     styleUrls: ['./paso-info-presupuestal.component.css'],
     standalone: false
 })
-export class PasoInfoPresupuestalComponent implements OnInit {
+export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   stepCompleted = output<boolean>();
   nextStep = output<void>();
   cdpGuardado = output<CDP[]>();
@@ -31,8 +32,6 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
   contratoGeneral = input<ContratoGeneral>();
-
-  firstTime = true;
 
   form = this._formBuilder.group({
     vigencia: [''],
@@ -241,16 +240,46 @@ export class PasoInfoPresupuestalComponent implements OnInit {
   }
 
   private cargarCDPsContrato(contratoId: number) {
-    if (this.firstTime) {
-      return;
-    }
     this.contratoGeneralCrudService
       .getCdpContrato(contratoId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
+        next: async (response) => {
           if (response && response.Data) {
             this.cdpsContrato = response.Data;
+
+            if (this.cdpsService.getLocalCDP().length > 0) {
+              return;
+            }
+
+            const cdpsRecuperados = await Promise.all(
+              this.cdpsContrato.map(async (cdpContrato) => {
+                try {
+                  const responseCDP = await firstValueFrom(
+                    this.cdpsService.get(
+                      `cdps?vigencia=${cdpContrato.vigencia_cdp}&unidadEjecutora=${this.unidadEjecutora}&numeroDisponibilidad=${cdpContrato.numero_cdp_id}`
+                    )
+                  );
+
+                  return responseCDP.Status === 200 && responseCDP.Data?.length > 0
+                    ? (responseCDP.Data[0] as CDP)
+                    : null;
+                } catch (error) {
+                  console.error(
+                    `Error loading CDP ${cdpContrato.numero_cdp_id}:`,
+                    error
+                  );
+                  return null;
+                }
+              })
+            );
+
+            this.selectedCDP = cdpsRecuperados.filter(
+              (cdp): cdp is CDP => cdp !== null
+            );
+            this.cdpsService.updateLocalCDP(this.selectedCDP)
+            this.updateValorAcumulado();
+            this.removeSelectedCDPsFromList();
           }
         },
         error: (error) => {
@@ -392,10 +421,8 @@ export class PasoInfoPresupuestalComponent implements OnInit {
     }
 
     try {
-      //Guardar en localStorage
+      //Guardar en servicio
       this.cdpsService.updateLocalCDP(this.selectedCDP);
-
-      this.firstTime = false;
 
       //Preparamos el guardado en el api
       const cdpsGuardarCrud: CDPContratoCRUD[] = this.selectedCDP.map(
@@ -688,7 +715,7 @@ export class PasoInfoPresupuestalComponent implements OnInit {
 
   async onInView(inView: boolean) {
     if (inView) {
-      this.loadSavedData();
+      //this.loadSavedData();
     } else {
       console.log('Paso Info Presupuestal - out of view');
     }

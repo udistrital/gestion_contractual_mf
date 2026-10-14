@@ -82,6 +82,8 @@
                 </ng-template>
                 <app-paso-obligaciones
                   #pasoObligaciones
+                  [contratoGeneral]="contratoGeneral"
+                  (contratoGuardado)="cargarContratoGeneral()"
                   (stepCompleted)="stepCompleted(4, $event)"
                   />
                 </mat-step>
