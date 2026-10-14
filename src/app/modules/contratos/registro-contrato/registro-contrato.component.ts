@@ -58,11 +58,13 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   showEspecificacionesTecnicas = false;
   showAplicaPoliza = false;
   stepsCompleted: BehaviorSubject<boolean[]> = new BehaviorSubject<boolean[]>(
-    new Array(7).fill(false)
+    new Array(6).fill(false)
   );
 
   pasoInfoGeneralValido = false;
   pasoInfoPresupuestalValido = false;
+  pasoSupervisoresValido = false;
+  pasoContratistasValido = false;
 
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly alertService = inject(AlertService);
@@ -117,13 +119,28 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     this.stepCompleted(0, isStep1Valid);
   }
 
+  onPasoSupervisoresCompleted(isCompleted: boolean) {
+    this.pasoSupervisoresValido = isCompleted;
+    this.verificarPaso2Completo();
+  }
+
+  onPasoContratistasCompleted(isCompleted: boolean) {
+    this.pasoContratistasValido = isCompleted;
+    this.verificarPaso2Completo();
+  }
+
+  private verificarPaso2Completo() {
+    const isStep2Valid = this.pasoSupervisoresValido && this.pasoContratistasValido;
+    this.stepCompleted(1, isStep2Valid);
+  }
+
   onTipoCompromisoChange(tipoCompromisoId: string) {
     this.showEspecificacionesTecnicas =
       tipoCompromisoId === environment.ORDEN_ID.toString();
 
     if (!this.showEspecificacionesTecnicas) {
       const currentSteps = this.stepsCompleted.value;
-      currentSteps[4] = true;
+      currentSteps[3] = true;
       this.stepsCompleted.next(currentSteps);
     }
   }
@@ -132,7 +149,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     this.showAplicaPoliza = aplicaPoliza == '1'; // 1 = Si, 0 = No
     if (!this.showAplicaPoliza) {
       const currentSteps = this.stepsCompleted.value;
-      currentSteps[5] = true;
+      currentSteps[4] = true;
       this.stepsCompleted.next(currentSteps);
     }
   }
@@ -146,7 +163,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.stepper.selectionChange.subscribe((event) => {
-      if (event.previouslySelectedIndex === 2 && event.selectedIndex !== 2) {
+      if (event.previouslySelectedIndex === 1 && event.selectedIndex !== 1) {
         this.pasoContratistas?.onStepLeave();
       }
     });

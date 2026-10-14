@@ -1,130 +1,230 @@
-<div class="d-flex align-items-center fondo-acento-50 mb-4 mt-lg">
-  <div>
-    <mat-icon>assignment_ind</mat-icon>
-  </div>
-  <div class="mx-3">
-    <h2>Información Contratista</h2>
-    Datos del contratista
-  </div>
-</div>
-
 <form [formGroup]="form">
-  <div class="border">
-    <div class="form-grid3">
-      <mat-form-field appearance="outline">
-        <mat-label>Clase Contratista:</mat-label>
-        <mat-icon matPrefix>business</mat-icon>
-        <!-- Icono para clase contratista -->
-        <mat-select formControlName="claseContratista">
-          @for (tipo of tiposContratista; track tipo) {
-            <mat-option
-              [value]="tipo.value"
-              >
-              {{ tipo.viewValue }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-
-    @if (mostrarConsulta) {
-      <div class="centered-container">
-        <div class="centered-content">
-          <h3 class="mb-2">Consulta de Contratista</h3>
-          <mat-form-field appearance="outline">
-            <mat-label>Digite el documento del contratista</mat-label>
-            <mat-icon matPrefix>search</mat-icon>
-            <!-- Icono para búsqueda -->
-            <input
-              matInput
-              formControlName="documentoContratista"
-              (keyup.enter)="buscarContratista()"
-              />
-            </mat-form-field>
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="buscarContratista()"
-              [disabled]="loading"
-              >
-              <mat-icon>search</mat-icon>
-              <!-- Icono de búsqueda en el botón -->
-              Buscar
-            </button>
-            @if (success) {
-              <div>
-                <h3>Información del Contratista</h3>
-                @if (datosContratista) {
-                  <p>Tipo Persona: {{ contratistaObject.tipo }}</p>
-                  <p>Nombre: {{ contratistaObject.nombre }}</p>
-                  <p>Documento: {{ contratistaObject.documento }}</p>
-                  @if (contratistaObject.lugar_expedicion) {
-                    <p>
-                      Lugar de Expedición Documento:
-                      {{ contratistaObject.lugar_expedicion }}
-                    </p>
-                  }
-                  <p>Ciudad de Contacto: {{ contratistaObject.ciudad_contacto }}</p>
-                  <p>Dirección: {{ contratistaObject.direccion }}</p>
-                  <p>Correo: {{ contratistaObject.correo }}</p>
-                  @if (contratistaObject.representante_legal) {
-                    <p>
-                      Representante Legal: {{ contratistaObject.representante_legal }}
-                    </p>
-                  }
-                  @if (contratistaObject.documento_rl) {
-                    <p>
-                      Documento Representante Legal:
-                      {{ contratistaObject.documento_rl }}
-                    </p>
-                  }
-                  @if (contratistaObject.lugar_expedicion_rl) {
-                    <p>
-                      Lugar Expedición RL: {{ contratistaObject.lugar_expedicion_rl }}
-                    </p>
-                  }
-                }
-              </div>
-            }
-            @if (errorMessage) {
-              <p class="error-message">{{ errorMessage }}</p>
-            }
-          </div>
-        </div>
-      }
-    </div>
-
-    <div class="btn-container">
-      <button
-        mat-stroked-button
-        style="border: 1px solid var(--md-primary-500)"
-        color="primary"
-        matStepperPrevious
-        >
-        <mat-icon>arrow_back</mat-icon>
-        Volver
-      </button>
-      <button
-        mat-raised-button
-        color="primary"
-        [disabled]="!form.valid"
-        (click)="guardarYContinuar()"
-        >
-        <mat-icon>save</mat-icon>
-        <!-- Icono para el botón Guardar y Continuar -->
-        Guardar y Continuar
-      </button>
-    </div>
-  </form>
-
-  @if (loading) {
-    <div class="loading-overlay">
-      <div class="spinner-container">
-        <mat-progress-spinner
-          mode="indeterminate"
-          diameter="50"
-        ></mat-progress-spinner>
-        <p>Buscando contratista...</p>
+  <!-- BLOQUE 3: VALIDACIÓN Y DATOS DEL CONTRATISTA -->
+  <div class="bloque-card mb-4">
+    <!-- Cabecera Institucional Vino Tinto -->
+    <div class="bloque-header">
+      <div class="bloque-header-title">
+        <mat-icon>person_check</mat-icon>
+        <span>3. VALIDACIÓN Y DATOS DEL CONTRATISTA</span>
+      </div>
+      <div class="bloque-badge">
+        <span class="dot-activo"></span>
+        <span>RÉGIMEN JURÍDICO & VERIFICACIÓN</span>
       </div>
     </div>
-  }
+
+    <div class="bloque-body">
+      <!-- Modalidad y Personería Jurídica -->
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 pb-3 mb-3 border-bottom">
+        <div>
+          <span class="modalidad-title">Modalidad de Contratación y Personería</span>
+          <p class="modalidad-subtitle">Seleccione la clasificación contractual para la búsqueda de registro oficial</p>
+        </div>
+
+        <div class="modalidad-pill-group">
+          <mat-form-field appearance="outline" class="compact-select-field">
+            <mat-label>Clase Contratista</mat-label>
+            <mat-icon matPrefix>business</mat-icon>
+            <mat-select formControlName="claseContratista">
+              @for (tipo of tiposContratista; track tipo.value) {
+                <mat-option [value]="tipo.value">
+                  {{ tipo.viewValue }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Buscador por documento -->
+      @if (mostrarConsulta) {
+        <div class="search-panel mb-4">
+          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-1 mb-2">
+            <label class="search-label">
+              <span>Documento de Identidad (C.C. / C.E. / NIT)</span>
+              <span class="text-error">*</span>
+            </label>
+            <span class="search-hint">Búsqueda directa en Base de Datos de Proveedores y Contratistas UDFJC</span>
+          </div>
+
+          <div class="search-input-row">
+            <div class="search-input-wrapper">
+              <mat-icon class="search-input-icon">fingerprint</mat-icon>
+              <input
+                type="text"
+                class="search-input-field"
+                formControlName="documentoContratista"
+                placeholder="Ej. 1013651454 o NIT de la entidad"
+                (keyup.enter)="buscarContratista()" />
+              @if (form.get('documentoContratista')?.value && success) {
+                <mat-icon class="search-check-icon">check_circle</mat-icon>
+              }
+            </div>
+
+            <button
+              type="button"
+              mat-raised-button
+              class="btn-consultar-contratista"
+              (click)="buscarContratista()"
+              [disabled]="loading || !form.get('documentoContratista')?.value">
+              <div class="d-flex align-items-center gap-2">
+                @if (loading) {
+                  <mat-spinner diameter="18"></mat-spinner>
+                  <span>Consultando...</span>
+                } @else {
+                  <mat-icon>search</mat-icon>
+                  <span>Consultar Registro</span>
+                }
+              </div>
+            </button>
+          </div>
+
+          @if (errorMessage) {
+            <div class="error-banner mt-2">
+              <mat-icon class="error-icon">error_outline</mat-icon>
+              <span>{{ errorMessage }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Tarjeta de Contratista Verificado (Verified Result Card) -->
+        @if (success && datosContratista) {
+          <div class="verified-card mb-3">
+            <!-- Header de la tarjeta verificada -->
+            <div class="verified-card-top pb-3 mb-3 border-bottom">
+              <div class="d-flex align-items-center gap-3">
+                <div class="verified-avatar">
+                  <mat-icon>verified</mat-icon>
+                </div>
+                <div>
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="verified-name">{{ contratistaObject.nombre }}</span>
+                    <span class="verified-chip-doc">
+                      {{ contratistaObject.tipo === 'Jurídica' ? 'NIT' : 'DOC' }}: {{ contratistaObject.documento }}
+                    </span>
+                  </div>
+                  <div class="verified-sub">
+                    @if (contratistaObject.lugar_expedicion) {
+                      <span>Lugar de Expedición: {{ contratistaObject.lugar_expedicion }} · </span>
+                    }
+                    <span>Persona {{ contratistaObject.tipo }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="verified-badge-status">
+                <span class="status-dot"></span>
+                <span>Habilitado para Contratar</span>
+              </div>
+            </div>
+
+            <!-- 3 Columnas Info Principal -->
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <div class="verified-info-cell">
+                  <span class="cell-label">Correo Notificaciones</span>
+                  <span class="cell-val text-truncate" [title]="contratistaObject.correo">
+                    {{ contratistaObject.correo || 'No registrado' }}
+                  </span>
+                  <span class="cell-subtext-success">RUT Oficial DIAN Actualizado</span>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <div class="verified-info-cell">
+                  <span class="cell-label">Ciudad de Contacto</span>
+                  <span class="cell-val">
+                    {{ contratistaObject.ciudad_contacto || 'Bogotá D.C.' }}
+                  </span>
+                  <span class="cell-subtext">Sede / Jurisdicción</span>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <div class="verified-info-cell">
+                  <span class="cell-label">Domicilio Fiscal</span>
+                  <span class="cell-val text-truncate" [title]="contratistaObject.direccion">
+                    {{ contratistaObject.direccion || 'No registrada' }}
+                  </span>
+                  <span class="cell-subtext">Dirección Notificación</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Representante Legal si aplica (Persona Jurídica) -->
+            @if (contratistaObject.representante_legal) {
+              <div class="rl-panel mt-3 pt-3 border-top">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <mat-icon class="text-secondary" style="font-size: 18px; width: 18px; height: 18px;">gavel</mat-icon>
+                  <span class="rl-title">Representante Legal Acreditado</span>
+                </div>
+                <div class="row g-3">
+                  <div class="col-12 col-md-5">
+                    <div class="verified-info-cell">
+                      <span class="cell-label">Nombre Representante</span>
+                      <span class="cell-val">{{ contratistaObject.representante_legal }}</span>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div class="verified-info-cell">
+                      <span class="cell-label">Documento RL</span>
+                      <span class="cell-val font-mono">{{ contratistaObject.documento_rl }}</span>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-3">
+                    <div class="verified-info-cell">
+                      <span class="cell-label">Lugar de Expedición</span>
+                      <span class="cell-val">{{ contratistaObject.lugar_expedicion_rl || 'Bogotá D.C.' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Barra de Navegación Inferior Institucional (Bottom Dock) -->
+  <div class="bottom-dock-container mb-4">
+    <div class="d-flex align-items-center gap-2">
+      <button
+        type="button"
+        mat-stroked-button
+        class="btn-dock-volver"
+        matStepperPrevious>
+        <mat-icon>arrow_back</mat-icon>
+        <span>Volver: General y Presupuesto</span>
+      </button>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+      <span class="dock-indicator">Paso 2 de 5</span>
+      <button
+        type="button"
+        mat-raised-button
+        class="btn-dock-siguiente"
+        [disabled]="!form.valid || !datosContratista || loading"
+        (click)="guardarYContinuar()">
+        @if (loading) {
+          <mat-spinner diameter="18"></mat-spinner>
+        }
+        <span>Siguiente: Estructura y Necesidad</span>
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </div>
+</form>
+
+@if (loading) {
+  <div class="loading-overlay">
+    <div class="spinner-container">
+      <mat-progress-spinner
+        mode="indeterminate"
+        diameter="48"
+      ></mat-progress-spinner>
+      <p class="mt-2 mb-0">Consultando información del contratista...</p>
+    </div>
+  </div>
+}

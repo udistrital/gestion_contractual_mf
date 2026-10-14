@@ -94,6 +94,7 @@ export class PasoSupervisoresComponent implements OnInit {
         console.log('Supervisores guardados:', parsedSupervisores);
         this.supervisoresIds = parsedSupervisores.supervisores;
       }
+      this.checkStepCompleted();
     } catch (error) {
       console.error('Error loading saved data:', error);
     }
@@ -140,6 +141,7 @@ export class PasoSupervisoresComponent implements OnInit {
         JSON.stringify({ ...solicitanteData, id: solicitante_id })
       );
       this.solicitanteSaved = true;
+      this.checkStepCompleted();
 
       this.alertService.showSuccessAlert(
         'La información del solicitante se ha guardado correctamente'
@@ -227,6 +229,7 @@ export class PasoSupervisoresComponent implements OnInit {
           contrato_id: this.contratoGeneralId
         })
       );
+      this.checkStepCompleted();
 
       this.alertService.showSuccessAlert(
         'La información de los supervisores se ha guardado correctamente'
@@ -465,6 +468,13 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   agregarSupervisor() {
+    if (this.getSupervisoresFormArray().length >= 2) {
+      this.alertService.showAlert(
+        'Solo se permite un máximo de 2 supervisores por contrato',
+        'Límite alcanzado'
+      );
+      return;
+    }
     const supervisorGroup = this.crearSupervisorFormGroup();
     this.getSupervisoresFormArray().push(supervisorGroup);
     const newIndex = this.getSupervisoresFormArray().length - 1;
@@ -475,6 +485,11 @@ export class PasoSupervisoresComponent implements OnInit {
     if (this.getSupervisoresFormArray().length > 1) {
       this.getSupervisoresFormArray().removeAt(index);
     }
+  }
+
+  private checkStepCompleted(): void {
+    const isCompleted = this.solicitanteSaved && this.supervisoresIds.length > 0;
+    this.stepCompleted.emit(isCompleted);
   }
 
 

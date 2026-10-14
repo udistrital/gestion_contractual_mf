@@ -1,41 +1,414 @@
-.form-grid3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    padding: 2%;
+/* Bloque Card y Cabecera Institucional Vino Tinto */
+.bloque-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.btn-container {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    gap: 10px;
-    margin-top: 15px;
+.bloque-header {
+  background-color: #801313;
+  color: #ffffff;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.centered-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.bloque-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.centered-content {
-    width: 100%;
-    text-align: center;
-    padding: 2%;
+.bloque-header-title mat-icon {
+  font-size: 19px;
+  width: 19px;
+  height: 19px;
 }
 
-mat-form-field {
-    width: 100%;
+.bloque-badge {
+  background-color: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
+.dot-activo {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #34d399;
+  display: inline-block;
+}
+
+.bloque-body {
+  padding: 18px 20px;
+}
+
+/* Modalidad de Contratación */
+.modalidad-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #191c1e;
+  display: block;
+}
+
+.modalidad-subtitle {
+  font-size: 11px;
+  color: #625e59;
+  margin: 2px 0 0 0;
+}
+
+.compact-select-field {
+  width: 240px;
+}
+
+::ng-deep .compact-select-field .mat-mdc-text-field-wrapper {
+  height: 40px;
+}
+
+::ng-deep .compact-select-field .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+/* Panel de Búsqueda */
+.search-panel {
+  background-color: #f2f4f6;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.search-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #191c1e;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.search-hint {
+  font-size: 11px;
+  color: #625e59;
+}
+
+.text-error {
+  color: #ba1a1a;
+  font-weight: 700;
+}
+
+.search-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  flex: 1;
+  min-width: 260px;
+  height: 40px;
+  background-color: #ffffff;
+  border: 1px solid #e0e3e5;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input-wrapper:focus-within {
+  border-color: #801313;
+  box-shadow: 0 0 0 2px rgba(128, 19, 19, 0.12);
+}
+
+.search-input-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #625e59;
+  margin-right: 8px;
+}
+
+.search-input-field {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  color: #191c1e;
+}
+
+.search-check-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #16a34a;
+  margin-left: 6px;
+}
+
+.btn-consultar-contratista {
+  background-color: #801313 !important;
+  color: #ffffff !important;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-consultar-contratista:hover:not([disabled]) {
+  background-color: #5c0005 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-consultar-contratista[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.error-banner {
+  background-color: #ffdad6;
+  border: 1px solid #ffb4ab;
+  color: #93000a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.error-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* Tarjeta de Contratista Verificado */
+.verified-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.verified-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.verified-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #ffdad6;
+  color: #801313;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.verified-avatar mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.verified-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #191c1e;
+  letter-spacing: -0.2px;
+}
+
+.verified-chip-doc {
+  background-color: #801313;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.verified-sub {
+  font-size: 11px;
+  color: #625e59;
+  margin-top: 1px;
+}
+
+.verified-badge-status {
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+}
+
+.verified-info-cell {
+  background-color: #f7f9fb;
+  border: 1px solid #eceef0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+}
+
+.cell-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #625e59;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.cell-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #191c1e;
+}
+
+.cell-subtext-success {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #15803d;
+  margin-top: 2px;
+}
+
+.cell-subtext {
+  font-size: 10.5px;
+  color: #625e59;
+  margin-top: 2px;
+}
+
+/* Representante Legal Panel */
+.rl-panel {
+  background-color: #fafbfc;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.rl-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #191c1e;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Dock de Navegación Inferior */
+.bottom-dock-container {
+  background-color: #ffffff;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  padding: 12px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-dock-volver {
+  border: 1px solid #d8dadc !important;
+  color: #191c1e !important;
+  font-weight: 600;
+  font-size: 12px;
+  height: 38px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-dock-volver:hover {
+  background-color: #f2f4f6 !important;
+}
+
+.dock-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  color: #625e59;
+}
+
+.btn-dock-siguiente {
+  background-color: #801313 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 13px;
+  height: 38px;
+  border-radius: 6px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-dock-siguiente:hover:not([disabled]) {
+  background-color: #5c0005 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-dock-siguiente[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading Overlay */
 .loading-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -46,13 +419,14 @@ mat-form-field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: white;
-  padding: 20px;
+  background-color: #ffffff;
+  padding: 24px 32px;
   border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .spinner-container p {
-  margin-top: 10px;
-  color: #333;
+  color: #191c1e;
+  font-size: 13px;
+  font-weight: 600;
 }

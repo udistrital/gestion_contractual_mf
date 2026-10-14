@@ -151,7 +151,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     private contratoGeneralCrudService: ContratoGeneralCrudService
   ) {
     this.form = this.fb.group({
-      claseContratista: ['', Validators.required],
+      claseContratista: ['clase1', Validators.required],
       documentoContratista: [
         '',
         [Validators.required, Validators.minLength(5)],
@@ -161,6 +161,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.mostrarConsulta = true;
     this.cargarContratoGeneral();
     this.cargarContratistaExistente();
     this.form
@@ -207,6 +208,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
                 this.form
                   .get('contratistaData')
                   ?.setValue(this.contratistaObject);
+                this.stepCompleted.emit(true);
               }
             } else {
               this.errorMessage = response.Message;
@@ -327,6 +329,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       direccion: '',
     };
     this.success = false;
+    this.stepCompleted.emit(false);
   }
 
   private contratistaValidator() {
@@ -392,6 +395,15 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const solicitanteGuardado = localStorage.getItem('paso-info-solicitante');
+    if (!solicitanteGuardado) {
+      this.alertService.showAlert(
+        'Por favor guarde la información del solicitante antes de continuar',
+        'Información incompleta'
+      );
+      return;
+    }
+
     if (!this.contratoGeneralId) {
       this.cargarContratoGeneral();
     }
@@ -424,6 +436,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
               } correctamente`,
             confirmButtonText: 'Aceptar',
           }).then(() => {
+            this.stepCompleted.emit(true);
             this.nextStep.emit();
           });
         } else {
