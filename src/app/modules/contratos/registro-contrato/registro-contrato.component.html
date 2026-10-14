@@ -97,7 +97,7 @@
                       <b style="color: var(--primary)">Especificaciones Técnicas</b>
                     </ng-template>
                     <app-paso-especificaciones
-                    [contratoGeneral]="contratoGeneral"
+                      [contratoGeneral]="contratoGeneral"
                       (stepCompleted)="stepCompleted(5, $event)"
                       >
                     </app-paso-especificaciones>
@@ -125,6 +125,7 @@
                       <b style="color: var(--primary)">Cláusulas y Parágrafos</b>
                     </ng-template>
                     <app-paso-clausulas-paragrafos
+                      [contratoGeneral]="contratoGeneral"
                       (stepCompleted)="stepCompleted(7, $event)"
                       />
                     </mat-step>

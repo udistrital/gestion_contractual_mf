@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, effect, EventEmitter, input, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
 import {
@@ -21,7 +21,7 @@ import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { rolPorEstado } from 'src/app/utils/rolesEstados';
 import { lastValueFrom } from 'rxjs';
-import { ApiResponse } from 'src/app/types/types';
+import { ApiResponse, ContratoGeneral } from 'src/app/types/types';
 
 interface Indice {
   Id: string;
@@ -52,6 +52,7 @@ interface Paragrafo {
 export class PasoClausulasParagrafosComponent {
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
+  contratoGeneral = input<ContratoGeneral>()
 
   roles: string[] = [];
   usuario_id: number = 0;
@@ -59,7 +60,6 @@ export class PasoClausulasParagrafosComponent {
   form: FormGroup;
   indices: Indice[] = [];
   contratoId: number = 9512;
-  contratoGeneralId: number = 0;
   tipoContratoId: number = 1;
   reversionSaldo: boolean = false;
   aplicaPoliza: boolean = true;
@@ -80,15 +80,16 @@ export class PasoClausulasParagrafosComponent {
     private zone: NgZone
   ) {
     this.form = this.fb.group({ clausulas: this.fb.array([]) });
+    effect(() => {
+      if (this.contratoGeneral()) {
+        this.getEstadoActual();
+      }
+    })
   }
 
   ngOnInit(): void {
     this.roles = this.rolService.getRol();
     this.getIdUsuario();
-    this.getContratoGeneralId();
-    if (this.contratoGeneralId) {
-      this.getEstadoActual();
-    }
     this.cargarIndices();
   }
 
@@ -100,14 +101,6 @@ export class PasoClausulasParagrafosComponent {
     return rolEncontrado || '';
   }
 
-  getContratoGeneralId() {
-    const contratoGeneral = localStorage.getItem('paso-info-general');
-    if (contratoGeneral) {
-      const parsedContrato: any = JSON.parse(contratoGeneral);
-      this.contratoGeneralId = parsedContrato.id;
-    }
-  }
-
   getIdUsuario() {
     this.userService.getPersonaId().then((usuario_id) => {
       this.usuario_id = usuario_id;
@@ -115,7 +108,7 @@ export class PasoClausulasParagrafosComponent {
   }
 
   getEstadoActual() {
-    this.contratoGeneralCrudService.getEstadoActual(this.contratoGeneralId).subscribe({
+    this.contratoGeneralCrudService.getEstadoActual(this.contratoGeneral()?.id as number).subscribe({
       next: (response: any) => {
         if (response.id) {
           this.estadoInternoActual = response.estado_interno_parametro_id || 0;
@@ -171,7 +164,7 @@ export class PasoClausulasParagrafosComponent {
         `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo};aplica_poliza:${this.aplicaPoliza};unidad_ejecutora_id:${this.undadEjecutora}`
       )
       .subscribe({
-        next: (response: { Success: boolean; Data: Clausula[] }) => {
+        next: (response: ApiResponse<Clausula[]>) => {
           if (response.Success && response.Data?.length > 0) {
             this.crearContratoDesdePlantilla(response.Data);
           } else {
@@ -204,7 +197,7 @@ export class PasoClausulasParagrafosComponent {
     this.clausulasParagrafosService
       .post(`contratos/${this.contratoId}`, nuevoContrato)
       .subscribe({
-        next: (response: any) => {
+        next: (response: ApiResponse<any>) => {
           if (response.Success && response.Data) {
             this.contratoId = response.Data.ordenClausula.contrato_id;
             this.cargarContratoNuevo(response.Data, clausulas);
@@ -984,15 +977,7 @@ export class PasoClausulasParagrafosComponent {
   }
 
   private confirmarAccion(mensaje: string, accion: () => void) {
-    Swal.fire({
-      text: mensaje,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      cancelButtonText: 'Cancelar',
-      confirmButtonText: 'Aceptar',
-    }).then((result) => {
+    this.alertService.showConfirmAlert(mensaje, '').then((result) => {
       if (result.isConfirmed) {
         accion();
       }
@@ -1016,21 +1001,18 @@ export class PasoClausulasParagrafosComponent {
   }
 
   async openPdfViewer() {
-    if (!this.contratoGeneralId) {
-      this.getContratoGeneralId();
-      if (!this.contratoGeneralId) {
-        this.alertService.showErrorAlert(
-          'No se ha guardado el contrato general. Por favor, complete la información general antes de continuar.'
-        )
-      }
+    if (!this.contratoGeneral()) {
+      this.alertService.showErrorAlert(
+        'No se ha guardado el contrato general. Por favor, complete la información general antes de continuar.'
+      )
     }
-    const base64: ApiResponse<string> = await lastValueFrom(this.minutasMidService.getMinuta(this.contratoGeneralId));
+    const base64: ApiResponse<string> = await lastValueFrom(this.minutasMidService.getMinuta(this.contratoGeneral()?.id as number));
     const file = this.base64ToBlob(base64.Data, 'application/pdf');
     const datos = {
       base64: base64.Data,
       nombre: `MINUTA ${this.contratoId}`,
-      descripcion: `Cargue de minuta firmada, contrato general id ${this.contratoGeneralId}`,
-      contrato_general_id: this.contratoGeneralId,
+      descripcion: `Cargue de minuta firmada, contrato general id ${this.contratoGeneral()?.id}`,
+      contrato_general_id: this.contratoGeneral()?.id,
       usuario_id: this.usuarioId,
       usuario_rol: this.getRolPorEstado(),
     };
