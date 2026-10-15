@@ -21,9 +21,30 @@ export class CdpsService {
 
   updateLocalCDP(cdpData: CDP[]) {
     this.cdpSubject.next(cdpData);
+    try {
+      localStorage.setItem('paso-info-presupuestal-cdps', JSON.stringify(cdpData));
+    } catch (e) {
+      console.error('Error guardando CDPs locales:', e);
+    }
   }
 
   getLocalCDP(): any[] {
-    return this.cdpSubject.getValue();
+    const mem = this.cdpSubject.getValue();
+    if (mem && mem.length > 0) {
+      return mem;
+    }
+    try {
+      const saved = localStorage.getItem('paso-info-presupuestal-cdps');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.cdpSubject.next(parsed);
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Error recuperando CDPs locales:', e);
+    }
+    return [];
   }
 }

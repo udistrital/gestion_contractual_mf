@@ -287,7 +287,7 @@
                       } @else {
                         <div
                           class="read-only-content"
-                          [innerHTML]="clausula.get('descripcion')?.value"
+                          [innerHTML]="renderizarDescripcionClausula(clausula.get('descripcion')?.value)"
                         ></div>
                       }
                     </div>
@@ -330,7 +330,7 @@
                                 } @else {
                                   <div
                                     class="read-only-content paragrafo-read-only"
-                                    [innerHTML]="paragrafo.get('descripcion')?.value"
+                                    [innerHTML]="renderizarDescripcionClausula(paragrafo.get('descripcion')?.value)"
                                   ></div>
                                 }
                               </div>

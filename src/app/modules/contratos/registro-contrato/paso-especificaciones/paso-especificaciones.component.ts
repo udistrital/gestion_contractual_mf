@@ -106,11 +106,20 @@ export class PasoEspecificacionesComponent implements OnInit {
             this.especificaciones = response.Data.map((element) =>
               this.getDataResponse(element)
             );
+            this.guardarLocalEspecificaciones();
           }
         },
         error: (error) =>
           this.handleError('Error al obtener especificaciones técnicas', error),
       });
+  }
+
+  private guardarLocalEspecificaciones() {
+    try {
+      localStorage.setItem('paso-especificaciones-data', JSON.stringify(this.especificaciones));
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   crearEspecificacion(especificacion: EspecificacionTecnica) {
@@ -129,6 +138,7 @@ export class PasoEspecificacionesComponent implements OnInit {
               ...this.especificaciones,
               nuevaEspecificacion,
             ];
+            this.guardarLocalEspecificaciones();
             this.alertService.showSuccessAlert(
               'La actividad fue creada exitosamente',
               'ACTIVIDAD CREADA'
@@ -159,6 +169,7 @@ export class PasoEspecificacionesComponent implements OnInit {
               this.especificaciones[index] = nuevaEspecificacion;
             }
             this.especificaciones = [...this.especificaciones];
+            this.guardarLocalEspecificaciones();
             this.alertService.showSuccessAlert(
               'La actividad fue actualizada exitosamente',
               'ACTIVIDAD ACTUALIZADA'
@@ -189,6 +200,7 @@ export class PasoEspecificacionesComponent implements OnInit {
           if (response.Success && response.Data) {
             this.especificaciones.splice(index, 1);
             this.especificaciones = [...this.especificaciones];
+            this.guardarLocalEspecificaciones();
             this.alertService.showSuccessAlert(
               'La actividad fue eliminada exitosamente',
               'ACTIVIDAD ELIMINADA'

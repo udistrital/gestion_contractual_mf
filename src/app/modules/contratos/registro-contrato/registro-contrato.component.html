@@ -124,6 +124,7 @@
           <!-- Paso Final: Clausulado y Parágrafos -->
           <mat-step [editable]="true">
             <app-paso-clausulas-paragrafos
+              [contratoGeneral]="contratoGeneral"
               (stepCompleted)="onPasoClausulasCompleted($event)"
             />
           </mat-step>

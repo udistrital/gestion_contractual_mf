@@ -1,5 +1,6 @@
-import { ChangeDetectorRef, Component, EventEmitter, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
 import {
   FormBuilder,
@@ -10,6 +11,7 @@ import {
 } from '@angular/forms';
 import { ClausulasParagrafosService } from 'src/app/services/clausulas-paragrafos.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { CdpsService } from 'src/app/services/cdps.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { MatStepper } from '@angular/material/stepper';
@@ -21,7 +23,8 @@ import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { rolPorEstado } from 'src/app/utils/rolesEstados';
 import { lastValueFrom } from 'rxjs';
-import { ApiResponse } from 'src/app/types/types';
+import { ApiResponse, ContratoGeneral, EspecificacionTecnica } from 'src/app/types/types';
+import { numeroALetras } from '../paso-info-presupuestal/paso-info-presupuestal.utilidades';
 
 interface Indice {
   Id: string;
@@ -49,7 +52,8 @@ interface Paragrafo {
     styleUrls: ['./paso-clausulas-paragrafos.component.css'],
     standalone: false
 })
-export class PasoClausulasParagrafosComponent {
+export class PasoClausulasParagrafosComponent implements OnInit {
+  @Input() contratoGeneral: ContratoGeneral | undefined;
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
 
@@ -66,6 +70,10 @@ export class PasoClausulasParagrafosComponent {
   undadEjecutora: number = environment.UNIDADES_EJECUTORAS.RECTORIA;
   usuarioId: number = 25;
 
+  // Datos contextuales para interpolación de minutas ARGO
+  especificacionesList: EspecificacionTecnica[] = [];
+  cdpsList: any[] = [];
+
   // Estado para la vista tipo Explorador / Dos columnas
   clausulaSeleccionadaIndex: number = 0;
   filtroClausulas: string = '';
@@ -80,6 +88,8 @@ export class PasoClausulasParagrafosComponent {
     private clausulasParagrafosService: ClausulasParagrafosService,
     private minutasMidService: MinutasMidService,
     private parametrosService: ParametrosService,
+    private cdpsService: CdpsService,
+    private sanitizer: DomSanitizer,
     private stepper: MatStepper,
     private zone: NgZone,
     private cdr: ChangeDetectorRef
@@ -95,6 +105,7 @@ export class PasoClausulasParagrafosComponent {
       this.getEstadoActual();
     }
     this.cargarIndices();
+    this.cargarDatosContextoMinuta();
   }
 
   getRolPorEstado(): string {
@@ -1185,5 +1196,395 @@ export class PasoClausulasParagrafosComponent {
       width: '70vw',
       data: { file, datos },
     });
+  }
+
+  // =========================================================================
+  // Renderizado Dinámico de Variables y Condicionales de Minuta
+  // =========================================================================
+
+  cargarDatosContextoMinuta(): void {
+    // 1. CDPs
+    this.cdpsList = this.cdpsService.getLocalCDP();
+    this.cdpsService.cdp$.subscribe((cdps) => {
+      if (cdps && cdps.length > 0) {
+        this.cdpsList = cdps;
+      }
+    });
+
+    // 2. Especificaciones Técnicas
+    try {
+      const savedEsp = localStorage.getItem('paso-especificaciones-data');
+      if (savedEsp) {
+        const parsed = JSON.parse(savedEsp);
+        if (Array.isArray(parsed)) {
+          this.especificacionesList = parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Error leyendo paso-especificaciones-data local:', e);
+    }
+
+    if (this.especificacionesList.length === 0 && this.contratoGeneralId) {
+      this.contratoGeneralCrudService
+        .getEspecificacionesTecnicas(this.contratoGeneralId)
+        .subscribe({
+          next: (res) => {
+            if (res.Success && Array.isArray(res.Data) && res.Data.length > 0) {
+              this.especificacionesList = res.Data;
+            }
+          },
+          error: (err) => console.log('Sin especificaciones previas en backend:', err),
+        });
+    }
+
+    // 3. Fallback contratoGeneral si no viene como @Input
+    if (!this.contratoGeneral) {
+      try {
+        const savedGen = localStorage.getItem('paso-info-general');
+        if (savedGen) {
+          this.contratoGeneral = JSON.parse(savedGen);
+        }
+      } catch (e) {
+        console.warn('Error leyendo paso-info-general local:', e);
+      }
+    }
+  }
+
+  obtenerListaCDPs(): any[] {
+    const cdpsMem = this.cdpsService.getLocalCDP();
+    if (cdpsMem && cdpsMem.length > 0) {
+      return cdpsMem;
+    }
+    if (this.cdpsList && this.cdpsList.length > 0) {
+      return this.cdpsList;
+    }
+    try {
+      const saved = localStorage.getItem('paso-info-presupuestal-cdps');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {}
+    return [];
+  }
+
+  obtenerListaEspecificaciones(): EspecificacionTecnica[] {
+    try {
+      const saved = localStorage.getItem('paso-especificaciones-data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {}
+    return this.especificacionesList || [];
+  }
+
+  obtenerObjetoContrato(): string {
+    try {
+      const savedObl = localStorage.getItem('paso-obligaciones');
+      if (savedObl) {
+        const parsed = JSON.parse(savedObl);
+        if (parsed.objeto && parsed.objeto.trim()) {
+          return parsed.objeto.trim();
+        }
+      }
+    } catch {}
+    if (this.contratoGeneral?.objeto && this.contratoGeneral.objeto.trim()) {
+      return this.contratoGeneral.objeto.trim();
+    }
+    try {
+      const gen = localStorage.getItem('paso-info-general');
+      if (gen) {
+        const parsed = JSON.parse(gen);
+        if (parsed.objeto && parsed.objeto.trim()) {
+          return parsed.objeto.trim();
+        }
+      }
+    } catch {}
+    return '';
+  }
+
+  obtenerActividadesContrato(): string {
+    try {
+      const savedObl = localStorage.getItem('paso-obligaciones');
+      if (savedObl) {
+        const parsed = JSON.parse(savedObl);
+        if (parsed.actividades && parsed.actividades.trim()) {
+          return parsed.actividades.trim();
+        }
+      }
+    } catch {}
+    try {
+      const savedActs = localStorage.getItem('paso-obligaciones-actividades');
+      if (savedActs) {
+        const acts = JSON.parse(savedActs);
+        if (Array.isArray(acts) && acts.length > 0) {
+          return acts
+            .map((act: any, idx: number) => {
+              const num = (idx + 1).toString().padStart(2, '0');
+              let p = `${num}. ${(act.descripcion || '').trim()}`;
+              if (act.entregables && act.entregables.length > 0) {
+                const ent = act.entregables
+                  .filter((e: any) => !!e && e.trim())
+                  .join('; ');
+                if (ent) p += ` Entregable(s): ${ent}.`;
+              }
+              if (act.plazo && act.plazo.trim()) {
+                p += ` Plazo/Periodicidad: ${act.plazo.trim()}.`;
+              }
+              return p;
+            })
+            .join('\n\n');
+        }
+      }
+    } catch {}
+    if (this.contratoGeneral?.actividades && this.contratoGeneral.actividades.trim()) {
+      return this.contratoGeneral.actividades.trim();
+    }
+    return '';
+  }
+
+  obtenerValorContrato(): { valorNum: number; valorTexto: string; valorPesos: string } {
+    let valorNum = 0;
+    if (this.contratoGeneral?.valor_pesos && Number(this.contratoGeneral.valor_pesos) > 0) {
+      valorNum = Number(this.contratoGeneral.valor_pesos);
+    } else {
+      try {
+        const gen = localStorage.getItem('paso-info-general');
+        if (gen) {
+          const parsed = JSON.parse(gen);
+          const v = Number(parsed.valor_pesos || parsed.valorContrato);
+          if (!isNaN(v) && v > 0) {
+            valorNum = v;
+          }
+        }
+      } catch {}
+    }
+
+    if (valorNum <= 0) {
+      const cdps = this.obtenerListaCDPs();
+      if (cdps.length > 0) {
+        valorNum = cdps.reduce((acc, curr) => {
+          const v = curr.valor_a_tomar !== undefined && curr.valor_a_tomar !== null && curr.valor_a_tomar !== ''
+            ? Number(curr.valor_a_tomar)
+            : Number(curr.valor_contratacion);
+          return acc + (isNaN(v) ? 0 : v);
+        }, 0);
+      }
+    }
+
+    const valorTexto = numeroALetras(valorNum).toUpperCase();
+    const valorPesos = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(valorNum);
+    return { valorNum, valorTexto, valorPesos };
+  }
+
+  formatearMoneda(valor: any): string {
+    const num = Number(valor);
+    if (isNaN(num)) return '$ 0';
+    return '$ ' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(num);
+  }
+
+  renderizarDescripcionClausula(contenido: string): SafeHtml {
+    if (!contenido || typeof contenido !== 'string') {
+      return this.sanitizer.bypassSecurityTrustHtml('');
+    }
+
+    let render = contenido;
+
+    // 1. Manejo del bloque Jinja2 de especificaciones técnicas:
+    // {% if especificaciones %}...{% endif %} o [% if especificaciones %]...[% endif %]
+    const regexBloqueEsp = /(?:\{%|\[%|%)\s*if\s+especificaciones\s*(?:%\}|%\]|%)([\s\S]*?)(?:\{%|\[%|%)\s*endif\s*(?:%\}|%\]|%)/gi;
+    const especificaciones = this.obtenerListaEspecificaciones();
+
+    if (regexBloqueEsp.test(render)) {
+      if (especificaciones && especificaciones.length > 0) {
+        const totalEsp = especificaciones.reduce(
+          (acc, curr) => acc + (Number(curr.valor_total) || 0),
+          0
+        );
+        const filasHtml = especificaciones
+          .map(
+            (esp, idx) => `
+            <tr>
+              <td style="text-align: center; font-weight: 600;">${idx + 1}</td>
+              <td style="text-align: left;">${esp.descripcion || ''}</td>
+              <td style="text-align: center;">${esp.cantidad ?? 1}</td>
+              <td style="text-align: right;">${this.formatearMoneda(esp.valor_unitario)}</td>
+              <td style="text-align: right; font-weight: 600;">${this.formatearMoneda(esp.valor_total)}</td>
+            </tr>
+          `
+          )
+          .join('');
+
+        const tablaEspHtml = `
+          <div class="especificaciones-minuta-render my-3">
+            <div class="table-responsive">
+              <table class="table-minuta-render">
+                <thead>
+                  <tr>
+                    <th style="width: 8%; text-align: center;">ITEM</th>
+                    <th style="text-align: left;">DESCRIPCIÓN</th>
+                    <th style="width: 12%; text-align: center;">CANTIDAD</th>
+                    <th style="width: 20%; text-align: right;">VALOR UNITARIO</th>
+                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filasHtml}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th colspan="4" style="text-align: right; font-weight: bold;">TOTAL ESPECIFICACIONES:</th>
+                    <th class="text-right font-bold total-highlight" style="text-align: right; color: #801313;">${this.formatearMoneda(totalEsp)}</th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        `;
+        render = render.replace(regexBloqueEsp, tablaEspHtml);
+      } else {
+        render = render.replace(regexBloqueEsp, '');
+      }
+    }
+
+    // 2. Interpolación de Objeto del Contrato
+    const objeto = this.obtenerObjetoContrato();
+    render = render.replace(
+      /\{\{\s*objeto\s*\}\}/gi,
+      objeto || '<span class="minuta-var-placeholder">[Objeto del contrato pendiente de definir]</span>'
+    );
+
+    // 3. Interpolación de Actividades Específicas
+    const actividades = this.obtenerActividadesContrato();
+    if (/\{\{\s*actividades\s*\}\}/gi.test(render)) {
+      if (actividades) {
+        const actividadesFormateadas = actividades
+          .split(/\n\s*\n/)
+          .filter((p) => !!p.trim())
+          .map((p) => `<p class="actividad-parrafo mb-2">${p.replace(/\n/g, '<br>')}</p>`)
+          .join('');
+        const actividadesHtml = `
+          <div class="actividades-minuta-render my-2">
+            ${actividadesFormateadas}
+          </div>
+        `;
+        render = render.replace(/\{\{\s*actividades\s*\}\}/gi, actividadesHtml);
+      } else {
+        render = render.replace(
+          /\{\{\s*actividades\s*\}\}/gi,
+          '<span class="minuta-var-placeholder">[Actividades específicas pendientes de registrar]</span>'
+        );
+      }
+    }
+
+    // 4. Cláusula de Valor y Presupuesto (Manejo singular y Múltiples CDPs)
+    const { valorTexto, valorPesos } = this.obtenerValorContrato();
+    render = render.replace(/\{\{\s*valorTexto\s*\}\}/gi, valorTexto || '[VALOR EN LETRAS]');
+    render = render.replace(/\{\{\s*valorPesos\s*\}\}/gi, valorPesos || '0');
+
+    const cdps = this.obtenerListaCDPs();
+
+    if (cdps && cdps.length > 1) {
+      // CASO MÚLTIPLES CDPS:
+      // Se transforma la referencia singular a plural e imputación desglosada
+      const totalComprometido = cdps.reduce((acc, curr) => {
+        const v = curr.valor_a_tomar !== undefined && curr.valor_a_tomar !== null && curr.valor_a_tomar !== ''
+          ? Number(curr.valor_a_tomar)
+          : Number(curr.valor_contratacion);
+        return acc + (isNaN(v) ? 0 : v);
+      }, 0);
+
+      const filasCdps = cdps
+        .map((cdp) => {
+          const noCdp = cdp.numero_disponibilidad || cdp.numero_cdp_id || 'N/A';
+          const vig = cdp.vigencia || cdp.vigencia_cdp || 'N/A';
+          const rubro = cdp.descripcion || cdp.rubro || cdp.nombre_dependencia || 'N/A';
+          const val = cdp.valor_a_tomar !== undefined && cdp.valor_a_tomar !== null && cdp.valor_a_tomar !== ''
+            ? Number(cdp.valor_a_tomar)
+            : Number(cdp.valor_contratacion);
+          return `
+            <tr>
+              <td style="text-align: center; font-weight: 600;">${noCdp}</td>
+              <td style="text-align: center;">${vig}</td>
+              <td style="text-align: left;">${rubro}</td>
+              <td style="text-align: right; font-weight: 600;">${this.formatearMoneda(val)}</td>
+            </tr>
+          `;
+        })
+        .join('');
+
+      const tablaCdpsHtml = `
+        con cargo a los siguientes Certificados de Disponibilidad Presupuestal:
+        <div class="multiple-cdps-wrapper my-3">
+          <div class="table-responsive">
+            <table class="table-minuta-render table-cdps">
+              <thead>
+                <tr>
+                  <th style="width: 16%; text-align: center;">No. CDP</th>
+                  <th style="width: 14%; text-align: center;">Vigencia</th>
+                  <th style="text-align: left;">Rubro / Dependencia</th>
+                  <th style="width: 25%; text-align: right;">Valor a Tomar</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filasCdps}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="3" style="text-align: right; font-weight: bold;">TOTAL PRESUPUESTADO:</th>
+                  <th class="text-right font-bold total-highlight" style="text-align: right; color: #801313;">${this.formatearMoneda(totalComprometido)}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      `;
+
+      const regexFraseSingularCdp = /con\s+cargo\s+al\s+certificado\s+de\s+Disponibilidad\s+Presupuestal\s+No\.?\s*\{\{\s*numero_cdp_id\s*\}\}\s*del\s+a(?:ñ|n)o\s*\{\{\s*vigencia_cdp\s*\}\}\.?\s*Rubro:\s*\{\{\s*rubro_cdp\s*\}\}\.?/gi;
+
+      if (regexFraseSingularCdp.test(render)) {
+        render = render.replace(regexFraseSingularCdp, tablaCdpsHtml);
+      } else {
+        render = render.replace(
+          /\{\{\s*numero_cdp_id\s*\}\}/gi,
+          cdps.map((c) => c.numero_disponibilidad || c.numero_cdp_id).join(', ')
+        );
+        render = render.replace(
+          /\{\{\s*vigencia_cdp\s*\}\}/gi,
+          [...new Set(cdps.map((c) => c.vigencia || c.vigencia_cdp))].join(', ')
+        );
+        render = render.replace(
+          /\{\{\s*rubro_cdp\s*\}\}/gi,
+          cdps.map((c) => c.descripcion || c.rubro || c.nombre_dependencia).filter(Boolean).join('; ')
+        );
+      }
+    } else if (cdps && cdps.length === 1) {
+      // CASO UN SOLO CDP:
+      const cdp = cdps[0];
+      const noCdp = (cdp.numero_disponibilidad || cdp.numero_cdp_id || '').toString();
+      const vig = (cdp.vigencia || cdp.vigencia_cdp || '').toString();
+      const rubro = cdp.descripcion || cdp.rubro || cdp.nombre_dependencia || '';
+
+      render = render.replace(/\{\{\s*numero_cdp_id\s*\}\}/gi, noCdp || '<span class="minuta-var-placeholder">[No. CDP]</span>');
+      render = render.replace(/\{\{\s*vigencia_cdp\s*\}\}/gi, vig || '<span class="minuta-var-placeholder">[Vigencia]</span>');
+      render = render.replace(/\{\{\s*rubro_cdp\s*\}\}/gi, rubro || '<span class="minuta-var-placeholder">[Rubro]</span>');
+    } else {
+      // CASO SIN CDPS AÚN:
+      render = render.replace(/\{\{\s*numero_cdp_id\s*\}\}/gi, '<span class="minuta-var-placeholder">[No. CDP pendiente]</span>');
+      render = render.replace(/\{\{\s*vigencia_cdp\s*\}\}/gi, '<span class="minuta-var-placeholder">[Vigencia]</span>');
+      render = render.replace(/\{\{\s*rubro_cdp\s*\}\}/gi, '<span class="minuta-var-placeholder">[Rubro pendiente]</span>');
+    }
+
+    // 5. Otras variables de minuta
+    if (this.contratoGeneral?.plazo_ejecucion) {
+      render = render.replace(/\{\{\s*(?:plazo|plazo_ejecucion)\s*\}\}/gi, `${this.contratoGeneral.plazo_ejecucion}`);
+    }
+
+    return this.sanitizer.bypassSecurityTrustHtml(render);
   }
 }

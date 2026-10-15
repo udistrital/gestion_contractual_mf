@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { CdpsService } from 'src/app/services/cdps.service';
 import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatStepper } from '@angular/material/stepper';
@@ -8,8 +9,14 @@ import { of } from 'rxjs';
 describe('PasoClausulasParagrafosComponent', () => {
   let component: PasoClausulasParagrafosComponent;
   let fixture: ComponentFixture<PasoClausulasParagrafosComponent>;
+  let mockCdpsService: any;
 
   beforeEach(() => {
+    mockCdpsService = {
+      getLocalCDP: jest.fn().mockReturnValue([]),
+      cdp$: of([]),
+    };
+
     TestBed.configureTestingModule({
       declarations: [PasoClausulasParagrafosComponent],
       providers: [
@@ -19,6 +26,10 @@ describe('PasoClausulasParagrafosComponent', () => {
             get: () => of({ Status: '200', Data: [] }),
             post: () => of({ Status: '200' }),
           },
+        },
+        {
+          provide: CdpsService,
+          useValue: mockCdpsService,
         },
         {
           provide: MatStepper,
@@ -197,6 +208,140 @@ describe('PasoClausulasParagrafosComponent', () => {
     it('debe retornar lista vacía si no hay catálogo de índices', () => {
       component.indices = [];
       expect(component.getIndicesDisponibles(0)).toEqual([]);
+    });
+  });
+
+  describe('renderizarDescripcionClausula', () => {
+    afterEach(() => {
+      localStorage.clear();
+    });
+
+    it('debe interpolar el objeto y las actividades del contrato', () => {
+      localStorage.setItem(
+        'paso-obligaciones',
+        JSON.stringify({
+          objeto: 'Prestar servicios de soporte técnico a la OATI.',
+          actividades: '01. Mantenimiento correctivo.\n\n02. Mantenimiento preventivo.',
+        })
+      );
+
+      const raw = 'CLÁUSULA: Objeto: {{objeto}}. Actividades: {{actividades}}';
+      const renderedSafe: any = component.renderizarDescripcionClausula(raw);
+      // Extraer string sanitizado
+      const renderedStr = renderedSafe.changingThisBreaksApplicationSecurity || renderedSafe.toString();
+
+      expect(renderedStr).toContain('Prestar servicios de soporte técnico a la OATI.');
+      expect(renderedStr).toContain('01. Mantenimiento correctivo.');
+      expect(renderedStr).toContain('02. Mantenimiento preventivo.');
+      expect(renderedStr).not.toContain('{{objeto}}');
+      expect(renderedStr).not.toContain('{{actividades}}');
+    });
+
+    it('debe renderizar tabla de especificaciones técnicas si existen y omitir bloque jinja si no existen', () => {
+      const plantillaRaw =
+        '{{objeto}}{% if especificaciones %}{% for especificacion in especificaciones %}{% endfor %}\nITEM DESCRIPCIÓN\n{% endif %}';
+
+      // 1. Caso sin especificaciones
+      localStorage.removeItem('paso-especificaciones-data');
+      component.especificacionesList = [];
+      const resSinEsp: any = component.renderizarDescripcionClausula(plantillaRaw);
+      const strSinEsp = resSinEsp.changingThisBreaksApplicationSecurity || resSinEsp.toString();
+      expect(strSinEsp).not.toContain('{% if especificaciones %}');
+      expect(strSinEsp).not.toContain('ITEM DESCRIPCIÓN');
+
+      // 2. Caso con especificaciones
+      localStorage.setItem(
+        'paso-especificaciones-data',
+        JSON.stringify([
+          {
+            id: 1,
+            descripcion: 'Licencia de software',
+            cantidad: 2,
+            valor_unitario: 5000000,
+            valor_total: 10000000,
+          },
+        ])
+      );
+      const resConEsp: any = component.renderizarDescripcionClausula(plantillaRaw);
+      const strConEsp = resConEsp.changingThisBreaksApplicationSecurity || resConEsp.toString();
+      expect(strConEsp).toContain('table-minuta-render');
+      expect(strConEsp).toContain('Licencia de software');
+      expect(strConEsp).toContain('TOTAL ESPECIFICACIONES:');
+    });
+
+    it('debe renderizar cláusula presupuestal en singular cuando hay un solo CDP', () => {
+      localStorage.setItem(
+        'paso-info-presupuestal-cdps',
+        JSON.stringify([
+          {
+            vigencia: '2024',
+            numero_disponibilidad: '845',
+            descripcion: 'SERVICIOS PERSONALES',
+            valor_contratacion: 150000000,
+            valor_a_tomar: 150000000,
+          },
+        ])
+      );
+      component.contratoGeneral = {
+        valor_pesos: 150000000,
+        unidad_ejecutora_id: 1,
+      };
+
+      const plantillaRaw =
+        'El valor corresponde a {{valorTexto}} ($ {{valorPesos}}). LA UNIVERSIDAD pagará con cargo al certificado de Disponibilidad Presupuestal No. {{numero_cdp_id}} del año {{vigencia_cdp}}. Rubro: {{rubro_cdp}}. El presente Contrato está sujeto a registro presupuestal.';
+
+      const res: any = component.renderizarDescripcionClausula(plantillaRaw);
+      const str = res.changingThisBreaksApplicationSecurity || res.toString();
+
+      expect(str).toContain('845');
+      expect(str).toContain('2024');
+      expect(str).toContain('SERVICIOS PERSONALES');
+      expect(str).toContain('150.000.000');
+      expect(str).not.toContain('{{numero_cdp_id}}');
+      expect(str).not.toContain('{{vigencia_cdp}}');
+      expect(str).not.toContain('{{rubro_cdp}}');
+    });
+
+    it('debe estructurar cláusula presupuestal en plural con tabla detallada cuando hay múltiples CDPs', () => {
+      const multiplesCdps = [
+        {
+          vigencia: '2024',
+          numero_disponibilidad: '101',
+          descripcion: 'RUBRO INFRAESTRUCTURA',
+          valor_contratacion: 60000000,
+          valor_a_tomar: 60000000,
+        },
+        {
+          vigencia: '2024',
+          numero_disponibilidad: '102',
+          descripcion: 'RUBRO TECNOLOGÍA',
+          valor_contratacion: 40000000,
+          valor_a_tomar: 40000000,
+        },
+      ];
+
+      localStorage.setItem('paso-info-presupuestal-cdps', JSON.stringify(multiplesCdps));
+      component.contratoGeneral = {
+        valor_pesos: 100000000,
+        unidad_ejecutora_id: 1,
+      };
+
+      const plantillaRaw =
+        'El valor corresponde a {{valorTexto}} ($ {{valorPesos}}). LA UNIVERSIDAD pagará a EL CONTRATISTA el valor del presente Contrato con cargo al certificado de Disponibilidad Presupuestal No. {{numero_cdp_id}} del año {{vigencia_cdp}}. Rubro: {{rubro_cdp}}. El presente Contrato está sujeto a registro presupuestal y el pago de su valor a las apropiaciones presupuestales.';
+
+      const res: any = component.renderizarDescripcionClausula(plantillaRaw);
+      const str = res.changingThisBreaksApplicationSecurity || res.toString();
+
+      // Debe adaptar la redacción a plural
+      expect(str).toContain('con cargo a los siguientes Certificados de Disponibilidad Presupuestal:');
+      // Debe incluir la tabla institucional de CDPs
+      expect(str).toContain('table-cdps');
+      expect(str).toContain('101');
+      expect(str).toContain('102');
+      expect(str).toContain('RUBRO INFRAESTRUCTURA');
+      expect(str).toContain('RUBRO TECNOLOGÍA');
+      expect(str).toContain('TOTAL PRESUPUESTADO:');
+      expect(str).toContain('100.000.000');
     });
   });
 });

@@ -1010,3 +1010,96 @@
   height: 18px;
   line-height: 18px;
 }
+
+/* ==========================================================================
+   Renderizado Institucional de Minutas: Tablas, Variables y Múltiples CDPs
+   ========================================================================== */
+
+:host ::ng-deep .table-minuta-render,
+.table-minuta-render {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 14px 0;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+:host ::ng-deep .table-minuta-render thead th,
+.table-minuta-render thead th {
+  background-color: #801313;
+  color: #ffffff;
+  padding: 9px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border: 1px solid #6b1010;
+}
+
+:host ::ng-deep .table-minuta-render tbody td,
+.table-minuta-render tbody td {
+  padding: 8px 12px;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+:host ::ng-deep .table-minuta-render tbody tr:nth-child(even),
+.table-minuta-render tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+:host ::ng-deep .table-minuta-render tbody tr:hover,
+.table-minuta-render tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+:host ::ng-deep .table-minuta-render tfoot th,
+.table-minuta-render tfoot th {
+  background-color: #fdf5f4;
+  color: #5c0005;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #f3d3cf;
+}
+
+:host ::ng-deep .table-minuta-render .total-highlight,
+.table-minuta-render .total-highlight {
+  color: #801313;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+:host ::ng-deep .multiple-cdps-wrapper,
+.multiple-cdps-wrapper,
+:host ::ng-deep .especificaciones-minuta-render,
+.especificaciones-minuta-render {
+  margin: 12px 0;
+}
+
+:host ::ng-deep .actividades-minuta-render,
+.actividades-minuta-render {
+  margin: 10px 0;
+}
+
+:host ::ng-deep .actividad-parrafo,
+.actividad-parrafo {
+  margin-bottom: 10px;
+  line-height: 1.65;
+  color: #334155;
+}
+
+:host ::ng-deep .minuta-var-placeholder,
+.minuta-var-placeholder {
+  color: #94a3b8;
+  font-style: italic;
+  background-color: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
