@@ -6,138 +6,130 @@
 <ng-template #contenidoDePlantilla>
   <div class="row">
     <div class="col-12">
-      <mat-stepper
-        #stepper
-        [linear]="isLinear"
-        labelPosition="bottom"
-        [orientation]="orientation"
-        class="stepper-responsive"
-        >
-        <ng-template matStepperIcon="number">
-          <mat-icon>lens</mat-icon>
-        </ng-template>
-        <mat-step [stepControl]="pasoInfoGeneral.formInfoGeneral">
-          <ng-template matStepLabel>
-            <p>Paso</p>
-            <b style="color: var(--primary)">Información General</b>
-          </ng-template>
-          <app-paso-info-general
-            #pasoInfoGeneral
-            [contratoGeneral]="contratoGeneral"
-            (stepCompleted)="stepCompleted(0, $event)"
-            (nextStep)="goToNextStep()"
-            (tipoCompromisoChange)="onTipoCompromisoChange($event)"
-            (aplicaPolizaChange)="onAplicaPolizaChange($event)"
-            (contratoGuardado)="onContratoGuardado($event)"
+      <!-- 1. Barra de Navegación del Stepper Institucional ARGO (4 Estados y Diseño Fluido) -->
+      <div class="stepper-nav-card">
+        <div class="stepper-nav-track">
+          @for (paso of pasosDinamicos; track paso.id; let idx = $index) {
+            <div
+              class="step-pill"
+              [class.step-state-actual]="getEstadoPaso(paso) === 'actual'"
+              [class.step-state-verde]="getEstadoPaso(paso) === 'verde'"
+              [class.step-state-amarillo]="getEstadoPaso(paso) === 'amarillo'"
+              [class.step-state-gris]="getEstadoPaso(paso) === 'gris'"
+              (click)="irAlPaso(idx)"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="paso.titulo"
             >
-          </app-paso-info-general>
-        </mat-step>
+              <!-- Círculo de Estado / Indicador Numérico o Icono -->
+              <div class="step-circle">
+                @switch (getEstadoPaso(paso)) {
+                  @case ('actual') {
+                    <span class="step-circle-num">{{ idx + 1 }}</span>
+                  }
+                  @case ('verde') {
+                    <mat-icon class="step-icon">check</mat-icon>
+                  }
+                  @case ('amarillo') {
+                    <mat-icon class="step-icon">priority_high</mat-icon>
+                  }
+                  @case ('gris') {
+                    <span class="step-circle-num">{{ paso.numeroFormateado }}</span>
+                  }
+                }
+              </div>
 
-        <mat-step
-          [stepControl]="pasoInfoPresupuestal.form"
-          [editable]="canProceedToStep(1) | async"
-          >
-          <ng-template matStepLabel>
-            <p>Paso</p>
-            <b style="color: var(--primary)">Información Presupuestal</b>
-          </ng-template>
-          <app-paso-info-presupuestal
-            #pasoInfoPresupuestal
-            [contratoGeneral]="contratoGeneral"
-            (stepCompleted)="stepCompleted(1, $event)"
-            (contratoGuardado)="cargarContratoGeneral()"
-            (nextStep)="goToNextStep()"
+              <!-- Textos del Paso con Reducción Adaptativa -->
+              <div class="step-text-wrap">
+                <span class="step-sublabel">{{ getSublabelPaso(paso) }}</span>
+                <span class="step-title" [title]="paso.titulo">{{ paso.titulo }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- 2. Contenedor del Stepper (Navegación Libre sin Bloqueos) -->
+      <div class="stepper-content-wrapper">
+        <mat-stepper
+          #stepper
+          [linear]="false"
+          [selectedIndex]="selectedIndex"
+          (selectionChange)="onStepSelectionChange($event)"
+          class="custom-argo-stepper"
+        >
+          <!-- Paso 1: General y Presupuestal -->
+          <mat-step [editable]="true">
+            <app-paso-info-general
+              #pasoInfoGeneral
+              [contratoGeneral]="contratoGeneral"
+              (stepCompleted)="onPasoInfoGeneralCompleted($event)"
+              (tipoCompromisoChange)="onTipoCompromisoChange($event)"
+              (aplicaPolizaChange)="onAplicaPolizaChange($event)"
+              (contratoGuardado)="onContratoGuardado($event)"
+            />
+            <app-paso-info-presupuestal
+              #pasoInfoPresupuestal
+              [contratoGeneral]="contratoGeneral"
+              (stepCompleted)="onPasoInfoPresupuestalCompleted($event)"
+              (contratoGuardado)="onPresupuestalGuardado()"
+              (nextStep)="goToNextStep()"
             />
           </mat-step>
 
-          <mat-step
-            [stepControl]="pasoSupervisores.form"
-            [editable]="canProceedToStep(2) | async"
-            >
-            <ng-template matStepLabel>
-              <p>Paso</p>
-              <b style="color: var(--primary)"
-                >Información Solicitante y Supervisor</b
-                >
-              </ng-template>
-              <app-paso-supervisores
-                #pasoSupervisores
-                (stepCompleted)="stepCompleted(2, $event)"
+          <!-- Paso 2: Solicitante y Supervisor (Responsables y Contratista) -->
+          <mat-step [editable]="true">
+            <app-paso-supervisores
+              #pasoSupervisores
+              (stepCompleted)="onPasoSupervisoresCompleted($event)"
+            />
+            <app-paso-contratistas
+              #pasoContratistas
+              (stepCompleted)="onPasoContratistasCompleted($event)"
+              (nextStep)="goToNextStep()"
+            />
+          </mat-step>
+
+          <!-- Paso 3: Estructura y Necesidad -->
+          <mat-step [editable]="true">
+            <app-paso-obligaciones
+              #pasoObligaciones
+              (stepCompleted)="onPasoEstructuraCompleted($event)"
+              (nextStep)="goToNextStep()"
+            />
+          </mat-step>
+
+          <!-- Paso Condicional A: Especificaciones Técnicas (Órdenes) -->
+          @if (showEspecificacionesTecnicas) {
+            <mat-step [editable]="true">
+              <app-paso-especificaciones
+                [contratoGeneral]="contratoGeneral"
+                (stepCompleted)="onPasoEspecificacionesCompleted($event)"
                 (nextStep)="goToNextStep()"
-                />
-              </mat-step>
+              />
+            </mat-step>
+          }
 
-              <mat-step>
-                <ng-template matStepLabel>
-                  <p>Paso</p>
-                  <b style="color: var(--primary)">Información Contratista</b>
-                </ng-template>
-                <app-paso-contratistas
-                  [contratoGeneral]="contratoGeneral"
-                  (stepCompleted)="stepCompleted(3, $event)" />
-              </mat-step>
+          <!-- Paso Condicional B: Garantías y Mecanismos de Cobertura del Riesgo -->
+          @if (showAplicaPoliza) {
+            <mat-step [editable]="true">
+              <app-paso-garantias
+                [contratoGeneral]="contratoGeneral"
+                (stepCompleted)="onPasoGarantiasCompleted($event)"
+                (nextStep)="goToNextStep()"
+              />
+            </mat-step>
+          }
 
-              <mat-step>
-                <ng-template matStepLabel>
-                  <p>Paso</p>
-                  <b style="color: var(--primary)">Obligaciones del Contrato</b>
-                </ng-template>
-                <app-paso-obligaciones
-                  #pasoObligaciones
-                  [contratoGeneral]="contratoGeneral"
-                  (contratoGuardado)="cargarContratoGeneral()"
-                  (stepCompleted)="stepCompleted(4, $event)"
-                  />
-                </mat-step>
-
-                @if (showEspecificacionesTecnicas) {
-                  <mat-step>
-                    <ng-template matStepLabel>
-                      <p>Paso</p>
-                      <b style="color: var(--primary)">Especificaciones Técnicas</b>
-                    </ng-template>
-                    <app-paso-especificaciones
-                      [contratoGeneral]="contratoGeneral"
-                      (stepCompleted)="stepCompleted(5, $event)"
-                      >
-                    </app-paso-especificaciones>
-                  </mat-step>
-                }
-
-                @if (showAplicaPoliza) {
-                  <mat-step>
-                    <ng-template matStepLabel>
-                      <p>Paso</p>
-                      <b style="color: var(--primary)"
-                        >Garantías y Mecanismos de Cobertura del Riesgo</b
-                        >
-                      </ng-template>
-                      <app-paso-garantias
-                        [contratoGeneral]="contratoGeneral"
-                        (stepCompleted)="stepCompleted(6, $event)"
-                      />
-                    </mat-step>
-                  }
-
-                  <mat-step>
-                    <ng-template matStepLabel>
-                      <p>Paso</p>
-                      <b style="color: var(--primary)">Cláusulas y Parágrafos</b>
-                    </ng-template>
-                    <app-paso-clausulas-paragrafos
-                      [contratoGeneral]="contratoGeneral"
-                      (stepCompleted)="stepCompleted(7, $event)"
-                      />
-                    </mat-step>
-
-                    <mat-step>
-                      <ng-template matStepLabel>
-                        <p>Paso</p>
-                        <b style="color: var(--primary)">Documentos Contratista</b>
-                      </ng-template>
-                      <app-paso-documentos (stepCompleted)="stepCompleted(8, $event)" />
-                    </mat-step>
-                  </mat-stepper>
-                </div>
-              </div>
-            </ng-template>
+          <!-- Paso Final: Clausulado y Parágrafos -->
+          <mat-step [editable]="true">
+            <app-paso-clausulas-paragrafos
+              [contratoGeneral]="contratoGeneral"
+              (stepCompleted)="onPasoClausulasCompleted($event)"
+            />
+          </mat-step>
+        </mat-stepper>
+      </div>
+    </div>
+  </div>
+</ng-template>

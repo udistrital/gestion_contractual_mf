@@ -64,7 +64,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     private contratoGeneralCrudService: ContratoGeneralCrudService
   ) {
     this.form = this.fb.group({
-      claseContratista: ['', Validators.required],
+      claseContratista: ['clase1', Validators.required],
       documentoContratista: [
         '',
         [Validators.required, Validators.minLength(5)],

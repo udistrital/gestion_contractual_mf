@@ -45,6 +45,7 @@ export interface CDPContratoCRUD {
   fecha_registro: Date;
   vigencia_cdp: number;
   contrato_general_id: number | null;
+  valor_a_tomar?: number;
 }
 
 export interface CDP {
@@ -55,6 +56,7 @@ export interface CDP {
   nombre_dependencia: string;
   descripcion: string;
   estado: string;
+  valor_a_tomar?: number | string;
 }
 
 export interface EstadoContrato {

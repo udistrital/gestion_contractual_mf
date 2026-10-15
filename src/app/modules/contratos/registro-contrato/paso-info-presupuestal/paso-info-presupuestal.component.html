@@ -1,273 +1,426 @@
 <div appInView (inView)="onInView($event)">
   <div class="row">
     <div class="col-12">
-      <div class="d-flex align-items-center fondo-acento-50 mb-4 mt-lg">
-        <div>
-          <mat-icon>monetization_on</mat-icon>
-        </div>
-        <div class="mx-3">
-          <h2>Información Presupuestal</h2>
-          Detalles del presupuesto
-        </div>
-      </div>
       <form [formGroup]="form">
-        <div class="border">
-          <div class="title">
-            <h3>Disponibilidades Presupuestales Asociadas</h3>
-          </div>
-          <div class="form-grid3">
-            <mat-form-field appearance="outline">
-              <mat-label>Vigencia:</mat-label>
-              <mat-select formControlName="vigencia">
-                @for (vigencia of vigencias; track vigencia) {
-                  <mat-option
-                    [value]="vigencia.value"
-                    >
-                    {{ vigencia.viewValue }}
-                  </mat-option>
-                }
-              </mat-select>
-              <mat-icon matPrefix>event</mat-icon>
-            </mat-form-field>
-            <app-searchable-select
-              label="Número de la Disponibilidad (CDP)"
-              icon="list_alt"
-              [items]="cdps"
-              [control]="form.get('cdp')"
-              >
-            </app-searchable-select>
-            <mat-form-field appearance="outline">
-              <mat-label>Valor Acumulado:</mat-label>
-              <input matInput formControlName="valorAcumulado" />
-              <mat-icon matSuffix>monetization_on</mat-icon>
-            </mat-form-field>
+        <!-- BLOQUE 2: Disponibilidades Presupuestales Asociadas (CDP) -->
+        <div class="bloque-card mb-4">
+          <div class="bloque-header">
+            <div class="bloque-header-title">
+              <mat-icon>account_balance_wallet</mat-icon>
+              <span>2. DISPONIBILIDADES PRESUPUESTALES ASOCIADAS (CDP)</span>
+            </div>
+            <span class="bloque-badge">
+              <span class="dot-activo"></span>
+              {{ selectedCDP.length }} CDP VINCULADOS
+            </span>
           </div>
 
-          <div class="table-container rounded-table table-scroll">
-            @if (selectedCDP.length != 0 && !isLoading) {
-              <table
-                mat-table
-                [dataSource]="selectedCDP"
-                class="custom-table"
-                >
-                @for (columna of cdpConstructorTabla; track columna) {
-                  <ng-container
-                    [matColumnDef]="columna.columnDef"
-                    >
-                    <th mat-header-cell *matHeaderCellDef>
-                      <b>{{ columna.header }}</b>
-                    </th>
-                    <td
-                      mat-cell
-                      *matCellDef="let element; let i = index"
-                      [class.even-row]="i % 2 === 0"
-                      >
-                      @if (columna.columnDef; as colDef) {
-                        @switch (colDef) {
-                          @case ('acciones') {
-                            <div>
-                              <button
-                                mat-icon-button
-                                color="warn"
-                                (click)="eliminarCDP(element)"
-                                matTooltip="Eliminar CDP"
-                                >
-                                <mat-icon>delete</mat-icon>
-                              </button>
-                            </div>
-                          }
-                          @default {
-                            <span>{{ columna.cell(element) }}</span>
-                          }
-                        }
-                      }
-                    </td>
-                  </ng-container>
-                }
-                <tr mat-header-row *matHeaderRowDef="tablaCdpColumnas"></tr>
-                <tr mat-row *matRowDef="let row; columns: tablaCdpColumnas"></tr>
-              </table>
-            }
-          </div>
-
-          <div class="btn-container">
-            @if (selectedCDP.length != 0) {
-              <button
-                mat-raised-button
-                (click)="guardarListaCDP()"
-                color="primary"
-                >
-                Guardar
-              </button>
-            }
-          </div>
-        </div>
-        <div class="border">
-          <div class="title">
-            <h3>Información Presupuestal</h3>
-          </div>
-          <div class="form-grid2">
-            <mat-form-field appearance="outline">
-              <mat-label>Tipo de Moneda:</mat-label>
-              <mat-select formControlName="tipoMoneda">
-                @for (moneda of monedas; track moneda) {
-                  <mat-option [value]="moneda.Id">
-                    {{ moneda.Nombre }}
-                  </mat-option>
-                }
-              </mat-select>
-              <mat-icon matPrefix>attach_money</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Valor de Contrato en Pesos:</mat-label>
-              <input
-                matInput
-                formControlName="valorContrato"
-                (keydown)="onlyNumbers($event)"
-                />
-                <mat-icon matPrefix>money</mat-icon>
-              </mat-form-field>
-              <div>
-                <p>
-                  Asegúrate de escoger la opción correcta, ya que esta acción no
-                  se puede deshacer.
-                </p>
-                <mat-checkbox>Reversar saldos</mat-checkbox>
-              </div>
-              <mat-form-field appearance="outline">
-                <mat-label>Ordenador Gasto:</mat-label>
-                <mat-select formControlName="ordenadorGasto">
-                  @for (ordenador of ordenadores; track ordenador) {
-                    <mat-option
-                      [value]="ordenador.id"
-                      >
-                      {{ ordenador.rol }}
-                    </mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix>person</mat-icon>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Nombre Ordenador:</mat-label>
-                <input matInput formControlName="nombreOrdenador" />
-                <mat-icon matPrefix>badge</mat-icon>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Tipo Gasto:</mat-label>
-                <mat-select formControlName="tipoGasto">
-                  @for (gasto of gastos; track gasto) {
-                    <mat-option [value]="gasto.Id">
-                      {{ gasto.Nombre }}
-                    </mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix>category</mat-icon>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Origen Recursos:</mat-label>
-                <mat-select formControlName="origenRecurso">
-                  @for (origen_recurso of origen_recursos; track origen_recurso) {
-                    <mat-option
-                      [value]="origen_recurso.Id"
-                      >
-                      {{ origen_recurso.Nombre }}
-                    </mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix>source</mat-icon>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Origen Presupuesto:</mat-label>
-                <mat-select formControlName="origenPresupuesto">
-                  @for (origen_presupuesto of origen_presupuestos; track origen_presupuesto) {
-                    <mat-option
-                      [value]="origen_presupuesto.Id"
-                      >
-                      {{ origen_presupuesto.Nombre }}
-                    </mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix>account_balance</mat-icon>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Tema Gasto Inversión:</mat-label>
-                <mat-select formControlName="temaGasto">
-                  @for (tema_gasto of tema_gasto; track tema_gasto) {
-                    <mat-option
-                      [value]="tema_gasto.Id"
-                      >
-                      {{ tema_gasto.Nombre }}
-                    </mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix>trending_up</mat-icon>
-              </mat-form-field>
-              @if (showCambioMonedaFields) {
-                <mat-form-field appearance="outline">
-                  <mat-label>Valor Moneda Extranjera:</mat-label>
-                  <input
-                    matInput
-                    formControlName="monedaExtranjera"
-                    (keydown)="onlyNumbers($event)"
-                    />
-                    <mat-icon matPrefix>euro</mat-icon>
-                  </mat-form-field>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Valor de Tasa Cambio:</mat-label>
-                    <input
-                      matInput
-                      formControlName="tasaCambio"
-                      (keydown)="onlyNumbers($event)"
-                      />
-                      <mat-icon matPrefix>currency_exchange</mat-icon>
-                    </mat-form-field>
-                  }
-                  <mat-form-field appearance="outline">
-                    <mat-label>Medio de Pago:</mat-label>
-                    <mat-select formControlName="medioPago">
-                      @for (medios_pago of medios_pago; track medios_pago) {
-                        <mat-option
-                          [value]="medios_pago.Id"
-                          >
-                          {{ medios_pago.Nombre }}
-                        </mat-option>
+          <div class="bloque-body p-3">
+            <!-- Panel Vincular Nueva Disponibilidad -->
+            <div class="subpanel-vincular mb-3">
+              <span class="subpanel-titulo">Vincular Nueva Disponibilidad</span>
+              <div class="row g-2 align-items-center">
+                <div class="col-12 col-sm-3">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Vigencia Fiscal:</mat-label>
+                    <mat-select formControlName="vigencia">
+                      @for (vigencia of vigencias; track vigencia) {
+                        <mat-option [value]="vigencia.value">{{ vigencia.viewValue }}</mat-option>
                       }
                     </mat-select>
-                    <mat-icon matPrefix>credit_card</mat-icon>
+                    <mat-icon matPrefix>event</mat-icon>
                   </mat-form-field>
-                  <mat-checkbox formControlName="clausulaRegistroPresupuestal">
-                    Sujeto a Registro Presupuestal (Hasta Agotar Presupuesto)
-                  </mat-checkbox>
                 </div>
-                <div class="full-width-field">
-                  <div class="title-box">Forma de Pago:</div>
-                  <app-editor-enriquecido
-                    formControlName="formaPago"
-                    placeholder="Ingrese la forma de pago"
-                  ></app-editor-enriquecido>
+                <div class="col-12 col-sm-6">
+                  <app-searchable-select
+                    label="Buscar CDP por Número o Rubro"
+                    icon="search"
+                    [items]="cdps"
+                    [control]="form.get('cdp')"
+                  >
+                  </app-searchable-select>
+                </div>
+                <div class="col-12 col-sm-3 d-flex align-items-center">
+                  <button
+                    type="button"
+                    mat-raised-button
+                    class="btn-asociar-cdp w-100"
+                    (click)="guardarListaCDP()"
+                    [disabled]="selectedCDP.length === 0"
+                  >
+                    <mat-icon>add_circle</mat-icon>
+                    Asociar CDP
+                  </button>
                 </div>
               </div>
-              <div class="btn-container">
-                <button
-                  mat-stroked-button
-                  style="border: 1px solid var(--md-primary-500)"
-                  color="primary"
-                  matStepperPrevious
-                  >
-                  <mat-icon>arrow_back</mat-icon>
-                  Volver
-                </button>
-                <button
-                  mat-raised-button
-                  (click)="guardarYContinuar()"
-                  color="primary"
-                  [disabled]="!form.valid || isLoading"
-                  >
-                  <mat-icon>save</mat-icon>
-                  Guardar y Continuar
-                </button>
+            </div>
+
+            <!-- Tabla de CDPs asociados -->
+            <div class="table-container rounded-table table-scroll">
+              @if (selectedCDP.length != 0 && !isLoading) {
+                <table
+                  mat-table
+                  [dataSource]="selectedCDP"
+                  class="custom-table w-100"
+                >
+                  @for (columna of cdpConstructorTabla; track columna) {
+                    <ng-container [matColumnDef]="columna.columnDef">
+                      <th mat-header-cell *matHeaderCellDef>
+                        <b>{{ columna.header }}</b>
+                      </th>
+                      <td
+                        mat-cell
+                        *matCellDef="let element; let i = index"
+                        [class.even-row]="i % 2 === 0"
+                      >
+                        @if (columna.columnDef; as colDef) {
+                          @switch (colDef) {
+                            @case ('acciones') {
+                              <div>
+                                <button
+                                  mat-icon-button
+                                  color="warn"
+                                  (click)="eliminarCDP(element)"
+                                  matTooltip="Eliminar CDP"
+                                >
+                                  <mat-icon>delete</mat-icon>
+                                </button>
+                              </div>
+                            }
+                            @case ('valor') {
+                              <span>$ {{ parseNumero(element.valor_contratacion).toLocaleString('es-CO') }}</span>
+                            }
+                            @case ('valorTomar') {
+                              <div class="valor-tomar-container">
+                                <mat-form-field appearance="outline" class="valor-tomar-field">
+                                  <span matPrefix>$&nbsp;</span>
+                                  <input
+                                    matInput
+                                    type="number"
+                                    [min]="0"
+                                    [max]="parseNumero(element.valor_contratacion)"
+                                    [(ngModel)]="element.valor_a_tomar"
+                                    [ngModelOptions]="{standalone: true}"
+                                    (ngModelChange)="onValorTomarChange(element)"
+                                    placeholder="0"
+                                  />
+                                </mat-form-field>
+                              </div>
+                            }
+                            @case ('estado') {
+                              <span class="badge-aprobado">
+                                <mat-icon class="icon-check">check_circle</mat-icon>
+                                Aprobado
+                              </span>
+                            }
+                            @default {
+                              <span>{{ columna.cell(element) }}</span>
+                            }
+                          }
+                        }
+                      </td>
+                    </ng-container>
+                  }
+                  <tr mat-header-row *matHeaderRowDef="tablaCdpColumnas"></tr>
+                  <tr mat-row *matRowDef="let row; columns: tablaCdpColumnas"></tr>
+                </table>
+              }
+            </div>
+
+            <!-- CINTA DE RESUMEN PRESUPUESTAL (Summary Ribbon) -->
+            <div class="summary-ribbon mt-3">
+              <div class="ribbon-datos">
+                <div class="ribbon-item">
+                  <span class="ribbon-label">TOTAL ACUMULADO EN CDPS</span>
+                  <span class="ribbon-val font-mono">$ {{ valorTotalAcumulado.toLocaleString('es-CO') }} COP</span>
+                </div>
+                <div class="ribbon-divider"></div>
+                <div class="ribbon-item">
+                  <span class="ribbon-label">VALOR ESTIMADO DEL CONTRATO</span>
+                  <span class="ribbon-val font-mono text-primary">$ {{ valorContratoNum.toLocaleString('es-CO') }} COP</span>
+                </div>
               </div>
-            </form>
+              <div
+                class="ribbon-badge"
+                [class.badge-suficiente]="coberturaSuficiente"
+                [class.badge-parcial]="!coberturaSuficiente"
+              >
+                <mat-icon>{{ coberturaSuficiente ? 'thumb_up' : 'warning' }}</mat-icon>
+                <span>Cobertura Presupuestal {{ coberturaSuficiente ? 'Suficiente' : 'Parcial' }} ({{ porcentajeCobertura }}%)</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        <!-- BLOQUE 3: Valores Contractuales, Ordenación y Pagos -->
+        <div class="bloque-card mb-4">
+          <div class="bloque-header">
+            <div class="bloque-header-title">
+              <mat-icon>payments</mat-icon>
+              <span>3. VALORES CONTRACTUALES, ORDENACIÓN Y PAGOS</span>
+            </div>
+            <span class="bloque-badge">10 CAMPOS OBLIGATORIOS</span>
+          </div>
+
+          <div class="bloque-body p-3">
+            <div class="row g-3">
+              <!-- Tipo de Moneda -->
+              <div class="col-12 col-md-4">
+                <div class="campo-bloque">
+                  <label class="campo-label">
+                    <span>TIPO DE MONEDA <span class="text-error">*</span></span>
+                  </label>
+                  <div class="campo-control-wrapper">
+                    <mat-icon class="campo-icon-left">attach_money</mat-icon>
+                    <select class="campo-select" formControlName="tipoMoneda">
+                      @for (moneda of monedas; track moneda) {
+                        <option [ngValue]="moneda.Id">{{ moneda.Nombre }}</option>
+                      }
+                    </select>
+                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Valor Total del Contrato -->
+              <div class="col-12 col-md-8">
+                <div class="campo-bloque">
+                  <label class="campo-label d-flex justify-content-between align-items-center">
+                    <span>VALOR TOTAL DEL CONTRATO <span class="text-error">*</span></span>
+                    <span class="campo-subtext-valor" [title]="valorEnLetras">{{ valorEnLetras }}</span>
+                  </label>
+                  <div class="campo-control-wrapper">
+                    <mat-icon class="campo-icon-left">point_of_sale</mat-icon>
+                    <input
+                      type="text"
+                      class="campo-input font-mono-val"
+                      formControlName="valorContrato"
+                      (keydown)="onlyNumbers($event)"
+                      placeholder="0"
+                    />
+                    <span class="badge-cop">COP</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cargo Ordenador del Gasto -->
+              <div class="col-12 col-md-6">
+                <div class="campo-bloque">
+                  <label class="campo-label d-flex justify-content-between align-items-center">
+                    <span>CARGO ORDENADOR DEL GASTO <span class="text-error">*</span></span>
+                    <span class="campo-subtext-hint">Por delegación</span>
+                  </label>
+                  <div class="campo-control-wrapper">
+                    <mat-icon class="campo-icon-left">manage_accounts</mat-icon>
+                    <select class="campo-select" formControlName="ordenadorGasto">
+                      @for (ordenador of ordenadores; track ordenador) {
+                        <option [ngValue]="ordenador.id">{{ ordenador.rol }}</option>
+                      }
+                    </select>
+                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Nombre y Apellido Ordenador -->
+              <div class="col-12 col-md-6">
+                <div class="campo-bloque">
+                  <label class="campo-label">
+                    <span>NOMBRE Y APELLIDO ORDENADOR <span class="text-error">*</span></span>
+                  </label>
+                  <div class="campo-control-wrapper campo-disabled">
+                    <mat-icon class="campo-icon-left">person</mat-icon>
+                    <input
+                      type="text"
+                      class="campo-input cursor-not-allowed"
+                      formControlName="nombreOrdenador"
+                      readonly
+                    />
+                    <mat-icon class="campo-icon-lock" title="Validado en planta activa">lock</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Origen de Recursos -->
+              <div class="col-12 col-md-6">
+                <div class="campo-bloque">
+                  <label class="campo-label">
+                    <span>ORIGEN DE RECURSOS <span class="text-error">*</span></span>
+                  </label>
+                  <div class="campo-control-wrapper">
+                    <mat-icon class="campo-icon-left">savings</mat-icon>
+                    <select class="campo-select" formControlName="origenRecurso">
+                      @for (origen of origen_recursos; track origen) {
+                        <option [ngValue]="origen.Id">{{ origen.Nombre }}</option>
+                      }
+                    </select>
+                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Origen Presupuesto -->
+              <div class="col-12 col-md-6">
+                <div class="campo-bloque">
+                  <label class="campo-label">
+                    <span>ORIGEN PRESUPUESTO <span class="text-error">*</span></span>
+                  </label>
+                  <div class="campo-control-wrapper">
+                    <mat-icon class="campo-icon-left">account_balance</mat-icon>
+                    <select class="campo-select" formControlName="origenPresupuesto">
+                      @for (pres of origen_presupuestos; track pres) {
+                        <option [ngValue]="pres.Id">{{ pres.Nombre }}</option>
+                      }
+                    </select>
+                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tipo Gasto -->
+              <div class="col-12 col-md-4">
+                <div class="campo-bloque">
+                  <label class="campo-label">
+                    <span>TIPO DE GASTO <span class="text-error">*</span></span>
+                  </label>
+                  <div class="campo-control-wrapper">
+                    <mat-icon class="campo-icon-left">category</mat-icon>
+                    <select class="campo-select" formControlName="tipoGasto">
+                      @for (gasto of gastos; track gasto) {
+                        <option [ngValue]="gasto.Id">{{ gasto.Nombre }}</option>
+                      }
+                    </select>
+                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tema Gasto Inversión -->
+              <div class="col-12 col-md-4">
+                <div class="campo-bloque">
+                  <label class="campo-label">
+                    <span>TEMA GASTO INVERSIÓN <span class="text-error">*</span></span>
+                  </label>
+                  <div class="campo-control-wrapper">
+                    <mat-icon class="campo-icon-left">trending_up</mat-icon>
+                    <select class="campo-select" formControlName="temaGasto">
+                      @for (tema of tema_gasto; track tema) {
+                        <option [ngValue]="tema.Id">{{ tema.Nombre }}</option>
+                      }
+                    </select>
+                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Medio Pago -->
+              <div class="col-12 col-md-4">
+                <div class="campo-bloque">
+                  <label class="campo-label">
+                    <span>MEDIO DE PAGO <span class="text-error">*</span></span>
+                  </label>
+                  <div class="campo-control-wrapper">
+                    <mat-icon class="campo-icon-left">payment</mat-icon>
+                    <select class="campo-select" formControlName="medioPago">
+                      @for (medio of medios_pago; track medio) {
+                        <option [ngValue]="medio.Id">{{ medio.Nombre }}</option>
+                      }
+                    </select>
+                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              @if (showCambioMonedaFields) {
+                <div class="col-12 col-md-6">
+                  <div class="campo-bloque">
+                    <label class="campo-label">
+                      <span>VALOR MONEDA EXTRANJERA <span class="text-error">*</span></span>
+                    </label>
+                    <div class="campo-control-wrapper">
+                      <mat-icon class="campo-icon-left">euro</mat-icon>
+                      <input
+                        type="text"
+                        class="campo-input"
+                        formControlName="monedaExtranjera"
+                        (keydown)="onlyNumbers($event)"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="campo-bloque">
+                    <label class="campo-label">
+                      <span>VALOR DE TASA CAMBIO <span class="text-error">*</span></span>
+                    </label>
+                    <div class="campo-control-wrapper">
+                      <mat-icon class="campo-icon-left">currency_exchange</mat-icon>
+                      <input
+                        type="text"
+                        class="campo-input"
+                        formControlName="tasaCambio"
+                        (keydown)="onlyNumbers($event)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Checkboxes Operativos -->
+              <div class="col-12 pt-2">
+                <div class="checkboxes-fila">
+                  <mat-checkbox formControlName="clausulaRegistroPresupuestal" class="checkbox-institucional">
+                    Sujeto a Registro Presupuestal previo a la ejecución (CRP)
+                  </mat-checkbox>
+                  <mat-checkbox formControlName="reversarSaldos" class="checkbox-institucional">
+                    Autorizar reversión automática de saldos no ejecutados
+                  </mat-checkbox>
+                </div>
+              </div>
+
+              <!-- Sub-bloque Cláusula Forma de Pago -->
+              <div class="col-12">
+                <div class="subbloque-clausula">
+                  <div class="subbloque-header">
+                    <div class="subbloque-header-title">
+                      <mat-icon>receipt_long</mat-icon>
+                      <span>CLÁUSULA CONTRACTUAL: FORMA DE PAGO Y DESEMBOLSOS</span>
+                    </div>
+                    <span class="badge-plantilla">Plantilla Oficial CPS-03</span>
+                  </div>
+                  <div class="p-2">
+                    <app-editor-enriquecido
+                      formControlName="formaPago"
+                      placeholder="Ingrese las condiciones de pago pactadas"
+                    ></app-editor-enriquecido>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-container mt-4">
+          <button
+            mat-stroked-button
+            style="border: 1px solid var(--md-primary-500)"
+            color="primary"
+            matStepperPrevious
+          >
+            <mat-icon>arrow_back</mat-icon>
+            Volver
+          </button>
+          <button
+            mat-raised-button
+            (click)="guardarYContinuar()"
+            color="primary"
+            [disabled]="!form.valid || isLoading"
+          >
+            <mat-icon>save</mat-icon>
+            Guardar y Continuar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

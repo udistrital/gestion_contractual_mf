@@ -4,10 +4,10 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EspecificacionTecnica } from 'src/app/types/types';
 
 @Component({
-    selector: 'app-modal-especificacion',
-    templateUrl: './modal-especificacion.component.html',
-    styleUrls: ['./modal-especificacion.component.css'],
-    standalone: false
+  selector: 'app-modal-especificacion',
+  templateUrl: './modal-especificacion.component.html',
+  styleUrls: ['./modal-especificacion.component.css'],
+  standalone: false
 })
 export class ModalEspecificacionComponent implements OnInit {
   allowedKeys = [
@@ -38,16 +38,49 @@ export class ModalEspecificacionComponent implements OnInit {
     } else {
       this.guardarHabilitado = true;
     }
+
+    // Recalcular valor total automáticamente al cambiar cantidad o valor unitario
+    this.formEspecificacion.get('cantidad')?.valueChanges.subscribe(() => {
+      this.recalcularValorTotal();
+    });
+    this.formEspecificacion.get('valor_unitario')?.valueChanges.subscribe(() => {
+      this.recalcularValorTotal();
+    });
+  }
+
+  get isEdicion(): boolean {
+    return !!(this.data && this.data.especificacion);
+  }
+
+  get cantidadActual(): number {
+    return parseFloat(this.formEspecificacion?.get('cantidad')?.value) || 0;
+  }
+
+  get valorUnitarioActual(): number {
+    return parseFloat(this.formEspecificacion?.get('valor_unitario')?.value) || 0;
+  }
+
+  get valorTotalActual(): number {
+    return parseFloat(this.formEspecificacion?.get('valor_total')?.value) || 0;
   }
 
   iniciarFormEspecificacion() {
     this.formEspecificacion = this.fb.group({
       id: [null],
-      descripcion: ['', Validators.required],
-      cantidad: ['', Validators.required],
-      valor_unitario: ['', Validators.required],
-      valor_total: ['', Validators.required],
+      descripcion: ['', [Validators.required, Validators.minLength(3)]],
+      cantidad: ['', [Validators.required, Validators.min(1)]],
+      valor_unitario: ['', [Validators.required, Validators.min(0.01)]],
+      valor_total: ['', [Validators.required, Validators.min(0.01)]],
     });
+  }
+
+  recalcularValorTotal() {
+    const cant = parseFloat(this.formEspecificacion.get('cantidad')?.value);
+    const unit = parseFloat(this.formEspecificacion.get('valor_unitario')?.value);
+    if (!isNaN(cant) && !isNaN(unit) && cant > 0 && unit > 0) {
+      const total = Math.round(cant * unit * 100) / 100;
+      this.formEspecificacion.get('valor_total')?.setValue(total, { emitEvent: false });
+    }
   }
 
   validarNumero(event: KeyboardEvent) {
@@ -60,25 +93,21 @@ export class ModalEspecificacionComponent implements OnInit {
   validarNumeroConDecimales(event: KeyboardEvent, inputValue: string) {
     const key = event.key;
 
-    // Permitir teclas funcionales (no numéricas)
     if (this.allowedKeys.includes(key)) {
-      return; // Permite estas teclas
+      return;
     }
 
-    // Permitir números y el punto decimal
     const pattern = /^[0-9.]$/;
     if (!pattern.test(key)) {
       event.preventDefault();
       return;
     }
 
-    // Evitar más de un punto decimal
     if (key === '.' && inputValue.includes('.')) {
       event.preventDefault();
       return;
     }
-    
-    // Validar que después del punto decimal solo haya hasta dos dígitos
+
     const [integerPart, decimalPart] = inputValue.split('.');
     if (decimalPart && decimalPart.length >= 2 && key !== 'Backspace') {
       event.preventDefault();
@@ -97,8 +126,8 @@ export class ModalEspecificacionComponent implements OnInit {
 
   guardarEspecificacion() {
     if (this.formEspecificacion.valid) {
-      const especificacionGuardada = this.formEspecificacion.value;
-      this.dialogRef.close(especificacionGuardada); // Enviar los datos al componente principal
+      const especificacionGuardada = this.formEspecificacion.getRawValue();
+      this.dialogRef.close(especificacionGuardada);
     }
   }
 

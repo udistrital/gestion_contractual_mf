@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ContratosRoutingModule } from './contratos-routing.module';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { InViewDirective } from 'src/app/directives/InViewDirective';
@@ -66,6 +67,7 @@ const consultaComponents = [
     ...consultaComponents,
   ],
   imports: [
+    CommonModule,
     SharedModule,
     ContratosRoutingModule
   ],

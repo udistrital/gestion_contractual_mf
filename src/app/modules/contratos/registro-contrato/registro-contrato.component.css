@@ -1,11 +1,255 @@
-@media (min-width: 992px) {
-  ::ng-deep .mat-step-text-label {
-    white-space: normal;
-    overflow: visible;
-    font-size: 10pt;
+/* ==========================================================================
+   Ocultar cabecera por defecto de Angular Material Stepper
+   ========================================================================== */
+.custom-argo-stepper ::ng-deep .mat-horizontal-stepper-header-container,
+.custom-argo-stepper ::ng-deep .mat-vertical-stepper-header-container {
+  display: none !important;
+}
+
+.custom-argo-stepper ::ng-deep .mat-horizontal-content-container {
+  padding: 0 !important;
+}
+
+.custom-argo-stepper {
+  background: transparent !important;
+}
+
+/* ==========================================================================
+   Barra de Navegación del Stepper Institucional ARGO (conforme a Guía de Diseño)
+   ========================================================================== */
+/* ==========================================================================
+   Barra de Navegación del Stepper Institucional ARGO (4 Estados y Diseño Fluido)
+   ========================================================================== */
+.stepper-nav-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.5rem clamp(0.5rem, 0.8vw, 1rem);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.25rem;
+  overflow: hidden; /* Cero scroll horizontal */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stepper-nav-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(4px, 0.55vw, 10px);
+  width: 100%;
+  min-width: 0;
+}
+
+/* Píldora individual de cada paso - Adaptación fluida sin desborde */
+.step-pill {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 0.5vw, 8px);
+  padding: 0.45rem clamp(4px, 0.55vw, 10px);
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  flex: 1 1 0px;
+  min-width: 0;
+  box-sizing: border-box;
+  background-color: #ffffff;
+}
+
+.step-pill:hover {
+  background-color: #f8fafc;
+}
+
+/* ==========================================================================
+   ESTADO 1: ACTUAL (ROJO INSTITUCIONAL ARGO)
+   Paso en edición activa en pantalla
+   ========================================================================== */
+.step-pill.step-state-actual {
+  background-color: #fdf2f2;
+  border-color: rgba(128, 19, 19, 0.35);
+  box-shadow: 0 1px 3px rgba(128, 19, 19, 0.08);
+}
+
+.step-pill.step-state-actual .step-circle {
+  background-color: #801313;
+  color: #ffffff;
+  border-color: #801313;
+}
+
+.step-pill.step-state-actual .step-sublabel {
+  color: #801313;
+  font-weight: 700;
+}
+
+.step-pill.step-state-actual .step-title {
+  color: #801313;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   ESTADO 2: VERDE (GUARDADO SATISFACTORIAMENTE)
+   Únicamente cuando el paso ha sido guardado con éxito
+   ========================================================================== */
+.step-pill.step-state-verde {
+  background-color: #f0fdf4;
+  border-color: rgba(5, 122, 85, 0.3);
+}
+
+.step-pill.step-state-verde:hover {
+  background-color: #dcfce7;
+}
+
+.step-pill.step-state-verde .step-circle {
+  background-color: #057a55;
+  color: #ffffff;
+  border-color: #057a55;
+}
+
+.step-pill.step-state-verde .step-sublabel {
+  color: #057a55;
+  font-weight: 700;
+}
+
+.step-pill.step-state-verde .step-title {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   ESTADO 3: AMARILLO (ALERTA / PENDIENTE DE COMPLETAR O GUARDAR)
+   Paso visitado/incompleto que aún no ha sido guardado
+   ========================================================================== */
+.step-pill.step-state-amarillo {
+  background-color: #fffbeb;
+  border-color: rgba(217, 119, 6, 0.35);
+}
+
+.step-pill.step-state-amarillo:hover {
+  background-color: #fef3c7;
+}
+
+.step-pill.step-state-amarillo .step-circle {
+  background-color: #d97706;
+  color: #ffffff;
+  border-color: #d97706;
+}
+
+.step-pill.step-state-amarillo .step-sublabel {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.step-pill.step-state-amarillo .step-title {
+  color: #78350f;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   ESTADO 4: GRIS (SIN CAMPOS LLENOS / NO INICIADO)
+   Paso inicial que no ha sido tocado ni guardado
+   ========================================================================== */
+.step-pill.step-state-gris {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.step-pill.step-state-gris:hover {
+  background-color: #f1f5f9;
+}
+
+.step-pill.step-state-gris .step-circle {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-color: #cbd5e1;
+}
+
+.step-pill.step-state-gris .step-sublabel {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.step-pill.step-state-gris .step-title {
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Círculo del Paso (Número o Icono)
+   ========================================================================== */
+.step-circle {
+  width: clamp(24px, 1.8vw, 30px);
+  height: clamp(24px, 1.8vw, 30px);
+  min-width: clamp(24px, 1.8vw, 30px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.step-circle-num {
+  font-size: clamp(10.5px, 0.75vw, 12.5px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.step-icon {
+  font-size: clamp(14px, 1vw, 17px);
+  width: clamp(14px, 1vw, 17px);
+  height: clamp(14px, 1vw, 17px);
+  line-height: clamp(14px, 1vw, 17px);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Textos del Paso (Contracción Horizontal Fluida y Tipografía Proporcional)
+   ========================================================================== */
+.step-text-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.step-sublabel {
+  font-size: clamp(8px, 0.58vw, 9.5px);
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-title {
+  font-size: clamp(9px, 0.68vw, 11.5px);
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* ==========================================================================
+   Ajustes para Pantallas Angostas
+   ========================================================================== */
+@media (max-width: 768px) {
+  .stepper-nav-track {
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
-  .mt-lg {
-    margin-top: 10px;
+  .step-pill {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 140px;
   }
 }

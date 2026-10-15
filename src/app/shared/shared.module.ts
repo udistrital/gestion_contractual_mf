@@ -30,6 +30,7 @@ import { SpinnerComponent } from './components/spinner/spinner.component';
     PdfViewerModule,
   ],
   exports: [
+    CommonModule,
     PlantillaTarjetaContenedoraComponent,
     PlantillaModalComponent,
     EditorEnriquecidoComponent,

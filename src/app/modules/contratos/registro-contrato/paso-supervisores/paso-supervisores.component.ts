@@ -7,7 +7,6 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import {FormBuilder, Validators, FormArray, AbstractControl} from '@angular/forms';
-import { UbicacionService } from 'src/app/services/ubicacion.service';
 import { distinctUntilChanged, filter, finalize } from 'rxjs/operators';
 import {
   DependenciaContratoMidResponse,
@@ -41,13 +40,10 @@ export class PasoSupervisoresComponent implements OnInit {
     dependencia_legado: '',
     cargo_legado: '',
   }]
-  lugareEjecucionId: number | null = null;
-
   sedes: SedeContratoMidResponse[] = [];
   dependenciasPorSede: { [key: number]: DependenciaContratoMidResponse[] } = {};
   loading = false;
   solicitanteSaved = false;
-  lugarEjecucionSaved = false;
 
   form = this._formBuilder.group({
     solicitante: this._formBuilder.group({
@@ -55,49 +51,21 @@ export class PasoSupervisoresComponent implements OnInit {
       dependencia: [null, Validators.required],
     }),
     supervisores: this._formBuilder.array([this.crearSupervisorFormGroup()]),
-    lugarEjecucion: this._formBuilder.group({
-      pais: [null, Validators.required],
-      departamento: [null, Validators.required],
-      municipioCiudad: [null, Validators.required],
-      sede: [null, Validators.required],
-      dependencia: [null, Validators.required],
-      direccion: ['', Validators.required],
-    }),
   });
-
-  pais: any[] = [];
-  departamento: any[] = [];
-  municipioCiudad: any[] = [];
 
   constructor(
     private alertService: AlertService,
     private _formBuilder: FormBuilder,
-    private ubicacionService: UbicacionService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService,
-  private cdRef: ChangeDetectorRef
+    private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.loadSavedData();
     this.cargarSedes();
     this.setupFormListeners();
-    this.CargarPais();
-
-    this.form.get('lugarEjecucion.pais')?.valueChanges.subscribe((id_pais) => {
-      if (id_pais) {
-        this.CargarDepartamento(id_pais);
-      }
-    });
-
-    this.form
-      .get('lugarEjecucion.departamento')
-      ?.valueChanges.subscribe((id_departamento) => {
-        if (id_departamento) {
-          this.CargarCiudad(id_departamento);
-        }
-      });
   }
 
   private loadSavedData(): void {
@@ -120,28 +88,13 @@ export class PasoSupervisoresComponent implements OnInit {
         this.solicitanteSaved = true;
       }
 
-      // Cargar datos del lugar de ejecución
-      const savedLugarEjecucion = localStorage.getItem('paso-lugar-ejecucion');
-      if (savedLugarEjecucion) {
-        const parsedLugar = JSON.parse(savedLugarEjecucion);
-        this.form.get('lugarEjecucion')?.patchValue({
-          pais: parsedLugar.pais_id,
-          departamento: parsedLugar.departamento_id,
-          municipioCiudad: parsedLugar.ciudad_id,
-          sede: parsedLugar.sede_id,
-          dependencia: parsedLugar.dependencia_id,
-          direccion: parsedLugar.direccion,
-        });
-        this.lugareEjecucionId = parsedLugar.id;
-        this.lugarEjecucionSaved = true;
-      }
-
       const savedSupervisores = localStorage.getItem('paso-supervisores');
       if (savedSupervisores) {
         const parsedSupervisores = JSON.parse(savedSupervisores);
         console.log('Supervisores guardados:', parsedSupervisores);
         this.supervisoresIds = parsedSupervisores.supervisores;
       }
+      this.checkStepCompleted();
     } catch (error) {
       console.error('Error loading saved data:', error);
     }
@@ -188,6 +141,7 @@ export class PasoSupervisoresComponent implements OnInit {
         JSON.stringify({ ...solicitanteData, id: solicitante_id })
       );
       this.solicitanteSaved = true;
+      this.checkStepCompleted();
 
       this.alertService.showSuccessAlert(
         'La información del solicitante se ha guardado correctamente'
@@ -203,59 +157,7 @@ export class PasoSupervisoresComponent implements OnInit {
     }
   }
 
-  async guardarLugarEjecucion() {
-    if (this.form.get('lugarEjecucion')?.invalid) {
-      this.form.get('lugarEjecucion')?.markAllAsTouched();
-      return;
-    }
 
-    try {
-      this.loading = true;
-      const lugarData = {
-        pais_id: this.form.get('lugarEjecucion.pais')?.value,
-        ciudad_id: this.form.get('lugarEjecucion.municipioCiudad')?.value,
-        municipio_id: this.form.get('lugarEjecucion.departamento')?.value,
-        sede_id: this.form.get('lugarEjecucion.sede')?.value,
-        dependencia_id: this.form.get('lugarEjecucion.dependencia')?.value,
-        direccion: this.form.get('lugarEjecucion.direccion')?.value,
-        contrato_general_id: this.contratoGeneralId,
-      };
-
-      const lugarEjecucionId = this.lugareEjecucionId;
-
-      if (lugarEjecucionId) {
-        this.contratoGeneralCrudService
-          .patchLugarEjecucion(lugarEjecucionId, lugarData)
-          .subscribe((response: any) => {
-            this.lugareEjecucionId = response.id;
-          });
-      } else {
-        this.contratoGeneralCrudService
-          .postLugarEjecucion(lugarData)
-          .subscribe((response: any) => {
-            this.lugareEjecucionId = response.id;
-          });
-      }
-
-      localStorage.setItem(
-        'paso-lugar-ejecucion',
-        JSON.stringify({ ...lugarData, id: this.lugareEjecucionId })
-      );
-      this.lugarEjecucionSaved = true;
-
-      this.alertService.showSuccessAlert(
-        'La información del lugar de ejecución se ha guardado correctamente',
-        'Lugar de ejecución guardado'
-      );
-    } catch (error) {
-      this.alertService.showErrorAlert(
-        'Ocurrió un error al guardar la información del lugar de ejecución'
-      );
-    } finally {
-      this.loading = false;
-      this.cdRef.detectChanges();
-    }
-  }
 
   async guardarSupervisores() {
     if (!this.contratoGeneralId) {
@@ -327,6 +229,7 @@ export class PasoSupervisoresComponent implements OnInit {
           contrato_id: this.contratoGeneralId
         })
       );
+      this.checkStepCompleted();
 
       this.alertService.showSuccessAlert(
         'La información de los supervisores se ha guardado correctamente'
@@ -344,9 +247,9 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   async guardarYContinuar() {
-    if (!this.solicitanteSaved || !this.lugarEjecucionSaved) {
+    if (!this.solicitanteSaved) {
       this.alertService.showAlert(
-        'Por favor, guarde todas las secciones antes de continuar',
+        'Por favor, guarde la información del solicitante antes de continuar',
         'Información incompleta'
       );
       return;
@@ -372,11 +275,6 @@ export class PasoSupervisoresComponent implements OnInit {
     return sedeId ? this.dependenciasPorSede[Number(sedeId)] || [] : [];
   }
 
-  getDependenciasLugarEjecucion(): DependenciaContratoMidResponse[] {
-    const sedeId = this.form.get('lugarEjecucion.sede')?.value;
-    return sedeId ? this.dependenciasPorSede[Number(sedeId)] || [] : [];
-  }
-
   private crearSupervisorFormGroup() {
     return this._formBuilder.group({
       sede: [null, Validators.required],
@@ -397,16 +295,6 @@ export class PasoSupervisoresComponent implements OnInit {
       )
       .subscribe((sedeId) => {
         this.cargarDependencias(Number(sedeId), 'solicitante');
-      });
-
-    this.form
-      .get('lugarEjecucion.sede')
-      ?.valueChanges.pipe(
-        distinctUntilChanged(),
-        filter((sedeId) => sedeId !== null && sedeId !== undefined)
-      )
-      .subscribe((sedeId) => {
-        this.cargarDependencias(Number(sedeId), 'lugarEjecucion');
       });
 
     this.setupSupervisorListeners(0);
@@ -532,7 +420,7 @@ export class PasoSupervisoresComponent implements OnInit {
 
   private cargarDependencias(
     sedeId: number,
-    tipo: 'solicitante' | 'supervisor' | 'lugarEjecucion',
+    tipo: 'solicitante' | 'supervisor',
     supervisorIndex?: number
   ): void {
     if (!sedeId) return;
@@ -561,10 +449,6 @@ export class PasoSupervisoresComponent implements OnInit {
             case 'solicitante':
               this.form.get('solicitante.dependencia')?.setValue(null, { emitEvent: false });
               break;
-
-            case 'lugarEjecucion':
-              this.form.get('lugarEjecucion.dependencia')?.setValue(null, { emitEvent: false });
-              break;
           }
 
           this.cdRef.detectChanges();
@@ -584,6 +468,13 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   agregarSupervisor() {
+    if (this.getSupervisoresFormArray().length >= 2) {
+      this.alertService.showAlert(
+        'Solo se permite un máximo de 2 supervisores por contrato',
+        'Límite alcanzado'
+      );
+      return;
+    }
     const supervisorGroup = this.crearSupervisorFormGroup();
     this.getSupervisoresFormArray().push(supervisorGroup);
     const newIndex = this.getSupervisoresFormArray().length - 1;
@@ -596,43 +487,12 @@ export class PasoSupervisoresComponent implements OnInit {
     }
   }
 
-  CargarPais() {
-    this.ubicacionService
-      .get('lugar?query=TipoLugarId:1&limit=0')
-      .subscribe((Response: any) => {
-        if (Response.length != 0) {
-          this.pais = Response;
-        }
-      });
+  private checkStepCompleted(): void {
+    const isCompleted = this.solicitanteSaved && this.supervisoresIds.length > 0;
+    this.stepCompleted.emit(isCompleted);
   }
 
-  CargarDepartamento(id_pais: string) {
-    console.log('Cargando departamentos para país:', id_pais);
-    this.ubicacionService
-      .get('relacion_lugares?query=LugarPadreId:' + id_pais + '&limit=0')
-      .subscribe({
-        next: (Response: any) => {
-          console.log('Respuesta departamentos:', Response);
-          if (Response.length != 0) {
-            this.departamento = Response;
-            this.cdRef.detectChanges();
-          }
-        },
-        error: (error) => console.error('Error cargando departamentos:', error),
-      });
-  }
 
-  CargarCiudad(id_departamento: string) {
-    this.ubicacionService
-      .get(
-        'relacion_lugares?query=LugarPadreId:' + id_departamento + '&limit=0'
-      )
-      .subscribe((Response: any) => {
-        if (Response.length != 0) {
-          this.municipioCiudad = Response;
-        }
-      });
-  }
 
   async onInView(inView: boolean) {
     if (inView) {

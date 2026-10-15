@@ -55,8 +55,23 @@ export class PasoGarantiasComponent implements OnInit {
   ngOnInit() {
     this.cargarTipoAmparos();
     this.form.statusChanges.subscribe(() => {
-      this.stepCompleted.emit(this.form.valid);
+      this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
     });
+  }
+
+  get totalAmparos(): number {
+    return this.filasFormArray.length;
+  }
+
+  get amparosValidos(): number {
+    return this.filasFormArray.controls.filter((c) => c.valid).length;
+  }
+
+  get estadoCobertura(): string {
+    if (this.filasFormArray.length === 0) {
+      return 'Sin amparos';
+    }
+    return this.form.valid ? 'Completo' : 'Incompleto';
   }
 
   private async loadSavedData(): Promise<void> {
@@ -98,8 +113,20 @@ export class PasoGarantiasComponent implements OnInit {
    * filas quitadas por el usuario se eliminan (soft delete en el CRUD).
    */
   async guardarYContinuar() {
+    if (this.filasFormArray.length === 0) {
+      this.alertService.showAlert(
+        'Debe registrar al menos un amparo o garantía para el contrato',
+        'Atención'
+      );
+      return;
+    }
+
     if (!this.form.valid) {
       this.markFormGroupTouched(this.form);
+      this.alertService.showAlert(
+        'Por favor complete todos los campos obligatorios de los amparos',
+        'Formulario incompleto'
+      );
       return;
     }
 
@@ -150,11 +177,13 @@ export class PasoGarantiasComponent implements OnInit {
     this.filasFormArray.push(nuevaFila);
     this.configurarAmparoListener(nuevaFila);
     this.actualizarDataSource();
+    this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
   }
 
   eliminarFila(index: number) {
     this.filasFormArray.removeAt(index);
     this.actualizarDataSource();
+    this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
     this.cdRef.detectChanges();
   }
 

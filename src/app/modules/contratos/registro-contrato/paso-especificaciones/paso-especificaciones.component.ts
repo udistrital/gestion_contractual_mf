@@ -42,6 +42,18 @@ export class PasoEspecificacionesComponent {
     })
   }
 
+  get valorTotalGeneral(): number {
+    return this.especificaciones.reduce(
+      (acc, curr) => acc + (Number(curr.valor_total) || 0),
+      0
+    );
+  }
+
+  guardarYContinuar() {
+    this.stepCompleted.emit(this.especificaciones.length > 0);
+    this.nextStep.emit();
+  }
+
   private handleError(message: string, error: any, callback?: () => void) {
     console.error(message, error);
     this.alertService.showErrorAlert(message);
@@ -167,7 +179,9 @@ export class PasoEspecificacionesComponent {
 
   openModalEspecificacion(especificacion?: EspecificacionTecnica): void {
     const dialog = this.dialog.open(ModalEspecificacionComponent, {
-      width: '70vw',
+      width: '680px',
+      maxWidth: '95vw',
+      autoFocus: false,
       data: { especificacion },
     });
 
