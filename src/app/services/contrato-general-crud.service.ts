@@ -3,7 +3,9 @@ import { RequestManager } from '../managers/requestManager';
 import { Observable } from 'rxjs';
 import {
   CDPContratoCRUD,
+  ApiResponse,
   ContratistaCRUD,
+  ContratistaResponse,
   EstadoContrato,
   SupervisorToSave,
 } from '../types/types';
@@ -77,7 +79,7 @@ export class ContratoGeneralCrudService {
   getEspecificacionesTecnicas(idContrato: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get(
-      `especificaciones-tecnicas?query={"activo":true, "contratoGeneralId":"${idContrato}"}&limit=0`
+      `especificaciones-tecnicas?query={"activo":true, "contrato_general_id":"${idContrato}"}&limit=0`
     );
   }
 
@@ -102,7 +104,9 @@ export class ContratoGeneralCrudService {
     return this.requestManager.delete('especificaciones-tecnicas', id);
   }
 
-  getContratista(idContrato: number): Observable<any> {
+  getContratista(
+    idContrato: number
+  ): Observable<ApiResponse<ContratistaResponse>> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get(`contratistas/contrato/${idContrato}`);
   }
@@ -214,6 +218,11 @@ export class ContratoGeneralCrudService {
       'ordenador-contrato',
       contrato_general_parcial
     );
+  }
+
+  gerOrdenadorGuardado(contratoId: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`ordenador-contrato/contrato/${contratoId}`)
   }
 
   postSupervisor(data: SupervisorToSave): Observable<any> {

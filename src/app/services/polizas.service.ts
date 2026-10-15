@@ -3,6 +3,7 @@ import { RequestManager } from '../managers/requestManager';
 import { Observable } from 'rxjs';
 import { GestorDocumentalService } from './gestor-documental.service';
 import { environment } from '../../environments/environment';
+import { ApiResponse, AmparoPolizaDto } from '../types/types';
 
 /**
  * Consume pólizas y amparos a través de gestion_contractual_mid (endpoints
@@ -55,6 +56,11 @@ export class PolizasService {
       JSON.stringify({ contrato_general_id: contratoGeneralId, activo: true })
     );
     return this.requestManager.get(`polizas?query=${query}&limit=1`);
+  }
+  
+  getAmparos(contratoId: number): Observable<ApiResponse<Amparo[]>> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get('amparos-polizas/contrato/' + contratoId);
   }
 
   postPoliza(poliza: any): Observable<any> {

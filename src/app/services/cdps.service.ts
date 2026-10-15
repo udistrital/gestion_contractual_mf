@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {RequestManager} from "../managers/requestManager";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, Observable} from "rxjs";
+import { CDP } from '../types/types';
 
 @Injectable({
   providedIn: 'root'
@@ -13,18 +14,16 @@ export class CdpsService {
   constructor(private requestManager: RequestManager) {
     this.requestManager.setPath('CDPS_SERVICE');
   }
-  get(endpoint: string) {
+  get(endpoint: string): Observable<any> {
     this.requestManager.setPath('CDPS_SERVICE');
     return this.requestManager.get(endpoint);
   }
 
-  updateLocalCDP(cdpData: any[]) {
-    localStorage.setItem('cdp', JSON.stringify(cdpData));
+  updateLocalCDP(cdpData: CDP[]) {
     this.cdpSubject.next(cdpData);
   }
 
   getLocalCDP(): any[] {
-    const cdpString = localStorage.getItem('cdp');
-    return cdpString ? JSON.parse(cdpString) : [];
+    return this.cdpSubject.getValue();
   }
 }

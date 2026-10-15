@@ -1,5 +1,5 @@
 <plantilla-tarjeta-contenedora
-  [title]="'Registrar Contrato'"
+  [title]="!editMode() ? 'Registrar Contrato' : 'Editar Contrato'"
   [contenido]="contenidoDePlantilla"
 ></plantilla-tarjeta-contenedora>
 
@@ -23,10 +23,12 @@
           </ng-template>
           <app-paso-info-general
             #pasoInfoGeneral
+            [contratoGeneral]="contratoGeneral"
             (stepCompleted)="stepCompleted(0, $event)"
             (nextStep)="goToNextStep()"
             (tipoCompromisoChange)="onTipoCompromisoChange($event)"
             (aplicaPolizaChange)="onAplicaPolizaChange($event)"
+            (contratoGuardado)="onContratoGuardado($event)"
             >
           </app-paso-info-general>
         </mat-step>
@@ -41,7 +43,9 @@
           </ng-template>
           <app-paso-info-presupuestal
             #pasoInfoPresupuestal
+            [contratoGeneral]="contratoGeneral"
             (stepCompleted)="stepCompleted(1, $event)"
+            (contratoGuardado)="cargarContratoGeneral()"
             (nextStep)="goToNextStep()"
             />
           </mat-step>
@@ -68,7 +72,9 @@
                   <p>Paso</p>
                   <b style="color: var(--primary)">Información Contratista</b>
                 </ng-template>
-                <app-paso-contratistas (stepCompleted)="stepCompleted(3, $event)" />
+                <app-paso-contratistas
+                  [contratoGeneral]="contratoGeneral"
+                  (stepCompleted)="stepCompleted(3, $event)" />
               </mat-step>
 
               <mat-step>
@@ -78,6 +84,8 @@
                 </ng-template>
                 <app-paso-obligaciones
                   #pasoObligaciones
+                  [contratoGeneral]="contratoGeneral"
+                  (contratoGuardado)="cargarContratoGeneral()"
                   (stepCompleted)="stepCompleted(4, $event)"
                   />
                 </mat-step>
@@ -89,6 +97,7 @@
                       <b style="color: var(--primary)">Especificaciones Técnicas</b>
                     </ng-template>
                     <app-paso-especificaciones
+                      [contratoGeneral]="contratoGeneral"
                       (stepCompleted)="stepCompleted(5, $event)"
                       >
                     </app-paso-especificaciones>
@@ -103,7 +112,10 @@
                         >Garantías y Mecanismos de Cobertura del Riesgo</b
                         >
                       </ng-template>
-                      <app-paso-garantias (stepCompleted)="stepCompleted(6, $event)" />
+                      <app-paso-garantias
+                        [contratoGeneral]="contratoGeneral"
+                        (stepCompleted)="stepCompleted(6, $event)"
+                      />
                     </mat-step>
                   }
 
@@ -113,6 +125,7 @@
                       <b style="color: var(--primary)">Cláusulas y Parágrafos</b>
                     </ng-template>
                     <app-paso-clausulas-paragrafos
+                      [contratoGeneral]="contratoGeneral"
                       (stepCompleted)="stepCompleted(7, $event)"
                       />
                     </mat-step>

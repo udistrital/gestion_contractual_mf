@@ -24,6 +24,7 @@ import { ModalMotivosRechazoComponent } from './revision-contrato/modal-motivos-
 import { ConsultaContratoComponent } from './consulta-contrato/consulta-contrato.component';
 import { ModalObservacionesComponent } from './consulta-contrato/modal-observaciones/modal-observaciones.component';
 import { DetalleContratoComponent } from './consulta-contrato/detalle-contrato/detalle-contrato.component';
+import { EditarContratoComponent } from './consulta-contrato/editar-contrato/editar-contrato.component';
 
 const registrarComponents = [
   CDPListComponent,
@@ -54,7 +55,8 @@ const revisionComponents = [
 const consultaComponents = [
   ConsultaContratoComponent,
   ModalObservacionesComponent,
-  DetalleContratoComponent
+  DetalleContratoComponent,
+  EditarContratoComponent,
 ]
 
 @NgModule({

@@ -5,6 +5,9 @@ import {
   AfterViewInit,
   ViewChildren,
   QueryList,
+  inject,
+  model,
+  effect,
 } from '@angular/core';
 import { PasoContratistasComponent } from './paso-contratistas/paso-contratistas.component';
 import { PasoInfoGeneralComponent } from './paso-info-general/paso-info-general.component';
@@ -16,6 +19,9 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { ApiResponse, ContratoGeneral } from 'src/app/types/types';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
     selector: 'app-registro-contrato',
@@ -30,14 +36,19 @@ import { BreakpointObserver } from '@angular/cdk/layout';
     standalone: false
 })
 export class RegistroContratoComponent implements OnInit, AfterViewInit {
+  
   @ViewChildren(MatStep) steps!: QueryList<MatStep>;
   @ViewChild('stepper') stepper!: MatStepper;
+  
   @ViewChild(PasoContratistasComponent)
   pasoContratistas!: PasoContratistasComponent;
+  
   @ViewChild(PasoInfoGeneralComponent)
   pasoInfoGeneral!: PasoInfoGeneralComponent;
+  
   @ViewChild(PasoObligacionesComponent)
   pasoObligaciones!: PasoObligacionesComponent;
+  
   @ViewChild(PasoInfoPresupuestalComponent)
   pasoInfoPresupuestal!: PasoInfoPresupuestalComponent;
 
@@ -50,10 +61,42 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     new Array(9).fill(false)
   );
 
-  constructor(private breakpointObserver: BreakpointObserver) {}
+  private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
+  private readonly alertService = inject(AlertService);
+
+  private breakpointObserver = inject(BreakpointObserver);
+  contratoGeneralId = model<number>(0);
+  editMode = model<boolean>(false);
+  contratoGeneral: ContratoGeneral | undefined = undefined;
+
+  constructor() {
+    effect(() => {
+      if (this.contratoGeneralId()) {
+        this.cargarContratoGeneral();
+      }
+    });
+  }
 
   ngOnInit() {
     this.manejarResponsiveStepper();
+  }
+
+  cargarContratoGeneral() {
+    this.contratoGeneralCrudService.get(this.contratoGeneralId()).subscribe({
+      next: (response: ApiResponse<ContratoGeneral>) => {
+        if (response.Success) {
+          this.contratoGeneral = response.Data;
+        }
+      },
+      error: () => {
+        this.alertService.showErrorAlert('Error al cargar el contrato general');
+      }
+    });
+  }
+
+  onContratoGuardado(contratoId: number) {
+    this.contratoGeneralId.set(contratoId);
+    this.cargarContratoGeneral();
   }
 
   onTipoCompromisoChange(tipoCompromisoId: string) {
@@ -84,11 +127,6 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.stepper.selectionChange.subscribe((event) => {
-      if (event.previouslySelectedIndex === 3 && event.selectedIndex !== 3) {
-        this.pasoContratistas.onStepLeave();
-      }
-    });
     this.steps.toArray().forEach((step, index) => {
       step.label = `Paso ${index + 1}`;
     });
