@@ -13,7 +13,7 @@ import { PolizasService } from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import { firstValueFrom } from 'rxjs';
-import { Amparo, ApiResponse, ContratoGeneral, ParametroListResponse, ParametroResponse } from 'src/app/types/types';
+import { AmparoPolizaDto, ApiResponse, ContratoGeneral, ParametroListResponse, ParametroResponse } from 'src/app/types/types';
 import { AlertService } from 'src/app/services/alert.service';
 
 @Component({
@@ -109,11 +109,11 @@ export class PasoGarantiasComponent implements OnInit {
       this.alertService.showErrorAlert('No se ha encontrado información del contrato');
     }
 
-    let response: ApiResponse<Amparo>;
+    let response: ApiResponse<AmparoPolizaDto>;
 
     if (this.datosExitentes) {
       response = await firstValueFrom(
-        this.polizasService.putAmparos(this.contratoGeneral()?.id as number, formData)
+        this.polizasService.putAmparo(this.contratoGeneral()?.id as number, formData)
       );
     } else {
       response = await firstValueFrom(
@@ -279,7 +279,7 @@ export class PasoGarantiasComponent implements OnInit {
     }
   }
 
-  sendDataToApi(data: Amparo[]) {
+  sendDataToApi(data: AmparoPolizaDto[]) {
     this.polizasService.postAmparos(data).subscribe({
       next: (response: ApiResponse<any>) => {
         this.alertService.showSuccessAlert(
@@ -308,7 +308,7 @@ export class PasoGarantiasComponent implements OnInit {
     });
   }
 
-  prepareFormData(): Amparo[] {
+  prepareFormData(): AmparoPolizaDto[] {
     return this.filasFormArray.controls.map((control) => {
       const formGroup = control as FormGroup;
       return {

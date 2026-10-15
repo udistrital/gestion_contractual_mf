@@ -58,7 +58,7 @@ export class PolizasService {
     return this.requestManager.get(`polizas?query=${query}&limit=1`);
   }
   
-  getAmparos(contratoId: number): Observable<ApiResponse<Amparo[]>> {
+  getAmparos(contratoId: number): Observable<ApiResponse<AmparoPolizaDto[]>> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get('amparos-polizas/contrato/' + contratoId);
   }
