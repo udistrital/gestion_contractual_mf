@@ -92,6 +92,11 @@ export class PasoGarantiasComponent implements OnInit {
     }
   }
 
+  /**
+   * Guarda las garantías con un diff por fila contra `idsOriginales`: filas
+   * nuevas se crean en lote, filas existentes se actualizan una a una y las
+   * filas quitadas por el usuario se eliminan (soft delete en el CRUD).
+   */
   async guardarYContinuar() {
     if (!this.form.valid) {
       this.markFormGroupTouched(this.form);
@@ -132,6 +137,7 @@ export class PasoGarantiasComponent implements OnInit {
 
   crearFilaFormGroup(): FormGroup {
     return this._formBuilder.group({
+      id: [null],
       amparo: ['', Validators.required],
       suficienciaPorcentaje: ['', Validators.required],
       suficienciaSalarios: [{ value: '', disabled: true }],
@@ -267,8 +273,7 @@ export class PasoGarantiasComponent implements OnInit {
 
   onSubmit() {
     if (this.form.valid) {
-      const formData = this.prepareFormData();
-      this.sendDataToApi(formData);
+      this.guardarYContinuar();
     } else {
       this.markFormGroupTouched(this.form);
     }
@@ -307,10 +312,13 @@ export class PasoGarantiasComponent implements OnInit {
     return this.filasFormArray.controls.map((control) => {
       const formGroup = control as FormGroup;
       return {
+        id: formGroup.get('id')?.value ?? null,
         amparo_id: formGroup.get('amparo')?.value,
-        suficiencia: Number(formGroup.get('suficienciaSalarios')?.enabled
-          ? formGroup.get('suficienciaSalarios')?.value
-          : formGroup.get('suficienciaPorcentaje')?.value),
+        suficiencia: Number(
+          formGroup.get('suficienciaSalarios')?.enabled
+            ? formGroup.get('suficienciaSalarios')?.value
+            : formGroup.get('suficienciaPorcentaje')?.value
+        ),
         descripcion: formGroup.get('descripcion')?.value,
         contrato_general_id: this.contratoGeneral()?.id as number,
         tipo_valor_amparo_id: formGroup.get('suficienciaSalarios')?.enabled
