@@ -196,6 +196,12 @@ importers:
       '@angular/router':
         specifier: ^21.2.23
         version: 21.2.23(@angular/common@21.2.23(@angular/core@21.2.23(@angular/compiler@21.2.23)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.2.23(@angular/compiler@21.2.23)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@21.2.23(@angular/animations@21.2.23(@angular/core@21.2.23(@angular/compiler@21.2.23)(rxjs@7.8.2)(zone.js@0.15.1)))(@angular/common@21.2.23(@angular/core@21.2.23(@angular/compiler@21.2.23)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.2.23(@angular/compiler@21.2.23)(rxjs@7.8.2)(zone.js@0.15.1)))(rxjs@7.8.2)
+      '@fingerprintjs/fingerprintjs':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@thumbmarkjs/thumbmarkjs':
+        specifier: ^1.12.0
+        version: 1.12.0
       bootstrap:
         specifier: ^5.3.0
         version: 5.3.8(@popperjs/core@2.11.8)
@@ -1532,6 +1538,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@fingerprintjs/fingerprintjs@5.3.0':
+    resolution: {integrity: sha512-goxeuSCF/LR8E/lcsCh/YTjhlFW7AOhj4A9RQ5GHpBOKwkX/OG3z8mY5ADR1xGVRB5bSEJB66WNh5eBwehx2nQ==}
+
   '@gar/promise-retry@1.0.3':
     resolution: {integrity: sha512-GmzA9ckNokPypTg10pgpeHNQe7ph+iIKKmhKu3Ob9ANkswreCx7R3cKmY781K8QK3AqVL3xVh9A42JvIAbkkSA==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -2595,6 +2604,9 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@thumbmarkjs/thumbmarkjs@1.12.0':
+    resolution: {integrity: sha512-qGIKlSKhsH7CtazU8dhowBDNo1l1DeAr30K785nCtFdzSWam/sybyjiPmmKu/jUjkuUJ8kr8VyRXiWQxQm/81w==}
 
   '@tsconfig/node10@1.0.13':
     resolution: {integrity: sha512-gcLdvR9HO1ZJBypsOGqaP6TFEzb6vIta0KSTLt9NAQ6pXQO3cRgSVyCN6pzYqI9DlJgY71XKO0dpDhCf08b3pg==}
@@ -7547,6 +7559,8 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
+  '@fingerprintjs/fingerprintjs@5.3.0': {}
+
   '@gar/promise-retry@1.0.3': {}
 
   '@harperfast/extended-iterable@1.0.3':
@@ -8601,6 +8615,8 @@ snapshots:
       '@sinonjs/commons': 3.0.1
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@thumbmarkjs/thumbmarkjs@1.12.0': {}
 
   '@tsconfig/node10@1.0.13': {}
 
