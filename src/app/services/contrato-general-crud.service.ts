@@ -180,6 +180,11 @@ export class ContratoGeneralCrudService {
     return this.requestManager.get(url);
   }
 
+  getSolicitante(contratoId: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`solicitantes/contrato/${contratoId}`)
+  }
+
   postSolicitante(contrato_general_parcial: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post('solicitantes', contrato_general_parcial);
@@ -223,6 +228,11 @@ export class ContratoGeneralCrudService {
   gerOrdenadorGuardado(contratoId: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get(`ordenador-contrato/contrato/${contratoId}`)
+  }
+
+  getSupervisores(contratoId: number): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.get(`supervisores/contrato/${contratoId}`)
   }
 
   postSupervisor(data: SupervisorToSave): Observable<any> {

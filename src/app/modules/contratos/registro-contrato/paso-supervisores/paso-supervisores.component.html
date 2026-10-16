@@ -62,16 +62,12 @@
             mat-raised-button
             class="btn-institucional-wine"
             (click)="guardarSolicitante()"
-            [disabled]="form.get('solicitante')?.invalid || loading">
+            [disabled]="form.get('solicitante')?.invalid">
             <div class="btn-flex-center">
-              @if (loading) {
-                <mat-spinner diameter="18"></mat-spinner>
-              }
-              @if (!loading && !solicitanteSaved) {
-                <mat-icon>save</mat-icon>
-              }
-              @if (!loading && solicitanteSaved) {
+              @if (solicitanteSaved) {
                 <mat-icon>check</mat-icon>
+              } @else  {
+                <mat-icon>save</mat-icon>
               }
               <span>{{ solicitanteSaved ? 'Actualizar Solicitante' : 'Guardar Solicitante' }}</span>
             </div>
@@ -239,14 +235,9 @@
             mat-raised-button
             class="btn-institucional-wine"
             (click)="guardarSupervisores()"
-            [disabled]="getSupervisoresFormArray().invalid || loading">
+            [disabled]="getSupervisoresFormArray().invalid">
             <div class="btn-flex-center">
-              @if (loading) {
-                <mat-spinner diameter="18"></mat-spinner>
-              }
-              @if (!loading) {
-                <mat-icon>save</mat-icon>
-              }
+              <mat-icon>save</mat-icon>
               <span>Guardar Supervisores</span>
             </div>
           </button>

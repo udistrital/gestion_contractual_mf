@@ -219,6 +219,13 @@ export interface CDPItem {
   Nombre: string;
 }
 
+export interface Solicitante {
+  id?: number;
+  dependencia_solicitante_id: number;
+  sede_solicitante_id: number;
+  contrato_general_id: number;
+}
+
 export interface SupervisorResponse {
   Success: boolean;
   Status: number;
@@ -240,6 +247,7 @@ export interface SupervisorData {
 }
 
 export interface SupervisorToSave {
+  id?: number;
   supervisor_id: string;
   sede_legado: string;
   dependencia_legado: string;
