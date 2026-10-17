@@ -10,13 +10,15 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { QuillModule } from "ngx-quill";
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
+import { SpinnerComponent } from './components/spinner/spinner.component';
 
 @NgModule({
   declarations: [
     PlantillaTarjetaContenedoraComponent,
     PlantillaModalComponent,
     EditorEnriquecidoComponent,
-    SearchableSelectComponent
+    SearchableSelectComponent,
+    SpinnerComponent
   ],
   imports: [
     MaterialModule,
@@ -28,6 +30,7 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
     PdfViewerModule,
   ],
   exports: [
+    CommonModule,
     PlantillaTarjetaContenedoraComponent,
     PlantillaModalComponent,
     EditorEnriquecidoComponent,
@@ -38,7 +41,8 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
     ReactiveFormsModule,
     MaterialModule,
     QuillModule,
-    PdfViewerModule
+    PdfViewerModule,
+    SpinnerComponent,
   ],
   providers: [
     { provide: MAT_DIALOG_DATA, useValue: {} },

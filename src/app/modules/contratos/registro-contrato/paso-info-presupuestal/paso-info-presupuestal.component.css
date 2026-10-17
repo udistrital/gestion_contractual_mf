@@ -1,0 +1,498 @@
+.btn-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.form-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 2%;
+}
+
+.form-grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 2%;
+}
+
+mat-table mat-cell,
+mat-table mat-header-cell {
+  border: 1px solid;
+}
+
+mat-table {
+  padding-bottom: 2%;
+}
+
+.full-width-field {
+  width: 96%;
+  margin: 2%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.title-box {
+  background-color: var(--md-primary-500);
+  color: white;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.even-row {
+  background-color: #f4f4f4;
+}
+
+.mat-column-vigencia {
+  text-align: center;
+  font-size: 9.5pt;
+}
+
+.mat-column-solicitudNecesidad {
+  font-size: 9.5pt;
+}
+
+.mat-column-numeroCDP {
+  font-size: 9.5pt;
+}
+
+.mat-column-valor {
+  font-size: 9.5pt;
+  white-space: nowrap;
+}
+
+.mat-column-valorTomar {
+  font-size: 9.5pt;
+  min-width: 170px;
+}
+
+.valor-tomar-field {
+  width: 100%;
+  max-width: 160px;
+  margin: 2px 0;
+}
+
+.valor-tomar-field ::ng-deep .mat-mdc-text-field-wrapper {
+  padding: 0 8px;
+}
+
+.valor-tomar-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.mat-column-dependencia {
+  font-size: 9.5pt;
+}
+
+.mat-column-rubro {
+  font-size: 9.5pt;
+}
+
+.mat-column-estado {
+  font-size: 9.5pt;
+}
+
+.mat-column-acciones {
+  text-align: center;
+  font-size: 9.5pt;
+}
+
+::ng-deep .mat-cell {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+/* Card y Cabeceras Institucionales Vino Tinto */
+.bloque-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.bloque-header {
+  background-color: #801313;
+  color: #ffffff;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bloque-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.bloque-header-title mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.bloque-badge {
+  background-color: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot-activo {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #34d399;
+  display: inline-block;
+}
+
+/* Subpanel Vincular Nueva Disponibilidad */
+.subpanel-vincular {
+  background-color: #f7f9fb;
+  border: 1px solid #e0e3e5;
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+
+.subpanel-titulo {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #801313;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.btn-asociar-cdp {
+  background-color: #801313 !important;
+  color: #ffffff !important;
+  height: 52px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+/* Estado Aprobado Chip */
+.badge-aprobado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #e5ded9;
+  color: #1e1b18;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-aprobado .icon-check {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: #801313;
+}
+
+/* Cinta de Resumen Presupuestal (Summary Ribbon) */
+.summary-ribbon {
+  background-color: #f7f9fb;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ribbon-datos {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.ribbon-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.ribbon-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #625e59;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ribbon-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #191c1e;
+}
+
+.ribbon-divider {
+  width: 1px;
+  height: 32px;
+  background-color: #d8dadc;
+}
+
+.ribbon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ribbon-badge mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.badge-suficiente {
+  background-color: #ffdad6;
+  color: #801313;
+}
+
+.badge-parcial {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+/* Bloque 3: Estructura de campos según Mockup Oficial */
+.campo-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.campo-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #625e59;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.campo-label .text-error {
+  color: #ba1a1a;
+  font-weight: 700;
+}
+
+.campo-subtext-valor {
+  font-size: 11.5px;
+  color: #801313;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.campo-subtext-hint {
+  font-size: 11px;
+  color: #625e59;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.campo-control-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #f7f9fb;
+  border: 1px solid #e0e3e5;
+  border-radius: 4px;
+  height: 38px;
+  padding: 0 10px;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.campo-control-wrapper:hover {
+  border-color: #c4c7c9;
+}
+
+.campo-control-wrapper:focus-within {
+  border-color: #801313;
+  box-shadow: 0 0 0 2px rgba(128, 19, 19, 0.12);
+  background-color: #ffffff;
+}
+
+.campo-control-wrapper.campo-disabled {
+  background-color: #f0f2f4;
+  cursor: not-allowed;
+}
+
+.campo-icon-left {
+  position: absolute;
+  left: 10px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #625e59;
+  pointer-events: none;
+}
+
+.campo-icon-arrow {
+  position: absolute;
+  right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #625e59;
+  pointer-events: none;
+}
+
+.campo-icon-lock {
+  position: absolute;
+  right: 10px;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #625e59;
+  pointer-events: none;
+}
+
+.campo-select {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding-left: 26px;
+  padding-right: 26px;
+  font-size: 13px;
+  color: #191c1e;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.campo-select:disabled {
+  cursor: not-allowed;
+  color: #625e59;
+}
+
+.campo-input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding-left: 26px;
+  padding-right: 48px;
+  font-size: 13.5px;
+  color: #191c1e;
+}
+
+.campo-input:read-only {
+  cursor: not-allowed;
+  color: #625e59;
+}
+
+.campo-input.font-mono-val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.campo-control-wrapper .badge-cop {
+  position: absolute;
+  right: 8px;
+  background-color: #e5e8ea;
+  color: #58413f;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Checkboxes Institucionales */
+.checkboxes-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  align-items: center;
+}
+
+.checkbox-institucional {
+  font-size: 13px;
+  color: #191c1e;
+}
+
+.checkbox-institucional ::ng-deep .mdc-checkbox--selected ~ .mdc-checkbox__ripple {
+  background: #801313;
+}
+
+.checkbox-institucional ::ng-deep .mdc-checkbox .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+.checkbox-institucional ::ng-deep .mdc-checkbox .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+  background-color: #801313 !important;
+  border-color: #801313 !important;
+}
+
+.subbloque-clausula {
+  border: 1px solid #e0e3e5;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.subbloque-header {
+  background-color: #eceef0;
+  border-bottom: 1px solid #e0e3e5;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subbloque-header-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #801313;
+  text-transform: uppercase;
+}
+
+.subbloque-header-title mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.badge-plantilla {
+  background-color: #ffffff;
+  border: 1px solid #e0e3e5;
+  color: #625e59;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}

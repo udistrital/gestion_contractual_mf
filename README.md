@@ -27,9 +27,26 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
 - **Gestión de Actas de Inicio (Migrado desde `acta_inicio_mf`):**
   - `/contratos/actas/registrar`: Registro de actas de inicio vinculadas a la contratación institucional.
 - **Gestión de Pólizas (Migrado desde `poliza_mf`):**
-  - `/contratos/polizas/registrar`: Registro de pólizas, asociación a contratos y configuración de amparos.
-  - `/contratos/polizas/consultar`: Consulta y visualización del estado de pólizas por contrato.
-  - `/contratos/polizas/listado`: Listado tabular de pólizas y amparos registrados.
+  - `/polizas/registrar`: Registro de pólizas, asociación a contratos y configuración de amparos.
+  - `/polizas/consultar`: Consulta y visualización del estado de pólizas por contrato.
+  - `/polizas/listado`: Listado tabular de pólizas y amparos registrados.
+  - Paso **Garantías** del registro de contrato (`/contratos/registrar`): creación, edición y eliminación de los amparos del contrato.
+
+### Endpoints de Pólizas y Amparos
+
+Las pólizas y los amparos se consumen únicamente de `gestion_contractual_mid` mediante `src/app/services/polizas.service.ts`, siguiendo la arquitectura OAS (MF → MID → CRUD). El MID reenvía `polizas` y `amparos-polizas` a `gestion_contractual_crud` con la misma ruta, query, body y respuesta (#360). Ya no se usan `poliza_crud` ni `poliza_mid`.
+
+| Servicio | Método y endpoint | Uso |
+|---|---|---|
+| MID | `GET amparos-polizas?query={"contrato_general_id":id,"activo":true}&limit=0&sortBy=id&orderBy=ASC` | Listar los amparos de un contrato |
+| MID | `POST amparos-polizas` (arreglo) | Crear amparos en lote (201, o 206 si la creación es parcial) |
+| MID | `PUT amparos-polizas/:id` | Editar un amparo o vincularlo (`poliza_id`) a una póliza |
+| MID | `DELETE amparos-polizas/:id` | Borrado lógico de un amparo |
+| MID | `GET polizas?query={"contrato_general_id":id,"activo":true}&limit=1` | Consultar la póliza de un contrato |
+| MID | `POST polizas` / `PUT polizas/:id` | Crear o actualizar la póliza |
+| MID | `GET amparos-contratos/:id` | Amparos de un contrato con el nombre del parámetro |
+
+Documentación detallada de la migración y de las pruebas: [`docs/integracion-polizas-352.md`](docs/integracion-polizas-352.md).
 
 ### Variables de Entorno y Microservicios Relacionados
 
@@ -37,9 +54,7 @@ Cliente para la gestión, registro, actualización y consulta de contratos, part
 |---|---|
 | `PARAMETROS_SERVICE` | API de parámetros institucionales OAS |
 | `GESTION_CONTRACTUAL_CRUD_SERVICE` | Microservicio CRUD de contratos (`localhost:8080`) |
-| `GESTION_CONTRACTUAL_MID_SERVICE` | Microservicio MID de contratación (`localhost:8081`) |
-| `POLIZAS_CRUD_SERVICE` | Microservicio CRUD de pólizas (`localhost:3119`) |
-| `POLIZAS_MID_SERVICE` | Microservicio MID de pólizas y amparos (`localhost:3118`) |
+| `GESTION_CONTRACTUAL_MID_SERVICE` | Microservicio MID de contratación (`localhost:8081`). Pólizas y amparos se consumen aquí (`polizas`, `amparos-polizas`, `amparos-contratos/:id`) |
 | `TERCEROS_CRUD` | Microservicio CRUD de terceros e identificación (`/apioas/terceros_crud/v1/`) |
 | `GESTOR_DOCUMENTAL_SERVICE` | API del Gestor Documental MID v1 |
 
@@ -152,9 +167,83 @@ Con estos pasos, se tendrán las partes mínimas necesarias para ejecutar el pro
 
 ## Ejecución Pruebas
 
+### Unitarias (Jest)
+
 ```bash
 pnpm run test
 ```
+
+### Requisitos previos para integración y E2E
+
+Las pruebas de integración y E2E usan servicios reales, no mocks. Antes de correrlas verifica:
+
+1. **VPN institucional activa.** `gestion_contractual_mid` consume `ENDP_PARAMETROS_CRUD` (red institucional). Sin VPN, `GET amparos-contratos/:id` tarda ~27 s y responde `500 Error al consultar amparos del contrato`; falla la prueba de integración `amparos-contratos` y el E2E de registrar póliza, porque el select de amparos (`E2E-amparo 6602`) nunca se llena.
+2. **Servicios levantados en local:**
+
+   | Servicio | Puerto | Necesario para |
+   |---|---|---|
+   | `gestion_contractual_crud` | `:8080` | Integración y E2E |
+   | `gestion_contractual_mid` | `:8081` | Integración y E2E |
+   | `gestion_contractual_mf` (`pnpm run start`) | `:4201` | Solo E2E |
+   | Root single-spa (`gestion_contractual_compras_root_mf`) | `:4200` | Solo E2E |
+
+   Si el MF (`:4201`) no está arriba, el root no monta la vista y las pruebas E2E fallan con `getByText('Asociar Contratos')` no encontrado. Si el root no está arriba, fallan con `net::ERR_CONNECTION_REFUSED` en `localhost:4200`.
+3. **Base de datos del CRUD arriba.** `gestion_contractual_crud` lee su `.env` (por defecto Postgres en `localhost:5433`). Sin la BD, cualquier consulta responde `400 Error en los parámetros de consulta:` (mensaje vacío) y fallan los `GET` de la prueba.
+4. **El MF debe apuntar a los servicios locales** (solo E2E). `pnpm run start` usa la configuración `local` de Angular, que lee `src/environments/environment.ts`. Para que la pantalla llame a tu CRUD y MID, cambia ahí, solo en tu máquina y sin commitear:
+
+   ```ts
+   GESTION_CONTRACTUAL_CRUD_SERVICE: 'http://localhost:8080/',
+   GESTION_CONTRACTUAL_MID_SERVICE: 'http://localhost:8081/',
+   ```
+
+   Si no lo haces, el MF consulta el CRUD remoto (`autenticacion.portaloas...`), responde `401` y el select de consecutivos queda vacío (`getByRole('option', { name: '13' })` no aparece).
+5. **El root debe enrutar `/polizas` al MF de contratos.** En `gestion_contractual_compras_root_mf/src/microfrontend-layout.html` la ruta `polizas` apunta a `@udistrital/argo-poliza-mf` (`:4203`), un MF que no corre en local. Las rutas de pólizas viven en este MF (`PolizasModule`), así que para E2E cambia, solo en tu máquina y sin commitear:
+
+   ```html
+   <route path="polizas">
+     <application name="@udistrital/argo-gestion-contractual-mf"></application>
+   </route>
+   ```
+
+   Si no lo haces, la página muestra `Uncaught runtime errors: Script error.` y en consola `application '@udistrital/argo-poliza-mf' died in status LOADING_SOURCE_CODE: Error loading http://localhost:4203/main.js`.
+6. **Google Chrome instalado** (solo E2E; la config usa `channel: 'chrome'`).
+7. **Contrato de pruebas disponible** (ver variables `E2E_*` más abajo).
+
+Comprobación rápida de los servicios:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" localhost:4200   # root
+curl -s -o /dev/null -w "%{http_code}\n" localhost:4201   # MF
+curl -s -o /dev/null -w "%{http_code}\n" localhost:8080   # CRUD
+curl -s -o /dev/null -w "%{http_code}\n" localhost:8081   # MID
+```
+
+### Integración (Playwright, sin navegador)
+
+Verifican el contrato HTTP entre el MF y los servicios reales de pólizas y amparos. Las operaciones de negocio van a `gestion_contractual_mid` (`:8081`), que reenvía a `gestion_contractual_crud` (`:8080`). La limpieza de datos de prueba borra la póliza directo en el CRUD, porque el MID no expone `DELETE polizas/:id`.
+
+```bash
+pnpm run test:integracion
+```
+
+### E2E de UI (Playwright + Google Chrome)
+
+Recorren el flujo de pólizas y amparos en el navegador. El MF es single-spa y no monta solo, por lo que se prueba a través del root. Requieren, además de CRUD y MID, el MF en `:4201` y el root en `:4200`.
+
+```bash
+pnpm run test:e2e
+pnpm run test:e2e -- --headed   # para ver el navegador
+```
+
+Las pruebas de integración y E2E escriben en la base de datos de desarrollo sobre un contrato de pruebas y eliminan lógicamente lo que crean (registros con el prefijo `E2E-`).
+
+| Variable | Por defecto | Descripción |
+|---|---|---|
+| `E2E_CONTRATO_ID` | `13` | Contrato de pruebas. Debe existir y no tener póliza ni amparos propios |
+| `E2E_VIGENCIA` | `2026` | Vigencia del contrato de pruebas |
+| `CRUD_URL` | `http://localhost:8080` | URL de `gestion_contractual_crud` (solo limpieza de datos de prueba) |
+| `MID_URL` | `http://localhost:8081` | URL de `gestion_contractual_mid` (pólizas y amparos) |
+| `ROOT_URL` | `http://localhost:4200` | URL del root (solo E2E) |
 
 ## Estado CI
 

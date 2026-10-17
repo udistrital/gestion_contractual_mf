@@ -1,0 +1,248 @@
+<div appInView (inView)="onInView($event)">
+  <!-- Banner Contextual Superior del Paso 2 -->
+  <div class="banner-contextual mb-4">
+    <div class="banner-flex-group">
+      <div class="banner-icon-box">
+        <mat-icon>supervised_user_circle</mat-icon>
+      </div>
+      <div>
+        <h2 class="banner-title">Paso 2: Responsables Institucionales y Validación de Contratista</h2>
+        <p class="banner-subtitle">
+          Indique la dependencia solicitante, asigne el cuerpo de supervisión e identifique al contratista habilitado en bases de datos oficiales.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <form [formGroup]="form">
+    <!-- BLOQUE 1: INFORMACIÓN DEL SOLICITANTE -->
+    <div class="bloque-card mb-4">
+      <div class="bloque-header">
+        <div class="bloque-header-title">
+          <mat-icon>corporate_fare</mat-icon>
+          <span>1. INFORMACIÓN DEL SOLICITANTE</span>
+        </div>
+        <div class="bloque-badge">
+          <span class="dot-activo"></span>
+          <span>OBLIGATORIO / DEPENDENCIA RECTORA</span>
+        </div>
+      </div>
+
+      <div class="bloque-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <app-searchable-select
+              icon="location_city"
+              label="Sede Universitaria Solicitante"
+              [items]="sedes"
+              [control]="form.get('solicitante.sede')"
+              [required]="true">
+            </app-searchable-select>
+          </div>
+          <div class="col-12 col-md-6">
+            <app-searchable-select
+              icon="account_balance"
+              label="Dependencia Solicitante"
+              [items]="getDependenciasSolicitante()"
+              [control]="form.get('solicitante.dependencia')"
+              [required]="true">
+            </app-searchable-select>
+          </div>
+        </div>
+
+        <div class="solicitante-actions-row">
+          @if (solicitanteSaved) {
+            <span class="solicitante-saved-pill">
+              <mat-icon class="icon-small">check_circle</mat-icon>
+              <span>Solicitante guardado</span>
+            </span>
+          }
+          <button
+            type="button"
+            mat-raised-button
+            class="btn-institucional-wine"
+            (click)="guardarSolicitante()"
+            [disabled]="form.get('solicitante')?.invalid">
+            <div class="btn-flex-center">
+              @if (solicitanteSaved) {
+                <mat-icon>check</mat-icon>
+              } @else  {
+                <mat-icon>save</mat-icon>
+              }
+              <span>{{ solicitanteSaved ? 'Actualizar Solicitante' : 'Guardar Solicitante' }}</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOQUE 2: DESIGNACIÓN DE SUPERVISIÓN CONTRACTUAL -->
+    <div class="bloque-card mb-4">
+      <div class="bloque-header">
+        <div class="bloque-header-title">
+          <mat-icon>badge</mat-icon>
+          <span>2. DESIGNACIÓN DE SUPERVISIÓN CONTRACTUAL</span>
+        </div>
+        <div class="bloque-badge">
+          <span class="dot-activo"></span>
+          <span>SUPERVISOR INTERNO</span>
+        </div>
+      </div>
+
+      <div class="bloque-body">
+        <div formArrayName="supervisores">
+          @for (
+            supervisorGroup of getSupervisoresFormArray().controls; track
+            supervisorGroup; let i = $index) {
+            <div [formGroupName]="i" class="supervisor-entry-box mb-4">
+              <div class="supervisor-header-row">
+                <span class="supervisor-subheading">
+                  <mat-icon class="subheading-icon">person</mat-icon>
+                  <span>Supervisor Designado {{ i + 1 }}</span>
+                </span>
+                @if (getSupervisoresFormArray().length > 1) {
+                  <button
+                    type="button"
+                    mat-button
+                    color="warn"
+                    class="btn-eliminar-supervisor"
+                    (click)="eliminarSupervisor(i)">
+                    <mat-icon>delete_outline</mat-icon>
+                    <span>Remover Supervisor</span>
+                  </button>
+                }
+              </div>
+
+              <!-- Selectores de Sede y Dependencia -->
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Sede Universitaria Supervisor</mat-label>
+                    <mat-icon matPrefix>location_city</mat-icon>
+                    <mat-select formControlName="sede">
+                      @for (sede of sedes; track sede.Id) {
+                        <mat-option [value]="sede.Id">
+                          {{ sede.Nombre }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (supervisorGroup.get('sede')?.hasError('required')) {
+                      <mat-error>Este campo es requerido</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Dependencia Supervisor</mat-label>
+                    <mat-icon matPrefix>account_balance</mat-icon>
+                    <mat-select
+                      formControlName="dependencia"
+                      [disabled]="!supervisorGroup.get('sede')?.value">
+                      @for (dep of getDependenciasSupervisor(i); track dep.id) {
+                        <mat-option [value]="dep.id">
+                          {{ dep.nombre }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (supervisorGroup.get('dependencia')?.hasError('required')) {
+                      <mat-error>Este campo es requerido</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Supervisor Verified Detail Card (3 items en Grid) -->
+              <div class="supervisor-detail-grid mb-3">
+                <div class="detail-tile">
+                  <span class="detail-label">Nombre Completo</span>
+                  <span class="detail-val text-truncate" [title]="supervisorGroup.get('nombre')?.value">
+                    {{ supervisorGroup.get('nombre')?.value || 'Seleccione sede y dependencia...' }}
+                  </span>
+                  @if (supervisorGroup.get('nombre')?.value) {
+                    <span class="detail-pill-success">
+                      <span class="pill-dot"></span> Funcionario de Carrera / Activo
+                    </span>
+                  }
+                </div>
+
+                <div class="detail-tile">
+                  <span class="detail-label">Cargo Institucional</span>
+                  <span class="detail-val text-truncate" [title]="supervisorGroup.get('cargo')?.value">
+                    {{ supervisorGroup.get('cargo')?.value || 'Pendiente de consulta' }}
+                  </span>
+                  <span class="detail-caption">Planta de Personal</span>
+                </div>
+
+                <div class="detail-tile">
+                  <span class="detail-label">Código / Registro</span>
+                  <span class="detail-val font-mono text-wine">
+                    {{ supervisorGroup.get('codigoVerificacion')?.value ? ('EMP-UD-' + supervisorGroup.get('codigoVerificacion')?.value) : (supervisorGroup.get('nombre')?.value ? 'REG-ACTIVO' : '---') }}
+                  </span>
+                  <span class="detail-caption">Estado: Verificado</span>
+                </div>
+              </div>
+
+              <!-- Tipo de Control y Código de Verificación -->
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Tipo y Alcance del Control</mat-label>
+                    <mat-icon matPrefix>tune</mat-icon>
+                    <mat-select formControlName="tipoControl">
+                      <mat-option value="tecnico">Técnico, Administrativo y Financiero</mat-option>
+                      <mat-option value="administrativo">Administrativo y Contable</mat-option>
+                      <mat-option value="financiero">Exclusivamente Financiero</mat-option>
+                    </mat-select>
+                    @if (supervisorGroup.get('tipoControl')?.hasError('required')) {
+                      <mat-error>Este campo es requerido</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Código de Verificación</mat-label>
+                    <mat-icon matPrefix>verified</mat-icon>
+                    <input matInput formControlName="codigoVerificacion" />
+                    @if (supervisorGroup.get('codigoVerificacion')?.hasError('required')) {
+                      <mat-error>Este campo es requerido</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Acciones del Bloque 2 -->
+        <div class="supervisores-actions-row">
+          <div class="supervisores-left-action">
+            <button
+              type="button"
+              mat-stroked-button
+              class="btn-agregar-supervisor"
+              (click)="agregarSupervisor()"
+              [disabled]="getSupervisoresFormArray().length >= 2">
+              <mat-icon>add_circle</mat-icon>
+              <span>+ Agregar Supervisor Adicional</span>
+            </button>
+            <span class="text-secondary small italic">(Máx. 2 supervisores por contrato)</span>
+          </div>
+
+          <button
+            type="button"
+            mat-raised-button
+            class="btn-institucional-wine"
+            (click)="guardarSupervisores()"
+            [disabled]="getSupervisoresFormArray().invalid">
+            <div class="btn-flex-center">
+              <mat-icon>save</mat-icon>
+              <span>Guardar Supervisores</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

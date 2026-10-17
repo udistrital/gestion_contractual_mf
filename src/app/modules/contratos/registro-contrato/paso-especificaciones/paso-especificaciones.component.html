@@ -1,0 +1,200 @@
+<div class="paso-especificaciones-container">
+  <!-- 1. Banner Contextual Superior -->
+  <div class="banner-contextual">
+    <div class="banner-info">
+      <div class="banner-icon-wrapper">
+        <mat-icon>build_circle</mat-icon>
+      </div>
+      <div class="banner-text">
+        <div class="banner-title-row">
+          <h2>Especificaciones Técnicas del Contrato</h2>
+          <span class="badge-condicional">Tipología: Órdenes</span>
+        </div>
+        <p class="banner-desc">
+          Defina el catálogo de ítems, cantidades y valores unitarios conforme a las necesidades técnicas requeridas para órdenes de compra o servicio.
+        </p>
+      </div>
+    </div>
+    <div class="banner-kpis">
+      <div class="kpi-card">
+        <span class="kpi-label">Total Ítems</span>
+        <strong class="kpi-val">{{ especificaciones.length }}</strong>
+      </div>
+      <div class="kpi-card kpi-highlight">
+        <span class="kpi-label">Valor Total General</span>
+        <strong class="kpi-val">{{ valorTotalGeneral | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Barra de Herramientas y Acciones -->
+  <div class="toolbar-acciones">
+    <div class="toolbar-left">
+      <span class="toolbar-title">Catálogo de Especificaciones Técnicas</span>
+      <span class="toolbar-badge">{{ especificaciones.length }} {{ especificaciones.length === 1 ? 'registro' : 'registros' }}</span>
+    </div>
+    <div class="toolbar-right">
+      <button
+        type="button"
+        mat-raised-button
+        color="primary"
+        class="btn-action-primary"
+        (click)="openModalEspecificacion()"
+      >
+        <mat-icon>add_circle</mat-icon>
+        <span>Añadir Especificación</span>
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        class="btn-action-stroked"
+        (click)="abrirModalCargarArchivo()"
+      >
+        <mat-icon>file_upload</mat-icon>
+        <span>Cargue Masivo</span>
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        class="btn-action-stroked"
+        (click)="obtenerPlantilla()"
+      >
+        <mat-icon>download</mat-icon>
+        <span>Descargar Plantilla XLSX</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. Contenedor de Tabla Institucional -->
+  <div class="table-container-card">
+    @if (especificaciones.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon-wrap">
+          <mat-icon>playlist_add</mat-icon>
+        </div>
+        <h4>Sin especificaciones técnicas registradas</h4>
+        <p>Añada las especificaciones manualmente con el botón superior o cargue masivamente una plantilla en formato Excel.</p>
+        <button
+          type="button"
+          mat-stroked-button
+          color="primary"
+          (click)="openModalEspecificacion()"
+        >
+          <mat-icon>add</mat-icon>
+          <span>Agregar primera especificación</span>
+        </button>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table mat-table [dataSource]="especificaciones" class="tabla-argo">
+          <!-- Columna Ítem -->
+          <ng-container matColumnDef="item">
+            <th mat-header-cell *matHeaderCellDef class="th-item"># ÍTEM</th>
+            <td mat-cell *matCellDef="let especificacion; let i = index" class="td-item">
+              <span class="badge-item">{{ (i + 1).toString().padStart(2, '0') }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Columna Descripción -->
+          <ng-container matColumnDef="descripcion">
+            <th mat-header-cell *matHeaderCellDef class="th-desc">DESCRIPCIÓN TÉCNICA</th>
+            <td mat-cell *matCellDef="let especificacion" class="td-desc">
+              <span class="desc-text">{{ especificacion.descripcion }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Columna Cantidad -->
+          <ng-container matColumnDef="cantidad">
+            <th mat-header-cell *matHeaderCellDef class="th-num">CANTIDAD</th>
+            <td mat-cell *matCellDef="let especificacion" class="td-num">
+              <span class="cantidad-pill">{{ especificacion.cantidad | number }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Columna Valor Unitario -->
+          <ng-container matColumnDef="valorUnitario">
+            <th mat-header-cell *matHeaderCellDef class="th-money">VALOR UNITARIO</th>
+            <td mat-cell *matCellDef="let especificacion" class="td-money">
+              <span>{{ especificacion.valor_unitario | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Columna Valor Total -->
+          <ng-container matColumnDef="valorTotal">
+            <th mat-header-cell *matHeaderCellDef class="th-money">VALOR TOTAL</th>
+            <td mat-cell *matCellDef="let especificacion" class="td-money td-total">
+              <strong>{{ especificacion.valor_total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+            </td>
+          </ng-container>
+
+          <!-- Columna Acciones -->
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="th-actions">ACCIONES</th>
+            <td mat-cell *matCellDef="let especificacion; let i = index" class="td-actions">
+              <div class="action-buttons-wrap">
+                <button
+                  type="button"
+                  mat-icon-button
+                  class="btn-tbl-action btn-edit"
+                  (click)="editarEspecificacion(i)"
+                  title="Editar especificación"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  class="btn-tbl-action btn-del"
+                  (click)="preguntarConfirmacionEliminacion(i)"
+                  title="Eliminar especificación"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns" class="fila-tabla"></tr>
+        </table>
+      </div>
+
+      <!-- Resumen al pie de la tabla -->
+      <div class="table-summary-bar">
+        <span class="summary-label">VALOR TOTAL GENERAL DE ESPECIFICACIONES:</span>
+        <span class="summary-value">{{ valorTotalGeneral | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- 4. Dock Inferior de Navegación -->
+  <div class="dock-footer">
+    <div class="dock-left">
+      <button
+        type="button"
+        mat-stroked-button
+        color="primary"
+        matStepperPrevious
+        class="dock-btn-back"
+      >
+        <mat-icon>arrow_back</mat-icon>
+        <span>Volver al Paso Anterior</span>
+      </button>
+    </div>
+    <div class="dock-center">
+      <span class="dock-step-tag">Paso Condicional: Especificaciones Técnicas</span>
+    </div>
+    <div class="dock-right">
+      <button
+        type="button"
+        mat-raised-button
+        color="primary"
+        class="dock-btn-continue"
+        (click)="guardarYContinuar()"
+      >
+        <span>Guardar y Continuar</span>
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,13 +1,42 @@
 export interface ContratoGeneral {
-  id: number;
-  vigencia: string;
-  tipoContratoId: string;
-  // tipo_persona: string;
-  // numero_contrato: string;
-  contratista: any;
-  fechaCreacion: string | null;
-  // fecha_aprobado: string | null;
-  estados: any;
+  id?: number;
+  tipo_compromiso_id?: number;
+  tipo_contrato_id?: number;
+  perfil_contratista_id?: number;
+  fecha_suscripcion_estudios?: Date;
+  aplica_poliza?: boolean;
+  modalidad_seleccion_id?: number;
+  tipo_control_id?: number;
+  tipologia_especifica_id?: number;
+  regimen_contratacion_id?: number;
+  procedimiento_id?: number;
+  plazo_ejecucion?: number;
+  unidad_ejecucion_id?: number;
+  tipo_moneda_id?: number;
+  valor_pesos?: number;
+  tipo_gasto_id?: number;
+  origen_recursos_id?: number;
+  origen_presupuestos_id?: number;
+  tema_gasto_inversion_id?: number;
+  valor_contrato_me?: number;
+  valor_tasa_cambio?: number;
+  medio_pago_id?: number;
+  clausula_registro_presupuestal?: boolean;
+  modo_pago?: string;
+  objeto?: string;
+  justificacion?: string;
+  actividades?: string;
+  condiciones?: string;
+  observaciones?: string;
+  vigencia?: string;
+  consecutivo_elaboracion?: string;
+  fecha_inicial?: Date;
+  fecha_final?: Date;
+  usuario_legado?: string;
+  numero_contrato?: string;
+  unidad_ejecutora_id: number;
+  estados?: any;
+  contratista?: any;
 }
 
 export interface CDPContratoCRUD {
@@ -16,6 +45,7 @@ export interface CDPContratoCRUD {
   fecha_registro: Date;
   vigencia_cdp: number;
   contrato_general_id: number | null;
+  valor_a_tomar?: number;
 }
 
 export interface CDP {
@@ -26,6 +56,7 @@ export interface CDP {
   nombre_dependencia: string;
   descripcion: string;
   estado: string;
+  valor_a_tomar?: number | string;
 }
 
 export interface EstadoContrato {
@@ -87,17 +118,63 @@ export interface ParametroListResponse {
 }
 
 export interface ParametroResponse {
-  Id: number | string;
+  Id: number;
   Nombre: string;
   Descripcion?: string;
   CodigoAbreviacion?: string;
   Activo?: boolean;
 }
 
-export interface AmparoResponse {
-  suficiencia: number;
+/** DTO para crear/actualizar un amparo en gestion_contractual_crud (amparos-polizas). */
+export interface AmparoPolizaDto {
+  id?: number;
+  contrato_general_id: number;
   amparo_id: number;
+  poliza_id?: number | null;
+  tipo_valor_amparo_id?: number;
+  suficiencia?: number;
+  valor?: number;
+  descripcion?: string;
+  fecha_inicio?: string;
+  fecha_fin?: string;
+  activo?: boolean;
+}
+
+/** Fila de amparos-polizas tal como la devuelve el CRUD (numéricos como string). */
+export interface AmparoPoliza {
+  id: number;
+  contrato_general_id: number;
+  poliza_id: number | null;
+  amparo_id: number;
+  tipo_valor_amparo_id: number;
+  suficiencia: string | number;
+  valor: string | number | null;
   descripcion: string;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  activo: boolean;
+  fecha_creacion?: string;
+  fecha_modificacion?: string;
+}
+
+/** @deprecated usar AmparoPolizaDto */
+export type AmparoResponse = AmparoPolizaDto;
+
+export interface Poliza {
+  id: number;
+  contrato_general_id: number;
+  numero_poliza: string | null;
+  entidad_aseguradora_id: number | null;
+  descripcion: string | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  fecha_expedicion: string | null;
+  fecha_aprobacion: string | null;
+  usuario_id?: number | null;
+  usuario_legado?: string | null;
+  activo: boolean;
+  fecha_creacion?: string;
+  fecha_modificacion?: string;
 }
 
 export interface SimpleItem {
@@ -134,12 +211,19 @@ export interface OrdenadorContratoData {
   resolucion?: string;
   documento_identidad: string;
   cargo_id: number;
-  contrato_general_id: number;
+  contrato_general_id?: number;
 }
 
 export interface CDPItem {
   Id: string;
   Nombre: string;
+}
+
+export interface Solicitante {
+  id?: number;
+  dependencia_solicitante_id: number;
+  sede_solicitante_id: number;
+  contrato_general_id: number;
 }
 
 export interface SupervisorResponse {
@@ -163,6 +247,7 @@ export interface SupervisorData {
 }
 
 export interface SupervisorToSave {
+  id?: number;
   supervisor_id: string;
   sede_legado: string;
   dependencia_legado: string;
@@ -172,5 +257,93 @@ export interface SupervisorToSave {
   digito_verificacion: string;
   sede_id: string;
   dependencia_id: string;
+  contrato_general_id: number;
+}
+
+export interface Proveedor {
+  id_proveedor: string;
+  ciudad_expedicion_documento: string;
+  id_ciudad_contacto: string;
+  direccion: string;
+  numero_documento: string;
+  nombre_estado: string;
+  numero_cuenta_bancaria: string;
+  id_estado: string;
+  nombre_completo_proveedor: string;
+  ciudad_contacto: string;
+  web: string;
+  fecha_registro: string;
+  correo: string;
+  id_entidad_bancaria: string;
+  tipo_persona: string;
+  tipo_persona_id: number;
+  tipo_cuenta_bancaria: string;
+  fecha_ultima_modificacion: string;
+  contratos: Contrato[];
+}
+
+export interface Representante {
+  segundo_apellido: string;
+  tipo_documento: string;
+  ciudad_expedicion_documento: string;
+  genero: string;
+  numero_documento: string;
+  primer_apellido: string;
+  segundo_nombre: string;
+  digito_verificacion: string;
+  id_tipo_documento: string;
+  id_ciudad_expedicion_documento: string;
+  primer_nombre: string;
+  id_proveedor_juridico: string;
+}
+
+export interface DatosContratista {
+  proveedor: Proveedor;
+  representante?: Representante;
+  contratos: Contrato[];
+}
+
+export interface ProveedorObject {
+  tipo: string;
+  nombre: string;
+  documento: string;
+  ciudad_contacto: string;
+  direccion: string;
+  correo: string;
+  lugar_expedicion?: string;
+  representante_legal?: string;
+  documento_rl?: string;
+  lugar_expedicion_rl?: string;
+  contratos?: Contrato[];
+  ultimoContrato?: {
+    tipo: string;
+    estado: string;
+    numero: string;
+    vigencia: string;
+  };
+}
+
+interface TipoContrato {
+  id: string;
+  nombre: string;
+}
+
+interface ContratoEstado {
+  id: string;
+  nombre: string;
+}
+
+interface Contrato {
+  tipo_contrato: TipoContrato;
+  estado_contrato: ContratoEstado;
+}
+
+export interface ContratistaResponse {
+  id: string;
+  numero_documento: string;
+  tipo_persona_id: number;
+  activo: boolean;
+  fecha_creacion: string;
+  fecha_modificacion: string | null;
   contrato_general_id: number;
 }

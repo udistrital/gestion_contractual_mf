@@ -1,0 +1,450 @@
+<div appInView (inView)="onInView($event)" class="paso-container">
+  <!-- Banner Contextual Superior -->
+  <div class="banner-contextual mb-4">
+    <div class="banner-main-row">
+      <div class="banner-flex-group">
+        <div class="banner-icon-box">
+          <mat-icon>verified_user</mat-icon>
+        </div>
+        <div>
+          <h2 class="banner-title">Paso 3: Estructura de Necesidad y Alcance</h2>
+          <p class="banner-subtitle">
+            Información precargada y sincronizada directamente desde el sistema institucional SICAPITAL (Solicitud de Necesidad y Estudios Previos). Edite, complemente y valide la minuta técnica.
+          </p>
+        </div>
+      </div>
+      <div class="banner-actions">
+        <button
+          type="button"
+          mat-stroked-button
+          class="banner-sync-btn"
+          (click)="reSincronizarSicapital()"
+          title="Re-sincronizar datos con los CDPs registrados"
+        >
+          <mat-icon>sync</mat-icon>
+          <span>Re-sincronizar SICAPITAL</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <form [formGroup]="form" class="formulario-paso3">
+    <!-- Bloque 1: Justificación de la Contratación -->
+    <div class="bloque-card mb-4">
+      <div class="bloque-header">
+        <div class="bloque-header-title">
+          <mat-icon>verified</mat-icon>
+          <span>1. JUSTIFICACIÓN DE LA CONTRATACIÓN</span>
+        </div>
+        <div class="bloque-badge">
+          <span class="dot-activo"></span>
+          <span>Fuente: SICAPITAL</span>
+        </div>
+      </div>
+      <div class="bloque-body">
+        @if (!hasSingleCDP) {
+          <div class="cdp-list-wrapper mb-3">
+            <app-cdp-list
+              [cdpData]="cdpData"
+              tipo="justificacion"
+            ></app-cdp-list>
+          </div>
+        }
+        <div class="editor-wrapper">
+          <app-editor-enriquecido
+            formControlName="justificacion"
+            [placeholder]="
+              hasSingleCDP
+                ? 'Justificación de conveniencia y oportunidad del contrato...'
+                : 'Ingresa o unifica la justificación de la contratación...'
+            "
+          ></app-editor-enriquecido>
+        </div>
+        <div class="helper-info-row mt-2">
+          <mat-icon class="helper-icon">info</mat-icon>
+          <span class="helper-text">
+            Sustentación de conveniencia, oportunidad y necesidad según el estudio previo de la dependencia solicitante.
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloque 2: Objeto del Contrato -->
+    <div class="bloque-card mb-4">
+      <div class="bloque-header">
+        <div class="bloque-header-title">
+          <mat-icon>description</mat-icon>
+          <span>2. OBJETO DEL CONTRATO</span>
+        </div>
+        <div class="bloque-badge">
+          <span class="dot-activo"></span>
+          <span>Sincronizado con Cláusula Primera</span>
+        </div>
+      </div>
+      <div class="bloque-body">
+        @if (!hasSingleCDP) {
+          <div class="cdp-list-wrapper mb-3">
+            <app-cdp-list
+              [cdpData]="cdpData"
+              tipo="descripcion"
+            ></app-cdp-list>
+          </div>
+        }
+        <div class="editor-wrapper">
+          <app-editor-enriquecido
+            formControlName="objetoContrato"
+            [placeholder]="
+              hasSingleCDP
+                ? 'Objeto principal del contrato...'
+                : 'Ingresa o unifica el objeto del contrato...'
+            "
+          ></app-editor-enriquecido>
+        </div>
+        <div class="helper-info-row mt-2">
+          <mat-icon class="helper-icon text-wine">link</mat-icon>
+          <span class="helper-text font-medium">
+            Se sincronizará automáticamente con la Cláusula Primera de la Minuta Oficial en el Paso de Cláusulas y Parágrafos.
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloque 3: Actividades Específicas y Entregables (Obligaciones Técnicas) -->
+    <div class="bloque-card mb-4">
+      <div class="bloque-header">
+        <div class="bloque-header-title">
+          <mat-icon>checklist</mat-icon>
+          <span>3. ACTIVIDADES ESPECÍFICAS Y ENTREGABLES (OBLIGACIONES TÉCNICAS)</span>
+        </div>
+        <div class="bloque-header-actions">
+          <button
+            type="button"
+            class="header-action-btn"
+            (click)="abrirModalNuevaActividad()"
+          >
+            <mat-icon>add</mat-icon>
+            <span>+ Nueva Actividad</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bloque-body">
+        @if (!hasSingleCDP) {
+          <div class="cdp-list-wrapper mb-3">
+            <app-cdp-list
+              [cdpData]="cdpData"
+              tipo="observaciones"
+            ></app-cdp-list>
+          </div>
+        }
+
+        <!-- Listado de Tarjetas de Actividades Estructuradas -->
+        @if (actividadesList.length > 0) {
+          <div class="actividades-lista-container">
+            @for (act of actividadesList; track act.id; let i = $index) {
+              <div class="actividad-item-card">
+                <!-- Número de la actividad -->
+                <div class="actividad-num-box">
+                  <span>{{ formatearNumero(act.numero) }}</span>
+                </div>
+
+                <!-- Contenido de la actividad -->
+                <div class="actividad-content-col">
+                  <div class="actividad-descripcion">
+                    {{ act.descripcion }}
+                  </div>
+
+                  <!-- Fila de Chips (Entregables y Plazo) -->
+                  <div class="actividad-chips-row">
+                    @for (ent of act.entregables; track $index) {
+                      <div class="chip-entregable">
+                        <span class="chip-entregable-label">Entregable:</span>
+                        <span class="chip-entregable-val">{{ ent }}</span>
+                      </div>
+                    }
+
+                    @if (act.plazo) {
+                      <div class="chip-plazo">
+                        <span>{{ act.plazo }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Acciones de la actividad -->
+                <div class="actividad-actions-col">
+                  <button
+                    type="button"
+                    class="btn-act-action"
+                    (click)="moverActividad(i, 'arriba')"
+                    [disabled]="i === 0"
+                    title="Mover arriba"
+                  >
+                    <mat-icon>arrow_upward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-act-action"
+                    (click)="moverActividad(i, 'abajo')"
+                    [disabled]="i === actividadesList.length - 1"
+                    title="Mover abajo"
+                  >
+                    <mat-icon>arrow_downward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-act-action edit"
+                    (click)="abrirModalEditarActividad(i)"
+                    title="Editar actividad"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-act-action delete"
+                    (click)="eliminarActividad(i)"
+                    title="Eliminar actividad"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-actividades-box">
+            <mat-icon class="empty-icon">assignment_late</mat-icon>
+            <p class="empty-title">No hay actividades u obligaciones registradas</p>
+            <p class="empty-subtitle">Agregue las actividades y entregables específicos que deberá cumplir el contratista.</p>
+            <button
+              type="button"
+              mat-raised-button
+              class="btn-institucional-wine mt-2"
+              (click)="abrirModalNuevaActividad()"
+            >
+              <mat-icon>add_circle</mat-icon>
+              <span>+ Agregar Primera Actividad</span>
+            </button>
+          </div>
+        }
+
+        <!-- Barra inferior de acciones del bloque de actividades -->
+        <div class="actividades-footer-bar">
+          <div class="footer-left-actions">
+            <button
+              type="button"
+              class="btn-secundario-link"
+              (click)="toggleMostrarParrafoCompilado()"
+            >
+              <mat-icon>{{ mostrarParrafoCompilado ? 'visibility_off' : 'visibility' }}</mat-icon>
+              <span>{{ mostrarParrafoCompilado ? 'Ocultar Párrafo Compilado' : 'Ver Párrafo Compilado de la Minuta' }}</span>
+            </button>
+          </div>
+
+          <div class="footer-right-actions">
+            <button
+              type="button"
+              class="btn-institucional-wine btn-agregar-act"
+              (click)="abrirModalNuevaActividad()"
+            >
+              <mat-icon>add_circle</mat-icon>
+              <span>+ Agregar Actividad Específica Adicional</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Previsualización del Párrafo Consolidado Generado para el Contrato -->
+        @if (mostrarParrafoCompilado) {
+          <div class="parrafo-compilado-preview">
+            <div class="preview-header">
+              <div class="preview-header-left">
+                <mat-icon>feed</mat-icon>
+                <span>Párrafo Consolidado para la Minuta Contractual</span>
+              </div>
+              <span class="preview-badge">Sincronizado con backend & minuta</span>
+            </div>
+            <div class="preview-body">
+              <pre class="preview-text">{{ form.get('actividades')?.value || 'Sin actividades registradas.' }}</pre>
+            </div>
+            <div class="preview-footer">
+              <mat-icon>info</mat-icon>
+              <span>Esta información se compila en un solo párrafo para la base de datos y se guarda en JSON para pasos posteriores.</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Wizard Action Dock Footer -->
+    <div class="dock-footer">
+      <div class="dock-left-group">
+        <button
+          type="button"
+          mat-stroked-button
+          color="primary"
+          matStepperPrevious
+          class="dock-btn-back"
+        >
+          <mat-icon>arrow_back</mat-icon>
+          <span>Volver: Responsables y Contratista</span>
+        </button>
+      </div>
+
+      <div class="dock-step-indicator">
+        <span class="dock-step-badge">Paso 3 de 5</span>
+        <span class="dock-step-name">Estructura y Necesidad</span>
+      </div>
+
+      <div class="dock-right-group">
+        <button
+          type="button"
+          mat-raised-button
+          color="primary"
+          class="dock-btn-continue"
+          (click)="guardarObligaciones()"
+          [disabled]="form.invalid || actividadesList.length === 0"
+        >
+          <span>Guardar y Continuar</span>
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- =========================================================================
+       Modal Overlay para Agregar / Editar Actividad Específica
+       ========================================================================= -->
+  @if (modalActividadAbierto) {
+    <div class="actividad-modal-backdrop" (click)="cerrarModalActividad()">
+      <div class="actividad-modal-dialog" (click)="$event.stopPropagation()">
+        <!-- Header del Modal -->
+        <div class="actividad-modal-header">
+          <div class="modal-header-title">
+            <mat-icon>{{ modoEdicionActividad ? 'edit_note' : 'add_task' }}</mat-icon>
+            <span>{{ modoEdicionActividad ? 'Editar Actividad Específica' : 'Nueva Actividad Específica' }}</span>
+          </div>
+          <button
+            type="button"
+            class="modal-close-icon-btn"
+            (click)="cerrarModalActividad()"
+            title="Cerrar modal"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Cuerpo del Modal -->
+        <div class="actividad-modal-body">
+          <!-- Título corto opcional -->
+          <div class="form-field-group mb-3">
+            <label class="custom-label">
+              Título corto de la actividad <span class="label-optional">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              class="custom-input"
+              [(ngModel)]="actividadEnEdicion.titulo"
+              placeholder="Ej: Plan de trabajo metodológico"
+            />
+          </div>
+
+          <!-- Descripción obligatoria -->
+          <div class="form-field-group mb-3">
+            <label class="custom-label required">
+              Descripción de la actividad u obligación técnica <span class="text-wine font-bold">*</span>
+            </label>
+            <textarea
+              rows="3"
+              class="custom-textarea"
+              [(ngModel)]="actividadEnEdicion.descripcion"
+              placeholder="Ej: Elaborar y concertar el plan de trabajo metodológico dentro de los cinco (5) días hábiles siguientes al acta de inicio..."
+            ></textarea>
+            <span class="field-hint">Redacte con claridad el compromiso u obligación técnica a cargo del contratista.</span>
+          </div>
+
+          <!-- Plazo o periodicidad -->
+          <div class="form-field-group mb-3">
+            <label class="custom-label">
+              Plazo o Periodicidad <span class="label-optional">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              class="custom-input"
+              [(ngModel)]="actividadEnEdicion.plazo"
+              placeholder="Ej: 5 días hábiles, Hito mensual 2, Obligación recurrente..."
+            />
+          </div>
+
+          <!-- Entregables asociados (uno o más) -->
+          <div class="form-field-group mb-3">
+            <label class="custom-label">
+              Entregables Asociados <span class="label-optional">(uno o más)</span>
+            </label>
+            <div class="entregable-input-wrapper">
+              <input
+                type="text"
+                class="custom-input flex-1"
+                [(ngModel)]="nuevoEntregableTexto"
+                (keydown.enter)="$event.preventDefault(); agregarEntregable()"
+                placeholder="Escriba un entregable y pulse 'Agregar'..."
+              />
+              <button
+                type="button"
+                class="btn-add-entregable"
+                (click)="agregarEntregable()"
+                [disabled]="!nuevoEntregableTexto.trim()"
+              >
+                <mat-icon>add</mat-icon>
+                <span>Agregar</span>
+              </button>
+            </div>
+
+            <!-- Chips de Entregables Añadidos -->
+            @if (actividadEnEdicion.entregables.length > 0) {
+              <div class="modal-entregables-list mt-2">
+                @for (ent of actividadEnEdicion.entregables; track $index) {
+                  <div class="modal-entregable-chip">
+                    <mat-icon class="modal-chip-icon">inventory_2</mat-icon>
+                    <span class="modal-chip-text">{{ ent }}</span>
+                    <button
+                      type="button"
+                      class="modal-chip-remove-btn"
+                      (click)="removerEntregable($index)"
+                      title="Eliminar entregable"
+                    >
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="field-hint mt-1">Puede añadir uno o más entregables asociados a esta actividad.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Footer del Modal -->
+        <div class="actividad-modal-footer">
+          <button
+            type="button"
+            mat-stroked-button
+            class="modal-btn-cancel"
+            (click)="cerrarModalActividad()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            mat-raised-button
+            class="modal-btn-save"
+            (click)="guardarActividadEnEdicion()"
+            [disabled]="!actividadEnEdicion.descripcion.trim()"
+          >
+            <mat-icon>save</mat-icon>
+            <span>{{ modoEdicionActividad ? 'Actualizar Actividad' : 'Guardar Actividad' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
