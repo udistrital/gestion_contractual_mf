@@ -212,18 +212,12 @@ describe('PasoClausulasParagrafosComponent', () => {
   });
 
   describe('renderizarDescripcionClausula', () => {
-    afterEach(() => {
-      localStorage.clear();
-    });
-
     it('debe interpolar el objeto y las actividades del contrato', () => {
-      localStorage.setItem(
-        'paso-obligaciones',
-        JSON.stringify({
-          objeto: 'Prestar servicios de soporte técnico a la OATI.',
-          actividades: '01. Mantenimiento correctivo.\n\n02. Mantenimiento preventivo.',
-        })
-      );
+      fixture.componentRef.setInput('contratoGeneral', {
+        objeto: 'Prestar servicios de soporte técnico a la OATI.',
+        actividades: '01. Mantenimiento correctivo.\n\n02. Mantenimiento preventivo.',
+        unidad_ejecutora_id: 1,
+      });
 
       const raw = 'CLÁUSULA: Objeto: {{objeto}}. Actividades: {{actividades}}';
       const renderedSafe: any = component.renderizarDescripcionClausula(raw);
@@ -242,7 +236,6 @@ describe('PasoClausulasParagrafosComponent', () => {
         '{{objeto}}{% if especificaciones %}{% for especificacion in especificaciones %}{% endfor %}\nITEM DESCRIPCIÓN\n{% endif %}';
 
       // 1. Caso sin especificaciones
-      localStorage.removeItem('paso-especificaciones-data');
       component.especificacionesList = [];
       const resSinEsp: any = component.renderizarDescripcionClausula(plantillaRaw);
       const strSinEsp = resSinEsp.changingThisBreaksApplicationSecurity || resSinEsp.toString();
@@ -250,18 +243,15 @@ describe('PasoClausulasParagrafosComponent', () => {
       expect(strSinEsp).not.toContain('ITEM DESCRIPCIÓN');
 
       // 2. Caso con especificaciones
-      localStorage.setItem(
-        'paso-especificaciones-data',
-        JSON.stringify([
-          {
-            id: 1,
-            descripcion: 'Licencia de software',
-            cantidad: 2,
-            valor_unitario: 5000000,
-            valor_total: 10000000,
-          },
-        ])
-      );
+      component.especificacionesList = [
+        {
+          id: 1,
+          descripcion: 'Licencia de software',
+          cantidad: 2,
+          valor_unitario: 5000000,
+          valor_total: 10000000,
+        },
+      ];
       const resConEsp: any = component.renderizarDescripcionClausula(plantillaRaw);
       const strConEsp = resConEsp.changingThisBreaksApplicationSecurity || resConEsp.toString();
       expect(strConEsp).toContain('table-minuta-render');
@@ -270,22 +260,19 @@ describe('PasoClausulasParagrafosComponent', () => {
     });
 
     it('debe renderizar cláusula presupuestal en singular cuando hay un solo CDP', () => {
-      localStorage.setItem(
-        'paso-info-presupuestal-cdps',
-        JSON.stringify([
-          {
-            vigencia: '2024',
-            numero_disponibilidad: '845',
-            descripcion: 'SERVICIOS PERSONALES',
-            valor_contratacion: 150000000,
-            valor_a_tomar: 150000000,
-          },
-        ])
-      );
-      component.contratoGeneral = {
+      mockCdpsService.getLocalCDP.mockReturnValue([
+        {
+          vigencia: '2024',
+          numero_disponibilidad: '845',
+          descripcion: 'SERVICIOS PERSONALES',
+          valor_contratacion: 150000000,
+          valor_a_tomar: 150000000,
+        },
+      ]);
+      fixture.componentRef.setInput('contratoGeneral', {
         valor_pesos: 150000000,
         unidad_ejecutora_id: 1,
-      };
+      });
 
       const plantillaRaw =
         'El valor corresponde a {{valorTexto}} ($ {{valorPesos}}). LA UNIVERSIDAD pagará con cargo al certificado de Disponibilidad Presupuestal No. {{numero_cdp_id}} del año {{vigencia_cdp}}. Rubro: {{rubro_cdp}}. El presente Contrato está sujeto a registro presupuestal.';
@@ -320,11 +307,11 @@ describe('PasoClausulasParagrafosComponent', () => {
         },
       ];
 
-      localStorage.setItem('paso-info-presupuestal-cdps', JSON.stringify(multiplesCdps));
-      component.contratoGeneral = {
+      mockCdpsService.getLocalCDP.mockReturnValue(multiplesCdps);
+      fixture.componentRef.setInput('contratoGeneral', {
         valor_pesos: 100000000,
         unidad_ejecutora_id: 1,
-      };
+      });
 
       const plantillaRaw =
         'El valor corresponde a {{valorTexto}} ($ {{valorPesos}}). LA UNIVERSIDAD pagará a EL CONTRATISTA el valor del presente Contrato con cargo al certificado de Disponibilidad Presupuestal No. {{numero_cdp_id}} del año {{vigencia_cdp}}. Rubro: {{rubro_cdp}}. El presente Contrato está sujeto a registro presupuestal y el pago de su valor a las apropiaciones presupuestales.';
