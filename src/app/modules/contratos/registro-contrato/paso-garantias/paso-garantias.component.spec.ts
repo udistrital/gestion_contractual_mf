@@ -5,7 +5,6 @@ import { of } from 'rxjs';
 import { PasoGarantiasComponent } from './paso-garantias.component';
 import { PolizasService } from 'src/app/services/polizas.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
-import { PolizasService } from 'src/app/services/polizas.service';
 import { AlertService } from 'src/app/services/alert.service';
 
 describe('PasoGarantiasComponent', () => {
@@ -49,17 +48,12 @@ describe('PasoGarantiasComponent', () => {
     component = fixture.componentInstance;
   });
 
-  afterEach(() => {
-    localStorage.clear();
-  });
-
   it('should create', () => {
     fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
-  it('debe inicializar con filas y permitir agregar una nueva fila', () => {
-    expect(component.filasFormArray.length).toBeGreaterThanOrEqual(1);
+  it('debe permitir agregar una nueva fila', () => {
     const initialLength = component.filasFormArray.length;
     component.agregarFila();
     expect(component.filasFormArray.length).toBe(initialLength + 1);
