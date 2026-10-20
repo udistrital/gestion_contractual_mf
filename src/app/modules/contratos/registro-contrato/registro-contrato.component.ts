@@ -89,7 +89,12 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   editMode = model<boolean>(false);
   contratoGeneral: ContratoGeneral | undefined = undefined;
 
+  contratistaPrevalidado: any = null;
+  bloquearContratista: boolean = false;
+  unidadEjecutoraInicial: any = null;
+
   constructor() {
+    this.recuperarEstadoNavegacion();
     effect(() => {
       if (this.contratoGeneralId()) {
         this.cargarContratoGeneral();
@@ -98,8 +103,26 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    this.recuperarEstadoNavegacion();
     this.manejarResponsiveStepper();
     this.verificarPasosGuardadosIniciales();
+  }
+
+  private recuperarEstadoNavegacion(): void {
+    const state = history.state;
+    if (state) {
+      if (state.contratistaPrevalidado) {
+        this.contratistaPrevalidado = state.contratistaPrevalidado;
+        this.bloquearContratista = state.bloquearContratista ?? true;
+      }
+      if (state.unidadEjecutoraId || state.unidadEjecutora) {
+        this.unidadEjecutoraInicial = {
+          id: state.unidadEjecutoraId,
+          codigo: state.unidadEjecutora,
+          nombre: state.unidadEjecutoraNombre,
+        };
+      }
+    }
   }
 
   /**

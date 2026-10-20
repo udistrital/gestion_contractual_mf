@@ -36,6 +36,8 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
   private contratistaId: string | null = null;
   contratoGeneral = input<ContratoGeneral>();
+  contratistaPrevalidado = input<any>();
+  bloquearContratista = input<boolean>(false);
 
   form: FormGroup;
   tiposContratista = [{ value: 'clase1', viewValue: 'Contratista Único' }];
@@ -71,14 +73,26 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       ],
       contratistaData: ['', [this.contratistaValidator()]],
     });
+
     effect(() => {
       if (this.contratoGeneral()) {
         this.cargarContratistaExistente();
       }
-    })
+    });
+
+    effect(() => {
+      const prevalidado = this.contratistaPrevalidado();
+      if (prevalidado) {
+        this.aplicarContratistaPrevalidado(prevalidado);
+      }
+    });
   }
 
   ngOnInit() {
+    if (this.contratistaPrevalidado()) {
+      this.aplicarContratistaPrevalidado(this.contratistaPrevalidado());
+    }
+
     this.form
       .get('claseContratista')
       ?.valueChanges.pipe(takeUntil(this.destroy$))
@@ -89,6 +103,28 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
           this.resetContratista();
         }
       });
+  }
+
+  private aplicarContratistaPrevalidado(prevalidado: any): void {
+    this.datosContratista = prevalidado;
+    const doc =
+      prevalidado.proveedor?.numero_documento ||
+      prevalidado.proveedor?.num_documento ||
+      prevalidado.numero_documento ||
+      '';
+
+    this.form.patchValue({
+      claseContratista: 'clase1',
+      documentoContratista: doc,
+    });
+    this.mostrarConsulta = true;
+    this.actualizarObjetoContratista();
+    this.form.get('contratistaData')?.setValue(this.contratistaObject);
+
+    if (this.bloquearContratista()) {
+      this.form.get('documentoContratista')?.disable();
+      this.form.get('claseContratista')?.disable();
+    }
   }
 
   ngOnDestroy() {
@@ -274,9 +310,19 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const doc =
+      this.datosContratista.proveedor?.numero_documento ||
+      (this.datosContratista.proveedor as any)?.num_documento ||
+      (this.datosContratista as any).numero_documento ||
+      this.form.getRawValue().documentoContratista;
+    const tipoPersonaId =
+      this.datosContratista.proveedor?.tipo_persona_id ||
+      (this.datosContratista as any).tipo_persona_id ||
+      1;
+
     const datosContratista: ContratistaCRUD = {
-      numero_documento: this.datosContratista.proveedor.numero_documento,
-      tipo_persona_id: this.datosContratista.proveedor.tipo_persona_id,
+      numero_documento: doc,
+      tipo_persona_id: tipoPersonaId,
       contrato_general_id: this.contratoGeneral()?.id!,
     };
 
