@@ -1,0 +1,148 @@
+.modal-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.modal-header-institucional {
+  background-color: #731514;
+  color: #ffffff;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  color: #ffffff;
+}
+
+.dialog-title {
+  margin: 0;
+  font-family: 'Raleway', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.btn-close-header {
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+}
+
+.modal-body-content {
+  padding: 20px 24px !important;
+  font-family: 'Roboto', sans-serif;
+}
+
+.instruction-text {
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.ue-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ue-card-option {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+}
+
+.ue-card-option:hover {
+  border-color: #8e1c1b;
+  background-color: #fbf5f5;
+  transform: translateY(-1px);
+}
+
+.ue-card-option.selected {
+  border-color: #731514;
+  background-color: #fbf5f5;
+  box-shadow: 0 0 0 1px #731514;
+}
+
+.ue-text-info {
+  flex: 1;
+  padding-right: 16px;
+}
+
+.ue-name {
+  font-family: 'Raleway', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #731514;
+  margin: 0 0 3px 0;
+}
+
+.ue-desc {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.radio-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.ue-card-option.selected .radio-indicator {
+  border-color: #731514;
+}
+
+.radio-inner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #731514;
+}
+
+.modal-footer-actions {
+  padding: 14px 20px !important;
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  margin: 0 !important;
+  gap: 10px;
+}
+
+.btn-cancelar {
+  font-weight: 600;
+}
+
+.btn-continuar {
+  background-color: #731514 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}

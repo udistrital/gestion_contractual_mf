@@ -1,0 +1,47 @@
+<div class="modal-container">
+  <div class="modal-header-institucional">
+    <div class="modal-title-row">
+      <mat-icon class="header-icon">add_business</mat-icon>
+      <h2 mat-dialog-title class="dialog-title">Nuevo Contrato - Seleccionar Unidad Ejecutora</h2>
+    </div>
+    <button mat-icon-button class="btn-close-header" (click)="cancelar()" aria-label="Cerrar modal">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="modal-body-content">
+    <p class="instruction-text">
+      Para iniciar el diligenciamiento del borrador de contrato, seleccione la Unidad Ejecutora responsable del trámite administrativo y presupuestal:
+    </p>
+
+    <div class="ue-options-list">
+      @for (ue of unidades; track ue.id) {
+        <div
+          class="ue-card-option"
+          [class.selected]="selectedUe.id === ue.id"
+          (click)="seleccionar(ue)"
+          tabindex="0"
+          (keydown.enter)="seleccionar(ue)"
+        >
+          <div class="ue-text-info">
+            <h3 class="ue-name">{{ ue.nombre }}</h3>
+            <p class="ue-desc">{{ ue.descripcion }}</p>
+          </div>
+          <div class="radio-indicator">
+            <div class="radio-inner" *ngIf="selectedUe.id === ue.id"></div>
+          </div>
+        </div>
+      }
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="modal-footer-actions">
+    <button mat-stroked-button (click)="cancelar()" class="btn-cancelar">
+      Cancelar
+    </button>
+    <button mat-raised-button color="primary" (click)="confirmar()" class="btn-continuar">
+      <mat-icon>verified_user</mat-icon>
+      Validar contratista
+    </button>
+  </mat-dialog-actions>
+</div>

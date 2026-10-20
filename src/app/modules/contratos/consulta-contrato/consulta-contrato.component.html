@@ -1,249 +1,606 @@
 <plantilla-tarjeta-contenedora
-  [title]="'Consultar Contrato'"
+  [title]="'Gestión y Consulta de Contratos'"
   [contenido]="contenidoDePlantilla"
 ></plantilla-tarjeta-contenedora>
 
 <ng-template #contenidoDePlantilla>
-  <form [formGroup]="form" (ngSubmit)="consultar()">
-    <div class="row mt-4">
-      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
-        <mat-label>Unidad Ejecutora</mat-label>
-        <mat-icon matIconPrefix>business</mat-icon>
-        <mat-select formControlName="unidadEjecutora">
-          @for (unidad_ejecucion of unidadEjecutora; track unidad_ejecucion) {
-            <mat-option
-              [value]="unidad_ejecucion.Id"
-              >
-              {{ unidad_ejecucion.Nombre }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+  <div class="consulta-contratos-container">
 
-      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
-        <mat-label>Vigencia</mat-label>
-        <mat-icon matPrefix>calendar_today</mat-icon>
-        <mat-select formControlName="vigencia">
-          @for (vigencia of vigencia; track vigencia) {
-            <mat-option
-              [value]="vigencia.Nombre"
-              >
-              {{ vigencia.Nombre }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
-        <mat-label>Tipo de Contrato</mat-label>
-        <mat-icon matPrefix>description</mat-icon>
-        <mat-select formControlName="tipoContratoId">
-          @for (contrato of tipoContratoId; track contrato) {
-            <mat-option
-              [value]="contrato.Id"
-              >
-              {{ contrato.Nombre }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
-        <mat-label>Tipo de Persona</mat-label>
-        <mat-icon matPrefix>person</mat-icon>
-        <mat-select formControlName="tipoPersona">
-          @for (tipoPersona of tipoPersona; track tipoPersona) {
-            <mat-option
-              [value]="tipoPersona.Id"
-              >
-              {{ tipoPersona.Nombre }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
-        <mat-label>Número de Elaboración</mat-label>
-        <mat-icon matPrefix>edit</mat-icon>
-        <input matInput formControlName="numeroElaboracion" />
-      </mat-form-field>
-
-      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
-        <mat-label>Número de Contrato</mat-label>
-        <mat-icon matPrefix>assignment</mat-icon>
-        <input matInput formControlName="numeroContrato" />
-      </mat-form-field>
-
-      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
-        <mat-label>Contratista</mat-label>
-        <mat-icon matPrefix>person</mat-icon>
-        <input matInput formControlName="contratista" />
-      </mat-form-field>
-
-      <mat-form-field class="col-12 col-md-6 col-lg-4" appearance="outline">
-        <mat-label>Estado</mat-label>
-        <mat-icon matPrefix>check_circle</mat-icon>
-        <mat-select formControlName="estado">
-          @for (estado of estado; track estado) {
-            <mat-option [value]="estado.Id">
-              {{ estado.Nombre }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field class="col-12 col-md-6 col-lg-6" appearance="outline">
-        <mat-label>Desde</mat-label>
-        <input
-          matInput
-          [matDatepicker]="pickerDesde"
-          formControlName="fechaDesde"
-          />
-          <mat-datepicker-toggle
-            matIconSuffix
-            [for]="pickerDesde"
-          ></mat-datepicker-toggle>
-          <mat-datepicker #pickerDesde></mat-datepicker>
-        </mat-form-field>
-
-        <mat-form-field class="col-12 col-md-6 col-lg-6" appearance="outline">
-          <mat-label>Hasta</mat-label>
-          <input
-            matInput
-            [matDatepicker]="pickerHasta"
-            formControlName="fechaHasta"
-            />
-            <mat-datepicker-toggle
-              matIconSuffix
-              [for]="pickerHasta"
-            ></mat-datepicker-toggle>
-            <mat-datepicker #pickerHasta></mat-datepicker>
-          </mat-form-field>
+    <!-- Top Bar Institucional con Controles Globales -->
+    <header class="top-header-bar">
+      <div class="title-area">
+        <div class="header-logo-badge">
+          <mat-icon>gavel</mat-icon>
         </div>
-
-        <div class="d-grid d-md-flex justify-content-md-end" style="gap: 10px">
-          <button
-            mat-stroked-button
-            color="primary"
-            (click)="limpiarFiltros()"
-            class="width-100-md"
-            >
-            <mat-icon>cleaning_services</mat-icon>
-            Limpiar filtros
-          </button>
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="consultar()"
-            class="width-100-md"
-            >
-            {{ isLoading ? "Consultando..." : "Consultar" }}
-            <mat-icon>update</mat-icon>
-          </button>
+        <div>
+          <h1 class="main-title">
+            Gestión Contractual ARGO
+          </h1>
+          <p class="subtitle">Tablero de control, consulta avanzada y ciclo de vida de contratos</p>
         </div>
-      </form>
-
-      <div class="mt-4 table-container rounded-table table-scroll">
-        <table mat-table [dataSource]="dataSource">
-          <ng-container matColumnDef="vigencia">
-            <th mat-header-cell *matHeaderCellDef><b>Vigencia</b></th>
-            <td mat-cell *matCellDef="let row">{{ row.vigencia ?? "N/A" }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="tipoContratoId">
-            <th mat-header-cell *matHeaderCellDef><b>Tipo de Contrato</b></th>
-            <td mat-cell *matCellDef="let row">
-              {{ row.tipoContratoId ?? "N/A" }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="tipo_persona">
-            <th mat-header-cell *matHeaderCellDef><b>Tipo de Persona</b></th>
-            <td mat-cell *matCellDef="let row">
-              {{ row.contratista?.tipo_persona_id ?? "N/A" }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="numero_contrato">
-            <th mat-header-cell *matHeaderCellDef><b>Número de Contrato</b></th>
-            <td mat-cell *matCellDef="let row">{{ row.id ?? "N/A" }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="contratista">
-            <th mat-header-cell *matHeaderCellDef><b>Contratista</b></th>
-            <td mat-cell *matCellDef="let row">
-              {{ row.contratista?.nombre ?? "N/A" }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="fecha_registro">
-            <th mat-header-cell *matHeaderCellDef><b>Fecha de Registro</b></th>
-            <td mat-cell *matCellDef="let row">
-              {{
-              row.fechaCreacion
-              ? (row.fechaCreacion | date : "yyyy-MM-dd")
-              : "N/A"
-              }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="fecha_aprobado">
-            <th mat-header-cell *matHeaderCellDef><b>Fecha de Aprobación</b></th>
-            <td mat-cell *matCellDef="let row">
-              {{
-              row.fecha_aprobado
-              ? (row.fecha_aprobado | date : "yyyy-MM-dd")
-              : "N/A"
-              }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="estado">
-            <th mat-header-cell *matHeaderCellDef><b>Estado</b></th>
-            <td mat-cell *matCellDef="let row">
-              {{ row.estados?.estado_parametro_id ?? "N/A" }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef><b>Acciones</b></th>
-            <td mat-cell *matCellDef="let row">
-              @if (getAccionesPorRolYEstado(row); as accionesPorRolYEstado) {
-                @if (accionesPorRolYEstado.length > 0) {
-                  <button
-                    mat-icon-button
-                    color="primary"
-                    [matMenuTriggerFor]="menu"
-                    >
-                    <mat-icon>more_vert</mat-icon>
-                  </button>
-                  <mat-menu #menu="matMenu" class="acciones">
-                    @for (accion of accionesPorRolYEstado; track accion) {
-                      <button
-                        mat-menu-item
-                        (click)="realizarAccion(row, accion)"
-                        >
-                        <mat-icon class="icon">{{ getIconoAccion(accion) }}</mat-icon>
-                        <span>{{ accion }}</span>
-                      </button>
-                    }
-                  </mat-menu>
-                }
-              }
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-
-        <mat-paginator
-          [length]="totalRegistros"
-          [pageSize]="tamanioPagina"
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          [showFirstLastButtons]="true"
-          (page)="cambiarPagina($event)"
-          aria-label="Seleccionar página"
-          >
-        </mat-paginator>
       </div>
-    </ng-template>
+
+      <div class="header-actions">
+        <!-- Switch de Rol (Visible únicamente en entorno de pruebas/desarrollo) -->
+        <div class="test-role-wrap" *ngIf="!isProduction" title="Selector de rol para pruebas. En producción se detecta automáticamente por el token de usuario.">
+          <span class="test-tag">
+            <mat-icon>science</mat-icon>
+            Pruebas:
+          </span>
+          <div class="role-button-group">
+            <button
+              type="button"
+              class="btn-role-tab"
+              [class.active]="rolActivo === 'JEFE'"
+              (click)="cambiarRolPruebas('JEFE')"
+            >
+              <mat-icon>admin_panel_settings</mat-icon>
+              Jefe de Contratación
+            </button>
+            <button
+              type="button"
+              class="btn-role-tab"
+              [class.active]="rolActivo === 'ABOGADO'"
+              (click)="cambiarRolPruebas('ABOGADO')"
+            >
+              <mat-icon>work</mat-icon>
+              Abogado
+            </button>
+          </div>
+        </div>
+
+        <!-- Selector de Vigencia -->
+        <div class="vigencia-picker-box">
+          <mat-icon class="vigencia-icon">calendar_month</mat-icon>
+          <span class="vigencia-label">Vigencia:</span>
+          <select
+            class="vigencia-select-native"
+            [ngModel]="vigenciaSeleccionada"
+            (ngModelChange)="onVigenciaChange($event)"
+          >
+            <option value="">Todas las vigencias</option>
+            @for (v of vigencia; track v.Id || v.Nombre) {
+              <option [value]="v.Nombre">{{ v.Nombre }}</option>
+            }
+            @if (vigencia.length === 0) {
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+            }
+          </select>
+        </div>
+
+        <!-- Botón Validar Contratista (Ágora) -->
+        <button
+          mat-stroked-button
+          color="accent"
+          class="btn-action-proveedor"
+          type="button"
+          (click)="abrirModalValidarContratista()"
+        >
+          <mat-icon>person_search</mat-icon>
+          Validar Contratista
+        </button>
+
+        <!-- Botón Crear Contrato -->
+        <button
+          mat-raised-button
+          color="primary"
+          class="btn-action-crear"
+          type="button"
+          (click)="abrirModalCrearContrato()"
+        >
+          <mat-icon>add_circle</mat-icon>
+          Crear Contrato
+        </button>
+      </div>
+    </header>
+
+    <!-- Tablero Superior Dinámico (KPIs según Rol) -->
+    <section class="kpi-cards-grid">
+      <!-- VISTA: JEFE DE CONTRATACIÓN -->
+      @if (rolActivo === 'JEFE') {
+        <div class="kpi-card wine">
+          <div class="kpi-card-header">
+            <span class="kpi-title">Total Contratos</span>
+            <div class="kpi-icon-wrap"><mat-icon>folder_shared</mat-icon></div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-number">{{ kpis.totalContratos }}</span>
+            <span class="kpi-badge info">Vigencia {{ vigenciaSeleccionada }}</span>
+          </div>
+          <span class="kpi-subtext">Total contratos registrados</span>
+        </div>
+
+        <div class="kpi-card navy">
+          <div class="kpi-card-header">
+            <span class="kpi-title">En Borrador / Elaboración</span>
+            <div class="kpi-icon-wrap"><mat-icon>edit_note</mat-icon></div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-number">{{ kpis.enBorrador }}</span>
+            <span class="kpi-badge info">Fase inicial</span>
+          </div>
+          <span class="kpi-subtext">Minutas en diligenciamiento</span>
+        </div>
+
+        <div class="kpi-card gold">
+          <div class="kpi-card-header">
+            <span class="kpi-title">Por Suscribir / Revisión</span>
+            <div class="kpi-icon-wrap"><mat-icon>rate_review</mat-icon></div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-number">{{ kpis.porSuscribir }}</span>
+            <span class="kpi-badge warning">Requieren visto</span>
+          </div>
+          <span class="kpi-subtext">Asignados para visto bueno</span>
+        </div>
+
+        <div class="kpi-card green">
+          <div class="kpi-card-header">
+            <span class="kpi-title">Legalizados / Ejecución</span>
+            <div class="kpi-icon-wrap"><mat-icon>verified</mat-icon></div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-number">{{ kpis.legalizados }}</span>
+            <span class="kpi-badge success">Firmados y activos</span>
+          </div>
+          <span class="kpi-subtext">Con registro presupuestal y pólizas</span>
+        </div>
+      }
+
+      <!-- VISTA: ABOGADO -->
+      @if (rolActivo === 'ABOGADO') {
+        <div class="kpi-card navy">
+          <div class="kpi-card-header">
+            <span class="kpi-title">Mis Contratos Asignados</span>
+            <div class="kpi-icon-wrap"><mat-icon>assignment_ind</mat-icon></div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-number">{{ kpis.asignados }}</span>
+            <span class="kpi-badge info">Gestión personal</span>
+          </div>
+          <span class="kpi-subtext">Asignados a mi bandeja {{ vigenciaSeleccionada ? 'en ' + vigenciaSeleccionada : 'en general' }}</span>
+        </div>
+
+        <div class="kpi-card gold">
+          <div class="kpi-card-header">
+            <span class="kpi-title">Pendientes de Mi Revisión</span>
+            <div class="kpi-icon-wrap"><mat-icon>hourglass_top</mat-icon></div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-number">{{ kpis.pendientesRevision }}</span>
+            <span class="kpi-badge warning">Acción requerida</span>
+          </div>
+          <span class="kpi-subtext">Listos para revisión de cláusulas</span>
+        </div>
+
+        <div class="kpi-card green">
+          <div class="kpi-card-header">
+            <span class="kpi-title">Aprobados por Mí</span>
+            <div class="kpi-icon-wrap"><mat-icon>task_alt</mat-icon></div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-number">{{ kpis.aprobados }}</span>
+            <span class="kpi-badge success">Visto bueno dado</span>
+          </div>
+          <span class="kpi-subtext">Enviados a firma de ordenación</span>
+        </div>
+
+        <div class="kpi-card red">
+          <div class="kpi-card-header">
+            <span class="kpi-title">Alertas Prioritarias</span>
+            <div class="kpi-icon-wrap"><mat-icon>priority_high</mat-icon></div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-number">{{ kpis.alertasPrioritarias }}</span>
+            <span class="kpi-badge danger">Próximos a vencer</span>
+          </div>
+          <span class="kpi-subtext">Requieren adición o trámite urgente</span>
+        </div>
+      }
+    </section>
+
+    <!-- Banner Alertas de Gestión Rápida -->
+    <section class="alerts-banner-card">
+      <div class="alerts-left">
+        <div class="alert-icon-ring">
+          <mat-icon>notifications_active</mat-icon>
+        </div>
+        <div class="alerts-message">
+          <h4>Alertas de Gestión Prioritaria {{ vigenciaSeleccionada ? '(Vigencia ' + vigenciaSeleccionada + ')' : '(Todas las vigencias)' }}</h4>
+          <p>Contratos con plazos de ejecución próximos a vencer o trámites pendientes de subsanación.</p>
+        </div>
+      </div>
+
+      <div class="alert-chips-actions">
+        <button
+          type="button"
+          class="chip-alert-btn red"
+          [class.active]="alertaFiltroActiva === 'vencer'"
+          (click)="filtrarPorAlerta('vencer')"
+        >
+          <mat-icon>alarm</mat-icon>
+          <span>Próximos a Vencer (&lt; 15 días)</span>
+          <span class="chip-count red">{{ alertas.proximosVencer }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="chip-alert-btn gold"
+          [class.active]="alertaFiltroActiva === 'revision'"
+          (click)="filtrarPorAlerta('revision')"
+        >
+          <mat-icon>hourglass_bottom</mat-icon>
+          <span>En Revisión Prolongada (&gt; 5 días)</span>
+          <span class="chip-count gold">{{ alertas.revisionProlongada }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="chip-alert-btn blue"
+          [class.active]="alertaFiltroActiva === 'polizas'"
+          (click)="filtrarPorAlerta('polizas')"
+        >
+          <mat-icon>policy</mat-icon>
+          <span>Pólizas por Aprobar</span>
+          <span class="chip-count blue">{{ alertas.polizasPorAprobar }}</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Panel Superior Colapsable de Filtros de Búsqueda -->
+    <section class="filtros-collapsible-card">
+      <div class="filtros-card-header" (click)="toggleFiltros()">
+        <div class="filtros-header-left">
+          <div class="filter-header-icon-box">
+            <mat-icon>tune</mat-icon>
+          </div>
+          <div>
+            <div class="filter-title-row">
+              <h3 class="filter-card-title">Filtros de Búsqueda Avanzada</h3>
+              @if (hayFiltrosActivos()) {
+                <span class="active-filters-badge">Activo</span>
+              }
+            </div>
+            <p class="filter-card-subtitle">
+              {{ getResumenFiltrosActivos() }}
+            </p>
+          </div>
+        </div>
+
+        <div class="filtros-header-right">
+          @if (hayFiltrosActivos()) {
+            <button
+              type="button"
+              class="btn-limpiar-quick"
+              title="Restablecer todos los filtros"
+              (click)="$event.stopPropagation(); limpiarFiltros()"
+            >
+              <mat-icon>cleaning_services</mat-icon>
+              <span>Limpiar</span>
+            </button>
+          }
+          <button
+            type="button"
+            class="btn-toggle-filtros"
+            [attr.aria-expanded]="filtrosExpandidos"
+          >
+            <span>{{ filtrosExpandidos ? 'Ocultar filtros' : 'Desplegar filtros' }}</span>
+            <mat-icon class="toggle-chevron" [class.rotated]="filtrosExpandidos">expand_more</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Cuerpo Colapsable con Cuadrícula Horizontal -->
+      <div class="filtros-body-collapsible" [class.open]="filtrosExpandidos">
+        <form [formGroup]="form" (ngSubmit)="consultar()" class="filtros-horizontal-form">
+          <div class="filtros-fields-grid">
+
+            <!-- 1. Vigencia -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Vigencia</mat-label>
+              <mat-select formControlName="vigencia" (selectionChange)="onVigenciaChange($event.value)">
+                <mat-option value="">Todas las vigencias</mat-option>
+                @for (v of vigencia; track v.Id || v.Nombre) {
+                  <mat-option [value]="v.Nombre">{{ v.Nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- 2. Unidad Ejecutora -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Unidad ejecutora</mat-label>
+              <mat-select formControlName="unidadEjecutora">
+                <mat-option value="">Todas</mat-option>
+                @for (ue of unidadEjecutora; track ue.Id) {
+                  <mat-option [value]="ue.Id">{{ ue.Nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- 3. Tipo de Contrato -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Tipo de contrato</mat-label>
+              <mat-select formControlName="tipoContratoId">
+                <mat-option value="">Todos</mat-option>
+                @for (tc of tipoContratoId; track tc.Id) {
+                  <mat-option [value]="tc.Id">{{ tc.Nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- 4. Tipo de Persona -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Tipo de persona</mat-label>
+              <mat-select formControlName="tipoPersona">
+                <mat-option value="">Todas</mat-option>
+                @for (tp of tipoPersona; track tp.Id) {
+                  <mat-option [value]="tp.Id">{{ tp.Nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- 5. Número de Elaboración -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Número de elaboración</mat-label>
+              <input matInput formControlName="numeroElaboracion" placeholder="Ej: 15" />
+            </mat-form-field>
+
+            <!-- 6. Número de Contrato -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Número de contrato</mat-label>
+              <input matInput formControlName="numeroContrato" placeholder="Ej: 104" />
+            </mat-form-field>
+
+            <!-- 7. Contratista -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Contratista</mat-label>
+              <input matInput formControlName="contratista" placeholder="Nombre o documento" />
+            </mat-form-field>
+
+            <!-- 8. Rango de Fechas -->
+            <div class="filter-dates-pair">
+              <mat-form-field appearance="outline" class="date-field">
+                <mat-label>Desde</mat-label>
+                <input matInput [matDatepicker]="pickerDesde" formControlName="fechaDesde" placeholder="dd/mm/aaaa" />
+                <mat-datepicker-toggle matIconSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+                <mat-datepicker #pickerDesde></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="date-field">
+                <mat-label>Hasta</mat-label>
+                <input matInput [matDatepicker]="pickerHasta" formControlName="fechaHasta" placeholder="dd/mm/aaaa" />
+                <mat-datepicker-toggle matIconSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+                <mat-datepicker #pickerHasta></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+          </div>
+
+          <!-- Barra de Acciones del Formulario -->
+          <div class="filtros-actions-row">
+            <button
+              mat-stroked-button
+              type="button"
+              class="btn-limpiar-form"
+              (click)="limpiarFiltros()"
+            >
+              <mat-icon>cleaning_services</mat-icon>
+              Limpiar filtros
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              class="btn-consultar-form"
+              [disabled]="isLoading"
+            >
+              <mat-icon>search</mat-icon>
+              {{ isLoading ? 'Consultando...' : 'Aplicar filtros' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Sección de Tabla a Ancho Completo -->
+    <section class="main-table-full-section">
+
+      <!-- Pestañas Horizontales de Estados con Contadores -->
+      <nav class="states-tabs-navbar">
+        @for (tab of pestanasEstados; track tab.nombre) {
+          <button
+            type="button"
+            class="state-nav-tab"
+            [class.active]="estadoTabActivo === tab.valor"
+            (click)="seleccionarPestanaEstado(tab.valor)"
+          >
+            <span class="tab-label">{{ tab.nombre }}</span>
+            <span class="tab-counter-badge">{{ tab.count }}</span>
+          </button>
+        }
+      </nav>
+
+      <!-- Contenedor Card de la Tabla Canónica (100% ancho disponible) -->
+      <div class="table-card-wrapper">
+        <div class="table-scroll-container">
+          <table mat-table [dataSource]="dataSource" class="canonical-argo-table">
+
+              <!-- No. Contrato (Recuadro coloreado según el estado) -->
+              <ng-container matColumnDef="numero_contrato">
+                <th mat-header-cell *matHeaderCellDef><b>No. Contrato</b></th>
+                <td mat-cell *matCellDef="let row">
+                  <span
+                    class="contrato-badge-id"
+                    [ngClass]="getEstadoBadgeClass(row)"
+                    [matTooltip]="'Estado: ' + getEstadoNombre(row)"
+                  >
+                    <mat-icon class="contrato-doc-icon">description</mat-icon>
+                    <span>{{ row.id || row.numero_contrato || '-' }}</span>
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Vigencia -->
+              <ng-container matColumnDef="vigencia">
+                <th mat-header-cell *matHeaderCellDef style="text-align: center;"><b>Vigencia</b></th>
+                <td mat-cell *matCellDef="let row" style="text-align: center; font-weight: 600;">
+                  {{ row.vigencia || "N/A" }}
+                </td>
+              </ng-container>
+
+              <!-- Tipo de Contrato -->
+              <ng-container matColumnDef="tipoContratoId">
+                <th mat-header-cell *matHeaderCellDef><b>Tipo de Contrato</b></th>
+                <td mat-cell *matCellDef="let row">
+                  {{ getNombreTipoContrato(row.tipoContratoId) }}
+                </td>
+              </ng-container>
+
+              <!-- Tipo de Persona -->
+              <ng-container matColumnDef="tipo_persona">
+                <th mat-header-cell *matHeaderCellDef><b>Tipo Persona</b></th>
+                <td mat-cell *matCellDef="let row">
+                  {{ getTipoPersona(row) }}
+                </td>
+              </ng-container>
+
+              <!-- Contratista -->
+              <ng-container matColumnDef="contratista">
+                <th mat-header-cell *matHeaderCellDef><b>Contratista</b></th>
+                <td mat-cell *matCellDef="let row">
+                  <div class="contratista-cell-box">
+                    <span class="contratista-name">{{ getNombreContratista(row) }}</span>
+                    <span class="contratista-doc" *ngIf="getDocumentoContratista(row)">
+                      Doc: {{ getDocumentoContratista(row) }}
+                    </span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Valor del Contrato -->
+              <ng-container matColumnDef="valor_contrato">
+                <th mat-header-cell *matHeaderCellDef style="text-align: right;"><b>Valor</b></th>
+                <td mat-cell *matCellDef="let row" style="text-align: right; font-weight: 600; white-space: nowrap;">
+                  <span class="valor-contrato-tag">{{ getValorContrato(row) }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Unidad Ejecutora -->
+              <ng-container matColumnDef="unidadEjecutora">
+                <th mat-header-cell *matHeaderCellDef><b>Unidad Ejecutora</b></th>
+                <td mat-cell *matCellDef="let row">
+                  {{ getNombreUnidadEjecutora(row.unidad_ejecutora_id || row.unidadEjecutora) }}
+                </td>
+              </ng-container>
+
+              <!-- Fecha de Registro -->
+              <ng-container matColumnDef="fecha_registro">
+                <th mat-header-cell *matHeaderCellDef><b>Fecha Registro</b></th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.fechaCreacion ? (row.fechaCreacion | date : "yyyy-MM-dd") : (row.fecha_registro ? (row.fecha_registro | date : "yyyy-MM-dd") : "N/A") }}
+                </td>
+              </ng-container>
+
+              <!-- Fecha de Aprobación -->
+              <ng-container matColumnDef="fecha_aprobado">
+                <th mat-header-cell *matHeaderCellDef><b>Fecha Aprobación</b></th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.fecha_aprobado ? (row.fecha_aprobado | date : "yyyy-MM-dd") : "N/A" }}
+                </td>
+              </ng-container>
+
+              <!-- Acciones -->
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef style="text-align: center;"><b>Acciones</b></th>
+                <td mat-cell *matCellDef="let row" style="text-align: center;">
+                  @if (getAccionesPorRolYEstado(row); as accionesPorRolYEstado) {
+                    @if (accionesPorRolYEstado.length > 0) {
+                      <button
+                        mat-icon-button
+                        color="primary"
+                        [matMenuTriggerFor]="menu"
+                        aria-label="Menú de acciones del contrato"
+                      >
+                        <mat-icon>more_vert</mat-icon>
+                      </button>
+                      <mat-menu #menu="matMenu" class="acciones">
+                        @for (accion of accionesPorRolYEstado; track accion) {
+                          <button mat-menu-item (click)="realizarAccion(row, accion)">
+                            <mat-icon class="icon">{{ getIconoAccion(accion) }}</mat-icon>
+                            <span>{{ accion }}</span>
+                          </button>
+                        }
+                      </mat-menu>
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+
+            <!-- Indicador de Carga -->
+            <div class="loading-results-box" *ngIf="isLoading">
+              <mat-spinner diameter="36"></mat-spinner>
+              <span>Consultando contratos en el sistema...</span>
+            </div>
+
+            <!-- Mensaje si no hay registros -->
+            <div class="empty-results-box" *ngIf="!isLoading && totalRegistros === 0">
+              <mat-icon class="empty-icon">search_off</mat-icon>
+              <p>No se encontraron contratos con los criterios de búsqueda seleccionados.</p>
+            </div>
+          </div>
+
+          <!-- Paginador Canónico -->
+          <mat-paginator
+            [length]="totalRegistros"
+            [pageSize]="tamanioPagina"
+            [pageSizeOptions]="[5, 10, 25, 100]"
+            [showFirstLastButtons]="true"
+            (page)="cambiarPagina($event)"
+            aria-label="Seleccionar página"
+          >
+          </mat-paginator>
+        </div>
+
+        <!-- SECCIÓN DE CONVENCIÓN DE ESTADOS (Ubicada exactamente debajo de la tabla como solicitó el usuario) -->
+        <div class="legend-card-under-table">
+          <div class="legend-title-box">
+            <mat-icon class="legend-header-icon">palette</mat-icon>
+            <span class="legend-main-text">Convención de Estados (Color de recuadro del No. Contrato)</span>
+          </div>
+          <div class="legend-chips-flow">
+            <div class="legend-chip">
+              <span class="swatch-indicator swatch-borrador"></span>
+              <span><b>Borrador:</b> En diligenciamiento</span>
+            </div>
+            <div class="legend-chip">
+              <span class="swatch-indicator swatch-suscribir"></span>
+              <span><b>Por suscribir:</b> Revisión / Visto bueno</span>
+            </div>
+            <div class="legend-chip">
+              <span class="swatch-indicator swatch-suscrito"></span>
+              <span><b>Suscrito:</b> Firmado por partes</span>
+            </div>
+            <div class="legend-chip">
+              <span class="swatch-indicator swatch-legalizado"></span>
+              <span><b>Legalizado:</b> Con RP y pólizas</span>
+            </div>
+            <div class="legend-chip">
+              <span class="swatch-indicator swatch-ejecucion"></span>
+              <span><b>En ejecución:</b> Acta de inicio activa</span>
+            </div>
+            <div class="legend-chip">
+              <span class="swatch-indicator swatch-declinado"></span>
+              <span><b>Declinado:</b> Cancelado</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+  </div>
+</ng-template>

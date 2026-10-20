@@ -26,6 +26,8 @@ import { ConsultaContratoComponent } from './consulta-contrato/consulta-contrato
 import { ModalObservacionesComponent } from './consulta-contrato/modal-observaciones/modal-observaciones.component';
 import { DetalleContratoComponent } from './consulta-contrato/detalle-contrato/detalle-contrato.component';
 import { EditarContratoComponent } from './consulta-contrato/editar-contrato/editar-contrato.component';
+import { ModalSeleccionarUeComponent } from './consulta-contrato/modal-seleccionar-ue/modal-seleccionar-ue.component';
+import { ModalValidarContratistaComponent } from './consulta-contrato/modal-validar-contratista/modal-validar-contratista.component';
 
 const registrarComponents = [
   CDPListComponent,
@@ -58,6 +60,8 @@ const consultaComponents = [
   ModalObservacionesComponent,
   DetalleContratoComponent,
   EditarContratoComponent,
+  ModalSeleccionarUeComponent,
+  ModalValidarContratistaComponent,
 ]
 
 @NgModule({
