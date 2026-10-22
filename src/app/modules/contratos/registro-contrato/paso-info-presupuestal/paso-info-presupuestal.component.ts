@@ -690,10 +690,9 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   }
 
   CambioMoneda(id_moneda: number) {
-    const idMonedaStr = id_moneda.toString();
 
     this.showCambioMonedaFields =
-      idMonedaStr !== environment.PESO_COLOMBIANO_ID;
+      id_moneda !== environment.PESO_COLOMBIANO_ID;
 
     const monedaFields = ['monedaExtranjera', 'tasaCambio'];
 
