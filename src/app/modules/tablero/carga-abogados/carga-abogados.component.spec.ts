@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CargaAbogadosComponent } from './carga-abogados.component';
 import { calcularAlertas } from '../../../utils/tablero.utils';
-import { contratoPrueba } from '../testing/contratos-prueba';
+import { contratoPrueba } from '../../../testing/contratos-prueba';
 
 describe('CargaAbogadosComponent', () => {
   let fixture: ComponentFixture<CargaAbogadosComponent>;

@@ -5,7 +5,7 @@ import { ParametrosService } from 'src/app/services/parametros.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { TableroDatosService } from '../../../services/tablero-datos.service';
-import { contratoPrueba } from '../testing/contratos-prueba';
+import { contratoPrueba } from '../../../testing/contratos-prueba';
 import { InicioTableroComponent } from './inicio-tablero.component';
 
 describe('InicioTableroComponent', () => {

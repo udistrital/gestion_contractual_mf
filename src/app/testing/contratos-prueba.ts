@@ -1,4 +1,4 @@
-import { ContratoTablero } from '../tablero.models';
+import { ContratoTablero } from '../types/tablero.models';
 
 export function contratoPrueba(parcial: Partial<ContratoTablero> = {}): ContratoTablero {
   return {

@@ -4,7 +4,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { UserService } from 'src/app/services/user.service';
 import { TableroDatosService } from '../../../services/tablero-datos.service';
 import { ContratoTablero } from '../../../types/tablero.models';
-import { contratoPrueba } from '../testing/contratos-prueba';
+import { contratoPrueba } from '../../../testing/contratos-prueba';
 import { PanelConsultaComponent } from './panel-consulta.component';
 
 describe('PanelConsultaComponent', () => {
