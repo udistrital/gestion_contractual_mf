@@ -1,0 +1,128 @@
+/*
+  Tokens del tablero. Los colores salen de gaia-style.css (repositorio assets),
+  que el root ya carga en tiempo de ejecución; el valor después de la coma es
+  el mismo de GAIA y solo aplica si la hoja no llega (por ejemplo en pruebas).
+  Los tonos suaves y neutros que no existen en GAIA se definen aquí.
+*/
+:host {
+  --tb-primario: var(--md-primary-500, #731514);
+  --tb-primario-suave: var(--md-primary-50, #eee3e3);
+  --tb-acento: var(--md-accent-500, #143873);
+
+  --tb-por-suscribir: var(--warning-accent, #faa500);
+  --tb-por-suscribir-suave: var(--md-warning-50, #fff7e8);
+  --tb-suscrito: var(--others-main, #42659d);
+  --tb-suscrito-suave: var(--md-accent-50, #e3e7ee);
+  --tb-legalizado: var(--success-base, #55993d);
+  --tb-legalizado-suave: #edf5e9;
+  --tb-en-ejecucion: var(--success-accent, #147314);
+  --tb-en-ejecucion-suave: #e3f0e3;
+  --tb-declinado: var(--danger-accent, #b22222);
+  --tb-declinado-suave: var(--color0, #f3ebeb);
+
+  --tb-alerta: var(--warning-accent, #faa500);
+  --tb-alerta-suave: var(--md-warning-50, #fff7e8);
+  --tb-alerta-alta: var(--danger-accent, #b22222);
+
+  /* Escala del treemap: de más a menos contratos */
+  --tb-tono-0: var(--color5, #731514);
+  --tb-tono-1: var(--color900, #863028);
+  --tb-tono-2: var(--color800, #98483c);
+  --tb-tono-3: var(--color700, #aa5f52);
+  --tb-tono-4: var(--color600, #bc7669);
+  --tb-tono-5: var(--color500, #cd8e81);
+  --tb-tono-6: var(--color400, #dea69a);
+  --tb-tono-7: var(--color300, #efbeb4);
+  --tb-texto-tono-claro: var(--md-primary-900, #430606);
+
+  --tb-superficie: #ffffff;
+  --tb-borde: #e2e8f0;
+  --tb-texto: #1e293b;
+  --tb-texto-suave: #64748b;
+  --tb-radio: 10px;
+  --tb-sombra: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.tb-card {
+  background: var(--tb-superficie);
+  border: 1px solid var(--tb-borde);
+  border-radius: var(--tb-radio);
+  box-shadow: var(--tb-sombra);
+}
+
+.tb-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px 0;
+}
+
+.tb-card-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tb-texto);
+}
+
+.tb-card-header p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--tb-texto-suave);
+}
+
+.tb-card-body {
+  padding: 14px 18px 16px;
+}
+
+.tb-espacio {
+  flex: 1;
+}
+
+.tb-vacio {
+  padding: 28px 12px;
+  text-align: center;
+  color: var(--tb-texto-suave);
+  font-size: 13px;
+}
+
+.tb-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tb-pill.alta {
+  background: var(--tb-declinado-suave);
+  color: var(--tb-alerta-alta);
+}
+
+.tb-pill.media {
+  background: var(--tb-alerta-suave);
+  color: var(--md-warning-900, #f8961b);
+}
+
+.tb-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 11.5px;
+  color: var(--tb-texto-suave);
+}
+
+.tb-leyenda i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+
+[data-estado='porSuscribir'] { --tb-c: var(--tb-por-suscribir); --tb-c-suave: var(--tb-por-suscribir-suave); }
+[data-estado='suscrito'] { --tb-c: var(--tb-suscrito); --tb-c-suave: var(--tb-suscrito-suave); }
+[data-estado='legalizado'] { --tb-c: var(--tb-legalizado); --tb-c-suave: var(--tb-legalizado-suave); }
+[data-estado='enEjecucion'] { --tb-c: var(--tb-en-ejecucion); --tb-c-suave: var(--tb-en-ejecucion-suave); }
+[data-estado='declinado'] { --tb-c: var(--tb-declinado); --tb-c-suave: var(--tb-declinado-suave); }
