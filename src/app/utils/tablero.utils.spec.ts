@@ -1,4 +1,4 @@
-import { contratoPrueba } from '../modules/tablero/testing/contratos-prueba';
+import { contratoPrueba } from '../testing/contratos-prueba';
 import {
   agruparPor,
   alertaDe,
@@ -84,6 +84,10 @@ describe('tablero.utils', () => {
       expect(alerta.texto).toContain('sin legalizar');
     });
 
+    it('con exactamente 5 días la prioridad sigue siendo media', () => {
+      expect(alertaDe(contratoPrueba({ diasEnEstado: 5 }), hoy)!.prioridad).toBe('media');
+    });
+
     it('alerta los contratos en ejecución que vencen dentro del umbral', () => {
       const vence = (fecha: Date | null) =>
         alertaDe(contratoPrueba({ estado: 'enEjecucion', fechaFinal: fecha, diasEnEstado: 40 }), hoy);
@@ -93,6 +97,15 @@ describe('tablero.utils', () => {
       expect(vence(new Date(2026, 9, 22))!.texto).toBe('Vence en 2 días');
       expect(vence(new Date(2026, 9, 20))!.prioridad).toBe('alta');
       expect(vence(new Date(2026, 9, 21))!.texto).toBe('Vence en 1 día');
+    });
+
+    it('en ejecución alerta hasta 3 días antes de vencer, con prioridad media', () => {
+      const vence = (fecha: Date) =>
+        alertaDe(contratoPrueba({ estado: 'enEjecucion', fechaFinal: fecha }), hoy);
+      const alerta = vence(new Date(2026, 9, 23))!;
+      expect(alerta.prioridad).toBe('media');
+      expect(alerta.texto).toBe('Vence en 3 días');
+      expect(vence(new Date(2026, 9, 24))).toBeNull();
     });
 
     it('no alerta contratos declinados', () => {
