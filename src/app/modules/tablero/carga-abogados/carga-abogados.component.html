@@ -1,0 +1,60 @@
+@if (rol() === 'JEFE') {
+  @if (filas().length === 0) {
+    <div class="tb-vacio">Sin contratos en esta vigencia.</div>
+  } @else {
+    <div class="barras">
+      <span></span>
+      <span></span>
+      <span class="cabecera">Total</span>
+      <span class="cabecera">Pend. · alertas</span>
+      @for (f of filas(); track f.clave) {
+        <span class="nombre">
+          <span class="avatar">{{ iniciales(f.nombre) }}</span>
+          <span class="texto">{{ f.nombre }}</span>
+        </span>
+        <span class="pista">
+          <span class="barra" [style.width.%]="(f.total / maximo()) * 100">
+            @for (e of estados; track e.clave) {
+              @if (f[e.clave]) {
+                <span
+                  [attr.data-estado]="e.clave"
+                  [style.width.%]="(f[e.clave] / f.total) * 100"
+                  [attr.title]="e.nombre + ': ' + f[e.clave]"
+                ></span>
+              }
+            }
+          </span>
+        </span>
+        <span class="total">{{ f.total }}</span>
+        <span class="pendientes">
+          {{ f.pendientes }}
+          <span class="tb-pill" [class.alta]="f.alertas > 0" [class.cero]="f.alertas === 0">{{ f.alertas }}</span>
+        </span>
+      }
+    </div>
+    <p class="nota">
+      Pendientes = Por suscribir + Suscrito + Legalizado. «Sin identificar» agrupa los contratos registrados
+      antes de guardar el usuario del abogado.
+    </p>
+  }
+} @else {
+  @if (abogadoId() === null) {
+    <div class="tb-vacio">No fue posible identificar tu usuario para calcular tu carga.</div>
+  } @else {
+    <div class="propia">
+      @for (f of cargaPropia(); track f.clave) {
+        <span class="estado" [attr.data-estado]="f.clave"><i></i>{{ f.nombre }}</span>
+        <span class="pista">
+          <span class="barra-propia" [attr.data-estado]="f.clave" [style.width.%]="f.anchoMios"></span>
+          <span class="marca-promedio" [style.left.%]="f.posicionPromedio" title="Promedio por abogado"></span>
+        </span>
+        <b class="total">{{ f.mios }}</b>
+        <span class="promedio">prom. {{ f.promedio }}</span>
+      }
+    </div>
+    <div class="tb-leyenda nota">
+      <span><i class="muestra-mios"></i>Mis contratos</span>
+      <span><i class="muestra-promedio"></i>Promedio por abogado de la oficina</span>
+    </div>
+  }
+}
