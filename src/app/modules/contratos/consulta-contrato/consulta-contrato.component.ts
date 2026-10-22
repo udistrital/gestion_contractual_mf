@@ -121,27 +121,6 @@ export class ConsultaContratoComponent implements OnInit {
     },
   ];
 
-  // Resumen superior dinámico (KPIs según rol)
-  kpis = {
-    totalContratos: 0,
-    enBorrador: 0,
-    porSuscribir: 0,
-    legalizados: 0,
-    asignados: 0,
-    pendientesRevision: 0,
-    aprobados: 0,
-    alertasPrioritarias: 0,
-  };
-
-  // Alertas de gestión rápida
-  alertas = {
-    proximosVencer: 0,
-    revisionProlongada: 0,
-    polizasPorAprobar: 0,
-  };
-
-  alertaFiltroActiva: string = '';
-
   // Columnas de la tabla (Incluye fecha_aprobado y estados mediante recuadro de color)
   displayedColumns: string[] = [
     'numero_contrato',
@@ -244,16 +223,6 @@ export class ConsultaContratoComponent implements OnInit {
   seleccionarPestanaEstado(valorEstado: string): void {
     this.estadoTabActivo = valorEstado;
     this.form.patchValue({ estado: valorEstado });
-    this.alertaFiltroActiva = '';
-    this.consultar();
-  }
-
-  filtrarPorAlerta(tipoAlerta: string): void {
-    if (this.alertaFiltroActiva === tipoAlerta) {
-      this.alertaFiltroActiva = '';
-    } else {
-      this.alertaFiltroActiva = tipoAlerta;
-    }
     this.consultar();
   }
 
@@ -585,7 +554,6 @@ export class ConsultaContratoComponent implements OnInit {
   private actualizarMetricasYAlertas(): void {
     const data = this.dataSource.data || [];
 
-    let countBorrador = 0;
     let countPorSuscribir = 0;
     let countSuscrito = 0;
     let countLegalizado = 0;
@@ -594,8 +562,7 @@ export class ConsultaContratoComponent implements OnInit {
 
     data.forEach((c) => {
       const cls = this.getEstadoBadgeClass(c);
-      if (cls === 'status-borrador') countBorrador++;
-      else if (cls === 'status-suscribir') countPorSuscribir++;
+      if (cls === 'status-suscribir') countPorSuscribir++;
       else if (cls === 'status-suscrito') countSuscrito++;
       else if (cls === 'status-legalizado') countLegalizado++;
       else if (cls === 'status-ejecucion') countEjecucion++;
@@ -611,30 +578,12 @@ export class ConsultaContratoComponent implements OnInit {
       else if (p.nombre === 'Legalizado') p.count = countLegalizado;
       else if (p.nombre === 'En ejecución') p.count = countEjecucion;
     });
-
-    // KPIs Jefe
-    this.kpis.totalContratos = this.totalRegistros;
-    this.kpis.enBorrador = countBorrador;
-    this.kpis.porSuscribir = countPorSuscribir;
-    this.kpis.legalizados = countLegalizado + countEjecucion;
-
-    // KPIs Abogado (Proyectados sobre asignación)
-    this.kpis.asignados = Math.max(1, countPorSuscribir + countBorrador);
-    this.kpis.pendientesRevision = countPorSuscribir;
-    this.kpis.aprobados = countSuscrito;
-    this.kpis.alertasPrioritarias = Math.min(3, countPorSuscribir);
-
-    // Alertas
-    this.alertas.proximosVencer = Math.max(0, countPorSuscribir > 0 ? 2 : 0);
-    this.alertas.revisionProlongada = Math.max(0, countBorrador > 1 ? 1 : 0);
-    this.alertas.polizasPorAprobar = Math.max(0, countSuscrito > 0 ? 1 : 0);
   }
 
   limpiarFiltros() {
     this.vigenciaSeleccionada = '';
     this.form.reset();
     this.estadoTabActivo = '';
-    this.alertaFiltroActiva = '';
     this.paginaActual = 0;
     if (this.paginator) {
       this.paginator.firstPage();

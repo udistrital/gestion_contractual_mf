@@ -1,0 +1,64 @@
+.tablero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: 13px;
+  color: var(--tb-texto-suave);
+}
+
+.chip-rol {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  background: var(--tb-primario-suave);
+  color: var(--tb-primario);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.chip-rol mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.campo-vigencia {
+  width: 150px;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--tb-radio);
+  background: var(--tb-declinado-suave);
+  color: var(--tb-declinado);
+  font-size: 12.5px;
+}
+
+/* Treemap y semáforo de alertas lado a lado */
+.fila-treemap {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .fila-treemap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
