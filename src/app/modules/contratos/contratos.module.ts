@@ -28,6 +28,7 @@ import { DetalleContratoComponent } from './consulta-contrato/detalle-contrato/d
 import { EditarContratoComponent } from './consulta-contrato/editar-contrato/editar-contrato.component';
 import { ModalSeleccionarUeComponent } from './consulta-contrato/modal-seleccionar-ue/modal-seleccionar-ue.component';
 import { ModalValidarContratistaComponent } from './consulta-contrato/modal-validar-contratista/modal-validar-contratista.component';
+import { TableroModule } from 'src/app/modules/tablero/tablero.module';
 
 const registrarComponents = [
   CDPListComponent,
@@ -73,6 +74,7 @@ const consultaComponents = [
   imports: [
     CommonModule,
     SharedModule,
+    TableroModule,
     ContratosRoutingModule
   ],
   exports: [
