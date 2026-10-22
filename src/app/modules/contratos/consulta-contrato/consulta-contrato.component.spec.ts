@@ -159,11 +159,12 @@ describe('ConsultaContratoComponent', () => {
     expect(params2.estados.estado_parametro_id).toBe(6774);
   });
 
-  it('debe filtrar por alerta y alternarla al hacer clic nuevamente', () => {
-    component.filtrarPorAlerta('vencer');
-    expect(component.alertaFiltroActiva).toBe('vencer');
-    component.filtrarPorAlerta('vencer');
-    expect(component.alertaFiltroActiva).toBe('');
+  it('debe filtrar la tabla por el estado elegido en las tarjetas de resumen', () => {
+    const consultarSpy = jest.spyOn(component, 'consultar');
+    component.seleccionarPestanaEstado('6774');
+    expect(component.estadoTabActivo).toBe('6774');
+    expect(component.form.get('estado')?.value).toBe('6774');
+    expect(consultarSpy).toHaveBeenCalled();
   });
 
   it('debe abrir modal de selección de Unidad Ejecutora y encadenar validación de contratista al confirmar', () => {
@@ -256,13 +257,11 @@ describe('ConsultaContratoComponent', () => {
   it('debe limpiar los filtros y recargar la vista', () => {
     component.form.patchValue({ contratista: '123', numeroContrato: '50' });
     component.estadoTabActivo = 'Suscrito';
-    component.alertaFiltroActiva = 'vencer';
 
     component.limpiarFiltros();
 
     expect(component.form.get('contratista')?.value).toBeNull();
     expect(component.estadoTabActivo).toBe('');
-    expect(component.alertaFiltroActiva).toBe('');
   });
 
   it('debe manejar error al consultar contratos', () => {
