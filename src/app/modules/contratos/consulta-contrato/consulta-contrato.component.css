@@ -526,63 +526,121 @@
 }
 
 /* ==========================================================
-   RECUADRO DE NÚMERO DE CONTRATO (COLOR SEGÚN ESTADO)
+   IDENTIFICADOR DE NÚMERO DE CONTRATO (DISEÑO SOBRIO)
    ========================================================== */
-.contrato-badge-id {
+.contrato-id-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
+  gap: 6px;
+  padding: 4px 10px;
   border-radius: 6px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
   font-family: 'Roboto Mono', monospace, sans-serif;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 12.5px;
   letter-spacing: -0.2px;
-  border-left: 4.5px solid transparent;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .contrato-doc-icon {
   font-size: 14px;
   width: 14px;
   height: 14px;
+  color: #64748b;
 }
 
-.contrato-badge-id.status-borrador {
-  background: #f1f5f9;
+/* ==========================================================
+   PÍLDORAS DE ESTADO (DISEÑO CHIP CON DOT Y FONDOS PASTEL)
+   ========================================================== */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.1px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.status-text {
+  font-family: 'Raleway', sans-serif;
+}
+
+/* En ejecución (Verde institucional profundo) */
+.status-pill.status-ejecucion {
+  background-color: #edf7f0;
+  border-color: #bfe5ca;
+  color: #0f6f32;
+}
+.status-pill.status-ejecucion .status-dot {
+  background-color: #1b8748;
+}
+
+/* Por suscribir (Ocre / Naranja suave) */
+.status-pill.status-suscribir {
+  background-color: #fef8eb;
+  border-color: #fce3b8;
+  color: #9c5812;
+}
+.status-pill.status-suscribir .status-dot {
+  background-color: #d97706;
+}
+
+/* Suscrito (Azul clásico) */
+.status-pill.status-suscrito {
+  background-color: #edf3fb;
+  border-color: #cdddf6;
+  color: #1e4785;
+}
+.status-pill.status-suscrito .status-dot {
+  background-color: #2563eb;
+}
+
+/* Legalizado (Verde menta / esmeralda suave) */
+.status-pill.status-legalizado {
+  background-color: #f1f8f3;
+  border-color: #c6e7ce;
+  color: #246e33;
+}
+.status-pill.status-legalizado .status-dot {
+  background-color: #2e7d32;
+}
+
+/* Declinado (Vino / Carmesí suave) */
+.status-pill.status-declinado {
+  background-color: #fdf2f2;
+  border-color: #fad2d2;
+  color: #9e2a2b;
+}
+.status-pill.status-declinado .status-dot {
+  background-color: #dc2626;
+}
+
+/* Borrador / Sin estado (Gris suave neutro) */
+.status-pill.status-borrador {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
   color: #475569;
-  border-color: #94a3b8;
+}
+.status-pill.status-borrador .status-dot {
+  background-color: #94a3b8;
 }
 
-.contrato-badge-id.status-suscribir {
-  background: #fffbf2;
-  color: #925807;
-  border-color: #c48918;
-}
-
-.contrato-badge-id.status-suscrito {
-  background: #edf3fb;
-  color: #143873;
-  border-color: #143873;
-}
-
-.contrato-badge-id.status-legalizado {
-  background: #f1f8f3;
-  color: #2e7d32;
-  border-color: #2e7d32;
-}
-
-.contrato-badge-id.status-ejecucion {
-  background: #e6f6f4;
-  color: #0d6e64;
-  border-color: #0d6e64;
-}
-
-.contrato-badge-id.status-declinado {
-  background: #fdf2f2;
-  color: #b22222;
-  border-color: #b22222;
-}
 
 .contratista-cell-box {
   display: flex;
@@ -682,16 +740,9 @@
   gap: 7px;
 }
 
-.swatch-indicator {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  flex-shrink: 0;
+.legend-desc {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
 }
 
-.swatch-borrador { background: #e2e8f0; border: 1.5px solid #94a3b8; }
-.swatch-suscribir { background: #fffbf2; border: 1.5px solid #c48918; }
-.swatch-suscrito { background: #edf3fb; border: 1.5px solid #143873; }
-.swatch-legalizado { background: #f1f8f3; border: 1.5px solid #2e7d32; }
-.swatch-ejecucion { background: #e6f6f4; border: 1.5px solid #0d6e64; }
-.swatch-declinado { background: #fdf2f2; border: 1.5px solid #b22222; }

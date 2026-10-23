@@ -72,8 +72,8 @@ export class ConsultaContratoComponent implements OnInit {
   rolActivo: 'JEFE' | 'ABOGADO' = 'JEFE';
   isProduction: boolean = environment.production;
 
-  // Selector de Vigencia (Vacío por defecto para traer todos los contratos)
-  vigenciaSeleccionada: string = '';
+  // Selector de Vigencia (Por defecto el año de la vigencia presente)
+  vigenciaSeleccionada: string = new Date().getFullYear().toString();
 
   // Parámetros maestros
   unidadEjecutora: any[] = [];
@@ -121,7 +121,7 @@ export class ConsultaContratoComponent implements OnInit {
     },
   ];
 
-  // Columnas de la tabla (Incluye fecha_aprobado y estados mediante recuadro de color)
+  // Columnas de la tabla (Incluye columna propia de estado con diseño de píldora)
   displayedColumns: string[] = [
     'numero_contrato',
     'vigencia',
@@ -130,6 +130,7 @@ export class ConsultaContratoComponent implements OnInit {
     'contratista',
     'valor_contrato',
     'unidadEjecutora',
+    'estado',
     'fecha_registro',
     'fecha_aprobado',
     'acciones',
@@ -148,7 +149,7 @@ export class ConsultaContratoComponent implements OnInit {
 
   form = this._formBuilder.group({
     unidadEjecutora: [''],
-    vigencia: [''],
+    vigencia: [new Date().getFullYear().toString()],
     tipoContratoId: [''],
     tipoPersona: [''],
     numeroElaboracion: [''],
@@ -308,12 +309,34 @@ export class ConsultaContratoComponent implements OnInit {
     });
   }
 
-  // Ayudante de clases de color para el recuadro del número de contrato
+  // Ayudante de clases de color para la píldora de estado (Estilos refinados con dot)
   getEstadoBadgeClass(contrato: ContratoGeneral): string {
+    const estadoParamId =
+      contrato?.estados?.estado_parametro_id ||
+      (contrato as any)?.estado ||
+      (contrato as any)?.estado_id;
+
+    const idStr = String(estadoParamId);
+    if (idStr === String(environment.ESTADOS_GENERALES?.EN_EJECUCION || 6777)) {
+      return 'status-ejecucion';
+    }
+    if (idStr === String(environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773)) {
+      return 'status-suscribir';
+    }
+    if (idStr === String(environment.ESTADOS_GENERALES?.SUSCRITO || 6774)) {
+      return 'status-suscrito';
+    }
+    if (idStr === String(environment.ESTADOS_GENERALES?.LEGALIZADO || 6776)) {
+      return 'status-legalizado';
+    }
+    if (idStr === String(environment.ESTADOS_GENERALES?.DECLINADO || 6775)) {
+      return 'status-declinado';
+    }
+
     const estadoNombre = (
-      contrato.estados?.nombre_estado ||
-      contrato.estados?.estado_nombre ||
-      contrato.estados?.estado_parametro_id ||
+      contrato?.estados?.nombre_estado ||
+      contrato?.estados?.estado_nombre ||
+      this.getEstadoNombre(contrato) ||
       ''
     )
       .toString()
@@ -321,8 +344,8 @@ export class ConsultaContratoComponent implements OnInit {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
 
-    if (estadoNombre.includes('borrador') || estadoNombre.includes('elaboracion')) {
-      return 'status-borrador';
+    if (estadoNombre.includes('ejecucion') || estadoNombre.includes('activo')) {
+      return 'status-ejecucion';
     }
     if (
       estadoNombre.includes('suscribir') ||
@@ -340,9 +363,6 @@ export class ConsultaContratoComponent implements OnInit {
     ) {
       return 'status-legalizado';
     }
-    if (estadoNombre.includes('ejecucion') || estadoNombre.includes('activo')) {
-      return 'status-ejecucion';
-    }
     if (
       estadoNombre.includes('declinado') ||
       estadoNombre.includes('cancelado') ||
@@ -354,13 +374,41 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   getEstadoNombre(contrato: ContratoGeneral): string {
-    return (
+    const rawNombre =
       contrato?.estados?.nombre_estado ||
       contrato?.estados?.estado_nombre ||
+      (contrato as any)?.estado_nombre;
+
+    if (rawNombre && isNaN(Number(rawNombre))) {
+      return this.capitalizarTexto(rawNombre);
+    }
+
+    const estadoParamId =
       contrato?.estados?.estado_parametro_id ||
       (contrato as any)?.estado ||
-      'Sin estado'
-    );
+      (contrato as any)?.estado_id;
+
+    if (estadoParamId !== undefined && estadoParamId !== null && estadoParamId !== '') {
+      if (this.estado && this.estado.length > 0) {
+        const encontrado = this.estado.find((e) => String(e.Id) === String(estadoParamId));
+        if (encontrado?.Nombre) return this.capitalizarTexto(encontrado.Nombre);
+      }
+
+      const idStr = String(estadoParamId);
+      if (idStr === String(environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773)) return 'Por suscribir';
+      if (idStr === String(environment.ESTADOS_GENERALES?.SUSCRITO || 6774)) return 'Suscrito';
+      if (idStr === String(environment.ESTADOS_GENERALES?.DECLINADO || 6775)) return 'Declinado';
+      if (idStr === String(environment.ESTADOS_GENERALES?.LEGALIZADO || 6776)) return 'Legalizado';
+      if (idStr === String(environment.ESTADOS_GENERALES?.EN_EJECUCION || 6777)) return 'En ejecución';
+    }
+
+    return 'Sin estado';
+  }
+
+  private capitalizarTexto(texto: string): string {
+    if (!texto) return '';
+    const str = String(texto).trim();
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
 
   getNombreTipoContrato(tipoId: any): string {
@@ -581,8 +629,10 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   limpiarFiltros() {
-    this.vigenciaSeleccionada = '';
-    this.form.reset();
+    this.vigenciaSeleccionada = new Date().getFullYear().toString();
+    this.form.reset({
+      vigencia: this.vigenciaSeleccionada,
+    });
     this.estadoTabActivo = '';
     this.paginaActual = 0;
     if (this.paginator) {
