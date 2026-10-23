@@ -140,12 +140,18 @@ describe('ConsultaContratoComponent', () => {
   });
 
   it('debe detectar correctamente si hay filtros activos y generar el resumen informativo', () => {
-    expect(component.hayFiltrosActivos()).toBe(false);
-    expect(component.getResumenFiltrosActivos()).toContain('Haga clic para desplegar');
+    const anioActual = new Date().getFullYear().toString();
+    expect(component.hayFiltrosActivos()).toBe(true);
+    expect(component.getResumenFiltrosActivos()).toContain(`Vigencia: ${anioActual}`);
 
     component.form.patchValue({ contratista: 'CAROLINA' });
     expect(component.hayFiltrosActivos()).toBe(true);
     expect(component.getResumenFiltrosActivos()).toContain('Contratista: CAROLINA');
+
+    component.form.patchValue({ vigencia: '', contratista: '' });
+    component.vigenciaSeleccionada = '';
+    expect(component.hayFiltrosActivos()).toBe(false);
+    expect(component.getResumenFiltrosActivos()).toContain('Haga clic para desplegar');
   });
 
   it('debe mapear nombre o ID de estado a número entero en prepararParametros para evitar error 400', () => {
@@ -254,7 +260,8 @@ describe('ConsultaContratoComponent', () => {
     expect(component.getNombreUnidadEjecutora(null)).toBe('01 - Rectoría');
   });
 
-  it('debe limpiar los filtros y recargar la vista', () => {
+  it('debe limpiar los filtros y recargar la vista manteniendo la vigencia presente por defecto', () => {
+    const anioActual = new Date().getFullYear().toString();
     component.form.patchValue({ contratista: '123', numeroContrato: '50' });
     component.estadoTabActivo = 'Suscrito';
 
@@ -262,6 +269,8 @@ describe('ConsultaContratoComponent', () => {
 
     expect(component.form.get('contratista')?.value).toBeNull();
     expect(component.estadoTabActivo).toBe('');
+    expect(component.vigenciaSeleccionada).toBe(anioActual);
+    expect(component.form.get('vigencia')?.value).toBe(anioActual);
   });
 
   it('debe manejar error al consultar contratos', () => {
@@ -287,8 +296,10 @@ describe('ConsultaContratoComponent', () => {
     expect(component.getDocumentoContratista(null)).toBeNull();
   });
 
-  it('debe incluir valor_contrato en displayedColumns y formatear correctamente el valor del contrato', () => {
+  it('debe incluir valor_contrato y estado en displayedColumns y formatear correctamente el valor del contrato', () => {
     expect(component.displayedColumns).toContain('valor_contrato');
+    expect(component.displayedColumns).toContain('estado');
+    expect(component.displayedColumns).toContain('numero_contrato');
 
     expect(component.getValorContrato({ valor_pesos: 50000000 })).toContain('50.000.000');
     expect(component.getValorContrato({ valor_contrato_me: 12500000 })).toContain('12.500.000');
