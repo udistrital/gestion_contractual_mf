@@ -137,6 +137,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     this.cargarCDPs();
     this.setupVigenciaListener();
     this.setupCdpListener();
+    this.CargarRolOrdenadores();
     this.loadInitialData().then(() => {
       this.loadSavedData();
     });
@@ -165,7 +166,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   }
 
   private async loadInitialData(): Promise<void> {
-    this.parametrosService.getParametrosPorTipo(this.tiposParametrosRequeridos).then(
+    return this.parametrosService.getParametrosPorTipo(this.tiposParametrosRequeridos).then(
       (data: Record<number, ParametroResponse[]>) => {
         this.monedas = data[environment.TIPO_MONEDA];
         this.gastos = data[environment.TIPO_GASTO_ID];
