@@ -89,6 +89,37 @@ describe('InicioTableroComponent', () => {
     expect(component.rol()).toBe('JEFE');
   });
 
+  it('reintenta el persona_id hasta que el core lo guarde y deja sin rol si falla la carga', async () => {
+    jest.useFakeTimers();
+    const getPersonaId = jest.fn().mockRejectedValueOnce(new Error('No id found')).mockResolvedValue(500);
+    TestBed.configureTestingModule({
+      declarations: [InicioTableroComponent],
+      providers: [
+        { provide: TableroDatosService, useValue: { cargarContratos: jest.fn().mockReturnValue(of(contratos)) } },
+        { provide: ParametrosService, useValue: { get: () => of({ Data: [{ Id: 1 }] }) } },
+        { provide: UserService, useValue: { getPersonaId } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+    });
+    TestBed.overrideComponent(InicioTableroComponent, {
+      set: {
+        providers: [{ provide: RolService, useValue: { cargarRol: () => Promise.reject(new Error('rol')), getRol: () => [] } }],
+      },
+    });
+    fixture = TestBed.createComponent(InicioTableroComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    await jest.advanceTimersByTimeAsync(0);
+    expect(component.personaId()).toBeNull();
+    await jest.advanceTimersByTimeAsync(500);
+    expect(component.personaId()).toBe(500);
+    expect(getPersonaId).toHaveBeenCalledTimes(2);
+    expect(component.rol()).toBeNull();
+    // Una vigencia sin nombre se descarta y se conservan las vigencias por defecto
+    expect(component.vigencias()).toEqual([anio, String(+anio - 1), String(+anio - 2)]);
+  });
+
   it('jefe: carga la vigencia actual por defecto con todos los contratos', async () => {
     await crear(['JEFE_CONTRATACION_RECTOR']);
     expect(component.rol()).toBe('JEFE');
@@ -136,6 +167,24 @@ describe('InicioTableroComponent', () => {
     expect(component.detalleTotal()).toBe(`Vigencia ${anio} · Ingeniería`);
     component.seleccionarDependencia(null);
     expect(component.conteo().total).toBe(4);
+  });
+
+  it('«Otras» filtra por las dependencias pequeñas y muestra sus alertas', async () => {
+    await crear(['JEFE_CONTRATACION_RECTOR']);
+    const muchos = Array.from({ length: 40 }, (_, i) =>
+      contratoPrueba({ id: 100 + i, dependenciaId: 10, dependencia: 'Ingeniería' })
+    );
+    const pequena = contratoPrueba({ id: 200, dependenciaId: 30, dependencia: 'Idiomas', diasEnEstado: 4 });
+    datos.cargarContratos.mockReturnValue(of([...muchos, pequena]));
+    component.cambiarVigencia('2025');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.alertasPorDependencia()).toEqual({ '30': 1 });
+    component.seleccionarDependencia('otras');
+    expect(component.conteo().total).toBe(1);
+    expect(component.alertas().map((a) => a.contrato.id)).toEqual([200]);
+    expect(component.nombreDependencia()).toBe('Otras dependencias');
   });
 
   it('al cambiar de vigencia recarga y quita el filtro de dependencia', async () => {

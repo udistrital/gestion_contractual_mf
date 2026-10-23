@@ -10,6 +10,7 @@ import { environment } from 'src/environments/environment';
 import { TableroDatosService } from '../../../services/tablero-datos.service';
 import { ContratoTablero, RolTablero } from '../../../types/tablero.models';
 import { agruparPor, calcularAlertas, contarPorEstado, rolTablero } from '../../../utils/tablero.utils';
+import { CLAVE_OTRAS, dependenciasMenores } from '../treemap-dependencias/treemap-dependencias.component';
 
 // Página de inicio de ARGO: estadísticas de contratación según el rol del usuario
 @Component({
@@ -86,7 +87,13 @@ export class InicioTableroComponent implements OnInit {
 
   private readonly filtrar = (lista: ContratoTablero[]) => {
     const dep = this.dependenciaSeleccionada();
-    return dep === null ? lista : lista.filter((c) => this.claveDependencia(c) === dep);
+    if (dep === null) return lista;
+    // "Otras" filtra por todas las dependencias agrupadas en ese bloque del treemap
+    const claves =
+      dep === CLAVE_OTRAS
+        ? new Set(dependenciasMenores(this.gruposDependencias()).map((g) => g.clave))
+        : new Set([dep]);
+    return lista.filter((c) => claves.has(this.claveDependencia(c)));
   };
 
   readonly propiosFiltrados = computed(() => this.filtrar(this.propios()));
@@ -94,8 +101,19 @@ export class InicioTableroComponent implements OnInit {
   readonly conteo = computed(() => contarPorEstado(this.propiosFiltrados()));
   readonly alertas = computed(() => calcularAlertas(this.propiosFiltrados(), new Date()));
 
+  // Alertas de cada dependencia sin filtro, para mostrarlas en el detalle de "Otras"
+  readonly alertasPorDependencia = computed(() => {
+    const conteo: Record<string, number> = {};
+    calcularAlertas(this.propios(), new Date()).forEach((a) => {
+      const clave = this.claveDependencia(a.contrato);
+      conteo[clave] = (conteo[clave] ?? 0) + 1;
+    });
+    return conteo;
+  });
+
   readonly nombreDependencia = computed(() => {
     const dep = this.dependenciaSeleccionada();
+    if (dep === CLAVE_OTRAS) return 'Otras dependencias';
     return this.gruposDependencias().find((g) => g.clave === dep)?.nombre ?? null;
   });
 

@@ -8,9 +8,9 @@
         class="bloque"
         [class.oscuro]="b.oscuro"
         [class.otras]="b.otras"
-        [class.seleccionado]="seleccionada() === b.grupo.clave && !b.otras"
+        [class.seleccionado]="seleccionada() === b.grupo.clave"
         [class.abierta]="b.otras && verOtras()"
-        [class.atenuado]="seleccionada() !== null && seleccionada() !== b.grupo.clave"
+        [class.atenuado]="seleccionada() !== null && seleccionada() !== b.grupo.clave && !(b.otras && eligioDentroDeOtras())"
         [style.left.%]="b.x"
         [style.top.%]="b.y"
         [style.width.%]="b.w"
@@ -54,13 +54,16 @@
           (click)="elegirDependencia(o.grupo.clave)"
         >
           {{ o.grupo.nombre }}<b>{{ o.grupo.total }}</b><small>{{ o.porcentaje }}%</small>
+          @if (alertasPorDependencia()[o.grupo.clave]; as n) {
+            <span class="tb-pill media">{{ n }} {{ n === 1 ? 'alerta' : 'alertas' }}</span>
+          }
         </button>
       }
     </div>
   }
   <div class="pie">
     <span>Tono más oscuro = más contratos · la franja inferior muestra la mezcla de estados</span>
-    <span>Las dependencias con menos del 3% se agrupan en «Otras»; haz clic en ese bloque para verlas</span>
+    <span>Las dependencias con menos del 3% se agrupan en «Otras»; haz clic en ese bloque para verlas y ver sus alertas</span>
   </div>
   <div class="tb-leyenda">
     @for (e of estados; track e.clave) {
@@ -68,3 +71,4 @@
     }
   </div>
 }
+

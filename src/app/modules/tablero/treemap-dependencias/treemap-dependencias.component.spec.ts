@@ -54,7 +54,7 @@ describe('TreemapDependenciasComponent', () => {
     expect(espia).toHaveBeenLastCalledWith(null);
 
     botones[2].click();
-    expect(espia).toHaveBeenCalledTimes(2);
+    expect(espia).toHaveBeenLastCalledWith('otras');
   });
 
   it('al hacer clic en «Otras» muestra sus dependencias y permite filtrar por una', () => {
@@ -63,6 +63,9 @@ describe('TreemapDependenciasComponent', () => {
     expect(fixture.nativeElement.querySelector('.detalle-otras')).toBeNull();
 
     fixture.nativeElement.querySelectorAll('button.bloque')[2].click();
+    expect(espia).toHaveBeenLastCalledWith('otras');
+    fixture.componentRef.setInput('seleccionada', 'otras');
+    fixture.componentRef.setInput('alertasPorDependencia', { '4': 2 });
     fixture.detectChanges();
     const otras: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button.otra'));
     const detalle = otras.map((b) => [
@@ -75,12 +78,36 @@ describe('TreemapDependenciasComponent', () => {
       ['Dependencia 4', '1', '1%'],
     ]);
 
+    expect(otras[0].querySelector('.tb-pill')).toBeNull();
+    expect(otras[1].querySelector('.tb-pill')!.textContent).toBe('2 alertas');
+
     otras[1].click();
     expect(espia).toHaveBeenLastCalledWith('4');
+    fixture.componentRef.setInput('seleccionada', '4');
+    fixture.detectChanges();
+    const bloqueOtras = fixture.nativeElement.querySelectorAll('button.bloque')[2];
+    expect(bloqueOtras.classList).not.toContain('atenuado');
 
-    fixture.nativeElement.querySelectorAll('button.bloque')[2].click();
+    fixture.componentRef.setInput('seleccionada', 'otras');
+    bloqueOtras.click();
+    expect(espia).toHaveBeenLastCalledWith(null);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.detalle-otras')).toBeNull();
+  });
+
+  it('sin dependencias pequeñas no crea «Otras» y ajusta el tamaño del texto al bloque', () => {
+    fixture.componentRef.setInput('grupos', Array.from({ length: 30 }, (_, i) => grupo(String(i), 10)));
+    fixture.detectChanges();
+    const bloques = component.bloques();
+    expect(bloques).toHaveLength(30);
+    expect(bloques.some((b) => b.otras)).toBe(false);
+    expect(bloques.some((b) => b.nivel === 'medio')).toBe(true);
+  });
+
+  it('nombra «Otras» en singular cuando agrupa una sola dependencia', () => {
+    fixture.componentRef.setInput('grupos', [grupo('1', 60), grupo('2', 38), grupo('3', 2)]);
+    fixture.detectChanges();
+    expect(component.bloques()[2].grupo.nombre).toBe('Otras 1 dependencia');
   });
 
   it('muestra un mensaje si no hay contratos', () => {

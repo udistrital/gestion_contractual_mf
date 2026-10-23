@@ -22,6 +22,15 @@ const ALTO = 470;
 // Las dependencias por debajo de esta participación se agrupan en "Otras"
 const MINIMO_PARTICIPACION = 0.03;
 const TONOS_DEPENDENCIAS = 7;
+// Clave que se emite al elegir el bloque "Otras": filtra por todas sus dependencias
+export const CLAVE_OTRAS = 'otras';
+
+// Dependencias por debajo del mínimo de participación
+export function dependenciasMenores(grupos: GrupoContratos[]): GrupoContratos[] {
+  const conContratos = grupos.filter((g) => g.total > 0);
+  const total = conContratos.reduce((s, g) => s + g.total, 0);
+  return conContratos.filter((g) => g.total / total < MINIMO_PARTICIPACION);
+}
 
 @Component({
   selector: 'app-treemap-dependencias',
@@ -32,6 +41,8 @@ const TONOS_DEPENDENCIAS = 7;
 export class TreemapDependenciasComponent {
   readonly grupos = input.required<GrupoContratos[]>();
   readonly seleccionada = input<string | null>(null);
+  // Número de alertas por clave de dependencia, para el detalle de "Otras"
+  readonly alertasPorDependencia = input<Record<string, number>>({});
   readonly seleccionar = output<string | null>();
 
   readonly estados = ESTADOS_TABLERO;
@@ -40,12 +51,17 @@ export class TreemapDependenciasComponent {
 
   // Dependencias por debajo del mínimo, con su porcentaje del total
   readonly otras = computed(() => {
-    const grupos = this.grupos().filter((g) => g.total > 0);
-    const total = grupos.reduce((s, g) => s + g.total, 0);
-    return grupos
-      .filter((g) => g.total / total < MINIMO_PARTICIPACION)
-      .map((g) => ({ grupo: g, porcentaje: porcentaje(g.total, total) }));
+    const total = this.grupos().reduce((s, g) => s + g.total, 0);
+    return dependenciasMenores(this.grupos()).map((g) => ({
+      grupo: g,
+      porcentaje: porcentaje(g.total, total),
+    }));
   });
+
+  // Si la dependencia elegida está dentro de "Otras", ese bloque no se atenúa
+  readonly eligioDentroDeOtras = computed(() =>
+    this.otras().some((o) => o.grupo.clave === this.seleccionada())
+  );
 
   readonly bloques = computed<BloqueTreemap[]>(() => {
     const grupos = this.grupos().filter((g) => g.total > 0);
@@ -57,7 +73,7 @@ export class TreemapDependenciasComponent {
     const lista = principales.map((g) => ({ grupo: g, otras: false }));
     if (resto.length) {
       const otras: GrupoContratos = {
-        clave: '',
+        clave: CLAVE_OTRAS,
         nombre: `Otras ${resto.length} ${resto.length === 1 ? 'dependencia' : 'dependencias'}`,
         ...conteoVacio(),
       };
@@ -96,7 +112,10 @@ export class TreemapDependenciasComponent {
 
   elegir(b: BloqueTreemap): void {
     if (b.otras) {
-      this.verOtras.update((v) => !v);
+      // Abre el detalle y filtra por todas las dependencias agrupadas; al repetir, lo cierra
+      const abrir = this.seleccionada() !== CLAVE_OTRAS;
+      this.verOtras.set(abrir);
+      this.seleccionar.emit(abrir ? CLAVE_OTRAS : null);
       return;
     }
     this.elegirDependencia(b.grupo.clave);
