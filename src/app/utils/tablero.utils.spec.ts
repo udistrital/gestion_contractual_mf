@@ -1,4 +1,5 @@
 import { contratoPrueba } from '../testing/contratos-prueba';
+import { DIAS_ALERTA_POR_ESTADO } from '../types/tablero.models';
 import {
   agruparPor,
   alertaDe,
@@ -70,6 +71,20 @@ describe('tablero.utils', () => {
   });
 
   describe('alertas', () => {
+    it('escribe «día» en singular cuando un estado tiene un umbral menor', () => {
+      const estados = ['porSuscribir', 'suscrito', 'legalizado'] as const;
+      estados.forEach((e) => (DIAS_ALERTA_POR_ESTADO[e] = 0));
+      try {
+        expect(estados.map((estado) => alertaDe(contratoPrueba({ estado, diasEnEstado: 1 }), hoy)?.texto)).toEqual([
+          'Por suscribir hace 1 día',
+          'Suscrito hace 1 día, sin legalizar',
+          'Legalizado hace 1 día, sin acta de inicio',
+        ]);
+      } finally {
+        estados.forEach((e) => delete DIAS_ALERTA_POR_ESTADO[e]);
+      }
+    });
+
     it('alerta un contrato con más de 3 días en el estado', () => {
       expect(alertaDe(contratoPrueba({ diasEnEstado: 3 }), hoy)).toBeNull();
       const alerta = alertaDe(contratoPrueba({ diasEnEstado: 4 }), hoy)!;
@@ -137,5 +152,14 @@ describe('tablero.utils', () => {
       expect(r.x + r.w).toBeLessThanOrEqual(100.0001);
       expect(r.y + r.h).toBeLessThanOrEqual(50.0001);
     });
+  });
+
+  it('agruparPor ignora los contratos sin estado', () => {
+    const grupos = agruparPor([{ ...contratoPrueba(), estado: null }], (c) => String(c.dependenciaId), (c) => c.dependencia);
+    expect(grupos).toEqual([]);
+  });
+
+  it('squarify sin valores no devuelve rectángulos', () => {
+    expect(squarify([], { x: 0, y: 0, w: 100, h: 50 })).toEqual([]);
   });
 });

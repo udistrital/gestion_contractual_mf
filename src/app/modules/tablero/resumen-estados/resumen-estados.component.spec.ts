@@ -64,4 +64,10 @@ describe('ResumenEstadosComponent', () => {
     expect(leyenda()[2].classList).toContain('activa');
     expect(leyenda()[0].classList).not.toContain('activa');
   });
+
+  it('sin contratos la dona no dibuja segmentos', () => {
+    fixture.componentRef.setInput('conteo', conteoVacio());
+    fixture.detectChanges();
+    expect(component.segmentos().every((s) => s.largo === 0)).toBe(true);
+  });
 });

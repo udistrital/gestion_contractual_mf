@@ -117,4 +117,29 @@ describe('TableroDatosService', () => {
     requestManager.get.mockReturnValue(of({ Data: null }));
     expect(await firstValueFrom(service.cargarContratos('2026', hoy))).toEqual([]);
   });
+
+  it('usa la fecha actual por defecto y valores de respaldo para número, rol y nombre', async () => {
+    requestManager.get.mockReturnValue(
+      of({
+        Data: [
+          {
+            ...contratoCrud,
+            id: 9,
+            consecutivo_elaboracion: null,
+            estados: [{ ...contratoCrud.estados[1], usuario_rol: null, actual: true }],
+          },
+          { ...contratoCrud, id: 10, estados: [{ ...contratoCrud.estados[1], usuario_id: 600, actual: true }] },
+          { ...contratoCrud, id: 11, estados: [{ ...contratoCrud.estados[1], usuario_id: 700, actual: true }] },
+        ],
+      })
+    );
+    tercerosService.getTerceroPorId.mockImplementation((id: number) =>
+      of(id === 600 ? { Data: { NombreCompleto: 'Andrés Pinzón' } } : {})
+    );
+    const [sinRol, conData, sinNombre] = await firstValueFrom(service.cargarContratos('2026'));
+    expect(sinRol.numero).toBe('#9');
+    expect(sinRol.abogadoId).toBeNull();
+    expect(conData.abogado).toBe('Andrés Pinzón');
+    expect(sinNombre.abogado).toBe('Abogado 700');
+  });
 });

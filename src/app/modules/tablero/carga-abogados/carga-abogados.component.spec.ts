@@ -47,6 +47,14 @@ describe('CargaAbogadosComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Promedio por abogado de la oficina');
   });
 
+  it('abogado: si ningún contrato tiene abogado identificado, el promedio es cero', () => {
+    fixture.componentRef.setInput('rol', 'ABOGADO');
+    fixture.componentRef.setInput('abogadoId', 500);
+    fixture.componentRef.setInput('contratos', [contratoPrueba({ abogadoId: null })]);
+    fixture.detectChanges();
+    expect(component.cargaPropia().every((f) => f.mios === 0 && f.promedio === 0)).toBe(true);
+  });
+
   it('abogado sin usuario identificado ve un aviso', () => {
     fixture.componentRef.setInput('rol', 'ABOGADO');
     fixture.componentRef.setInput('abogadoId', null);
