@@ -2,7 +2,8 @@
   Tokens del tablero. Los colores salen de gaia-style.css (repositorio assets),
   que el root ya carga en tiempo de ejecución; el valor después de la coma es
   el mismo de GAIA y solo aplica si la hoja no llega (por ejemplo en pruebas).
-  Los tonos suaves y neutros que no existen en GAIA se definen aquí.
+  GAIA no tiene verdes suaves: se derivan de sus verdes con color-mix.
+  Los neutros son los mismos que ya usan los demás componentes del MF.
 */
 :host {
   --tb-primario: var(--md-primary-500, #731514);
@@ -14,9 +15,9 @@
   --tb-suscrito: var(--others-main, #42659d);
   --tb-suscrito-suave: var(--md-accent-50, #e3e7ee);
   --tb-legalizado: var(--success-base, #55993d);
-  --tb-legalizado-suave: #edf5e9;
+  --tb-legalizado-suave: color-mix(in srgb, var(--tb-legalizado) 12%, #ffffff);
   --tb-en-ejecucion: var(--success-accent, #147314);
-  --tb-en-ejecucion-suave: #e3f0e3;
+  --tb-en-ejecucion-suave: color-mix(in srgb, var(--tb-en-ejecucion) 12%, #ffffff);
   --tb-declinado: var(--danger-accent, #b22222);
   --tb-declinado-suave: var(--color0, #f3ebeb);
 
