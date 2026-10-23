@@ -1,0 +1,90 @@
+<section class="resumen" aria-label="Resumen de contratos por estado">
+  <div class="tarjeta dona-tarjeta">
+    <svg class="dona" viewBox="0 0 42 42" aria-hidden="true">
+      <circle class="pista" cx="21" cy="21" [attr.r]="radio"></circle>
+      @for (s of segmentos(); track s.estado.clave) {
+        @if (s.largo > 0) {
+          <circle
+            class="segmento"
+            cx="21"
+            cy="21"
+            [attr.r]="radio"
+            [attr.data-estado]="s.estado.clave"
+            [attr.stroke-dasharray]="s.largo + ' ' + (100 - s.largo)"
+            [attr.stroke-dashoffset]="25 - s.desde"
+          ></circle>
+        }
+      }
+    </svg>
+    <div class="dona-centro">
+      <span class="dona-numero">{{ formato(conteo().total) }}</span>
+      <span class="dona-texto">contratos</span>
+    </div>
+
+    <ul class="leyenda">
+      <li>
+        <button
+          type="button"
+          class="leyenda-item todos"
+          [class.activa]="estadoActivo() === ''"
+          [class.estatica]="!seleccionable()"
+          [attr.aria-pressed]="seleccionable() ? estadoActivo() === '' : null"
+          (click)="elegir(null)"
+        >
+          <i></i><span>Todos</span><b>{{ formato(conteo().total) }}</b>
+        </button>
+      </li>
+      @for (e of estados; track e.clave) {
+        <li>
+          <button
+            type="button"
+            class="leyenda-item"
+            [attr.data-estado]="e.clave"
+            [class.activa]="estadoActivo() === valor(e)"
+            [class.estatica]="!seleccionable()"
+            [attr.aria-pressed]="seleccionable() ? estadoActivo() === valor(e) : null"
+            (click)="elegir(e)"
+          >
+            <i></i><span>{{ e.nombre }}</span><b>{{ formato(conteo()[e.clave]) }}</b>
+          </button>
+        </li>
+      }
+    </ul>
+    @if (detalleTotal()) {
+      <p class="detalle-total">{{ detalleTotal() }}</p>
+    }
+  </div>
+
+  @for (e of estados; track e.clave) {
+    <button
+      type="button"
+      class="tarjeta estado"
+      [attr.data-estado]="e.clave"
+      [class.activa]="estadoActivo() === valor(e)"
+      [class.estatica]="!seleccionable()"
+      [attr.aria-pressed]="seleccionable() ? estadoActivo() === valor(e) : null"
+      (click)="elegir(e)"
+    >
+      <span class="cabecera">
+        <mat-icon class="icono">{{ e.icono }}</mat-icon>
+        <span class="anillo">
+          <svg viewBox="0 0 42 42" aria-hidden="true">
+            <circle class="pista" cx="21" cy="21" [attr.r]="radio"></circle>
+            <circle
+              class="progreso"
+              cx="21"
+              cy="21"
+              [attr.r]="radio"
+              [attr.stroke-dasharray]="porcentaje(e) + ' ' + (100 - porcentaje(e))"
+              stroke-dashoffset="25"
+            ></circle>
+          </svg>
+          <span>{{ porcentaje(e) }}%</span>
+        </span>
+      </span>
+      <span class="numero">{{ formato(conteo()[e.clave]) }}</span>
+      <span class="nombre">{{ e.nombre }}</span>
+      <span class="descripcion">{{ e.descripcion }}</span>
+    </button>
+  }
+</section>

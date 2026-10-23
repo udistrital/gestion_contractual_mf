@@ -2,8 +2,14 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
 import { authGuard } from 'src/_guards/auth.guard';
+import { InicioTableroComponent } from './modules/tablero/inicio-tablero/inicio-tablero.component';
 
 const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    component: InicioTableroComponent
+  },
   {
     path: 'contratos',
     canActivate: [authGuard],

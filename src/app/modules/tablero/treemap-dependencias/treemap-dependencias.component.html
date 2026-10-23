@@ -1,0 +1,74 @@
+@if (bloques().length === 0) {
+  <div class="tb-vacio">Sin contratos en esta vigencia.</div>
+} @else {
+  <div class="treemap">
+    @for (b of bloques(); track b.grupo.nombre) {
+      <button
+        type="button"
+        class="bloque"
+        [class.oscuro]="b.oscuro"
+        [class.otras]="b.otras"
+        [class.seleccionado]="seleccionada() === b.grupo.clave"
+        [class.abierta]="b.otras && verOtras()"
+        [class.atenuado]="seleccionada() !== null && seleccionada() !== b.grupo.clave && !(b.otras && eligioDentroDeOtras())"
+        [style.left.%]="b.x"
+        [style.top.%]="b.y"
+        [style.width.%]="b.w"
+        [style.height.%]="b.h"
+        [style.background]="'var(--tb-tono-' + b.tono + ')'"
+        [attr.title]="b.titulo"
+        [attr.aria-label]="b.titulo"
+        (click)="elegir(b)"
+      >
+        @if (b.nivel !== 'pequeno') {
+          <span class="nombre">{{ b.grupo.nombre }}</span>
+          <span class="valor">
+            {{ b.grupo.total }}
+            @if (b.nivel === 'grande') {
+              <small>{{ b.porcentaje }}%</small>
+            }
+          </span>
+        } @else {
+          <span class="valor pequeno">{{ b.grupo.total }}</span>
+        }
+        @if (b.nivel === 'grande') {
+          <span class="mezcla">
+            @for (e of estados; track e.clave) {
+              @if (b.grupo[e.clave]) {
+                <span [attr.data-estado]="e.clave" [style.flex]="b.grupo[e.clave]"></span>
+              }
+            }
+          </span>
+        }
+      </button>
+    }
+  </div>
+  @if (verOtras() && otras().length) {
+    <div class="detalle-otras" aria-label="Dependencias agrupadas en Otras">
+      <span class="detalle-titulo">Incluidas en «Otras»</span>
+      @for (o of otras(); track o.grupo.clave) {
+        <button
+          type="button"
+          class="otra"
+          [class.seleccionada]="seleccionada() === o.grupo.clave"
+          (click)="elegirDependencia(o.grupo.clave)"
+        >
+          {{ o.grupo.nombre }}<b>{{ o.grupo.total }}</b><small>{{ o.porcentaje }}%</small>
+          @if (alertasPorDependencia()[o.grupo.clave]; as n) {
+            <span class="tb-pill media">{{ n }} {{ n === 1 ? 'alerta' : 'alertas' }}</span>
+          }
+        </button>
+      }
+    </div>
+  }
+  <div class="pie">
+    <span>Tono más oscuro = más contratos · la franja inferior muestra la mezcla de estados</span>
+    <span>Las dependencias con menos del 3% se agrupan en «Otras»; haz clic en ese bloque para verlas y ver sus alertas</span>
+  </div>
+  <div class="tb-leyenda">
+    @for (e of estados; track e.clave) {
+      <span><i [attr.data-estado]="e.clave"></i>{{ e.nombre }}</span>
+    }
+  </div>
+}
+

@@ -140,12 +140,18 @@ describe('ConsultaContratoComponent', () => {
   });
 
   it('debe detectar correctamente si hay filtros activos y generar el resumen informativo', () => {
-    expect(component.hayFiltrosActivos()).toBe(false);
-    expect(component.getResumenFiltrosActivos()).toContain('Haga clic para desplegar');
+    const anioActual = new Date().getFullYear().toString();
+    expect(component.hayFiltrosActivos()).toBe(true);
+    expect(component.getResumenFiltrosActivos()).toContain(`Vigencia: ${anioActual}`);
 
     component.form.patchValue({ contratista: 'CAROLINA' });
     expect(component.hayFiltrosActivos()).toBe(true);
     expect(component.getResumenFiltrosActivos()).toContain('Contratista: CAROLINA');
+
+    component.form.patchValue({ vigencia: '', contratista: '' });
+    component.vigenciaSeleccionada = '';
+    expect(component.hayFiltrosActivos()).toBe(false);
+    expect(component.getResumenFiltrosActivos()).toContain('Haga clic para desplegar');
   });
 
   it('debe mapear nombre o ID de estado a número entero en prepararParametros para evitar error 400', () => {
@@ -159,11 +165,12 @@ describe('ConsultaContratoComponent', () => {
     expect(params2.estados.estado_parametro_id).toBe(6774);
   });
 
-  it('debe filtrar por alerta y alternarla al hacer clic nuevamente', () => {
-    component.filtrarPorAlerta('vencer');
-    expect(component.alertaFiltroActiva).toBe('vencer');
-    component.filtrarPorAlerta('vencer');
-    expect(component.alertaFiltroActiva).toBe('');
+  it('debe filtrar la tabla por el estado elegido en las tarjetas de resumen', () => {
+    const consultarSpy = jest.spyOn(component, 'consultar');
+    component.seleccionarPestanaEstado('6774');
+    expect(component.estadoTabActivo).toBe('6774');
+    expect(component.form.get('estado')?.value).toBe('6774');
+    expect(consultarSpy).toHaveBeenCalled();
   });
 
   it('debe abrir modal de selección de Unidad Ejecutora y encadenar validación de contratista al confirmar', () => {
@@ -253,16 +260,17 @@ describe('ConsultaContratoComponent', () => {
     expect(component.getNombreUnidadEjecutora(null)).toBe('01 - Rectoría');
   });
 
-  it('debe limpiar los filtros y recargar la vista', () => {
+  it('debe limpiar los filtros y recargar la vista manteniendo la vigencia presente por defecto', () => {
+    const anioActual = new Date().getFullYear().toString();
     component.form.patchValue({ contratista: '123', numeroContrato: '50' });
     component.estadoTabActivo = 'Suscrito';
-    component.alertaFiltroActiva = 'vencer';
 
     component.limpiarFiltros();
 
     expect(component.form.get('contratista')?.value).toBeNull();
     expect(component.estadoTabActivo).toBe('');
-    expect(component.alertaFiltroActiva).toBe('');
+    expect(component.vigenciaSeleccionada).toBe(anioActual);
+    expect(component.form.get('vigencia')?.value).toBe(anioActual);
   });
 
   it('debe manejar error al consultar contratos', () => {
@@ -288,8 +296,10 @@ describe('ConsultaContratoComponent', () => {
     expect(component.getDocumentoContratista(null)).toBeNull();
   });
 
-  it('debe incluir valor_contrato en displayedColumns y formatear correctamente el valor del contrato', () => {
+  it('debe incluir valor_contrato y estado en displayedColumns y formatear correctamente el valor del contrato', () => {
     expect(component.displayedColumns).toContain('valor_contrato');
+    expect(component.displayedColumns).toContain('estado');
+    expect(component.displayedColumns).toContain('numero_contrato');
 
     expect(component.getValorContrato({ valor_pesos: 50000000 })).toContain('50.000.000');
     expect(component.getValorContrato({ valor_contrato_me: 12500000 })).toContain('12.500.000');

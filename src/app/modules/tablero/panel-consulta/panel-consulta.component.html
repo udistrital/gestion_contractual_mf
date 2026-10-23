@@ -1,0 +1,23 @@
+<div class="panel">
+  @if (error()) {
+    <div class="aviso" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      No fue posible cargar el resumen de contratos. La tabla de consulta sigue disponible.
+    </div>
+  }
+  <app-resumen-estados
+    [conteo]="conteo()"
+    [detalleTotal]="detalleTotal()"
+    [estadoActivo]="estadoActivo()"
+    [seleccionable]="true"
+    (seleccionar)="seleccionarEstado.emit($event)"
+  ></app-resumen-estados>
+  <app-alertas-gestion
+    [alertas]="alertas()"
+    [limite]="6"
+    [mostrarAbogado]="rol() === 'JEFE'"
+    [estadoActivo]="estadoActivo()"
+    [seleccionable]="true"
+    (seleccionarEstado)="seleccionarEstado.emit($event)"
+  ></app-alertas-gestion>
+</div>

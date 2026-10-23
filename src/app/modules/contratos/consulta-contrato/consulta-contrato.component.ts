@@ -72,8 +72,8 @@ export class ConsultaContratoComponent implements OnInit {
   rolActivo: 'JEFE' | 'ABOGADO' = 'JEFE';
   isProduction: boolean = environment.production;
 
-  // Selector de Vigencia (Vacío por defecto para traer todos los contratos)
-  vigenciaSeleccionada: string = '';
+  // Selector de Vigencia (Por defecto el año de la vigencia presente)
+  vigenciaSeleccionada: string = new Date().getFullYear().toString();
 
   // Parámetros maestros
   unidadEjecutora: any[] = [];
@@ -121,28 +121,7 @@ export class ConsultaContratoComponent implements OnInit {
     },
   ];
 
-  // Resumen superior dinámico (KPIs según rol)
-  kpis = {
-    totalContratos: 0,
-    enBorrador: 0,
-    porSuscribir: 0,
-    legalizados: 0,
-    asignados: 0,
-    pendientesRevision: 0,
-    aprobados: 0,
-    alertasPrioritarias: 0,
-  };
-
-  // Alertas de gestión rápida
-  alertas = {
-    proximosVencer: 0,
-    revisionProlongada: 0,
-    polizasPorAprobar: 0,
-  };
-
-  alertaFiltroActiva: string = '';
-
-  // Columnas de la tabla (Incluye fecha_aprobado y estados mediante recuadro de color)
+  // Columnas de la tabla (Incluye columna propia de estado con diseño de píldora)
   displayedColumns: string[] = [
     'numero_contrato',
     'vigencia',
@@ -151,6 +130,7 @@ export class ConsultaContratoComponent implements OnInit {
     'contratista',
     'valor_contrato',
     'unidadEjecutora',
+    'estado',
     'fecha_registro',
     'fecha_aprobado',
     'acciones',
@@ -169,7 +149,7 @@ export class ConsultaContratoComponent implements OnInit {
 
   form = this._formBuilder.group({
     unidadEjecutora: [''],
-    vigencia: [''],
+    vigencia: [new Date().getFullYear().toString()],
     tipoContratoId: [''],
     tipoPersona: [''],
     numeroElaboracion: [''],
@@ -244,16 +224,6 @@ export class ConsultaContratoComponent implements OnInit {
   seleccionarPestanaEstado(valorEstado: string): void {
     this.estadoTabActivo = valorEstado;
     this.form.patchValue({ estado: valorEstado });
-    this.alertaFiltroActiva = '';
-    this.consultar();
-  }
-
-  filtrarPorAlerta(tipoAlerta: string): void {
-    if (this.alertaFiltroActiva === tipoAlerta) {
-      this.alertaFiltroActiva = '';
-    } else {
-      this.alertaFiltroActiva = tipoAlerta;
-    }
     this.consultar();
   }
 
@@ -339,12 +309,34 @@ export class ConsultaContratoComponent implements OnInit {
     });
   }
 
-  // Ayudante de clases de color para el recuadro del número de contrato
+  // Ayudante de clases de color para la píldora de estado (Estilos refinados con dot)
   getEstadoBadgeClass(contrato: ContratoGeneral): string {
+    const estadoParamId =
+      contrato?.estados?.estado_parametro_id ||
+      (contrato as any)?.estado ||
+      (contrato as any)?.estado_id;
+
+    const idStr = String(estadoParamId);
+    if (idStr === String(environment.ESTADOS_GENERALES?.EN_EJECUCION || 6777)) {
+      return 'status-ejecucion';
+    }
+    if (idStr === String(environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773)) {
+      return 'status-suscribir';
+    }
+    if (idStr === String(environment.ESTADOS_GENERALES?.SUSCRITO || 6774)) {
+      return 'status-suscrito';
+    }
+    if (idStr === String(environment.ESTADOS_GENERALES?.LEGALIZADO || 6776)) {
+      return 'status-legalizado';
+    }
+    if (idStr === String(environment.ESTADOS_GENERALES?.DECLINADO || 6775)) {
+      return 'status-declinado';
+    }
+
     const estadoNombre = (
-      contrato.estados?.nombre_estado ||
-      contrato.estados?.estado_nombre ||
-      contrato.estados?.estado_parametro_id ||
+      contrato?.estados?.nombre_estado ||
+      contrato?.estados?.estado_nombre ||
+      this.getEstadoNombre(contrato) ||
       ''
     )
       .toString()
@@ -352,8 +344,8 @@ export class ConsultaContratoComponent implements OnInit {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
 
-    if (estadoNombre.includes('borrador') || estadoNombre.includes('elaboracion')) {
-      return 'status-borrador';
+    if (estadoNombre.includes('ejecucion') || estadoNombre.includes('activo')) {
+      return 'status-ejecucion';
     }
     if (
       estadoNombre.includes('suscribir') ||
@@ -371,9 +363,6 @@ export class ConsultaContratoComponent implements OnInit {
     ) {
       return 'status-legalizado';
     }
-    if (estadoNombre.includes('ejecucion') || estadoNombre.includes('activo')) {
-      return 'status-ejecucion';
-    }
     if (
       estadoNombre.includes('declinado') ||
       estadoNombre.includes('cancelado') ||
@@ -385,13 +374,41 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   getEstadoNombre(contrato: ContratoGeneral): string {
-    return (
+    const rawNombre =
       contrato?.estados?.nombre_estado ||
       contrato?.estados?.estado_nombre ||
+      (contrato as any)?.estado_nombre;
+
+    if (rawNombre && isNaN(Number(rawNombre))) {
+      return this.capitalizarTexto(rawNombre);
+    }
+
+    const estadoParamId =
       contrato?.estados?.estado_parametro_id ||
       (contrato as any)?.estado ||
-      'Sin estado'
-    );
+      (contrato as any)?.estado_id;
+
+    if (estadoParamId !== undefined && estadoParamId !== null && estadoParamId !== '') {
+      if (this.estado && this.estado.length > 0) {
+        const encontrado = this.estado.find((e) => String(e.Id) === String(estadoParamId));
+        if (encontrado?.Nombre) return this.capitalizarTexto(encontrado.Nombre);
+      }
+
+      const idStr = String(estadoParamId);
+      if (idStr === String(environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773)) return 'Por suscribir';
+      if (idStr === String(environment.ESTADOS_GENERALES?.SUSCRITO || 6774)) return 'Suscrito';
+      if (idStr === String(environment.ESTADOS_GENERALES?.DECLINADO || 6775)) return 'Declinado';
+      if (idStr === String(environment.ESTADOS_GENERALES?.LEGALIZADO || 6776)) return 'Legalizado';
+      if (idStr === String(environment.ESTADOS_GENERALES?.EN_EJECUCION || 6777)) return 'En ejecución';
+    }
+
+    return 'Sin estado';
+  }
+
+  private capitalizarTexto(texto: string): string {
+    if (!texto) return '';
+    const str = String(texto).trim();
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
 
   getNombreTipoContrato(tipoId: any): string {
@@ -585,7 +602,6 @@ export class ConsultaContratoComponent implements OnInit {
   private actualizarMetricasYAlertas(): void {
     const data = this.dataSource.data || [];
 
-    let countBorrador = 0;
     let countPorSuscribir = 0;
     let countSuscrito = 0;
     let countLegalizado = 0;
@@ -594,8 +610,7 @@ export class ConsultaContratoComponent implements OnInit {
 
     data.forEach((c) => {
       const cls = this.getEstadoBadgeClass(c);
-      if (cls === 'status-borrador') countBorrador++;
-      else if (cls === 'status-suscribir') countPorSuscribir++;
+      if (cls === 'status-suscribir') countPorSuscribir++;
       else if (cls === 'status-suscrito') countSuscrito++;
       else if (cls === 'status-legalizado') countLegalizado++;
       else if (cls === 'status-ejecucion') countEjecucion++;
@@ -611,30 +626,14 @@ export class ConsultaContratoComponent implements OnInit {
       else if (p.nombre === 'Legalizado') p.count = countLegalizado;
       else if (p.nombre === 'En ejecución') p.count = countEjecucion;
     });
-
-    // KPIs Jefe
-    this.kpis.totalContratos = this.totalRegistros;
-    this.kpis.enBorrador = countBorrador;
-    this.kpis.porSuscribir = countPorSuscribir;
-    this.kpis.legalizados = countLegalizado + countEjecucion;
-
-    // KPIs Abogado (Proyectados sobre asignación)
-    this.kpis.asignados = Math.max(1, countPorSuscribir + countBorrador);
-    this.kpis.pendientesRevision = countPorSuscribir;
-    this.kpis.aprobados = countSuscrito;
-    this.kpis.alertasPrioritarias = Math.min(3, countPorSuscribir);
-
-    // Alertas
-    this.alertas.proximosVencer = Math.max(0, countPorSuscribir > 0 ? 2 : 0);
-    this.alertas.revisionProlongada = Math.max(0, countBorrador > 1 ? 1 : 0);
-    this.alertas.polizasPorAprobar = Math.max(0, countSuscrito > 0 ? 1 : 0);
   }
 
   limpiarFiltros() {
-    this.vigenciaSeleccionada = '';
-    this.form.reset();
+    this.vigenciaSeleccionada = new Date().getFullYear().toString();
+    this.form.reset({
+      vigencia: this.vigenciaSeleccionada,
+    });
     this.estadoTabActivo = '';
-    this.alertaFiltroActiva = '';
     this.paginaActual = 0;
     if (this.paginator) {
       this.paginator.firstPage();

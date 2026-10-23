@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Raleway', sans-serif;
   color: #1e293b;
 }
 
@@ -185,213 +185,6 @@
 }
 
 /* ==========================================================
-   TABLERO SUPERIOR DINÁMICO (KPIS POR ROL)
-   ========================================================== */
-.kpi-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
-
-.kpi-card {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 14px 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
-}
-
-.kpi-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-}
-
-.kpi-card.wine::before { background: #731514; }
-.kpi-card.navy::before { background: #143873; }
-.kpi-card.gold::before { background: #c48918; }
-.kpi-card.green::before { background: #2e7d32; }
-.kpi-card.red::before { background: #b22222; }
-
-.kpi-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.kpi-title {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.kpi-icon-wrap {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.kpi-icon-wrap mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-}
-
-.kpi-card.wine .kpi-icon-wrap { background: #fbf5f5; color: #731514; }
-.kpi-card.navy .kpi-icon-wrap { background: #f0f4fa; color: #143873; }
-.kpi-card.gold .kpi-icon-wrap { background: #fffbf2; color: #c48918; }
-.kpi-card.green .kpi-icon-wrap { background: #f1f8f3; color: #2e7d32; }
-.kpi-card.red .kpi-icon-wrap { background: #fdf2f2; color: #b22222; }
-
-.kpi-value-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.kpi-number {
-  font-size: 24px;
-  font-weight: 800;
-  color: #0f172a;
-  font-family: 'Raleway', sans-serif;
-}
-
-.kpi-badge {
-  font-size: 10.5px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 10px;
-}
-
-.kpi-badge.info { background: #f0f4fa; color: #143873; }
-.kpi-badge.warning { background: #fffbf2; color: #925807; }
-.kpi-badge.success { background: #f1f8f3; color: #2e7d32; }
-.kpi-badge.danger { background: #fdf2f2; color: #b22222; }
-
-.kpi-subtext {
-  font-size: 11px;
-  color: #94a3b8;
-  margin-top: 4px;
-}
-
-/* ==========================================================
-   BANNER ALERTAS DE GESTIÓN RÁPIDA
-   ========================================================== */
-.alerts-banner-card {
-  background: linear-gradient(135deg, #fffbf2 0%, #fff6e0 100%);
-  border: 1px solid #f8dfaa;
-  border-radius: 10px;
-  padding: 12px 16px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.alerts-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.alert-icon-ring {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(196, 137, 24, 0.15);
-  color: #925807;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.alert-icon-ring mat-icon {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
-}
-
-.alerts-message h4 {
-  font-size: 13.5px;
-  color: #784803;
-  font-weight: 700;
-  margin: 0;
-}
-
-.alerts-message p {
-  font-size: 11.5px;
-  color: #8b5709;
-  margin: 2px 0 0 0;
-}
-
-.alert-chips-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.chip-alert-btn {
-  background: #ffffff;
-  border: 1px solid #f8dfaa;
-  border-radius: 20px;
-  padding: 4px 10px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #784803;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.2s;
-}
-
-.chip-alert-btn:hover,
-.chip-alert-btn.active {
-  background: #fff3d1;
-  border-color: #d89b25;
-}
-
-.chip-alert-btn mat-icon {
-  font-size: 14px;
-  width: 14px;
-  height: 14px;
-}
-
-.chip-count {
-  color: #ffffff;
-  border-radius: 10px;
-  padding: 1px 6px;
-  font-size: 10.5px;
-  font-weight: 700;
-}
-
-.chip-count.red { background: #b22222; }
-.chip-count.gold { background: #c48918; }
-.chip-count.blue { background: #143873; }
-
-/* ==========================================================
    PANEL SUPERIOR COLAPSABLE DE FILTROS DE BÚSQUEDA
    ========================================================== */
 .filtros-collapsible-card {
@@ -517,7 +310,7 @@
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   background: #f8fafc;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Raleway', sans-serif;
   font-size: 12.5px;
   font-weight: 600;
   color: #334155;
@@ -656,7 +449,7 @@
   padding: 10px 12px;
   border: none;
   background: transparent;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Raleway', sans-serif;
   font-size: 13.5px;
   font-weight: 500;
   color: #475569;
@@ -733,63 +526,121 @@
 }
 
 /* ==========================================================
-   RECUADRO DE NÚMERO DE CONTRATO (COLOR SEGÚN ESTADO)
+   IDENTIFICADOR DE NÚMERO DE CONTRATO (DISEÑO SOBRIO)
    ========================================================== */
-.contrato-badge-id {
+.contrato-id-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
+  gap: 6px;
+  padding: 4px 10px;
   border-radius: 6px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
   font-family: 'Roboto Mono', monospace, sans-serif;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 12.5px;
   letter-spacing: -0.2px;
-  border-left: 4.5px solid transparent;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .contrato-doc-icon {
   font-size: 14px;
   width: 14px;
   height: 14px;
+  color: #64748b;
 }
 
-.contrato-badge-id.status-borrador {
-  background: #f1f5f9;
+/* ==========================================================
+   PÍLDORAS DE ESTADO (DISEÑO CHIP CON DOT Y FONDOS PASTEL)
+   ========================================================== */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.1px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.status-text {
+  font-family: 'Raleway', sans-serif;
+}
+
+/* En ejecución (Verde institucional profundo) */
+.status-pill.status-ejecucion {
+  background-color: #edf7f0;
+  border-color: #bfe5ca;
+  color: #0f6f32;
+}
+.status-pill.status-ejecucion .status-dot {
+  background-color: #1b8748;
+}
+
+/* Por suscribir (Ocre / Naranja suave) */
+.status-pill.status-suscribir {
+  background-color: #fef8eb;
+  border-color: #fce3b8;
+  color: #9c5812;
+}
+.status-pill.status-suscribir .status-dot {
+  background-color: #d97706;
+}
+
+/* Suscrito (Azul clásico) */
+.status-pill.status-suscrito {
+  background-color: #edf3fb;
+  border-color: #cdddf6;
+  color: #1e4785;
+}
+.status-pill.status-suscrito .status-dot {
+  background-color: #2563eb;
+}
+
+/* Legalizado (Verde menta / esmeralda suave) */
+.status-pill.status-legalizado {
+  background-color: #f1f8f3;
+  border-color: #c6e7ce;
+  color: #246e33;
+}
+.status-pill.status-legalizado .status-dot {
+  background-color: #2e7d32;
+}
+
+/* Declinado (Vino / Carmesí suave) */
+.status-pill.status-declinado {
+  background-color: #fdf2f2;
+  border-color: #fad2d2;
+  color: #9e2a2b;
+}
+.status-pill.status-declinado .status-dot {
+  background-color: #dc2626;
+}
+
+/* Borrador / Sin estado (Gris suave neutro) */
+.status-pill.status-borrador {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
   color: #475569;
-  border-color: #94a3b8;
+}
+.status-pill.status-borrador .status-dot {
+  background-color: #94a3b8;
 }
 
-.contrato-badge-id.status-suscribir {
-  background: #fffbf2;
-  color: #925807;
-  border-color: #c48918;
-}
-
-.contrato-badge-id.status-suscrito {
-  background: #edf3fb;
-  color: #143873;
-  border-color: #143873;
-}
-
-.contrato-badge-id.status-legalizado {
-  background: #f1f8f3;
-  color: #2e7d32;
-  border-color: #2e7d32;
-}
-
-.contrato-badge-id.status-ejecucion {
-  background: #e6f6f4;
-  color: #0d6e64;
-  border-color: #0d6e64;
-}
-
-.contrato-badge-id.status-declinado {
-  background: #fdf2f2;
-  color: #b22222;
-  border-color: #b22222;
-}
 
 .contratista-cell-box {
   display: flex;
@@ -807,7 +658,7 @@
 }
 
 .valor-contrato-tag {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Raleway', sans-serif;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: #1e293b;
@@ -889,16 +740,9 @@
   gap: 7px;
 }
 
-.swatch-indicator {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  flex-shrink: 0;
+.legend-desc {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
 }
 
-.swatch-borrador { background: #e2e8f0; border: 1.5px solid #94a3b8; }
-.swatch-suscribir { background: #fffbf2; border: 1.5px solid #c48918; }
-.swatch-suscrito { background: #edf3fb; border: 1.5px solid #143873; }
-.swatch-legalizado { background: #f1f8f3; border: 1.5px solid #2e7d32; }
-.swatch-ejecucion { background: #e6f6f4; border: 1.5px solid #0d6e64; }
-.swatch-declinado { background: #fdf2f2; border: 1.5px solid #b22222; }
