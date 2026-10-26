@@ -302,26 +302,16 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   }
 
   private verificarPasosGuardadosIniciales() {
-    if (localStorage.getItem('paso-info-general')) {
-      try {
-        const data = JSON.parse(
-          localStorage.getItem('paso-info-general') || '{}'
-        );
-        if (data.id) {
-          this.marcarPasoGuardado('general');
-        }
-      } catch (e) {
-        console.error(e);
+    if (this.contratoGeneral) {
+      if (this.contratoGeneral.id) {
+        this.marcarPasoGuardado('general');
       }
-    }
-    if (
-      localStorage.getItem('paso-contratistas') ||
-      localStorage.getItem('paso-supervisores')
-    ) {
-      this.marcarPasoGuardado('responsables');
-    }
-    if (localStorage.getItem('paso-garantias')) {
-      this.marcarPasoGuardado('garantias');
+      if (this.contratoGeneral.contratista) {
+        this.marcarPasoGuardado('responsables');
+      }
+      if (this.contratoGeneral.objeto || this.contratoGeneral.actividades) {
+        this.marcarPasoGuardado('estructura');
+      }
     }
   }
 

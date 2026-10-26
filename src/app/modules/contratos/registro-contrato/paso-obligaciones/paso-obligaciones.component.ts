@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, output, input } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, output, input, effect } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CdpsService } from "src/app/services/cdps.service";
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
@@ -62,12 +62,18 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
   nuevoEntregableTexto: string = '';
   mostrarParrafoCompilado: boolean = false;
 
-  constructor(
-  ) { 
+  constructor() { 
     this.form = this._formBuilder.group({
       justificacion: ['', Validators.required],
       objetoContrato: ['', Validators.required],
       actividades: ['', Validators.required]
+    });
+
+    effect(() => {
+      const c = this.contratoGeneral();
+      if (c) {
+        this.updateFormWithCDPData();
+      }
     });
   }
 
@@ -97,23 +103,41 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
     if (currentCDPCount === 1) {
       const cdp = this.cdpData[0];
       const contrato = this.contratoGeneral();
+      const justificacionVal = contrato?.justificacion || cdp.justificacion || '';
+      const objetoVal = contrato?.objeto || cdp.descripcion || '';
+      const actividadesVal = contrato?.actividades || cdp.observaciones || '';
+
       this.form.patchValue({
-        justificacion: contrato?.justificacion || cdp.justificacion || '',
-        objetoContrato: contrato?.objeto || cdp.descripcion || '',
-        actividades: contrato?.actividades || cdp.observaciones || ''
+        justificacion: justificacionVal,
+        objetoContrato: objetoVal,
+        actividades: actividadesVal
       });
-      this.actualizarParrafoCompilado();
+
+      if (this.actividadesList.length === 0 && actividadesVal) {
+        this.cargarActividadesDesdeTexto(actividadesVal);
+      } else if (this.actividadesList.length > 0) {
+        this.actualizarParrafoCompilado();
+      }
     } else if (currentCDPCount >= 2 || currentCDPCount === 0) {
       this.resetForm();
       const contratoData = this.contratoGeneral();
       if (contratoData) {
+        const justificacionVal = contratoData.justificacion || '';
+        const objetoVal = contratoData.objeto || '';
+        const actividadesVal = contratoData.actividades || '';
+
         this.form.patchValue({
-          justificacion: contratoData.justificacion || '',
-          objetoContrato: contratoData.objeto || '',
-          actividades: contratoData.actividades || ''
+          justificacion: justificacionVal,
+          objetoContrato: objetoVal,
+          actividades: actividadesVal
         });
+
+        if (this.actividadesList.length === 0 && actividadesVal) {
+          this.cargarActividadesDesdeTexto(actividadesVal);
+        } else if (this.actividadesList.length > 0) {
+          this.actualizarParrafoCompilado();
+        }
       }
-      this.actualizarParrafoCompilado();
     }
 
     this.previousCDPCount = currentCDPCount;
@@ -157,42 +181,47 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
     };
   }
 
-  cargarActividadesIniciales() {
-    const savedActivities = localStorage.getItem('paso-obligaciones-actividades');
-    if (savedActivities) {
-      try {
-        const parsed = JSON.parse(savedActivities);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.actividadesList = parsed;
-        } else {
-          this.actividadesList = [];
-        }
-      } catch {
-        this.actividadesList = [];
-      }
-    } else {
-      const savedObligaciones = localStorage.getItem('paso-obligaciones');
-      if (savedObligaciones) {
-        try {
-          const parsed = JSON.parse(savedObligaciones);
-          if (parsed.actividadesEstructuradas && Array.isArray(parsed.actividadesEstructuradas) && parsed.actividadesEstructuradas.length > 0) {
-            this.actividadesList = parsed.actividadesEstructuradas;
-          } else {
-            this.actividadesList = [];
-          }
-        } catch {
-          this.actividadesList = [];
-        }
-      } else {
-        this.actividadesList = [];
-      }
+  cargarActividadesDesdeTexto(texto: string) {
+    if (!texto || !texto.trim() || this.actividadesList.length > 0) {
+      return;
     }
-    this.renumerarActividades();
-    this.actualizarParrafoCompilado();
-  }
 
-  guardarActividadesEnStorage() {
-    localStorage.setItem('paso-obligaciones-actividades', JSON.stringify(this.actividadesList));
+    const bloques = texto.split(/\n\s*\n/).map((b) => b.trim()).filter((b) => !!b);
+    const nuevasActividades: ActividadEspecifica[] = [];
+
+    for (let i = 0; i < bloques.length; i++) {
+      const bloque = bloques[i];
+      let limpio = bloque.replace(/^\d+[\.\)]\s*/, '');
+      
+      let entregables: string[] = [];
+      let plazo = '';
+
+      const plazoMatch = limpio.match(/Plazo\/Periodicidad:\s*([^.]+)\.?/i);
+      if (plazoMatch) {
+        plazo = plazoMatch[1].trim();
+        limpio = limpio.replace(/Plazo\/Periodicidad:\s*([^.]+)\.?/i, '').trim();
+      }
+
+      const entregablesMatch = limpio.match(/Entregable\(s\):\s*([^.]+)\.?/i);
+      if (entregablesMatch) {
+        entregables = entregablesMatch[1].split(';').map((e) => e.trim()).filter((e) => !!e);
+        limpio = limpio.replace(/Entregable\(s\):\s*([^.]+)\.?/i, '').trim();
+      }
+
+      nuevasActividades.push({
+        id: `act-${Date.now()}-${i}`,
+        numero: i + 1,
+        descripcion: limpio.trim(),
+        entregables: entregables,
+        plazo: plazo
+      });
+    }
+
+    if (nuevasActividades.length > 0) {
+      this.actividadesList = nuevasActividades;
+      this.renumerarActividades();
+      this.actualizarParrafoCompilado();
+    }
   }
 
   renumerarActividades() {
@@ -229,8 +258,9 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
 
   actualizarParrafoCompilado() {
     const parrafoCompilado = this.generarParrafoActividades();
-    this.form.patchValue({ actividades: parrafoCompilado });
-    this.guardarActividadesEnStorage();
+    if (this.actividadesList.length > 0) {
+      this.form.patchValue({ actividades: parrafoCompilado });
+    }
   }
 
   abrirModalNuevaActividad() {
