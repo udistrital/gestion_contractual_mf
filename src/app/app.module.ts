@@ -4,10 +4,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ParametrosService } from './services/parametros.service';
 import { RequestManager } from './managers/requestManager';
-import {
-  provideHttpClient,
-  withInterceptors,
-} from '@angular/common/http';
+import { provideHttpClient, withInterceptors} from '@angular/common/http';
 import { FileService } from './services/file.service';
 import { UbicacionService } from './services/ubicacion.service';
 import { GestorDocumentalService } from './services/gestor-documental.service';
@@ -18,6 +15,7 @@ import { MAT_DATE_FORMATS, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@an
 import { RegistroActasModule } from './modules/registro-actas/registro-actas.module';
 import { ContratosModule } from './modules/contratos/contratos.module';
 import { SharedModule } from './shared/shared.module';
+import { TableroModule } from './modules/tablero/tablero.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -28,6 +26,7 @@ import { SharedModule } from './shared/shared.module';
     ContratosModule,
     RegistroActasModule,
     PolizasModule,
+    TableroModule
   ],
   providers: [
     ParametrosService,

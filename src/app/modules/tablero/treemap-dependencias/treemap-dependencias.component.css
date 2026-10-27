@@ -1,0 +1,144 @@
+.treemap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1000 / 470;
+  min-height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bloque {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  font: inherit;
+  color: var(--tb-texto-tono-claro);
+  border: 2px solid var(--tb-superficie);
+  border-radius: 7px;
+  padding: 10px 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+.bloque.oscuro {
+  color: var(--md-primary-contrast-500, #ffffff);
+}
+
+.bloque.abierta {
+  box-shadow: inset 0 0 0 3px var(--tb-texto);
+}
+
+.detalle-otras {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--tb-primario-suave);
+}
+
+.detalle-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tb-primario);
+  margin-right: 4px;
+}
+
+.otra {
+  font: inherit;
+  font-size: 12px;
+  color: var(--tb-texto);
+  background: var(--tb-superficie);
+  border: 1px solid var(--tb-borde);
+  border-radius: 14px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.otra b,
+.otra small {
+  margin-left: 5px;
+}
+
+.otra small {
+  color: var(--tb-texto-suave);
+}
+
+.otra .tb-pill {
+  margin-left: 6px;
+}
+
+.otra.seleccionada {
+  border-color: var(--tb-texto);
+  box-shadow: inset 0 0 0 1px var(--tb-texto);
+}
+
+.bloque:hover {
+  filter: brightness(1.08);
+}
+
+.bloque.atenuado {
+  opacity: 0.35;
+}
+
+.bloque.seleccionado {
+  box-shadow: inset 0 0 0 3px var(--tb-texto);
+}
+
+.nombre {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.valor {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.valor.pequeno {
+  font-size: 14px;
+}
+
+.valor small {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.mezcla {
+  display: flex;
+  gap: 1px;
+  width: 100%;
+  height: 6px;
+  margin-top: auto;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.mezcla span,
+.tb-leyenda i {
+  background: var(--tb-c);
+}
+
+.pie {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 6px;
+  font-size: 11.5px;
+  color: var(--tb-texto-suave);
+}

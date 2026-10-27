@@ -36,6 +36,25 @@
         </div>
       </div>
 
+      <!-- Alerta visual si el contratista fue prevalidado y bloqueado -->
+      @if (bloquearContratista()) {
+        <div class="prevalidado-banner-box mb-4">
+          <div class="banner-icon-ring">
+            <mat-icon>lock</mat-icon>
+          </div>
+          <div class="banner-texts">
+            <span class="banner-title">Contratista Prevalidado (Ágora / Terceros)</span>
+            <p class="banner-subtitle">
+              El contratista fue verificado previamente en la consulta de contratos. El campo se encuentra bloqueado para mantener la trazabilidad y consistencia del trámite.
+            </p>
+          </div>
+          <div class="verified-chip">
+            <mat-icon>verified</mat-icon>
+            <span>Verificado</span>
+          </div>
+        </div>
+      }
+
       <!-- Buscador por documento -->
       @if (mostrarConsulta) {
         <div class="search-panel mb-4">
@@ -48,13 +67,15 @@
           </div>
 
           <div class="search-input-row">
-            <div class="search-input-wrapper">
-              <mat-icon class="search-input-icon">fingerprint</mat-icon>
+            <div class="search-input-wrapper" [class.wrapper-locked]="bloquearContratista()">
+              <mat-icon class="search-input-icon">{{ bloquearContratista() ? 'lock' : 'fingerprint' }}</mat-icon>
               <input
                 type="text"
                 class="search-input-field"
+                [class.field-locked]="bloquearContratista()"
                 formControlName="documentoContratista"
                 placeholder="Ej. 1013651454 o NIT de la entidad"
+                [readonly]="bloquearContratista()"
                 (keyup.enter)="buscarContratista()" />
               @if (form.get('documentoContratista')?.value) {
                 <mat-icon class="search-check-icon">check_circle</mat-icon>
@@ -66,10 +87,10 @@
               mat-raised-button
               class="btn-consultar-contratista"
               (click)="buscarContratista()"
-              [disabled]="!form.get('documentoContratista')?.value">
+              [disabled]="!form.get('documentoContratista')?.value || bloquearContratista()">
               <div class="btn-content-flex">
-                <mat-icon>search</mat-icon>
-                <span>Consultar Registro</span>
+                <mat-icon>{{ bloquearContratista() ? 'verified' : 'search' }}</mat-icon>
+                <span>{{ bloquearContratista() ? 'Prevalidado' : 'Consultar Registro' }}</span>
               </div>
             </button>
           </div>

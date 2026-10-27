@@ -1,0 +1,238 @@
+.resumen {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.7fr) repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.tarjeta {
+  font: inherit;
+  text-align: left;
+  color: var(--tb-texto);
+  background: var(--tb-superficie);
+  border: 1px solid var(--tb-borde);
+  border-radius: var(--tb-radio);
+  box-shadow: var(--tb-sombra);
+  padding: 14px 16px;
+}
+
+/* Dona con el total y la leyenda por estado */
+.dona-tarjeta {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 16px;
+  position: relative;
+}
+
+.dona {
+  grid-row: 1;
+  grid-column: 1;
+  width: 110px;
+  height: 110px;
+}
+
+.dona circle {
+  fill: none;
+  stroke-width: 6;
+}
+
+.pista {
+  stroke: var(--tb-borde);
+}
+
+.segmento {
+  stroke: var(--tb-c);
+}
+
+.dona-centro {
+  grid-row: 1;
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.dona-numero {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--tb-primario);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.dona-texto {
+  font-size: 11px;
+  color: var(--tb-texto-suave);
+}
+
+.leyenda {
+  grid-row: 1;
+  grid-column: 2;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--tb-texto);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.leyenda-item span {
+  flex: 1;
+}
+
+.leyenda-item b {
+  font-variant-numeric: tabular-nums;
+}
+
+.leyenda-item i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tb-c);
+}
+
+.leyenda-item.todos {
+  font-weight: 700;
+}
+
+.leyenda-item.todos i {
+  background: var(--tb-primario);
+}
+
+.leyenda-item.todos b {
+  color: var(--tb-primario);
+}
+
+.leyenda-item:not(.estatica):hover {
+  background: var(--tb-primario-suave);
+}
+
+.leyenda-item.activa {
+  background: var(--tb-c-suave, var(--tb-primario-suave));
+}
+
+.leyenda-item.estatica {
+  cursor: default;
+}
+
+.detalle-total {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--tb-texto-suave);
+}
+
+/* Tarjeta de cada estado */
+.estado {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.estado:not(.estatica):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.estado.estatica {
+  cursor: default;
+}
+
+.estado.activa {
+  outline: 2px solid var(--tb-c);
+  outline-offset: -1px;
+  background: var(--tb-c-suave);
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.icono {
+  color: var(--tb-c);
+  margin-top: 6px;
+}
+
+.anillo {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+}
+
+.anillo svg {
+  position: absolute;
+  inset: 0;
+}
+
+.anillo circle {
+  fill: none;
+  stroke-width: 4;
+}
+
+.anillo .progreso {
+  stroke: var(--tb-c);
+  stroke-linecap: round;
+}
+
+.anillo span {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.numero {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 10px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nombre {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tb-c);
+}
+
+.descripcion {
+  font-size: 11.5px;
+  color: var(--tb-texto-suave);
+  margin-top: 8px;
+}
+
+@media (max-width: 1300px) {
+  .resumen {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dona-tarjeta {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .resumen {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -15,6 +15,7 @@ import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-cr
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { AlertService } from 'src/app/services/alert.service';
+import { UserService } from 'src/app/services/user.service';
 import {
   ApiResponse,
   ContratoGeneral,
@@ -100,6 +101,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly contratoGeneralMidService = inject(ContratoGeneralMidService);
   private readonly cdRef = inject(ChangeDetectorRef);
+  private readonly userService = inject(UserService);
 
   formInfoGeneral = this.fb.group({
     unidadEjecutoraId: [0, Validators.required],
@@ -526,9 +528,10 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     const rol =
       this.roles.find((item) => item.includes('ABOGADO')) || 'ABOGADO';
+    const usuarioId = await this.userService.getPersonaId().catch(() => 1);
     const estado: EstadoContrato = {
       contrato_general_id: contratoId,
-      usuario_id: 1,
+      usuario_id: usuarioId,
       usuario_rol: rol,
       estado_parametro_id: this.estado_id,
       estado_interno_parametro_id: this.estado_interno_id,

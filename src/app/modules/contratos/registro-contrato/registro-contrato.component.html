@@ -85,6 +85,8 @@
             />
             <app-paso-contratistas
               #pasoContratistas
+              [contratistaPrevalidado]="contratistaPrevalidado"
+              [bloquearContratista]="bloquearContratista"
               (stepCompleted)="onPasoContratistasCompleted($event)"
               (nextStep)="goToNextStep()"
             />
