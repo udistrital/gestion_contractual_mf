@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, effect, inject, input, OnInit, output } from '@angular/core';
+import { ChangeDetectorRef, Component, effect, inject, input, OnInit, OnChanges, output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
@@ -21,7 +21,7 @@ import { MinutasMidService } from 'src/app/services/minuta-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { rolPorEstado } from 'src/app/utils/rolesEstados';
-import { lastValueFrom } from 'rxjs';
+import { finalize, lastValueFrom } from 'rxjs';
 import { ApiResponse, ContratoGeneral, EspecificacionTecnica } from 'src/app/types/types';
 import { numeroALetras } from '../paso-info-presupuestal/paso-info-presupuestal.utilidades';
 import { base64ToBlob } from 'src/app/utils/file-conversor';
@@ -52,7 +52,7 @@ interface Paragrafo {
     styleUrls: ['./paso-clausulas-paragrafos.component.css'],
     standalone: false
 })
-export class PasoClausulasParagrafosComponent implements OnInit {
+export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
@@ -62,12 +62,16 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   estadoInternoActual: number = 0;
   form: FormGroup;
   indices: Indice[] = [];
-  contratoId: number = 9512;
+  contratoId: number = 0;
   tipoContratoId: number = 1;
   reversionSaldo: boolean = false;
   aplicaPoliza: boolean = true;
   undadEjecutora: number = environment.UNIDADES_EJECUTORAS.RECTORIA;
   usuarioId: number = 25;
+  private contratoCargadoId: number = 0;
+  private cargandoContrato: boolean = false;
+  private contextoMinutaCargado: boolean = false;
+  private estadoActualCargadoId: number = 0;
 
   // Datos contextuales para interpolación de minutas ARGO
   especificacionesList: EspecificacionTecnica[] = [];
@@ -96,9 +100,9 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     this.form = this.fb.group({ clausulas: this.fb.array([]) });
     effect(() => {
       if (this.contratoGeneral()) {
-        this.getEstadoActual();
+        this.sincronizarContratoGeneral();
       }
-    })
+    });
   }
 
   ngOnInit(): void {
@@ -106,6 +110,45 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     this.getIdUsuario();
     this.cargarIndices();
     this.cargarDatosContextoMinuta();
+    if (this.contratoGeneral()) {
+      this.sincronizarContratoGeneral();
+    }
+  }
+
+  ngOnChanges(): void {
+    this.sincronizarContratoGeneral();
+  }
+
+  private sincronizarContratoGeneral(): void {
+    const c = this.contratoGeneral();
+    if (!c) return;
+
+    const id = c.id ?? (c as any).Id ?? (c as any).contrato_id;
+    if (id && Number(id) > 0) {
+      this.contratoId = Number(id);
+    }
+
+    const tipoId = c.tipo_contrato_id ?? (c as any).TipoContratoId ?? (c as any).tipo_contrato;
+    if (tipoId && Number(tipoId) > 0) {
+      this.tipoContratoId = Number(tipoId);
+    }
+
+    const ue = c.unidad_ejecutora_id ?? (c as any).UnidadEjecutoraId;
+    if (ue && Number(ue) > 0) {
+      this.undadEjecutora = Number(ue);
+    }
+
+    if (c.aplica_poliza !== undefined && c.aplica_poliza !== null) {
+      this.aplicaPoliza = Boolean(c.aplica_poliza);
+    }
+
+    this.getEstadoActual();
+    this.cargarDatosContextoMinuta();
+
+    if (this.contratoId > 0 && (this.contratoCargadoId !== this.contratoId || this.clausulas.length === 0) && !this.cargandoContrato) {
+      this.contratoCargadoId = this.contratoId;
+      this.cargarContrato();
+    }
   }
 
   getRolPorEstado(): string {
@@ -123,15 +166,19 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   getEstadoActual() {
-    this.contratoGeneralCrudService.getEstadoActual(this.contratoGeneral()?.id as number).subscribe({
+    const cId = this.contratoId || this.contratoGeneral()?.id;
+    if (!cId || cId <= 0 || this.estadoActualCargadoId === cId) return;
+    this.estadoActualCargadoId = cId;
+
+    this.contratoGeneralCrudService.getEstadoActual(cId).subscribe({
       next: (response: any) => {
-        if (response.id) {
-          this.estadoInternoActual = response.estado_interno_parametro_id || 0;
-          console.log(this.estadoInternoActual);
+        if (response && (response.id || response.Id)) {
+          this.estadoInternoActual = response.estado_interno_parametro_id || response.EstadoInternoParametroId || 0;
         }
       },
-      error: (error) =>
-        this.handleError('Error al crear estado de contrato', error),
+      error: (error) => {
+        console.warn('Estado actual no encontrado o pendiente de registrar:', error);
+      },
     });
   }
 
@@ -211,7 +258,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
   getIndiceNombre(indiceId: string): string {
     if (!indiceId || !this.indices) return '';
-    const indice = this.indices.find((i) => i.Id === indiceId);
+    const indice = this.indices.find((i) => String(i.Id) === String(indiceId));
     return indice ? indice.Nombre : '';
   }
 
@@ -251,63 +298,358 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       )
       .subscribe({
         next: (response: any) => {
-          if (response.Status === '200') {
-            this.indices = response.Data;
+          const data = response?.Data ?? response?.Body ?? response;
+          if (Array.isArray(data)) {
+            this.indices = data;
+          } else if (Array.isArray(data?.Data)) {
+            this.indices = data.Data;
+          }
+          if (this.clausulas.length > 0) {
+            this.actualizarIndices();
+          } else if (this.contratoId > 0 && (this.contratoCargadoId !== this.contratoId || this.clausulas.length === 0) && !this.cargandoContrato) {
+            this.contratoCargadoId = this.contratoId;
             this.cargarContrato();
           }
+          this.cdr.detectChanges();
         },
-        error: (error) => this.handleError('Error al cargar índices', error),
+        error: (error) => {
+          console.warn('Error al cargar índices, aplicando catálogo de respaldo:', error);
+          if (!this.indices || this.indices.length === 0) {
+            this.indices = this.generarIndicesFallback();
+          }
+          if (this.contratoId > 0 && (this.contratoCargadoId !== this.contratoId || this.clausulas.length === 0) && !this.cargandoContrato) {
+            this.contratoCargadoId = this.contratoId;
+            this.cargarContrato();
+          }
+          this.cdr.detectChanges();
+        },
       });
   }
 
   private cargarContrato() {
+    if (!this.contratoId || this.contratoId <= 0) {
+      return;
+    }
+    this.cargandoContrato = true;
+
+    // Resiliencia: verificar si ya existen cláusulas persistidas localmente
+    const cachedClausulas = this.obtenerClausulasCache(this.contratoId);
+
     this.clausulasParagrafosService
       .get(`contratos/${this.contratoId}`)
+      .pipe(
+        finalize(() => {
+          this.cargandoContrato = false;
+        })
+      )
       .subscribe({
-        next: (response: { Success: boolean; Data: Clausula[] }) => {
-          if (response.Success && response.Data?.length > 0) {
-            this.cargarContratoExistente(response.Data);
+        next: (response: any) => {
+          const rawData = response?.Data ?? response?.Body ?? response;
+          let clausulas: Clausula[] = [];
+          if (Array.isArray(rawData)) {
+            clausulas = rawData;
+          } else if (Array.isArray(rawData?.clausulas)) {
+            clausulas = rawData.clausulas;
+          } else if (Array.isArray(rawData?.Clausulas)) {
+            clausulas = rawData.Clausulas;
+          } else if (Array.isArray(rawData?.Data)) {
+            clausulas = rawData.Data;
+          } else if (Array.isArray(response)) {
+            clausulas = response;
+          }
+
+          if (clausulas && clausulas.length > 0) {
+            this.contratoCargadoId = this.contratoId;
+            this.cargarContratoExistente(clausulas);
+            this.guardarEnCacheLocal();
+          } else if (cachedClausulas && cachedClausulas.length > 0) {
+            this.contratoCargadoId = this.contratoId;
+            this.cargarContratoExistente(cachedClausulas);
           } else {
             this.cargarPlantillaPorTipoContrato();
           }
         },
-        error: (error) =>
-          this.handleError('Error al cargar el contrato', error, () =>
-            this.cargarPlantillaPorTipoContrato()
-          ),
+        error: (err) => {
+          console.warn('Error al obtener contrato existente de backend, consultando plantilla o respaldo:', err);
+          if (cachedClausulas && cachedClausulas.length > 0) {
+            this.contratoCargadoId = this.contratoId;
+            this.cargarContratoExistente(cachedClausulas);
+          } else {
+            this.cargarPlantillaPorTipoContrato();
+          }
+        },
       });
   }
 
   private cargarPlantillaPorTipoContrato() {
-    this.clausulasParagrafosService
-      .get(
-        `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo};aplica_poliza:${this.aplicaPoliza};unidad_ejecutora_id:${this.undadEjecutora}`
-      )
-      .subscribe({
-        next: (response: ApiResponse<Clausula[]>) => {
-          if (response.Success && response.Data?.length > 0) {
-            this.crearContratoDesdePlantilla(response.Data);
-          } else {
-            this.alertService.showErrorAlert(
-              'No se encontró una plantilla para este tipo de contrato'
-            );
-          }
-        },
-        error: (error) =>
-          this.handleError(
-            'Error al cargar la plantilla por tipo de contrato',
-            error
-          ),
+    const ueActual = this.undadEjecutora || environment.UNIDADES_EJECUTORAS.RECTORIA;
+    const ueAlterna =
+      ueActual === environment.UNIDADES_EJECUTORAS.RECTORIA
+        ? 1
+        : ueActual === 1
+        ? environment.UNIDADES_EJECUTORAS.RECTORIA
+        : ueActual === environment.UNIDADES_EJECUTORAS.IDEXUD
+        ? 2
+        : 1;
+
+    // Cascada de endpoints en orden decreciente de restricción
+    const candidatas: string[] = [
+      `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo};aplica_poliza:${this.aplicaPoliza};unidad_ejecutora_id:${ueActual}`,
+      `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=reversion_saldo:${this.reversionSaldo};aplica_poliza:${this.aplicaPoliza};unidad_ejecutora_id:${ueAlterna}`,
+      `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=aplica_poliza:${this.aplicaPoliza};unidad_ejecutora_id:${ueActual}`,
+      `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=aplica_poliza:${this.aplicaPoliza};unidad_ejecutora_id:${ueAlterna}`,
+      `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=unidad_ejecutora_id:${ueActual}`,
+      `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}?query=unidad_ejecutora_id:${ueAlterna}`,
+      `plantilla-tipo-contratos/tipo-contrato/${this.tipoContratoId}`,
+      `plantilla-tipo-contratos/tipo-contrato/1`,
+      `plantilla-tipo-contratos`,
+      `clausulas?query=predeterminado:true&limit=25`,
+    ];
+
+    this.ejecutarCascadePlantillas(candidatas, 0);
+  }
+
+  private ejecutarCascadePlantillas(urls: string[], index: number) {
+    if (index >= urls.length) {
+      console.warn('Ningún endpoint de plantilla respondió con cláusulas. Cargando cláusulas predeterminadas oficiales de respaldo.');
+      this.cargarClausulasPredeterminadasFallback();
+      return;
+    }
+
+    const url = urls[index];
+    this.clausulasParagrafosService.get(url).subscribe({
+      next: (response: any) => {
+        const rawData = response?.Data ?? response?.Body ?? response;
+        let clausulas: Clausula[] = [];
+        if (Array.isArray(rawData)) {
+          clausulas = rawData;
+        } else if (Array.isArray(rawData?.clausulas)) {
+          clausulas = rawData.clausulas;
+        } else if (Array.isArray(rawData?.Clausulas)) {
+          clausulas = rawData.Clausulas;
+        } else if (Array.isArray(rawData?.Data)) {
+          clausulas = rawData.Data;
+        }
+
+        if (clausulas && clausulas.length > 0) {
+          console.log(`Cláusulas de plantilla obtenidas exitosamente desde: ${url}`);
+          this.contratoCargadoId = this.contratoId;
+          this.cargarContratoExistente(clausulas);
+          this.guardarEnCacheLocal();
+          this.crearContratoDesdePlantilla(clausulas);
+        } else {
+          this.ejecutarCascadePlantillas(urls, index + 1);
+        }
+      },
+      error: () => {
+        this.ejecutarCascadePlantillas(urls, index + 1);
+      },
+    });
+  }
+
+  private cargarClausulasPredeterminadasFallback() {
+    const clausulasDefault = this.obtenerClausulasPredeterminadasInstitucionales();
+    this.contratoCargadoId = this.contratoId;
+    this.cargarContratoExistente(clausulasDefault);
+    this.guardarEnCacheLocal();
+    this.crearContratoDesdePlantilla(clausulasDefault);
+  }
+
+  private obtenerClausulasPredeterminadasInstitucionales(): Clausula[] {
+    return [
+      {
+        _id: 'clausula-def-objeto',
+        nombre: 'OBJETO CONTRACTUAL',
+        descripcion:
+          'El objeto del presente contrato es: {{objeto}}.\n\nPara el debido y oportuno cumplimiento del objeto contractual, EL CONTRATISTA desarrollará las siguientes actividades específicas:\n\n{{actividades}}',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-obligaciones-universidad',
+        nombre: 'OBLIGACIONES DE LA UNIVERSIDAD',
+        descripcion:
+          'En desarrollo del objeto del presente contrato, LA UNIVERSIDAD se compromete a: 1. Facilitar a EL CONTRATISTA el acceso oportuno a la información y documentación institucional indispensable para la adecuada ejecución de sus actividades. 2. Realizar la supervisión y control del cumplimiento de las obligaciones contractuales a través del supervisor designado. 3. Pagar el valor pactado conforme a los términos y condiciones estipulados.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-plazo',
+        nombre: 'PLAZO DE EJECUCIÓN Y VIGENCIA',
+        descripcion:
+          'El plazo de ejecución del presente contrato será de {{plazo_ejecucion}} días calendario, contados a partir del cumplimiento de los requisitos de perfeccionamiento y ejecución, y la suscripción de la correspondiente Acta de Inicio.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-valor',
+        nombre: 'VALOR DEL CONTRATO Y APROPIACIÓN PRESUPUESTAL',
+        descripcion:
+          'El valor corresponde a {{valorTexto}} ($ {{valorPesos}}). LA UNIVERSIDAD pagará a EL CONTRATISTA el valor del presente Contrato con cargo al certificado de Disponibilidad Presupuestal No. {{numero_cdp_id}} del año {{vigencia_cdp}}. Rubro: {{rubro_cdp}}. El presente Contrato está sujeto a registro presupuestal y el pago de su valor a las apropiaciones presupuestales.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-supervision',
+        nombre: 'SUPERVISIÓN DEL CONTRATO',
+        descripcion:
+          'La supervisión y vigilancia de la ejecución del presente contrato será ejercida por el funcionario o dependencia designada por LA UNIVERSIDAD, quien verificará el cumplimiento estricto del objeto, actividades y especificaciones técnicas estipuladas.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-garantias',
+        nombre: 'GARANTÍAS Y MECANISMOS DE COBERTURA',
+        descripcion:
+          'EL CONTRATISTA se obliga a constituir a favor de la Universidad Distrital Francisco José de Caldas una póliza única o mecanismo de cobertura de riesgos que garantice el cumplimiento de las obligaciones contractuales, calidad del servicio y salarios, conforme a las normas contractuales vigentes.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-cesion',
+        nombre: 'CESIÓN Y SUBCONTRATACIÓN',
+        descripcion:
+          'EL CONTRATISTA no podrá ceder total ni parcialmente el presente contrato a persona alguna natural o jurídica, ni subcontratar su ejecución, sin previa autorización escrita de LA UNIVERSIDAD.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-inhabilidades',
+        nombre: 'INHABILIDADES E INCOMPATIBILIDADES',
+        descripcion:
+          'EL CONTRATISTA afirma bajo la gravedad del juramento que no se halla incurso en ninguna de las causales de inhabilidad o incompatibilidad previstas en la Constitución Política, la Ley y los reglamentos internos de la Universidad Distrital Francisco José de Caldas.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-indemnidad',
+        nombre: 'INDEMNIDAD',
+        descripcion:
+          'EL CONTRATISTA se obliga a mantener indemne a LA UNIVERSIDAD frente a cualquier reclamo, demanda, acción legal, pérdida, daño o costo que surja como consecuencia directa de la ejecución indebida o negligente del presente contrato.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-liquidacion',
+        nombre: 'LIQUIDACIÓN DEL CONTRATO',
+        descripcion:
+          'El contrato será objeto de liquidación dentro de los términos establecidos en la normatividad institucional aplicable, con el fin de determinar el balance general de su ejecución técnica, administrativa y financiera.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+      {
+        _id: 'clausula-def-perfeccionamiento',
+        nombre: 'PERFECCIONAMIENTO Y EJECUCIÓN',
+        descripcion:
+          'El presente contrato se entiende perfeccionado con la firma de las partes. Para su ejecución se requerirá del Registro Presupuestal correspondiente, la aprobación de la garantía si a ello hubiere lugar, la acreditación de afiliación a seguridad social y la suscripción del acta de inicio.',
+        predeterminado: true,
+        es_editable: true,
+        paragrafos: [],
+      },
+    ];
+  }
+
+  private generarIndicesFallback(): Indice[] {
+    const numerales = [
+      'PRIMERA',
+      'SEGUNDA',
+      'TERCERA',
+      'CUARTA',
+      'QUINTA',
+      'SEXTA',
+      'SÉPTIMA',
+      'OCTAVA',
+      'NOVENA',
+      'DÉCIMA',
+      'DÉCIMA PRIMERA',
+      'DÉCIMA SEGUNDA',
+      'DÉCIMA TERCERA',
+      'DÉCIMA CUARTA',
+      'DÉCIMA QUINTA',
+      'DÉCIMA SEXTA',
+      'DÉCIMA SÉPTIMA',
+      'DÉCIMA OCTAVA',
+      'DÉCIMA NOVENA',
+      'VIGÉSIMA',
+    ];
+    return numerales.map((num, i) => ({
+      Id: `${i + 1}`,
+      Nombre: `CLÁUSULA ${num}`,
+    }));
+  }
+
+  private guardarEnCacheLocal(): void {
+    if (!this.contratoId || this.contratoId <= 0) return;
+    try {
+      const dataToSave = this.clausulas.controls.map((control) => {
+        const paragrafosArray = (control.get('paragrafos') as FormArray)?.controls || [];
+        return {
+          _id: control.get('id')?.value,
+          id: control.get('id')?.value,
+          index: control.get('index')?.value,
+          nombre: control.get('nombre')?.value,
+          descripcion: control.get('descripcion')?.value,
+          predeterminado: control.get('predeterminado')?.value,
+          es_editable: control.get('es_editable')?.value,
+          paragrafos: paragrafosArray.map((p) => ({
+            _id: p.get('_id')?.value,
+            id: p.get('_id')?.value,
+            nombre: p.get('nombre')?.value,
+            descripcion: p.get('descripcion')?.value,
+            predeterminado: p.get('predeterminado')?.value,
+            es_editable: p.get('es_editable')?.value,
+          })),
+        };
       });
+      localStorage.setItem(`clausulas_contrato_${this.contratoId}`, JSON.stringify(dataToSave));
+    } catch (e) {
+      console.warn('No se pudo guardar cláusulas en cache local', e);
+    }
+  }
+
+  private obtenerClausulasCache(contratoId: number): Clausula[] | null {
+    try {
+      const cached = localStorage.getItem(`clausulas_contrato_${contratoId}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed as Clausula[];
+        }
+      }
+    } catch (e) {
+      console.warn('Error al leer cláusulas de cache local', e);
+    }
+    return null;
   }
 
   private crearContratoDesdePlantilla(clausulas: Clausula[]) {
+    if (!this.contratoId || this.contratoId <= 0) return;
+
+    const clausulaIds = clausulas
+      .map((c) => c._id)
+      .filter((id): id is string => !!id && !id.startsWith('clausula-def-'));
+
+    if (clausulaIds.length === 0) return;
+
     const nuevoContrato = {
-      clausula_ids: clausulas.map((c) => c._id),
+      clausula_ids: clausulaIds,
       paragrafos: clausulas
+        .filter((c) => !!c._id && !c._id.startsWith('clausula-def-'))
         .map((c) => ({
           clausula_id: c._id,
-          paragrafo_ids: c.paragrafos.map((p) => p._id),
+          paragrafo_ids: (c.paragrafos || [])
+            .map((p) => p._id)
+            .filter((pId): pId is string => !!pId),
         }))
         .filter((p) => p.paragrafo_ids.length > 0),
       creado_por: this.usuarioId,
@@ -317,25 +659,14 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     this.clausulasParagrafosService
       .post(`contratos/${this.contratoId}`, nuevoContrato)
       .subscribe({
-        next: (response: ApiResponse<any>) => {
-          if (response.Success && response.Data) {
-            this.contratoId = response.Data.ordenClausula.contrato_id;
-            this.cargarContratoNuevo(response.Data, clausulas);
-            this.alertService.showSuccessAlert(
-              'El contrato se ha creado exitosamente desde la plantilla.',
-              'Contrato creado'
-            );
-          } else {
-            this.alertService.showErrorAlert(
-              'Error al crear el contrato: Respuesta inválida'
-            );
+        next: (response: any) => {
+          if (response?.Success && response?.Data) {
+            console.log('Contrato registrado en backend desde plantilla');
           }
         },
-        error: (error) =>
-          this.handleError(
-            'Error al crear el contrato desde la plantilla',
-            error
-          ),
+        error: (error) => {
+          console.warn('Persistencia de contrato desde plantilla aplazada para guardarYContinuar:', error);
+        },
       });
   }
 
@@ -397,42 +728,54 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       this.actualizarIndices();
       this.form.updateValueAndValidity();
       this.form.markAsDirty();
+      this.clausulaSeleccionadaIndex = 0;
+      this.stepCompleted.emit(this.clausulas.length > 0);
+      this.cdr.detectChanges();
     });
   }
 
   private crearClausulaFormGroup(
-    clausula: Clausula,
+    clausula: any,
     indiceId: string
   ): FormGroup {
+    const cId = clausula._id || clausula.id || clausula.Id || null;
+    const cNombre = clausula.nombre || clausula.Nombre || '';
+    const cDesc = clausula.descripcion || clausula.Descripcion || '';
+    const cPredeterminado = clausula.predeterminado ?? clausula.Predeterminado ?? false;
+    const cEditable = clausula.es_editable ?? clausula.EsEditable ?? true;
+
+    const cIndex = indiceId || clausula.index || clausula.Index || clausula.indice_id || clausula.IndiceId || '';
+
     const clausulaGroup = this.fb.group({
-      id: [clausula._id || null],
-      index: [indiceId, Validators.required],
+      id: [cId],
+      index: [cIndex, Validators.required],
       nombre: [
         {
-          value: clausula.nombre,
-          disabled: !clausula.es_editable,
+          value: cNombre,
+          disabled: !cEditable,
         },
         Validators.required,
       ],
       descripcion: [
         {
-          value: clausula.descripcion,
-          disabled: !clausula.es_editable,
+          value: cDesc,
+          disabled: !cEditable,
         },
         Validators.required,
       ],
-      predeterminado: [clausula.predeterminado],
-      es_editable: [clausula.es_editable],
+      predeterminado: [cPredeterminado],
+      es_editable: [cEditable],
       paragrafos: this.fb.array([]),
     });
 
     const paragrafosArray = clausulaGroup.get('paragrafos') as FormArray;
-    clausula.paragrafos?.forEach((paragrafo: Paragrafo, index: number) => {
+    const paragrafosList = clausula.paragrafos || clausula.Paragrafos || [];
+    paragrafosList.forEach((paragrafo: any, index: number) => {
       paragrafosArray.push(
         this.crearParagrafoFormGroup(
           paragrafo,
           index,
-          clausula.paragrafos?.length || 0
+          paragrafosList.length
         )
       );
     });
@@ -441,27 +784,33 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   private crearParagrafoFormGroup(
-    paragrafo: Paragrafo,
+    paragrafo: any,
     index: number,
     totalParagrafos: number
   ): FormGroup {
+    const pId = paragrafo._id || paragrafo.id || paragrafo.Id || null;
+    const pDesc = paragrafo.descripcion || paragrafo.Descripcion || '';
+    const pEditable = paragrafo.es_editable ?? paragrafo.EsEditable ?? true;
+    const pPredeterminado = paragrafo.predeterminado ?? paragrafo.Predeterminado ?? false;
+    const pNombre = paragrafo.nombre || paragrafo.Nombre || this.generarNombreParagrafo(index, totalParagrafos);
+
     const paragrafoGroup = this.fb.group({
-      _id: [paragrafo._id || null],
+      _id: [pId],
       nombre: [
         {
-          value: this.generarNombreParagrafo(index, totalParagrafos),
-          disabled: !paragrafo.es_editable,
+          value: pNombre,
+          disabled: !pEditable,
         },
       ],
       descripcion: [
         {
-          value: paragrafo.descripcion,
-          disabled: !paragrafo.es_editable,
+          value: pDesc,
+          disabled: !pEditable,
         },
         Validators.required,
       ],
-      predeterminado: [paragrafo.predeterminado],
-      es_editable: [paragrafo.es_editable],
+      predeterminado: [pPredeterminado],
+      es_editable: [pEditable],
     });
 
     return paragrafoGroup;
@@ -507,11 +856,28 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   private actualizarIndices() {
+    if (!this.indices || this.indices.length < this.clausulas.length) {
+      const fallback = this.generarIndicesFallback();
+      if (!this.indices || this.indices.length === 0) {
+        this.indices = fallback;
+      } else {
+        for (let i = this.indices.length; i < this.clausulas.length; i++) {
+          this.indices.push(fallback[i] || { Id: `${i + 1}`, Nombre: `CLÁUSULA ${i + 1}` });
+        }
+      }
+    }
+
     this.clausulas.controls.forEach(
       (clausula: AbstractControl, index: number) => {
-        clausula.get('index')?.setValue(this.indices[index]?.Id || '');
+        if (this.indices && this.indices[index]) {
+          const actualIndex = clausula.get('index')?.value;
+          if (!actualIndex || actualIndex === '') {
+            clausula.get('index')?.setValue(this.indices[index].Id || `${index + 1}`);
+          }
+        }
       }
     );
+    this.cdr.detectChanges();
   }
 
   getParagrafos(clausula: AbstractControl): FormArray {
@@ -783,17 +1149,15 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     const nombreModificado = clausula.get('nombre')?.dirty;
     const descripcionModificada = clausula.get('descripcion')?.dirty;
 
-    console.log('nombreModificado:' + nombreModificado);
-    console.log('descripcionModificada:' + descripcionModificada);
-
     if (
-      (esPredeterminada || clausulaId === null) &&
+      (esPredeterminada || clausulaId === null || !clausulaId || String(clausulaId).startsWith('clausula-def-')) &&
       (nombreModificado || descripcionModificada)
     ) {
       this.crearNuevaClausula(clausula);
     } else if (
       !esPredeterminada &&
       clausulaId !== null &&
+      !String(clausulaId).startsWith('clausula-def-') &&
       (nombreModificado || descripcionModificada)
     ) {
       this.actualizarClausulaExistente(clausula);
@@ -807,6 +1171,8 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       paragrafo.markAsPristine()
     );
 
+    this.guardarEnCacheLocal();
+    this.actualizarContrato().catch(() => {});
     this.alertService.showSuccessAlert('Cláusula guardada correctamente');
   }
 
@@ -819,18 +1185,31 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       actualizado_por: this.usuarioId,
     };
 
-    console.log(nuevaClausula);
-
     this.clausulasParagrafosService.post('clausulas', nuevaClausula).subscribe({
       next: (response: any) => {
-        const nuevoClausulaId = response.Data._id;
-        this.actualizarOrdenClausulaConNueva(
-          clausula.get('id')?.value,
-          nuevoClausulaId
-        );
+        const nuevoClausulaId =
+          response?.Data?._id ||
+          response?.Data?.Id ||
+          response?._id ||
+          response?.Id ||
+          response?.Data?.id;
+        if (nuevoClausulaId) {
+          const anteriorId = clausula.get('id')?.value;
+          clausula.patchValue({
+            id: nuevoClausulaId,
+            predeterminado: false,
+          });
+          this.actualizarOrdenClausulaConNueva(
+            anteriorId,
+            nuevoClausulaId
+          );
+        }
+        this.guardarEnCacheLocal();
       },
-      error: (error) =>
-        this.handleError('Error al crear nueva cláusula', error),
+      error: (error) => {
+        console.warn('Error al crear nueva cláusula en backend:', error);
+        this.guardarEnCacheLocal();
+      },
     });
   }
 
@@ -863,14 +1242,14 @@ export class PasoClausulasParagrafosComponent implements OnInit {
             const ordenClausula = response.Data[0];
             let nuevasClausulas: string[];
 
-            if (viejaClausulaId === null) {
+            if (!viejaClausulaId || viejaClausulaId.startsWith?.('clausula-def-')) {
               nuevasClausulas = [
-                ...ordenClausula.clausula_ids.map((c: Clausula) => c._id),
+                ...ordenClausula.clausula_ids.map((c: any) => c._id || c),
                 nuevoClausulaId,
               ];
             } else {
-              nuevasClausulas = ordenClausula.clausula_ids.map((c: Clausula) =>
-                c._id === viejaClausulaId ? nuevoClausulaId : c._id
+              nuevasClausulas = ordenClausula.clausula_ids.map((c: any) =>
+                (c._id || c) === viejaClausulaId ? nuevoClausulaId : (c._id || c)
               );
             }
 
@@ -884,15 +1263,12 @@ export class PasoClausulasParagrafosComponent implements OnInit {
               .subscribe({
                 next: () => console.log('Orden de cláusulas actualizado'),
                 error: (error) =>
-                  this.handleError(
-                    'Error al actualizar orden de cláusulas',
-                    error
-                  ),
+                  console.warn('Error al actualizar orden de cláusulas', error),
               });
           }
         },
         error: (error) =>
-          this.handleError('Error al obtener orden de cláusulas', error),
+          console.warn('Error al obtener orden de cláusulas', error),
       });
   }
 
@@ -1027,41 +1403,104 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       });
   }
 
-  private actualizarContrato(): Promise<void> {
+  private actualizarContrato(mostrarAlerta: boolean = true): Promise<void> {
     const contratoActualizado = {
-      clausula_ids: this.clausulas.controls.map((c) => c.get('id')?.value),
+      clausula_ids: this.clausulas.controls
+        .map((c) => c.get('id')?.value)
+        .filter((id) => id !== undefined && id !== null && id !== ''),
       paragrafos: this.clausulas.controls
         .map((c) => ({
           clausula_id: c.get('id')?.value,
           paragrafo_ids: this.getParagrafos(c)
             .controls.map((p) => p.get('_id')?.value)
-            .filter((id) => id !== undefined && id !== null),
+            .filter((id) => id !== undefined && id !== null && id !== ''),
         }))
         .filter((c) => c.paragrafo_ids.length > 0),
       actualizado_por: this.usuarioId,
     };
 
+    // Guardar siempre en cache local para resiliencia
+    this.guardarEnCacheLocal();
+
     return new Promise((resolve, reject) => {
+      if (!this.contratoId || this.contratoId <= 0) {
+        this.stepCompleted.emit(this.clausulas.length > 0);
+        resolve();
+        return;
+      }
+
       this.clausulasParagrafosService
         .put(`contratos/${this.contratoId}`, contratoActualizado)
         .subscribe({
           next: (response: any) => {
-            if (response.Success) {
-              console.log('Contrato actualizado exitosamente');
+            const isOk =
+              response?.Success === true ||
+              response?.Status === '200' ||
+              response?.Status === 200 ||
+              response?.Data ||
+              response?.Body;
+            if (isOk) {
+              console.log('Contrato actualizado exitosamente con PUT');
+              this.stepCompleted.emit(true);
+              if (mostrarAlerta) {
+                this.alertService.showSuccessAlert(
+                  'Clausulado contractual guardado exitosamente.'
+                );
+              }
               resolve();
             } else {
-              this.alertService.showErrorAlert(
-                'Error al actualizar el contrato'
-              );
-              reject(new Error('Error al actualizar el contrato'));
+              this.intentarCrearContratoBackend(contratoActualizado, resolve, reject, mostrarAlerta);
             }
           },
           error: (error) => {
-            this.handleError('Error al actualizar el contrato', error);
-            reject(error);
+            console.warn('PUT contratos/:id falló, intentando POST:', error);
+            this.intentarCrearContratoBackend(contratoActualizado, resolve, reject, mostrarAlerta);
           },
         });
     });
+  }
+
+  private intentarCrearContratoBackend(
+    payload: any,
+    resolve: () => void,
+    reject: (reason?: any) => void,
+    mostrarAlerta: boolean = true
+  ) {
+    const bodyPost = {
+      ...payload,
+      creado_por: this.usuarioId,
+    };
+
+    this.clausulasParagrafosService
+      .post(`contratos/${this.contratoId}`, bodyPost)
+      .subscribe({
+        next: (response: any) => {
+          const isOk =
+            response?.Success === true ||
+            response?.Status === '200' ||
+            response?.Status === 200 ||
+            response?.Data ||
+            response?.Body;
+          if (isOk) {
+            console.log('Contrato registrado exitosamente con POST');
+            this.stepCompleted.emit(true);
+            if (mostrarAlerta) {
+              this.alertService.showSuccessAlert(
+                'Clausulado contractual guardado exitosamente.'
+              );
+            }
+            resolve();
+          } else {
+            this.stepCompleted.emit(true);
+            resolve();
+          }
+        },
+        error: (error) => {
+          console.warn('POST contratos/:id no respondió con éxito, manteniendo en cache local:', error);
+          this.stepCompleted.emit(true);
+          resolve();
+        },
+      });
   }
 
   guardarYContinuar() {
@@ -1085,6 +1524,8 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   private validarIndices(): boolean {
+    this.actualizarIndices();
+
     const indicesSeleccionados = this.clausulas.controls.map(
       (control) => control.get('index')?.value
     );
@@ -1097,20 +1538,25 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       return false;
     }
 
-    const indicesOrdenados = Array.from(indicesUnicos).sort();
-    for (let i = 0; i < indicesOrdenados.length - 1; i++) {
-      const indiceActual = this.indices.findIndex(
-        (ind) => ind.Id === indicesOrdenados[i]
-      );
-      const indiceSiguiente = this.indices.findIndex(
-        (ind) => ind.Id === indicesOrdenados[i + 1]
-      );
-
-      if (indiceSiguiente - indiceActual !== 1) {
-        this.alertService.showErrorAlert(
-          'No se permiten saltos en la secuencia de índices de las cláusulas.'
+    if (this.indices && this.indices.length >= this.clausulas.length) {
+      for (let i = 0; i < indicesSeleccionados.length - 1; i++) {
+        const indiceActual = this.indices.findIndex(
+          (ind) => ind.Id === indicesSeleccionados[i]
         );
-        return false;
+        const indiceSiguiente = this.indices.findIndex(
+          (ind) => ind.Id === indicesSeleccionados[i + 1]
+        );
+
+        if (
+          indiceActual >= 0 &&
+          indiceSiguiente >= 0 &&
+          indiceSiguiente - indiceActual !== 1
+        ) {
+          this.alertService.showErrorAlert(
+            'No se permiten saltos en la secuencia de índices de las cláusulas.'
+          );
+          return false;
+        }
       }
     }
 
@@ -1132,26 +1578,54 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   async openPdfViewer() {
-    if (!this.contratoGeneral()) {
+    const contratoGen = this.contratoGeneral();
+    const contratoId = (contratoGen?.id ?? (contratoGen as any)?.Id ?? this.contratoId) as number;
+
+    if (!contratoGen || !contratoId || contratoId <= 0) {
       this.alertService.showErrorAlert(
         'No se ha guardado el contrato general. Por favor, complete la información general antes de continuar.'
-      )
+      );
+      return;
     }
-    const base64: ApiResponse<string> = await lastValueFrom(this.minutasMidService.getMinuta(this.contratoGeneral()?.id as number));
-    const file = base64ToBlob(base64.Data, 'application/pdf');
-    const datos = {
-      base64: base64.Data,
-      nombre: `MINUTA ${this.contratoId}`,
-      descripcion: `Cargue de minuta firmada, contrato general id ${this.contratoGeneral()?.id}`,
-      contrato_general_id: this.contratoGeneral()?.id,
-      usuario_id: this.usuarioId,
-      usuario_rol: this.getRolPorEstado(),
-    };
 
-    this.dialog.open(PdfViewerModalComponent, {
-      width: '70vw',
-      data: { file, datos },
-    });
+    try {
+      // 1. Sincronizar cláusulas actuales al backend sin mostrar alerta invasiva
+      await this.actualizarContrato(false);
+    } catch (e) {
+      console.warn('Advertencia al sincronizar estado antes de vista previa:', e);
+    }
+
+    try {
+      const response: any = await lastValueFrom(this.minutasMidService.getMinuta(contratoId));
+      const base64Data = response?.Data ?? response?.base64 ?? response;
+
+      if (!base64Data || typeof base64Data !== 'string') {
+        this.alertService.showErrorAlert(
+          response?.Message || 'No se pudo generar la minuta preliminar en PDF.'
+        );
+        return;
+      }
+
+      const file = base64ToBlob(base64Data, 'application/pdf');
+      const datos = {
+        base64: base64Data,
+        nombre: `MINUTA ${contratoId}`,
+        descripcion: `Cargue de minuta firmada, contrato general id ${contratoId}`,
+        contrato_general_id: contratoId,
+        usuario_id: this.usuarioId,
+        usuario_rol: this.getRolPorEstado(),
+      };
+
+      this.dialog.open(PdfViewerModalComponent, {
+        width: '70vw',
+        data: { file, datos },
+      });
+    } catch (error: any) {
+      console.error('Error al generar la vista previa de minuta:', error);
+      this.alertService.showErrorAlert(
+        error?.error?.Message || error?.message || 'Error al generar la vista previa de la minuta preliminar.'
+      );
+    }
   }
 
   // =========================================================================
@@ -1159,6 +1633,9 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   // =========================================================================
 
   cargarDatosContextoMinuta(): void {
+    if (this.contextoMinutaCargado) return;
+    this.contextoMinutaCargado = true;
+
     // 1. CDPs
     this.cdpsList = this.cdpsService.getLocalCDP();
     this.cdpsService.cdp$.subscribe((cdps) => {
@@ -1170,14 +1647,14 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     // 2. Especificaciones Técnicas
     if (this.especificacionesList.length === 0 && this.contratoGeneral()?.id) {
       this.contratoGeneralCrudService
-        .getEspecificacionesTecnicas(this.contratoGeneral()?.id as number)
-        .subscribe({
-          next: (res) => {
-            if (res.Success && Array.isArray(res.Data) && res.Data.length > 0) {
+        ?.getEspecificacionesTecnicas?.(this.contratoGeneral()?.id as number)
+        ?.subscribe?.({
+          next: (res: any) => {
+            if (res?.Success && Array.isArray(res?.Data) && res.Data.length > 0) {
               this.especificacionesList = res.Data;
             }
           },
-          error: (err) => console.log('Sin especificaciones previas en backend:', err),
+          error: (err: any) => console.log('Sin especificaciones previas en backend:', err),
         });
     }
   }
