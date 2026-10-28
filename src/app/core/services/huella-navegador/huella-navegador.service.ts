@@ -23,6 +23,7 @@ const MARCA_INICIO = 'huella-navegador-inicio';
 const MARCA_FIN = 'huella-navegador-fin';
 const TIMEOUT_IDLE_MS = 5000;
 const RETARDO_SIN_IDLE_MS = 2000;
+const TIMEOUT_ROL_MS = 5000;
 const LONGITUD_USER_AGENT = 512;
 const LONGITUD_RUTA = 255;
 const LONGITUD_ROL = 40;
@@ -100,10 +101,12 @@ export class HuellaNavegadorService {
     this.estadoActual.set('calculando');
     try {
       const ip = this.obtenerIp();
+      const rol = this.obtenerRol();
       const resultado = await this.calcularHuella();
-      const [direccion_ip, usuario_id] = await Promise.all([
+      const [direccion_ip, usuario_id, usuario_rol] = await Promise.all([
         ip,
         this.obtenerUsuarioId(),
+        rol,
       ]);
       if (this.destruido) {
         return;
@@ -118,7 +121,7 @@ export class HuellaNavegadorService {
         direccion_ip,
         user_agent: navigator.userAgent.slice(0, LONGITUD_USER_AGENT),
         usuario_id,
-        usuario_rol: this.obtenerRol(),
+        usuario_rol,
         microcliente: this.config.MICROCLIENTE,
         ruta: window.location.pathname.slice(0, LONGITUD_RUTA),
         fecha_captura: new Date().toISOString(),
@@ -220,10 +223,29 @@ export class HuellaNavegadorService {
    * Primer rol de Argo del usuario (RolService, cargado por AppComponent).
    * Los estados-contrato eligen el rol según el estado del contrato; aquí no
    * hay contrato, así que se toma el primero de la lista.
+   * cargarRol es asíncrono: se espera a que termine, como máximo
+   * TIMEOUT_ROL_MS; si no llega a tiempo se envía null en lugar de bloquear.
    */
-  private obtenerRol(): string | null {
+  private async obtenerRol(): Promise<string | null> {
+    await this.esperarRol();
     const rol = this.rolService.getRol()[0];
     return rol ? rol.slice(0, LONGITUD_ROL) : null;
+  }
+
+  private async esperarRol(): Promise<void> {
+    let temporizador: ReturnType<typeof setTimeout> | undefined;
+    let terminar: () => void = () => undefined;
+    const limite = new Promise<void>((resolve) => {
+      terminar = resolve;
+      temporizador = setTimeout(resolve, TIMEOUT_ROL_MS);
+      this.abortController.signal.addEventListener('abort', terminar);
+    });
+    try {
+      await Promise.race([this.rolService.rolCargado(), limite]);
+    } finally {
+      clearTimeout(temporizador);
+      this.abortController.signal.removeEventListener('abort', terminar);
+    }
   }
 
   private registradaEnSesion(): boolean {

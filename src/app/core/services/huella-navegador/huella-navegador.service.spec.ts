@@ -37,7 +37,7 @@ describe('HuellaNavegadorService', () => {
 
   const proveedor = { nombre: 'fingerprintjs', obtener: jest.fn() };
   const userService = { getPersonaId: jest.fn() };
-  const rolService = { getRol: jest.fn() };
+  const rolService = { getRol: jest.fn(), rolCargado: jest.fn() };
   const config = environment.HUELLA_NAVEGADOR;
 
   const respuestaIp = (ip: string) =>
@@ -76,6 +76,7 @@ describe('HuellaNavegadorService', () => {
     proveedor.obtener.mockReset().mockResolvedValue(resultadoSimulado);
     userService.getPersonaId.mockReset().mockResolvedValue(123);
     rolService.getRol.mockReset().mockReturnValue(['ABOGADO_CONTRATACION_RECTOR']);
+    rolService.rolCargado.mockReset().mockResolvedValue(undefined);
     fetchMock = jest.fn().mockImplementation(() => respuestaIp('190.25.0.1'));
     (globalThis as any).fetch = fetchMock;
 
@@ -350,6 +351,43 @@ describe('HuellaNavegadorService', () => {
     peticion.flush({});
   });
 
+  it('debería esperar a que cargue el rol antes de enviar la huella', async () => {
+    let resolverRol!: () => void;
+    rolService.rolCargado.mockReturnValue(
+      new Promise<void>((resolve) => (resolverRol = resolve)),
+    );
+    rolService.getRol.mockReturnValue([]);
+    crearServicio();
+
+    service.iniciar();
+    await ejecutarTrabajo();
+    httpMock.expectNone(URL_HUELLAS);
+
+    rolService.getRol.mockReturnValue(['ORDENADOR_DEL_GASTO']);
+    resolverRol();
+    const peticion = await esperarPost();
+
+    expect(peticion.request.body.usuario_rol).toBe('ORDENADOR_DEL_GASTO');
+    peticion.flush({});
+  });
+
+  it('debería enviar usuario_rol null si el rol no carga en 5000 ms', async () => {
+    rolService.rolCargado.mockReturnValue(new Promise<void>(() => undefined));
+    rolService.getRol.mockReturnValue([]);
+    crearServicio();
+
+    service.iniciar();
+    await ejecutarTrabajo();
+    await jest.advanceTimersByTimeAsync(4999);
+    httpMock.expectNone(URL_HUELLAS);
+
+    await jest.advanceTimersByTimeAsync(1);
+    const peticion = await esperarPost();
+
+    expect(peticion.request.body.usuario_rol).toBeNull();
+    peticion.flush({});
+  });
+
   describe('al destruirse el injector (unmount de single-spa)', () => {
     it('debería cancelar el trabajo programado', async () => {
       crearServicio();
@@ -396,6 +434,21 @@ describe('HuellaNavegadorService', () => {
 
       expect(senal?.aborted).toBe(true);
       http.expectNone(URL_HUELLAS);
+    });
+
+    it('no debería enviar el POST si se desmonta mientras espera el rol', async () => {
+      rolService.rolCargado.mockReturnValue(new Promise<void>(() => undefined));
+      crearServicio();
+      service.iniciar();
+      await ejecutarTrabajo();
+
+      const http = httpMock;
+      TestBed.resetTestingModule();
+      verificarHttp = false;
+      await jest.advanceTimersByTimeAsync(5000);
+
+      http.expectNone(URL_HUELLAS);
+      expect(jest.getTimerCount()).toBe(0);
     });
 
     it('debería cancelar el POST en curso', async () => {
