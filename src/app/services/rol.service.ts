@@ -6,6 +6,10 @@ import { ImplicitAutenticationService } from './implicit_autentication.service';
 })
 export class RolService {
   private roles: string[] = [];
+  private resolverCarga!: () => void;
+  private readonly carga = new Promise<void>((resolve) => {
+    this.resolverCarga = resolve;
+  });
 
   constructor(private autenticationService: ImplicitAutenticationService) {}
 
@@ -19,8 +23,17 @@ export class RolService {
       'PROVEEDOR',
       'ADMIN_ARGO',
     ];
-    const rolesObtenidos: any = await this.autenticationService.getRole();
-    this.roles = rolesValidos.filter((rol) => rolesObtenidos.includes(rol));
+    try {
+      const rolesObtenidos: any = await this.autenticationService.getRole();
+      this.roles = rolesValidos.filter((rol) => rolesObtenidos.includes(rol));
+    } finally {
+      this.resolverCarga();
+    }
+  }
+
+  /** Se resuelve al terminar la primera carga de roles, con o sin éxito. */
+  rolCargado(): Promise<void> {
+    return this.carga;
   }
 
   getRol(): string[] {

@@ -23,6 +23,14 @@ export const environment = {
 
   TERCEROS_CRUD: "https://autenticacion.portaloas.udistrital.edu.co/apioas/terceros_crud/v1/",
 
+  HUELLA_NAVEGADOR: {
+    HABILITADO: true,
+    LIBRERIA: 'fingerprintjs', // 'fingerprintjs' | 'thumbmarkjs'
+    SERVICIO_IP: 'https://api64.ipify.org?format=json',
+    TIMEOUT_IP_MS: 3000,
+    MICROCLIENTE: 'gestion_contractual_mf',
+  },
+
   TIPO_COMPROMISO_ID: 111,
   TIPO_CONTRATO_ID: 112,
   PERFIL_CONTRATISTA_ID: 113,
