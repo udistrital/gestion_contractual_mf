@@ -1,7 +1,8 @@
 import { hashComponentes } from './hash-componentes';
 
-// El tsconfig de pruebas no resuelve @types/node; se usa el módulo crypto de
-// Node en tiempo de ejecución.
+// tsconfig.spec.json solo carga los tipos de jest (@types/node no es una
+// dependencia del MF): se declara require para usar el módulo crypto de Node
+// en tiempo de ejecución.
 declare const require: (modulo: string) => any;
 const { createHash, webcrypto } = require('crypto');
 
