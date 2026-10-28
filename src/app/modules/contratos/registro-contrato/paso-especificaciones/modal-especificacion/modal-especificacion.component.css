@@ -1,0 +1,269 @@
+.modal-especificacion-container {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1.75rem;
+  background-color: #ffffff;
+  border-radius: 14px;
+  position: relative;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   1. Cabecera del Modal
+   ========================================================================== */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background-color: rgba(128, 19, 19, 0.08);
+  color: #801313;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-icon-badge mat-icon {
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #191c1e;
+  line-height: 1.25;
+}
+
+.modal-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.close-button {
+  color: #64748b;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.close-button:hover {
+  color: #1e293b;
+  background-color: #f1f5f9;
+}
+
+/* ==========================================================================
+   2. Cuerpo del Formulario
+   ========================================================================== */
+.modal-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-field-row {
+  width: 100%;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.align-start {
+  align-items: flex-start;
+}
+
+.field-icon {
+  color: #64748b;
+  margin-right: 6px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.unit-suffix {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  margin-left: 4px;
+}
+
+.field-readonly ::ng-deep .mat-mdc-text-field-wrapper {
+  background-color: #f8fafc !important;
+}
+
+.field-readonly input {
+  cursor: default !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   Tarjeta de Desglose Económico
+   ========================================================================== */
+.card-calculo-vivo {
+  background-color: #fff9f5;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  box-sizing: border-box;
+}
+
+.calculo-vivo-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9a3412;
+}
+
+.calculo-vivo-head mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.calculo-vivo-formula {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.calc-op {
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.calc-part {
+  font-weight: 600;
+}
+
+.calculo-vivo-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed #fed7aa;
+}
+
+.calc-total-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.calc-total-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #801313;
+}
+
+/* ==========================================================================
+   3. Acciones del Modal
+   ========================================================================== */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-modal-cancel {
+  border: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+}
+
+.btn-modal-cancel mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-modal-save {
+  background-color: #801313 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 1.5rem;
+}
+
+.btn-modal-save mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-modal-save[disabled] {
+  background-color: #e2e8f0 !important;
+  color: #94a3b8 !important;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-modal-cancel, .btn-modal-save {
+    width: 100%;
+    justify-content: center;
+  }
+}

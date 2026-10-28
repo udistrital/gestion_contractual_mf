@@ -1,0 +1,66 @@
+<section class="tb-card semaforo" aria-label="Semáforo de gestión">
+  <div class="tb-card-header">
+    <div>
+      <h2>Semáforo de gestión</h2>
+      <p>Contratos que requieren acción pronta</p>
+    </div>
+  </div>
+
+  <div class="tb-card-body cuerpo">
+    <div class="prioridades">
+      <div class="prioridad alta">
+        <b>{{ formato(altas()) }}</b>
+        <span>Prioridad alta</span>
+      </div>
+      <div class="prioridad media">
+        <b>{{ formato(medias()) }}</b>
+        <span>Prioridad media</span>
+      </div>
+      <div class="prioridad al-dia">
+        <b>{{ formato(alDia()) }}</b>
+        <span>Al día</span>
+      </div>
+    </div>
+
+    <ul class="tipos">
+      @for (t of tipos; track t.tipo) {
+        <li class="tipo">
+          <mat-icon>{{ t.icono }}</mat-icon>
+          <span>{{ t.nombre }}</span>
+          <b>{{ formato(conteoPorTipo()[t.tipo]) }}</b>
+        </li>
+      }
+    </ul>
+
+    <div class="lista-contenedor">
+      @if (alertas().length === 0) {
+        <div class="tb-vacio">
+          <mat-icon class="ok">task_alt</mat-icon>
+          <div>Sin contratos pendientes de gestión.</div>
+        </div>
+      } @else {
+        <ul class="lista">
+          @for (a of alertas(); track a.contrato.id) {
+            <li class="item">
+              <span class="item-icono" [class.alta]="a.prioridad === 'alta'">
+                <mat-icon>{{ iconos[a.tipo] }}</mat-icon>
+              </span>
+              <div class="item-texto">
+                <div>
+                  <b>{{ a.contrato.numero }}</b>
+                  <span class="tb-pill" [class.alta]="a.prioridad === 'alta'" [class.media]="a.prioridad === 'media'">
+                    {{ a.prioridad === 'alta' ? 'Prioridad alta' : 'Prioridad media' }}
+                  </span>
+                </div>
+                <div class="motivo">{{ a.texto }}</div>
+                <div class="contexto">
+                  {{ a.contrato.dependencia }}@if (mostrarAbogado()) { · {{ a.contrato.abogado }} }
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+</section>

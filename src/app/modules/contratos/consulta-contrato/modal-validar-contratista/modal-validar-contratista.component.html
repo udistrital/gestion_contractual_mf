@@ -1,0 +1,145 @@
+<div class="modal-container">
+  <!-- Header Institucional -->
+  <div class="modal-header-institucional">
+    <div class="modal-title-row">
+      <mat-icon class="header-icon">person_search</mat-icon>
+      <h2 mat-dialog-title class="dialog-title">Validación Integral de Contratista (Ágora / Terceros)</h2>
+    </div>
+    <button mat-icon-button class="btn-close-header" (click)="cerrar()" aria-label="Cerrar modal">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="modal-body-content">
+    <!-- Buscador por Cédula o NIT -->
+    <div class="search-section">
+      <mat-form-field appearance="outline" class="search-input-field">
+        <mat-label>Número de documento de identidad o NIT</mat-label>
+        <mat-icon matPrefix>badge</mat-icon>
+        <input
+          matInput
+          [(ngModel)]="documentoBusqueda"
+          placeholder="Ej: 1014285934 o 900542119"
+          (keydown.enter)="consultarContratista()"
+        />
+      </mat-form-field>
+      <button
+        mat-raised-button
+        color="primary"
+        class="btn-buscar"
+        (click)="consultarContratista()"
+        [disabled]="isLoading"
+      >
+        <mat-icon *ngIf="!isLoading">search</mat-icon>
+        <mat-spinner diameter="18" *ngIf="isLoading" class="spinner-btn"></mat-spinner>
+        <span>{{ isLoading ? 'Consultando...' : 'Consultar' }}</span>
+      </button>
+    </div>
+
+    <!-- Mensaje de Error / No Encontrado -->
+    <div class="alert-box error" *ngIf="errorMessage">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Ficha de Datos Básicos y Calificación del Contratista -->
+    <div class="contractor-card" *ngIf="datosContratista">
+      <div class="contractor-header">
+        <div class="contractor-main-info">
+          <h3 class="contractor-name">
+            {{ datosContratista.proveedor?.nombre || datosContratista.proveedor?.NomProveedor || 'Contratista Registrado' }}
+          </h3>
+          <span class="contractor-id-type">
+            {{ datosContratista.proveedor?.tipo_documento || 'Doc' }}:
+            {{ datosContratista.proveedor?.num_documento || documentoBusqueda }} •
+            {{ datosContratista.proveedor?.tipo_persona?.valor || 'Persona Natural / Jurídica' }}
+          </span>
+        </div>
+
+        <!-- Calificación o Mensaje 'Sin calificación actual' -->
+        <div class="rating-badge" [class.has-rating]="tieneCalificacion" [class.no-rating]="!tieneCalificacion">
+          <mat-icon class="rating-icon">{{ tieneCalificacion ? 'star' : 'star_border' }}</mat-icon>
+          <span class="rating-text">{{ valorCalificacion }}</span>
+        </div>
+      </div>
+
+      <div class="contractor-details-grid">
+        <div class="detail-item">
+          <span class="detail-label">Correo Electrónico</span>
+          <span class="detail-value">{{ datosContratista.proveedor?.correo || 'No registrado' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Teléfono de Contacto</span>
+          <span class="detail-value">{{ datosContratista.proveedor?.telefono || 'No registrado' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Última Actualización en Ágora</span>
+          <span class="detail-value">{{ fechaActualizacion }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Perfil / Ocupación Registrada</span>
+          <span class="detail-value">{{ datosContratista.proveedor?.perfil || 'Contratista UDFJC' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial de Contratos Previos (Orden Descendente) -->
+    <div class="history-section" *ngIf="datosContratista">
+      <div class="history-title-row">
+        <mat-icon class="history-icon">history_edu</mat-icon>
+        <h4 class="history-title">Historial de Contratos Previos (Orden Descendente)</h4>
+        <span class="history-count">({{ contratosOrdenados.length }} registrados)</span>
+      </div>
+
+      <div class="history-table-wrap" *ngIf="contratosOrdenados.length > 0">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>No. Contrato</th>
+              <th>Vigencia</th>
+              <th>Objeto Contractual</th>
+              <th style="text-align: right;">Valor</th>
+              <th style="text-align: center;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (contrato of contratosOrdenados; track contrato.numero_contrato + contrato.vigencia) {
+              <tr>
+                <td><b>{{ contrato.numero_contrato }}</b></td>
+                <td style="text-align: center;">{{ contrato.vigencia }}</td>
+                <td class="history-objeto">{{ contrato.objeto || 'Sin objeto detallado' }}</td>
+                <td style="text-align: right; font-weight: 600;">
+                  {{ contrato.valor ? ('$ ' + (contrato.valor | number)) : 'N/A' }}
+                </td>
+                <td style="text-align: center;">
+                  <span class="status-chip">{{ contrato.estado || 'Liquidado' }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-history-box" *ngIf="contratosOrdenados.length === 0">
+        <mat-icon>folder_off</mat-icon>
+        <p>No se registran contratos previos anteriores para este contratista en el sistema.</p>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="modal-footer-actions">
+    <button mat-stroked-button (click)="cerrar()" class="btn-cerrar">
+      Cerrar
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="crearContratoConContratista()"
+      class="btn-asociar-contrato"
+      *ngIf="datosContratista"
+    >
+      <mat-icon>arrow_forward</mat-icon>
+      Continuar con el registro
+    </button>
+  </mat-dialog-actions>
+</div>

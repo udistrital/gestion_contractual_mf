@@ -1,57 +1,37 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
-import { RegistroContratoComponent } from './modules/registro-contrato/registro-contrato.component';
-import { ConsultaContratoComponent } from './modules/consulta-contrato/consulta-contrato.component';
-import { RevisionContratoComponent } from './modules/revision-contrato/revision-contrato.component';
-import { RegistroActasComponent } from './modules/registro-actas/registro-actas.component';
-import { RegistroPolizaComponent } from './modules/polizas/registro-poliza/registro-poliza.component';
-import { VisualizarPolizaComponent } from './modules/polizas/visualizar-poliza/visualizar-poliza.component';
 import { authGuard } from 'src/_guards/auth.guard';
+import { InicioTableroComponent } from './modules/tablero/inicio-tablero/inicio-tablero.component';
 
 const routes: Routes = [
   {
-    path: 'registrar',
-    canActivate: [authGuard],
-    component: RegistroContratoComponent,
+    path: '',
+    pathMatch: 'full',
+    component: InicioTableroComponent
   },
   {
-    path: 'consultar',
+    path: 'contratos',
     canActivate: [authGuard],
-    component: ConsultaContratoComponent,
+    loadChildren: () => import('./modules/contratos/contratos.module').then(m => m.ContratosModule)
   },
   {
-    path: ':idContrato/documentos',
+    path: 'polizas',
     canActivate: [authGuard],
-    component: RevisionContratoComponent,
+    loadChildren: () => import('./modules/polizas/polizas.module').then(m => m.PolizasModule)
   },
   {
-    path: 'actas/registrar',
+    path: 'actas',
     canActivate: [authGuard],
-    component: RegistroActasComponent,
-  },
-  {
-    path: 'polizas/registrar',
-    canActivate: [authGuard],
-    component: RegistroPolizaComponent,
-  },
-  {
-    path: 'polizas/consultar',
-    canActivate: [authGuard],
-    component: VisualizarPolizaComponent,
-  },
-  {
-    path: 'polizas/listado',
-    canActivate: [authGuard],
-    component: VisualizarPolizaComponent,
+    loadChildren: () => import('./modules/registro-actas/registro-actas.module').then(m => m.RegistroActasModule)
   }
-];
+]
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
   providers: [
-    { provide: APP_BASE_HREF, useValue: '/contratos/' },
+    { provide: APP_BASE_HREF, useValue: '/' },
   ],
 })
 export class AppRoutingModule {}

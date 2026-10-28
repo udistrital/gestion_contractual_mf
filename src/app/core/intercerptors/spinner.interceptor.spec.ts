@@ -31,12 +31,19 @@ describe('SpinnerIntercerptor', () => {
 
   afterEach(() => httpMock.verify());
 
+  /** isLoading es un BehaviorSubject expuesto como Observable: emite al suscribirse. */
+  const cargando = (): boolean => {
+    let valor = false;
+    spinner.isLoading.subscribe((v) => (valor = v)).unsubscribe();
+    return valor;
+  };
+
   it('debería mostrar el spinner mientras la petición está en curso y ocultarlo al terminar', () => {
     http.get('/recurso').subscribe();
 
-    expect(spinner.isLoading()).toBe(true);
+    expect(cargando()).toBe(true);
     httpMock.expectOne('/recurso').flush({});
-    expect(spinner.isLoading()).toBe(false);
+    expect(cargando()).toBe(false);
   });
 
   it('no debería tocar el spinner cuando la petición pide OMITIR_SPINNER', () => {
@@ -47,7 +54,7 @@ describe('SpinnerIntercerptor', () => {
       .post('/huellas', {}, { context: new HttpContext().set(OMITIR_SPINNER, true) })
       .subscribe();
 
-    expect(spinner.isLoading()).toBe(false);
+    expect(cargando()).toBe(false);
     httpMock.expectOne('/huellas').flush({});
     expect(show).not.toHaveBeenCalled();
     expect(hide).not.toHaveBeenCalled();

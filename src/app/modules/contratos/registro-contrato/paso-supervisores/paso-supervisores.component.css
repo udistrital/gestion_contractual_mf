@@ -1,0 +1,322 @@
+/* Banner Contextual Superior */
+.banner-contextual {
+  background-color: #fdf5f4;
+  border: 1px solid #f3d3cf;
+  border-radius: 8px;
+  padding: 14px 18px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.banner-flex-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.banner-icon-box {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 8px;
+  background-color: #801313;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.banner-icon-box mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #5c0005;
+  margin: 0 0 2px 0;
+  letter-spacing: -0.2px;
+}
+
+.banner-subtitle {
+  font-size: 12px;
+  color: #58413f;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Bloque Card y Cabecera Institucional Vino Tinto */
+.bloque-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.bloque-header {
+  background-color: #801313;
+  color: #ffffff;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bloque-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.bloque-header-title mat-icon {
+  font-size: 19px;
+  width: 19px;
+  height: 19px;
+}
+
+.bloque-badge {
+  background-color: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot-activo {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #34d399;
+  display: inline-block;
+}
+
+.bloque-body {
+  padding: 18px 20px;
+}
+
+/* Solicitante Actions Row */
+.solicitante-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e6e8ea;
+}
+
+.solicitante-saved-pill {
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Botón Institucional Vino Tinto */
+.btn-institucional-wine {
+  background-color: #801313 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 12.5px;
+  border-radius: 6px;
+  height: 38px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-institucional-wine:hover:not([disabled]) {
+  background-color: #5c0005 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-institucional-wine[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-flex-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Supervisor Entry Container */
+.supervisor-entry-box {
+  background-color: #fafbfc;
+  border: 1px solid #e6e8ea;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.supervisor-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e6e8ea;
+}
+
+.supervisor-subheading {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #191c1e;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subheading-icon {
+  color: #801313;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-eliminar-supervisor {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* Tarjeta de Detalle del Supervisor Verificado en Grid */
+.supervisor-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .supervisor-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-tile {
+  background-color: #f7f9fb;
+  border: 1px solid #eceef0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+}
+
+.detail-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #625e59;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.detail-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #191c1e;
+}
+
+.detail-pill-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #15803d;
+  font-size: 10.5px;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #16a34a;
+  display: inline-block;
+}
+
+.detail-caption {
+  font-size: 11px;
+  color: #625e59;
+  margin-top: 2px;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.text-wine {
+  color: #801313;
+}
+
+/* Acciones Supervisores */
+.supervisores-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #e6e8ea;
+}
+
+.supervisores-left-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-agregar-supervisor {
+  border: 1px dashed #801313 !important;
+  color: #801313 !important;
+  background-color: transparent !important;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  height: 36px;
+}
+
+.btn-agregar-supervisor:hover:not([disabled]) {
+  background-color: #fdf5f4 !important;
+}
+
+.btn-agregar-supervisor[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.icon-small {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Field utilities */
+mat-form-field {
+  width: 100%;
+}
+
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  margin-top: 2px;
+}

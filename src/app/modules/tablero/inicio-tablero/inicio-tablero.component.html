@@ -1,0 +1,109 @@
+<plantilla-tarjeta-contenedora
+  [title]="'Tablero de gestión contractual'"
+  [contenido]="contenidoTablero"
+></plantilla-tarjeta-contenedora>
+
+<ng-template #contenidoTablero>
+  @if (rol() === undefined) {
+    <div class="tb-vacio">Cargando tablero…</div>
+  } @else if (rol() === null) {
+    <div class="tb-card tb-vacio">
+      Las estadísticas de contratación están disponibles para los roles de jefe de contratación y abogado.
+    </div>
+  } @else {
+    <div class="tablero">
+      <header class="encabezado">
+        <div>
+          <p class="subtitulo">
+            @if (rol() === 'JEFE') {
+              Vigencia {{ vigencia() }} · Todos los contratos de la Oficina de Contratación ·
+              {{ propios().length }} contratos
+            } @else {
+              Vigencia {{ vigencia() }} · Contratos asignados a ti · {{ propios().length }} contratos
+            }
+          </p>
+        </div>
+        <span class="tb-espacio"></span>
+        <span class="chip-rol">
+          <mat-icon>{{ rol() === 'JEFE' ? 'admin_panel_settings' : 'person' }}</mat-icon>
+          {{ rol() === 'JEFE' ? 'Vista: Jefe de contratación' : 'Vista: Abogado' }}
+        </span>
+        <mat-form-field appearance="outline" class="campo-vigencia" subscriptSizing="dynamic">
+          <mat-label>Vigencia</mat-label>
+          <mat-select [value]="vigencia()" (selectionChange)="cambiarVigencia($event.value)">
+            @for (v of vigencias(); track v) {
+              <mat-option [value]="v">{{ v }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </header>
+
+      @if (error()) {
+        <div class="aviso" role="alert">
+          <mat-icon>error_outline</mat-icon>
+          No fue posible cargar las estadísticas de contratación.
+        </div>
+      }
+
+      <app-resumen-estados [conteo]="conteo()" [detalleTotal]="detalleTotal()"></app-resumen-estados>
+
+      <div class="fila-treemap">
+        <section class="tb-card">
+          <div class="tb-card-header">
+            <div>
+              <h2>Contratos por dependencia solicitante</h2>
+              <p>
+                El área de cada bloque es proporcional al número de contratos. Haz clic en un bloque para
+                filtrar el resumen y la carga.
+              </p>
+            </div>
+            <span class="tb-espacio"></span>
+            @if (nombreDependencia()) {
+              <button mat-stroked-button color="primary" type="button" (click)="seleccionarDependencia(null)">
+                <mat-icon>filter_alt_off</mat-icon>
+                Quitar filtro
+              </button>
+            }
+          </div>
+          <div class="tb-card-body">
+            <app-treemap-dependencias
+              [grupos]="gruposDependencias()"
+              [seleccionada]="dependenciaSeleccionada()"
+              [alertasPorDependencia]="alertasPorDependencia()"
+              (seleccionar)="seleccionarDependencia($event)"
+            ></app-treemap-dependencias>
+          </div>
+        </section>
+
+        <app-semaforo-gestion
+          [alertas]="alertas()"
+          [total]="conteo().total"
+          [mostrarAbogado]="rol() === 'JEFE'"
+        ></app-semaforo-gestion>
+      </div>
+
+      <section class="tb-card">
+        <div class="tb-card-header">
+          <div>
+            <h2>{{ rol() === 'JEFE' ? 'Carga por abogado' : 'Mi carga de trabajo' }}</h2>
+            <p>
+              @if (rol() === 'JEFE') {
+                Contratos asignados a cada abogado en la vigencia {{ vigencia() }}, por estado
+              } @else {
+                Tus contratos frente al promedio de la oficina · vigencia {{ vigencia() }}
+              }
+            </p>
+          </div>
+        </div>
+        <div class="tb-card-body">
+          <app-carga-abogados
+            [contratos]="rol() === 'JEFE' ? propiosFiltrados() : todosFiltrados()"
+            [alertas]="alertas()"
+            [rol]="rol()!"
+            [abogadoId]="personaId()"
+          ></app-carga-abogados>
+        </div>
+      </section>
+    </div>
+  }
+</ng-template>

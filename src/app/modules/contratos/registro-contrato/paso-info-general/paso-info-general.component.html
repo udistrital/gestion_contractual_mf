@@ -1,0 +1,260 @@
+<div appInView (inView)="onInView($event)">
+
+  <!-- Banner Contextual del Paso 1 -->
+  <div class="banner-paso-contexto mb-4">
+    <div class="banner-icon">
+      <mat-icon>verified_user</mat-icon>
+    </div>
+    <div class="banner-text">
+      <h3 class="banner-titulo">Paso 1: Información General y Soporte Presupuestal</h3>
+      <p class="banner-subtitulo">
+        Complete los datos básicos de la contratación y asocie la disponibilidad presupuestal (CDP) que respaldará las obligaciones. Los campos señalados con asterisco (<span class="text-error font-bold">*</span>) son de diligenciamiento obligatorio conforme a la Ley 80 de 1993 y Estatuto Acuerdo 03.
+      </p>
+    </div>
+  </div>
+
+  @if (loadedData()) {
+    <form [formGroup]="formInfoGeneral">
+      <div class="bloque-card mb-4">
+        <!-- Cabecera Institucional Vino Tinto -->
+        <div class="bloque-header">
+          <div class="bloque-header-title">
+            <mat-icon>domain</mat-icon>
+            <span>1. DATOS BÁSICOS DEL CONTRATO</span>
+          </div>
+          <span class="bloque-badge">8 campos obligatorios / Ley 80</span>
+        </div>
+
+        <div class="bloque-body p-3">
+          <div class="row g-3">
+            <!-- Unidad Ejecutora -->
+            <div class="col-12 col-md-6">
+              <app-searchable-select
+                label="Unidad Ejecutora"
+                icon="corporate_fare"
+                [items]="unidadesEjecutoras"
+                [control]="formInfoGeneral.get('unidadEjecutoraId')"
+                [required]="true"
+              >
+              </app-searchable-select>
+            </div>
+
+            <!-- Tipo de Compromiso -->
+            <div class="col-12 col-md-6">
+              <app-searchable-select
+                label="Tipo de Compromiso"
+                icon="feed"
+                [items]="tiposCompromisos"
+                [control]="formInfoGeneral.get('tipoCompromisoId')"
+                [required]="true"
+              >
+              </app-searchable-select>
+            </div>
+
+            <!-- Tipo de Contrato (Ancho completo según mockup) -->
+            <div class="col-12">
+              <app-searchable-select
+                label="Tipo de Contrato"
+                icon="description"
+                [items]="tiposContratos"
+                [control]="formInfoGeneral.get('tipoContratoId')"
+                [required]="true"
+              >
+              </app-searchable-select>
+            </div>
+
+            @if (showContratoFields) {
+              @if (formInfoGeneral.get('perfilContratistaId')?.enabled) {
+                <div class="col-12 col-md-6">
+                  <mat-form-field class="w-100" appearance="outline">
+                    <mat-label>Perfil del Contratista:</mat-label>
+                    <mat-icon matIconPrefix>badge</mat-icon>
+                    <mat-select formControlName="perfilContratistaId">
+                      @for (perfil of perfilesContratista; track perfil) {
+                        <mat-option [value]="perfil.Id">
+                          {{ perfil.Nombre }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              }
+
+              @if (formInfoGeneral.get('aplicaPoliza')?.enabled) {
+                <div class="col-12 col-md-6">
+                  <mat-form-field class="w-100" appearance="outline">
+                    <mat-label>Aplica Póliza:</mat-label>
+                    <mat-icon matIconPrefix>admin_panel_settings</mat-icon>
+                    <mat-select formControlName="aplicaPoliza">
+                      @for (aplica of aplicaPoliza; track aplica) {
+                        <mat-option [value]="aplica.value">
+                          {{ aplica.viewValue }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              }
+            }
+
+            @if (showConvenioFields) {
+              <div class="col-12 col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Vigencia de Convenio:</mat-label>
+                  <mat-icon matIconPrefix>date_range</mat-icon>
+                  <mat-select formControlName="vigenciaConvenio">
+                    @for (vigencia of vigenciasConvenio; track vigencia) {
+                      <mat-option [value]="vigencia.Id">
+                        {{ vigencia.Nombre }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Convenio:</mat-label>
+                  <mat-icon matIconPrefix>folder_shared</mat-icon>
+                  <mat-select formControlName="convenio">
+                    @for (conv of convenios; track conv) {
+                      <mat-option [value]="conv.Id">
+                        {{ conv.Nombre }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Nombre Convenio:</mat-label>
+                  <mat-icon matIconPrefix>text_fields</mat-icon>
+                  <input matInput formControlName="nombreConvenio" />
+                </mat-form-field>
+              </div>
+            }
+
+            <!-- Modalidad de Selección -->
+            <div class="col-12 col-md-6">
+              <app-searchable-select
+                label="Modalidad de Selección"
+                icon="filter_alt"
+                [items]="modalidadesSeleccion"
+                [control]="formInfoGeneral.get('modalidadSeleccionId')"
+                [required]="true"
+              >
+              </app-searchable-select>
+            </div>
+
+            <!-- Régimen de Contratación -->
+            <div class="col-12 col-md-6">
+              <app-searchable-select
+                label="Régimen de Contratación"
+                icon="gavel"
+                [items]="regimenesContratacion"
+                [control]="formInfoGeneral.get('regimenContratacionId')"
+                [required]="true"
+              >
+              </app-searchable-select>
+            </div>
+
+            <!-- Tipología Específica (CGR) -->
+            <div class="col-12 col-md-6">
+              <app-searchable-select
+                label="Tipología Específica (CGR - Contraloría)"
+                icon="category"
+                [items]="tipologiasEspecificas"
+                [control]="formInfoGeneral.get('tipologiaEspecificaId')"
+                [required]="true"
+              >
+              </app-searchable-select>
+            </div>
+
+            <!-- Procedimiento -->
+            <div class="col-12 col-md-6">
+              <app-searchable-select
+                label="Procedimiento (Código de trámite)"
+                icon="rule"
+                [items]="procedimientos"
+                [control]="formInfoGeneral.get('procedimientoId')"
+                [required]="true"
+              >
+              </app-searchable-select>
+            </div>
+
+            <!-- Fecha Suscripción Estudios Previos -->
+            @if (showContratoFields && formInfoGeneral.get('fechaSuscripcionEstudios')?.enabled) {
+              <div class="col-12 col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Fecha Suscripción Estudios Previos (DD/MM/AAAA):</mat-label>
+                  <input
+                    matInput
+                    [matDatepicker]="picker"
+                    formControlName="fechaSuscripcionEstudios"
+                    [max]="maxDate"
+                  />
+                  <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+              </div>
+            }
+
+            <!-- Tríada de Ejecución: Plazo, Unidad y Estimación de Término -->
+            <div class="col-12 col-md-4">
+              <mat-form-field class="w-100" appearance="outline">
+                <mat-label>Plazo de Ejecución:</mat-label>
+                <mat-icon matIconPrefix>timelapse</mat-icon>
+                <input
+                  matInput
+                  type="number"
+                  min="1"
+                  formControlName="plazoEjecucion"
+                  (keydown)="validateOnlyNumbers($event)"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <mat-form-field class="w-100" appearance="outline">
+                <mat-label>Unidad de Tiempo:</mat-label>
+                <mat-icon matIconPrefix>schedule</mat-icon>
+                <mat-select formControlName="unidadEjecucionId">
+                  @for (unidad of unidadesEjecucion; track unidad) {
+                    <mat-option [value]="unidad.Id">
+                      {{ unidad.Nombre }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="estimacion-termino-wrapper">
+                <span class="estimacion-label">ESTIMACIÓN DE TÉRMINO</span>
+                <div class="estimacion-box" title="Calculado a partir de la fecha de suscripción y el plazo">
+                  <mat-icon class="estimacion-icon">event_available</mat-icon>
+                  <span class="estimacion-texto font-mono">{{ estimacionTermino }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end mt-3">
+            @if (!viewMode()) {
+              <button
+                mat-raised-button
+                (click)="guardarYContinuar()"
+                color="primary"
+                [disabled]="!formInfoGeneral.valid"
+              >
+                <mat-icon>save</mat-icon>
+                Guardar Datos Básicos
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </form>
+  }
+</div>

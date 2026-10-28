@@ -1,0 +1,68 @@
+<section class="tb-card alertas" aria-label="Alertas de gestión">
+  <div class="tb-card-header">
+    <div>
+      <h2>Alertas de gestión</h2>
+      <p>Contratos con más de {{ diasPorDefecto }} días sin avanzar de estado o próximos a vencer</p>
+    </div>
+    <span class="tb-espacio"></span>
+    <span class="tb-pill alta">{{ altas() }} alta</span>
+    <span class="tb-pill media">{{ medias() }} media</span>
+  </div>
+
+  <div class="tb-card-body">
+    <div class="tipos">
+      @for (t of tipos; track t.tipo) {
+        <button
+          type="button"
+          class="tipo"
+          [class.activo]="estadoActivo() === t.valor"
+          [class.estatico]="!seleccionable()"
+          (click)="elegir(t)"
+        >
+          <mat-icon>{{ t.icono }}</mat-icon>
+          <b>{{ conteoPorTipo()[t.tipo] }}</b>
+          <small>{{ t.nombre }}</small>
+        </button>
+      }
+    </div>
+
+    @if (alertas().length === 0) {
+      <div class="tb-vacio">
+        <mat-icon class="ok">task_alt</mat-icon>
+        <div>Sin contratos pendientes de gestión.</div>
+      </div>
+    } @else {
+      <ul class="lista" [class.completa]="todasVisibles()">
+        @for (a of visibles(); track a.contrato.id) {
+          <li class="item">
+            <span class="item-icono" [class.alta]="a.prioridad === 'alta'">
+              <mat-icon>{{ iconos[a.tipo] }}</mat-icon>
+            </span>
+            <div class="item-texto">
+              <div>
+                <b>{{ a.contrato.numero }}</b>
+                <span class="tb-pill" [class.alta]="a.prioridad === 'alta'" [class.media]="a.prioridad === 'media'">
+                  {{ a.prioridad === 'alta' ? 'Prioridad alta' : 'Prioridad media' }}
+                </span>
+              </div>
+              <div class="motivo">{{ a.texto }}</div>
+              <div class="contexto">
+                {{ a.contrato.dependencia }}@if (mostrarAbogado()) { · {{ a.contrato.abogado }} }
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+      @if (alertas().length > limite()) {
+        <button type="button" class="mas" (click)="alternarTodas()">
+          @if (todasVisibles()) {
+            Ver menos <mat-icon>expand_less</mat-icon>
+          } @else {
+            Ver las {{ alertas().length }} alertas <mat-icon>expand_more</mat-icon>
+          }
+        </button>
+      }
+    }
+    <p class="nota">Umbral: {{ diasPorDefecto }} días por defecto (máximo {{ diasMaximo }})</p>
+  </div>
+</section>

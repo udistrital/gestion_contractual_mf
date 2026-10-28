@@ -37,9 +37,13 @@
     </div>
   }
   @if (selectedContratoId && !hasError) {
-    <app-datos-basicos></app-datos-basicos>
+    <app-datos-basicos
+      [contratoId]="selectedContratoId"
+      (polizaGuardada)="onPolizaGuardada($event)"
+    ></app-datos-basicos>
     <app-amparo-contrato
       [contratoId]="selectedContratoId"
+      [polizaId]="polizaId"
     ></app-amparo-contrato>
   }
 </form>
