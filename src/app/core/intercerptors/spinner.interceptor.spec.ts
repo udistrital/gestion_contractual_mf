@@ -59,4 +59,24 @@ describe('SpinnerIntercerptor', () => {
     expect(show).not.toHaveBeenCalled();
     expect(hide).not.toHaveBeenCalled();
   });
+
+  it('no debería alterar el contador cuando OMITIR_SPINNER corre en paralelo con una petición normal', () => {
+    const contador = () => spinner['requestCount'];
+
+    http.get('/recurso').subscribe();
+    http
+      .post('/huellas', {}, { context: new HttpContext().set(OMITIR_SPINNER, true) })
+      .subscribe();
+    expect(contador()).toBe(1);
+    expect(cargando()).toBe(true);
+
+    // La huella termina primero: no debe ocultar el spinner de la otra petición.
+    httpMock.expectOne('/huellas').flush({});
+    expect(contador()).toBe(1);
+    expect(cargando()).toBe(true);
+
+    httpMock.expectOne('/recurso').flush({});
+    expect(contador()).toBe(0);
+    expect(cargando()).toBe(false);
+  });
 });
