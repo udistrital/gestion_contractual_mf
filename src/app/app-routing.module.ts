@@ -11,6 +11,16 @@ const routes: Routes = [
     component: InicioTableroComponent
   },
   {
+    path: 'gestion-contractual/contratos',
+    canActivate: [authGuard],
+    loadChildren: () => import('./modules/contratos/contratos.module').then(m => m.ContratosModule)
+  },
+  {
+    path: 'gestion-contractual',
+    redirectTo: 'gestion-contractual/contratos/consultar',
+    pathMatch: 'full'
+  },
+  {
     path: 'contratos',
     canActivate: [authGuard],
     loadChildren: () => import('./modules/contratos/contratos.module').then(m => m.ContratosModule)

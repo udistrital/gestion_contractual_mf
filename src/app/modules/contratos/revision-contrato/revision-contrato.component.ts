@@ -21,6 +21,7 @@ import {
 import { SubirArchivoComponent } from './cargar-archivo/cargar-archivo.component';
 import { forkJoin } from 'rxjs';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { MinutasMidService } from 'src/app/services/minuta-mid.service';
 
 @Component({
     selector: 'app-revision-contrato',
@@ -51,6 +52,7 @@ export class RevisionContratoComponent {
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private gestorDocumentalService: GestorDocumentalService,
+    private minutasMidService: MinutasMidService,
     private rolService: RolService,
     private userService: UserService
   ) {}
@@ -75,7 +77,9 @@ export class RevisionContratoComponent {
   }
 
   getIdContratoUrl() {
-    const id = this.route.snapshot.paramMap.get('idContrato');
+    const id =
+      this.route.snapshot.paramMap.get('idContrato') ||
+      this.route.snapshot.paramMap.get('contratoId');
     this.contrato_general_id = id ? Number(id) : 0;
   }
 
@@ -94,6 +98,7 @@ export class RevisionContratoComponent {
   }
 
   cargarDatosIniciales() {
+    if (!this.contrato_general_id) return;
     forkJoin({
       contrato: this.contratoGeneralCrudService.get(this.contrato_general_id),
       estadosContrato: this.contratoGeneralCrudService.getEstados(
@@ -101,23 +106,28 @@ export class RevisionContratoComponent {
       ),
     }).subscribe({
       next: ({ contrato, estadosContrato }: any) => {
-        if (contrato.Success && contrato.Status === 200) {
-          this.unidad_ejecutora_id = contrato.Data?.unidad_ejecutora_id;
-          this.vigencia = contrato.Data?.vigencia;
-          this.numero_contrato = contrato.Data?.numero_contrato;
+        const contratoData = contrato?.Data || contrato;
+        if (contratoData) {
+          this.unidad_ejecutora_id = contratoData.unidad_ejecutora_id || 1;
+          this.vigencia = contratoData.vigencia || '';
+          this.numero_contrato = contratoData.numero_contrato || '';
         }
 
-        if (estadosContrato.length > 0) {
+        const estados = Array.isArray(estadosContrato)
+          ? estadosContrato
+          : (estadosContrato?.Data || []);
+
+        if (estados.length > 0) {
           this.estadoInternoActual =
-            estadosContrato[0].estado_interno_parametro_id || 0;
+            estados[0].estado_interno_parametro_id || 0;
           this.estadoInternoAnterior =
-            estadosContrato[1]?.estado_interno_parametro_id || 0;
+            estados[1]?.estado_interno_parametro_id || 0;
         }
 
         this.getTextosMensajes();
       },
       error: (error) => {
-        this.handleError('Error al cargar datos iniciales', error);
+        console.warn('Error al cargar datos iniciales del contrato:', error);
       },
     });
   }
@@ -142,45 +152,124 @@ export class RevisionContratoComponent {
     this.contratoGeneralCrudService
       .getDocumentoActual(this.contrato_general_id, tipoDocumento)
       .subscribe({
-        next: (documentos: DocumentoContrato[]) => {
-          const documentoActual = documentos[0];
-          if (documentoActual) {
+        next: (documentos: any) => {
+          const docsList = Array.isArray(documentos)
+            ? documentos
+            : (documentos?.Data || []);
+          const documentoActual = docsList[0];
+          if (documentoActual?.documento_enlace) {
             this.gestorDocumentalService
               .getDocumento(documentoActual.documento_enlace)
               .subscribe({
                 next: (response: any) => {
-                  if (response.file) {
+                  if (response?.file) {
                     callback(response.file);
                   }
+                  this.isLoading = false;
                 },
-                error: (error) => this.handleError(errorMessage, error),
-                complete: () => (this.isLoading = false),
+                error: (error) => {
+                  console.warn(errorMessage, error);
+                  this.isLoading = false;
+                },
               });
           } else {
             this.isLoading = false;
           }
         },
         error: (error) => {
-          this.handleError('Error al obtener documentos', error);
+          console.warn('No se encontraron documentos en gestor documental:', error);
           this.isLoading = false;
         },
       });
   }
 
   getMinuta() {
-    this.getDocumento(
-      environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
-      (file) => (this.documentos.minuta = file),
-      'Error al obtener minuta'
-    );
+    this.isLoading = true;
+    this.contratoGeneralCrudService
+      .getDocumentoActual(
+        this.contrato_general_id,
+        environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA
+      )
+      .subscribe({
+        next: (documentos: any) => {
+          const docsList = Array.isArray(documentos)
+            ? documentos
+            : (documentos?.Data || []);
+          const documentoActual = docsList[0];
+          if (documentoActual?.documento_enlace) {
+            this.gestorDocumentalService
+              .getDocumento(documentoActual.documento_enlace)
+              .subscribe({
+                next: (response: any) => {
+                  if (response?.file) {
+                    this.documentos.minuta = response.file;
+                    this.isLoading = false;
+                  } else {
+                    this.obtenerMinutaRenderizadaMid();
+                  }
+                },
+                error: () => this.obtenerMinutaRenderizadaMid(),
+              });
+          } else {
+            this.obtenerMinutaRenderizadaMid();
+          }
+        },
+        error: () => {
+          this.obtenerMinutaRenderizadaMid();
+        },
+      });
+  }
+
+  obtenerMinutaRenderizadaMid() {
+    if (!this.contrato_general_id) {
+      this.isLoading = false;
+      return;
+    }
+    this.minutasMidService.getMinuta(this.contrato_general_id).subscribe({
+      next: (response: any) => {
+        const base64 = response?.Data || response;
+        if (typeof base64 === 'string' && base64.length > 0) {
+          this.documentos.minuta = base64;
+        }
+        this.isLoading = false;
+      },
+      error: (error: any) => {
+        console.warn('No se pudo obtener minuta renderizada desde minuta_mid:', error);
+        this.isLoading = false;
+      },
+    });
   }
 
   getDocumentosPrecontractuales() {
-    this.getDocumento(
-      environment.TIPO_DOCUMENTO_ID_PARAMETROS.DOCUMENTOS_PRECONTRACTUALES,
-      (file) => (this.documentos.documentos_precontractuales = file),
-      'Error al obtener documentos precontractuales'
-    );
+    this.contratoGeneralCrudService
+      .getDocumentoActual(
+        this.contrato_general_id,
+        environment.TIPO_DOCUMENTO_ID_PARAMETROS.DOCUMENTOS_PRECONTRACTUALES
+      )
+      .subscribe({
+        next: (documentos: any) => {
+          const docsList = Array.isArray(documentos)
+            ? documentos
+            : (documentos?.Data || []);
+          const documentoActual = docsList[0];
+          if (documentoActual?.documento_enlace) {
+            this.gestorDocumentalService
+              .getDocumento(documentoActual.documento_enlace)
+              .subscribe({
+                next: (response: any) => {
+                  if (response?.file) {
+                    this.documentos.documentos_precontractuales = response.file;
+                  }
+                },
+                error: (error) =>
+                  console.warn('Error al obtener documentos precontractuales:', error),
+              });
+          }
+        },
+        error: (error) => {
+          console.warn('No se encontraron documentos precontractuales en gestor:', error);
+        },
+      });
   }
 
   mostrarBotonRechazo() {

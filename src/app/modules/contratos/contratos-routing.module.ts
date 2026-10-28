@@ -8,9 +8,14 @@ import { authGuard } from 'src/_guards/auth.guard';
 
 const routes: Routes = [
   {
-    path: 'registrar',
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'gestionar',
+  },
+  {
+    path: 'gestionar',
     canActivate: [authGuard],
-    component: RegistroContratoComponent,
+    component: ConsultaContratoComponent,
   },
   {
     path: 'consultar',
@@ -18,9 +23,19 @@ const routes: Routes = [
     component: ConsultaContratoComponent,
   },
   {
+    path: 'registrar',
+    canActivate: [authGuard],
+    component: RegistroContratoComponent,
+  },
+  {
     path: 'editar/:contratoId',
     canActivate: [authGuard],
     component: EditarContratoComponent,
+  },
+  {
+    path: 'documentos/:idContrato',
+    canActivate: [authGuard],
+    component: RevisionContratoComponent,
   },
   {
     path: 'documentos/:contratoId',

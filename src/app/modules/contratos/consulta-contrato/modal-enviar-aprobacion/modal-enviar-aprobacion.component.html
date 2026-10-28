@@ -1,0 +1,81 @@
+<div class="modal-enviar-container">
+  <div class="modal-header">
+    <div class="header-icon-badge">
+      <mat-icon>send</mat-icon>
+    </div>
+    <div class="header-text">
+      <h2 mat-dialog-title class="dialog-title">Enviar Contrato a Aprobación</h2>
+      <p class="dialog-subtitle">Remisión oficial para VoBo del Jefe de Contratación</p>
+    </div>
+    <button mat-icon-button (click)="cancelar()" class="btn-close" aria-label="Cerrar modal">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="modal-body">
+    <!-- Ficha Resumen del Contrato -->
+    <div class="resumen-card">
+      <div class="resumen-grid">
+        <div class="resumen-item">
+          <span class="label">Número / Consecutivo:</span>
+          <span class="value destacado">{{ numeroContrato }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="label">Vigencia:</span>
+          <span class="value">{{ data.contrato.vigencia || 'Sin vigencia' }}</span>
+        </div>
+        <div class="resumen-item col-span-2">
+          <span class="label">Contratista:</span>
+          <span class="value">{{ nombreContratista }}</span>
+        </div>
+        <div class="resumen-item col-span-2">
+          <span class="label">Valor Total:</span>
+          <span class="value valor">{{ valorContrato }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje Opcional del Abogado -->
+    <div class="form-section">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Mensaje o nota para la Jefatura (opcional)</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          [(ngModel)]="observacion"
+          placeholder="Escribe aquí aclaraciones técnicas o jurídicas para la revisión de este contrato..."
+          maxlength="500"
+        ></textarea>
+        <mat-hint align="end">{{ observacion.length }}/500</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <!-- Advertencia de Bloqueo de Edición -->
+    <div class="aviso-bloqueo">
+      <mat-icon class="aviso-icon">lock_clock</mat-icon>
+      <div class="aviso-texto">
+        <strong>Bloqueo preventivo de edición:</strong>
+        <span>
+          Al enviar este contrato a aprobación, pasará al estado <em>"Por Aprobar"</em> y su edición quedará
+          temporalmente deshabilitada hasta que la Jefatura emita el VoBo o lo devuelva con observaciones.
+        </span>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="modal-actions">
+    <button mat-stroked-button type="button" (click)="cancelar()" class="btn-cancelar">
+      Cancelar
+    </button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="confirmar()"
+      class="btn-confirmar"
+    >
+      <mat-icon>send</mat-icon>
+      Confirmar y Enviar
+    </button>
+  </mat-dialog-actions>
+</div>
