@@ -1,5 +1,5 @@
 <plantilla-tarjeta-contenedora
-  [title]="!editMode() ? 'Registrar Contrato' : 'Editar Contrato'"
+  [title]="tituloVista"
   [contenido]="contenidoDePlantilla"
 ></plantilla-tarjeta-contenedora>
 
@@ -81,10 +81,12 @@
           <mat-step [editable]="true">
             <app-paso-supervisores
               #pasoSupervisores
+              [contratoGeneral]="contratoGeneral"
               (stepCompleted)="onPasoSupervisoresCompleted($event)"
             />
             <app-paso-contratistas
               #pasoContratistas
+              [contratoGeneral]="contratoGeneral"
               [contratistaPrevalidado]="contratistaPrevalidado"
               [bloquearContratista]="bloquearContratista"
               (stepCompleted)="onPasoContratistasCompleted($event)"
@@ -96,6 +98,7 @@
           <mat-step [editable]="true">
             <app-paso-obligaciones
               #pasoObligaciones
+              [contratoGeneral]="contratoGeneral"
               (stepCompleted)="onPasoEstructuraCompleted($event)"
               (nextStep)="goToNextStep()"
             />

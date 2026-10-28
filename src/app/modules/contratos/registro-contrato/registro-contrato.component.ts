@@ -3,11 +3,13 @@ import {
   OnInit,
   ViewChild,
   AfterViewInit,
+  OnChanges,
   ViewChildren,
   QueryList,
   inject,
   model,
   effect,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { PasoContratistasComponent } from './paso-contratistas/paso-contratistas.component';
 import { PasoInfoGeneralComponent } from './paso-info-general/paso-info-general.component';
@@ -16,7 +18,7 @@ import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-inf
 import { MatStep, MatStepper } from '@angular/material/stepper';
 import { STEPPER_GLOBAL_OPTIONS, StepperSelectionEvent } from '@angular/cdk/stepper';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { ApiResponse, ContratoGeneral } from 'src/app/types/types';
@@ -44,7 +46,7 @@ export interface PasoDinamico {
   ],
   standalone: false,
 })
-export class RegistroContratoComponent implements OnInit, AfterViewInit {
+export class RegistroContratoComponent implements OnInit, AfterViewInit, OnChanges {
   @ViewChildren(MatStep) steps!: QueryList<MatStep>;
   @ViewChild('stepper') stepper!: MatStepper;
 
@@ -83,6 +85,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly alertService = inject(AlertService);
+  private readonly cdRef = inject(ChangeDetectorRef);
   private breakpointObserver = inject(BreakpointObserver);
 
   contratoGeneralId = model<number>(0);
@@ -92,11 +95,14 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   contratistaPrevalidado: any = null;
   bloquearContratista: boolean = false;
   unidadEjecutoraInicial: any = null;
+  private contratoCargadoId: number = 0;
+  private cargandoContrato: boolean = false;
 
   constructor() {
     this.recuperarEstadoNavegacion();
     effect(() => {
-      if (this.contratoGeneralId()) {
+      const id = this.contratoGeneralId();
+      if (id && id > 0) {
         this.cargarContratoGeneral();
       }
     });
@@ -105,7 +111,19 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.recuperarEstadoNavegacion();
     this.manejarResponsiveStepper();
+    if (this.contratoGeneralId() && !this.contratoGeneral) {
+      this.cargarContratoGeneral();
+    }
     this.verificarPasosGuardadosIniciales();
+  }
+
+  ngOnChanges(): void {
+    if (
+      this.contratoGeneralId() &&
+      (!this.contratoGeneral || this.contratoGeneral.id !== this.contratoGeneralId())
+    ) {
+      this.cargarContratoGeneral();
+    }
   }
 
   private recuperarEstadoNavegacion(): void {
@@ -123,6 +141,17 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
         };
       }
     }
+  }
+
+  get tituloVista(): string {
+    if (!this.editMode()) {
+      return 'Registrar Contrato';
+    }
+    const num =
+      this.contratoGeneral?.numero_contrato ||
+      this.contratoGeneral?.consecutivo_elaboracion ||
+      (this.contratoGeneralId() ? `${this.contratoGeneralId()}` : '');
+    return num ? `Edición del contrato ${num}` : 'Edición de Contrato';
   }
 
   /**
@@ -218,6 +247,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   onPresupuestalGuardado() {
     this.marcarPasoGuardado('general');
+    this.contratoCargadoId = 0;
     this.cargarContratoGeneral();
   }
 
@@ -290,38 +320,57 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   }
 
   cargarContratoGeneral() {
-    this.contratoGeneralCrudService.get(this.contratoGeneralId()).subscribe({
-      next: (response: ApiResponse<ContratoGeneral>) => {
-        if (response.Success && response.Data) {
-          this.contratoGeneral = response.Data;
-          if (this.contratoGeneral.id) {
-            this.marcarPasoGuardado('general');
+    const id = this.contratoGeneralId();
+    if (!id || this.contratoCargadoId === id || this.cargandoContrato) return;
+
+    this.contratoCargadoId = id;
+    this.cargandoContrato = true;
+
+    this.contratoGeneralCrudService
+      .get(id)
+      .pipe(
+        finalize(() => {
+          this.cargandoContrato = false;
+        })
+      )
+      .subscribe({
+        next: (response: any) => {
+          const data = response?.Data ?? response?.Body ?? response;
+          const contrato: ContratoGeneral = Array.isArray(data) ? data[0] : data;
+
+          if (contrato && (contrato.id || (contrato as any).Id)) {
+            this.contratoGeneral = contrato;
+            if (this.contratoGeneral.id) {
+              this.marcarPasoGuardado('general');
+            }
+            if (this.contratoGeneral.objeto || this.contratoGeneral.actividades) {
+              this.marcarPasoGuardado('estructura');
+            }
+            if (this.contratoGeneral.contratista) {
+              this.marcarPasoGuardado('responsables');
+            }
+            if (this.contratoGeneral.tipo_compromiso_id) {
+              this.onTipoCompromisoChange(
+                this.contratoGeneral.tipo_compromiso_id.toString()
+              );
+            }
+            if (
+              this.contratoGeneral.aplica_poliza !== undefined &&
+              this.contratoGeneral.aplica_poliza !== null
+            ) {
+              this.onAplicaPolizaChange(
+                this.contratoGeneral.aplica_poliza ? '1' : '0'
+              );
+            }
+            this.verificarPasosGuardadosIniciales();
+            this.cdRef.detectChanges();
           }
-          if (this.contratoGeneral.objeto || this.contratoGeneral.actividades) {
-            this.marcarPasoGuardado('estructura');
-          }
-          if (this.contratoGeneral.contratista) {
-            this.marcarPasoGuardado('responsables');
-          }
-          if (this.contratoGeneral.tipo_compromiso_id) {
-            this.onTipoCompromisoChange(
-              this.contratoGeneral.tipo_compromiso_id.toString()
-            );
-          }
-          if (
-            this.contratoGeneral.aplica_poliza !== undefined &&
-            this.contratoGeneral.aplica_poliza !== null
-          ) {
-            this.onAplicaPolizaChange(
-              this.contratoGeneral.aplica_poliza ? '1' : '0'
-            );
-          }
-        }
-      },
-      error: () => {
-        this.alertService.showErrorAlert('Error al cargar el contrato general');
-      },
-    });
+        },
+        error: (err) => {
+          console.error('Error al cargar contrato general:', err);
+          this.alertService.showErrorAlert('Error al cargar el contrato general');
+        },
+      });
   }
 
   private verificarPasosGuardadosIniciales() {

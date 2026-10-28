@@ -1,4 +1,4 @@
-import { Component, effect, EventEmitter, inject, input, output, Output } from '@angular/core';
+import { Component, effect, EventEmitter, inject, input, OnChanges, output, Output } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalEspecificacionComponent } from './modal-especificacion/modal-especificacion.component';
@@ -14,7 +14,7 @@ import { environment } from 'src/environments/environment';
     styleUrls: ['./paso-especificaciones.component.css'],
     standalone: false
 })
-export class PasoEspecificacionesComponent {
+export class PasoEspecificacionesComponent implements OnChanges {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
@@ -39,7 +39,13 @@ export class PasoEspecificacionesComponent {
       if (this.contratoGeneral()) {
         this.getEspecificaciones();
       }
-    })
+    });
+  }
+
+  ngOnChanges(): void {
+    if (this.contratoGeneral()) {
+      this.getEspecificaciones();
+    }
   }
 
   get valorTotalGeneral(): number {

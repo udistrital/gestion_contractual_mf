@@ -1,4 +1,6 @@
-<app-registro-contrato
-    [contratoGeneralId]="contratoGeneralId"
-    [editMode]="editMode"
-></app-registro-contrato>
+@if (contratoGeneralId > 0) {
+  <app-registro-contrato
+      [contratoGeneralId]="contratoGeneralId"
+      [editMode]="editMode"
+  ></app-registro-contrato>
+}

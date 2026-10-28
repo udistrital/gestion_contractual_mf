@@ -3,6 +3,7 @@ import {
   Component,
   output,
   OnInit,
+  OnChanges,
   ChangeDetectionStrategy,
   input,
   inject,
@@ -31,7 +32,7 @@ import {firstValueFrom} from "rxjs";
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class PasoSupervisoresComponent implements OnInit {
+export class PasoSupervisoresComponent implements OnInit, OnChanges {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>();
@@ -47,6 +48,8 @@ export class PasoSupervisoresComponent implements OnInit {
   sedes: SedeContratoMidResponse[] = [];
   dependenciasPorSede: { [key: number]: DependenciaContratoMidResponse[] } = {};
   solicitanteSaved = false;
+  cargandoDatosGuardados = false;
+  private contratoCargadoId: number = 0;
 
   form: FormGroup;
   
@@ -77,50 +80,102 @@ export class PasoSupervisoresComponent implements OnInit {
     this.setupFormListeners();
   }
 
+  ngOnChanges(): void {
+    if (this.contratoGeneral()?.id) {
+      this.loadSavedData();
+    }
+  }
+
   private loadSavedData(): void {
+    const contratoId = this.contratoGeneral()?.id;
+    if (!contratoId || this.contratoCargadoId === contratoId || this.cargandoDatosGuardados) return;
+
+    this.contratoCargadoId = contratoId;
+    this.cargandoDatosGuardados = true;
+
     // Cargar datos del solicitante
-    this.contratoGeneralCrudService.getSolicitante(this.contratoGeneral()?.id as number).subscribe({
-      next: (response: ApiResponse<Solicitante>) => {
-        this.form.get('solicitante')?.patchValue({
-          sede: response.Data.sede_solicitante_id,
-          dependencia: response.Data.dependencia_solicitante_id,
-        });
-        this.solicitanteId = response.Data?.id as number;
-        this.solicitanteSaved = true;
-      }, error: () => {
-        console.log('No se pudo cargar el solicitante.')
-      }
-    });
+    this.contratoGeneralCrudService
+      .getSolicitante(contratoId)
+      .subscribe({
+        next: (response: any) => {
+          const data = response?.Data ?? response;
+          if (data && (data.sede_solicitante_id || data.dependencia_solicitante_id || data.id)) {
+            const sedeId = data.sede_solicitante_id;
+            const depId = data.dependencia_solicitante_id;
+            this.solicitanteId = data?.id as number;
+            this.solicitanteSaved = true;
+
+            if (sedeId) {
+              this.cargarDependencias(Number(sedeId), 'solicitante', undefined, false);
+            }
+            this.form.get('solicitante')?.patchValue({
+              sede: sedeId,
+              dependencia: depId,
+            });
+            this.cdRef.detectChanges();
+          }
+        },
+        error: () => {
+          console.log('No se pudo cargar el solicitante.');
+        },
+      });
 
     // Cargar supervisores
-    this.contratoGeneralCrudService.getSupervisores(this.contratoGeneral()?.id as number).subscribe({
-      next: (response: ApiResponse<SupervisorToSave[]>) => {
-        this.supervisoresIds = response.Data.map((sup) => sup?.id as number)
-        if (response.Data.length > 1 && this.getSupervisoresFormArray().length < 2) {
-          this.agregarSupervisor();
-        }
+    this.contratoGeneralCrudService
+      .getSupervisores(contratoId)
+      .subscribe({
+        next: (response: ApiResponse<SupervisorToSave[]>) => {
+          const supervisores =
+            response?.Data || (Array.isArray(response) ? response : []);
+          if (supervisores && supervisores.length > 0) {
+            this.supervisoresIds = supervisores.map(
+              (sup) => sup?.id as number
+            );
+            if (
+              supervisores.length > 1 &&
+              this.getSupervisoresFormArray().length < 2
+            ) {
+              this.agregarSupervisor();
+            }
 
-        response.Data.forEach((supervisor, index) => {
-          const supervisorForm = this.getSupervisoresFormArray().at(index);
+            supervisores.forEach((supervisor, index) => {
+              const supervisorForm = this.getSupervisoresFormArray().at(index);
+              if (!supervisorForm) return;
 
-          this.supervisorLegacy[index] = {
-            documento: supervisor.documento,
-            sede_legado: supervisor.sede_legado,
-            dependencia_legado: supervisor.dependencia_legado,
-            cargo_legado: supervisor.cargo_legado,
-          };
+              this.supervisorLegacy[index] = {
+                documento: supervisor.documento,
+                sede_legado: supervisor.sede_legado,
+                dependencia_legado: supervisor.dependencia_legado,
+                cargo_legado: supervisor.cargo_legado,
+              };
 
-          supervisorForm.patchValue({
-            sede: Number(supervisor.sede_id),
-            dependencia: Number(supervisor.dependencia_id),
-            codigoVerificacion: supervisor.digito_verificacion,
-          });
-        });
-        
-      }, error: () => {
-        console.log('No se pudo cargar el supervisor.')
-      }
-    });
+              const sedeId = Number(supervisor.sede_id);
+              const depId = Number(supervisor.dependencia_id);
+
+              if (sedeId) {
+                this.cargarDependencias(sedeId, 'supervisor', index, false);
+              }
+              if (depId) {
+                this.cargarSupervisor(String(depId), index);
+              }
+
+              supervisorForm.patchValue({
+                sede: sedeId,
+                dependencia: depId,
+                codigoVerificacion: supervisor.digito_verificacion,
+              });
+            });
+
+            this.checkStepCompleted();
+            this.cdRef.detectChanges();
+          }
+          this.cargandoDatosGuardados = false;
+        },
+        error: () => {
+          console.log('No se pudo cargar el supervisor.');
+          this.cargandoDatosGuardados = false;
+        },
+      });
   }
 
   guardarSolicitante() {
@@ -300,6 +355,7 @@ export class PasoSupervisoresComponent implements OnInit {
         filter((sedeId) => sedeId !== null && sedeId !== undefined)
       )
       .subscribe((sedeId) => {
+        if (this.cargandoDatosGuardados) return;
         this.cargarDependencias(Number(sedeId), 'solicitante');
       });
 
@@ -313,6 +369,7 @@ export class PasoSupervisoresComponent implements OnInit {
       distinctUntilChanged(),
       filter((sedeId) => sedeId !== null && sedeId !== undefined)
     ).subscribe((sedeId) => {
+      if (this.cargandoDatosGuardados) return;
       this.cargarDependencias(Number(sedeId), 'supervisor', index);
 
       supervisor.patchValue({
@@ -330,6 +387,7 @@ export class PasoSupervisoresComponent implements OnInit {
       distinctUntilChanged(),
       filter((dependenciaId) => dependenciaId !== null && dependenciaId !== undefined)
     ).subscribe((dependenciaId) => {
+      if (this.cargandoDatosGuardados) return;
       this.cargarSupervisor(String(dependenciaId), index);
     });
   }
@@ -423,7 +481,8 @@ export class PasoSupervisoresComponent implements OnInit {
   private cargarDependencias(
     sedeId: number,
     tipo: 'solicitante' | 'supervisor',
-    supervisorIndex?: number
+    supervisorIndex?: number,
+    resetDependencia: boolean = true
   ): void {
     if (!sedeId) return;
 
@@ -438,27 +497,25 @@ export class PasoSupervisoresComponent implements OnInit {
         next: (dependencias) => {
           this.dependenciasPorSede[sedeId] = dependencias;
 
-          switch (tipo) {
-            case 'supervisor':
-              if (supervisorIndex !== undefined) {
-                const supervisor = this.getSupervisoresFormArray().at(supervisorIndex);
-                supervisor.get('dependencia')?.setValue(null, { emitEvent: false });
-              }
-              break;
+          if (resetDependencia) {
+            switch (tipo) {
+              case 'supervisor':
+                if (supervisorIndex !== undefined) {
+                  const supervisor = this.getSupervisoresFormArray().at(supervisorIndex);
+                  supervisor.get('dependencia')?.setValue(null, { emitEvent: false });
+                }
+                break;
 
-            case 'solicitante':
-              this.form.get('solicitante.dependencia')?.setValue(null, { emitEvent: false });
-              break;
+              case 'solicitante':
+                this.form.get('solicitante.dependencia')?.setValue(null, { emitEvent: false });
+                break;
+            }
           }
 
           this.cdRef.detectChanges();
         },
         error: async (error) => {
           console.error(`Error al cargar dependencias para sede ${sedeId}:`, error);
-          this.alertService.showErrorAlert(
-            'Ocurrió un error al cargar las dependencias, por favor intenta más tarde.',
-            'Error al cargar dependencias'
-          );
         },
       });
   }

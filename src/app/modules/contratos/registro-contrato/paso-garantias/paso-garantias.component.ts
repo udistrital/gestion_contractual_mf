@@ -5,6 +5,7 @@ import {
   inject,
   input,
   OnInit,
+  OnChanges,
   output,
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
@@ -22,7 +23,7 @@ import { AlertService } from 'src/app/services/alert.service';
     styleUrls: ['./paso-garantias.component.css'],
     standalone: false
 })
-export class PasoGarantiasComponent implements OnInit {
+export class PasoGarantiasComponent implements OnInit, OnChanges {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
@@ -57,6 +58,12 @@ export class PasoGarantiasComponent implements OnInit {
     this.form.statusChanges.subscribe(() => {
       this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
     });
+  }
+
+  ngOnChanges(): void {
+    if (this.contratoGeneral()) {
+      this.loadSavedData();
+    }
   }
 
   get totalAmparos(): number {

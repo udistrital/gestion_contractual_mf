@@ -151,10 +151,10 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
 
   constructor() {
     effect(() => {
-      if (this.loadedData()) {
+      if (this.loadedData() && this.contratoGeneral()) {
         this.setFormData();
       }
-    })
+    });
   }
 
   ngOnInit(): void {
@@ -270,7 +270,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
         this.loadedData.set(true);
         this.cdRef.detectChanges();
       })
-      .catch(this.handleError);
+      .catch((err) => this.handleError(err));
   }
 
   private processRoles(): void {
@@ -577,7 +577,9 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   }
 
   setFormData() {
-    const data = this.contratoGeneral()!;
+    const data = this.contratoGeneral();
+    if (!data) return;
+
     const formData = {
       unidadEjecutoraId: data.unidad_ejecutora_id,
       tipoCompromisoId: data.tipo_compromiso_id ?? 0,
@@ -586,9 +588,6 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
       fechaSuscripcionEstudios:
         data.fecha_suscripcion_estudios?.toLocaleString() ?? '',
       aplicaPoliza: data?.aplica_poliza ? '1' : '0',
-      //vigenciaConvenio: data?.vigencia_convenio || '',
-      //convenio: data?.convenio || '',
-      //nombreConvenio: data?.nombre_convenio || '',
       modalidadSeleccionId: data.modalidad_seleccion_id ?? 0,
       tipologiaEspecificaId: data.tipologia_especifica_id ?? 0,
       regimenContratacionId: data.regimen_contratacion_id ?? 0,
@@ -598,6 +597,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
     };
     this.formInfoGeneral.patchValue(formData);
     this.updateFormAndSelects(formData);
+    this.cdRef.detectChanges();
   }
 
   updateFormAndSelects(data: any) {
@@ -742,7 +742,7 @@ export class PasoInfoGeneralComponent implements OnInit, OnChanges {
   }
 
   private async handleError(error: any): Promise<void> {
-    this.alertService.showErrorAlert(
+    this.alertService?.showErrorAlert?.(
       'Ocurrió un error al cargar los datos iniciales',
       'Error al cargar los datos iniciales'
     );

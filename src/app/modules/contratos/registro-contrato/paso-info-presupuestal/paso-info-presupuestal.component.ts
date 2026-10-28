@@ -1,7 +1,9 @@
 import {
   ChangeDetectorRef,
   Component,
+  effect,
   input,
+  OnChanges,
   OnDestroy,
   OnInit,
   output,
@@ -24,7 +26,7 @@ import { AlertService } from 'src/app/services/alert.service';
     styleUrls: ['./paso-info-presupuestal.component.css'],
     standalone: false
 })
-export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
+export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChanges {
   stepCompleted = output<boolean>();
   nextStep = output<void>();
   cdpGuardado = output<CDP[]>();
@@ -113,6 +115,8 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   cargoIdOrdenador: number | null = null;
   idSicapitalOrdenador: number | null = null;
   ordenadorGastoId: number | null = null;
+  private contratoCargadoId: number = 0;
+  private cargandoPresupuestal: boolean = false;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -122,7 +126,14 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     private cdpsService: CdpsService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService,
-  ) {}
+  ) {
+    effect(() => {
+      const c = this.contratoGeneral();
+      if (c && c.id) {
+        this.loadSavedData();
+      }
+    });
+  }
 
   ngOnInit() {
     this.cargarCDPs();
@@ -158,6 +169,12 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngOnChanges(): void {
+    if (this.contratoGeneral()?.id) {
+      this.loadSavedData();
+    }
+  }
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
@@ -166,7 +183,10 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   private loadSavedData(): void {
     try {
       const contratoGeneral = this.contratoGeneral();
-      if (contratoGeneral) {
+      if (!contratoGeneral?.id || this.contratoCargadoId === contratoGeneral.id || this.cargandoPresupuestal) return;
+
+      this.contratoCargadoId = contratoGeneral.id;
+      this.cargandoPresupuestal = true;
         const formValues = {
           tipoGasto: contratoGeneral.tipo_gasto_id,
           origenPresupuesto: contratoGeneral.origen_presupuestos_id,
@@ -179,20 +199,25 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           formaPago: contratoGeneral.modo_pago,
         };
 
-        this.contratoGeneralCrudService.gerOrdenadorGuardado(contratoGeneral.id as number).subscribe({
-          next: (response: ApiResponse<OrdenadorContratoData>) => {
-            this.ordenadorGastoId = response.Data.ordenador_argo_id;
-            this.setOrdenadorGuardado();
-          }
-        });
+        this.contratoGeneralCrudService
+          .gerOrdenadorGuardado(contratoGeneral.id as number)
+          .subscribe({
+            next: (response: any) => {
+              const data = response?.Data ?? response;
+              if (data && data.ordenador_argo_id) {
+                this.ordenadorGastoId = data.ordenador_argo_id;
+                this.setOrdenadorGuardado();
+              }
+            },
+            error: () => {
+              console.log('No se pudo cargar ordenador guardado.');
+            },
+          });
 
         this.form.patchValue(formValues);
+        this.cdRef.detectChanges();
 
-        if (contratoGeneral.id) {
-          this.cargarCDPsContrato(contratoGeneral.id);
-        }
-      }
-
+        this.cargarCDPsContrato(contratoGeneral.id);
     } catch (error) {
       console.error('Error loading saved data:', error);
     }
@@ -273,7 +298,12 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   private cargarCDPsContrato(contratoId: number) {
     this.contratoGeneralCrudService
       .getCdpContrato(contratoId)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.cargandoPresupuestal = false;
+        })
+      )
       .subscribe({
         next: async (response) => {
           if (response && response.Data) {
