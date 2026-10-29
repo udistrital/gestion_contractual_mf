@@ -89,6 +89,7 @@ const contrato = {
   justificacion: 'Justificación guardada',
   objeto: 'Objeto guardado',
   actividades: '1. Actividad guardada',
+  tipo_control_id: 6611,
 } as unknown as ContratoGeneral;
 
 describe('Modo visualización de los pasos del registro de contrato', () => {
@@ -294,6 +295,14 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
             provide: OrdenadoresSupervisoresContratacionMidService,
             useValue: { getSupervisoresDependencia: jest.fn().mockReturnValue(of({ Data: [] })) },
           },
+          {
+            provide: ParametrosService,
+            useValue: {
+              getParametrosPorTipo: jest.fn().mockResolvedValue({
+                [environment.TIPO_CONTROL_ID]: [{ Id: 6611, Nombre: 'Técnico, administrativo y financiero' }],
+              }),
+            },
+          },
         ],
         schemas: [NO_ERRORS_SCHEMA],
       });
@@ -306,6 +315,12 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
+    });
+
+    it('carga Tipo y Alcance del Control desde el contrato y sus opciones desde Parámetros', () => {
+      expect(component.tiposControl).toEqual([{ Id: 6611, Nombre: 'Técnico, administrativo y financiero' }]);
+      expect(component.getSupervisoresFormArray().at(0).get('tipoControl')?.value).toBe(6611);
+      expect(component.getSupervisoresFormArray().at(1).get('tipoControl')?.value).toBe(6611);
     });
 
     it('en visualización marca el paso como completo con los supervisores cargados', () => {
