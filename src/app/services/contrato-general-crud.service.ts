@@ -135,9 +135,18 @@ export class ContratoGeneralCrudService {
     return this.documentos.crear(documento).pipe(map((respuesta) => respuesta.Data));
   }
 
-  /** El solicitante vive en contrato_general (modelo v2). */
+  /**
+   * El solicitante vive en contrato_general (modelo v2). Si el contrato aún no lo
+   * tiene responde 404, como el CRUD anterior, para que el paso no lo dé por guardado.
+   */
   getSolicitante(contratoId: number): Observable<any> {
-    return this.contratos.obtenerSolicitante(contratoId);
+    return this.contratos.obtenerSolicitante(contratoId).pipe(
+      switchMap((respuesta) =>
+        respuesta.Data?.sede_solicitante_id || respuesta.Data?.dependencia_solicitante_id
+          ? [respuesta]
+          : throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Solicitante no encontrado' }))
+      )
+    );
   }
 
   postSolicitante(contrato_general_parcial: any): Observable<any> {

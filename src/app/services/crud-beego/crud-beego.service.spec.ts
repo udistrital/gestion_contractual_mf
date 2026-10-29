@@ -316,6 +316,13 @@ describe('Services del CRUD Beego v2 (fachada ContratoGeneralCrudService)', () =
     expect(http.expectOne(`${CRUD}/contrato_general/42`).request.method).toBe('PUT');
   });
 
+  it('19. sin sede ni dependencia de solicitante en el contrato responde 404', () => {
+    let estado: number | undefined;
+    service.getSolicitante(42).subscribe({ error: (e) => (estado = e.status) });
+    http.expectOne(`${CRUD}/contrato_general/42`).flush(ok({ Id: 42, SedeSolicitanteId: 0, DependenciaSolicitanteId: 0 }));
+    expect(estado).toBe(404);
+  });
+
   it('Tipo y Alcance del Control se guarda en ContratoGeneral.TipoControlId', () => {
     service.putTipoControl(42, 6611).subscribe();
     const req = http.expectOne(`${CRUD}/contrato_general/42`);
