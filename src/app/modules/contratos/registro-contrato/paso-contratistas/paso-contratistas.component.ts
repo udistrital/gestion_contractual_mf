@@ -308,6 +308,10 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
             this.buscarContratista();
           }
           this.aplicarModoVisualizacion();
+          // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+          if (this.viewMode()) {
+            this.stepCompleted.emit(!!contratista);
+          }
         },
         error: (error) => {
           console.error('Error al cargar contratista:', error);

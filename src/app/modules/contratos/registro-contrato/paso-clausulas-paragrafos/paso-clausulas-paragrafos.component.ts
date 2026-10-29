@@ -402,6 +402,10 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       this.form.updateValueAndValidity();
       this.form.markAsDirty();
       this.aplicarModoVisualizacion();
+      // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+      if (this.viewMode()) {
+        this.stepCompleted.emit(this.clausulas.length > 0);
+      }
     });
   }
 

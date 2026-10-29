@@ -148,6 +148,10 @@ export class PasoGarantiasComponent implements OnInit {
         this.agregarFila();
       }
       this.aplicarModoVisualizacion();
+      // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+      if (this.viewMode()) {
+        this.stepCompleted.emit(this.estadoCobertura === 'Completo');
+      }
     }
   }
 

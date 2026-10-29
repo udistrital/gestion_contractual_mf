@@ -539,6 +539,12 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
     await expect.soft(page.locator('app-paso-documentos')).toHaveCount(0);
   });
 
+  await test.step('el stepper marca los pasos con datos como guardados', async () => {
+    const estados = (await page.locator('.step-pill .step-sublabel').allTextContents()).map((t) => t.trim());
+    expect.soft(estados.filter((estado) => /PENDIENTE/.test(estado)), 'pasos pendientes con datos').toEqual([]);
+    expect.soft(estados.filter((estado) => /GUARDADO/.test(estado)).length, 'pasos guardados').toBe(estados.length - 1);
+  });
+
   await test.step('el detalle no escribe nada y todas las peticiones están simuladas', async () => {
     expect(escrituras, 'peticiones de escritura').toEqual([]);
     expect(noSimuladas, 'peticiones sin simular').toEqual([]);

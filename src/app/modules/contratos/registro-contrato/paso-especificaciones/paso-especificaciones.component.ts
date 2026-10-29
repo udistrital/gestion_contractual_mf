@@ -86,6 +86,10 @@ export class PasoEspecificacionesComponent {
           if (response.Success && response.Data.length > 0) {
             this.especificaciones = response.Data;
           }
+          // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+          if (this.viewMode()) {
+            this.stepCompleted.emit(this.especificaciones.length > 0);
+          }
         },
         error: (error) =>
           this.handleError('Error al obtener especificaciones técnicas', error),

@@ -52,6 +52,9 @@ function esperarSinAccionesDeEdicion(fixture: ComponentFixture<unknown>): void {
   expect(acciones).toEqual([]);
 }
 
+/** Emisiones de stepCompleted del paso montado (estado del paso en el stepper). */
+let pasoCompleto: boolean[] = [];
+
 const alertServiceMock = () => ({
   showAlert: jest.fn(),
   showSuccessAlert: jest.fn().mockResolvedValue({ isConfirmed: true }),
@@ -264,11 +267,17 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       });
       fixture = TestBed.createComponent(PasoSupervisoresComponent);
       component = fixture.componentInstance;
+      pasoCompleto = [];
+      component.stepCompleted.subscribe((completo) => pasoCompleto.push(completo));
       fixture.componentRef.setInput('viewMode', true);
       fixture.componentRef.setInput('contratoGeneral', contrato);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
+    });
+
+    it('en visualización marca el paso como completo con los supervisores cargados', () => {
+      expect(pasoCompleto).toContain(true);
     });
 
     it('deshabilita el formulario, incluido el supervisor agregado en la carga', () => {
@@ -322,11 +331,17 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       });
       fixture = TestBed.createComponent(PasoContratistasComponent);
       component = fixture.componentInstance;
+      pasoCompleto = [];
+      component.stepCompleted.subscribe((completo) => pasoCompleto.push(completo));
       fixture.componentRef.setInput('viewMode', true);
       fixture.componentRef.setInput('contratoGeneral', contrato);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
+    });
+
+    it('en visualización marca el paso como completo con el contratista cargado', () => {
+      expect(pasoCompleto).toContain(true);
     });
 
     it('carga el contratista guardado y deja el formulario deshabilitado', () => {
@@ -405,11 +420,17 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       });
       fixture = TestBed.createComponent(PasoEspecificacionesComponent);
       component = fixture.componentInstance;
+      pasoCompleto = [];
+      component.stepCompleted.subscribe((completo) => pasoCompleto.push(completo));
       fixture.componentRef.setInput('viewMode', true);
       fixture.componentRef.setInput('contratoGeneral', contrato);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
+    });
+
+    it('en visualización marca el paso como completo con las especificaciones cargadas', () => {
+      expect(pasoCompleto).toEqual([true]);
     });
 
     it('carga las especificaciones y omite la columna de acciones', () => {
@@ -443,12 +464,21 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       });
       fixture = TestBed.createComponent(PasoGarantiasComponent);
       component = fixture.componentInstance;
+      pasoCompleto = [];
+      component.stepCompleted.subscribe((completo) => pasoCompleto.push(completo));
       fixture.componentRef.setInput('viewMode', viewMode);
       fixture.componentRef.setInput('contratoGeneral', contrato);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
     }
+
+    it('en visualización marca el paso como completo con los amparos cargados', async () => {
+      await montar([
+        { amparo_id: environment.AMPARO_CREC_ID, tipo_valor_amparo_id: 1, suficiencia: 5, descripcion: 'Amparo' },
+      ]);
+      expect(pasoCompleto).toContain(true);
+    });
 
     it('deshabilita los amparos cargados y el cambio de amparo no los reactiva', async () => {
       await montar([
@@ -559,12 +589,19 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       });
       fixture = TestBed.createComponent(PasoClausulasParagrafosComponent);
       component = fixture.componentInstance;
+      pasoCompleto = [];
+      component.stepCompleted.subscribe((completo) => pasoCompleto.push(completo));
       fixture.componentRef.setInput('viewMode', true);
       fixture.componentRef.setInput('contratoGeneral', contrato);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
     }
+
+    it('en visualización marca el paso como completo con las cláusulas cargadas', async () => {
+      await montar({ Success: true, Data: [clausula] });
+      expect(pasoCompleto).toContain(true);
+    });
 
     it('carga las cláusulas en solo lectura aunque sean editables', async () => {
       await montar({ Success: true, Data: [clausula] });

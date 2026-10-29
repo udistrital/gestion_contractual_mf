@@ -127,6 +127,10 @@ export class PasoSupervisoresComponent implements OnInit {
           });
         });
         this.aplicarModoVisualizacion();
+        // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+        if (this.viewMode()) {
+          this.stepCompleted.emit(response.Data.length > 0);
+        }
 
       }, error: () => {
         console.log('No se pudo cargar el supervisor.')
