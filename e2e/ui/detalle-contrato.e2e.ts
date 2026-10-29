@@ -504,6 +504,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
     await expect.soft(filas.nth(0).locator('input[placeholder="Ej: 10"]')).toHaveValue('20');
     await expect.soft(filas.nth(1).locator('input[placeholder="Ej: 10"]')).toHaveValue('10');
     await expect.soft(filas.nth(0).locator('input').last()).toHaveValue(/Cumplimiento del contrato/);
+    await expect.soft(seccion.locator('.kpi-card', { hasText: 'Estado Cobertura' })).toContainText('Completo');
     await expect.soft(seccion.locator('th', { hasText: 'ACCIONES' })).toHaveCount(0);
 
     await verificarSoloLectura(seccion);

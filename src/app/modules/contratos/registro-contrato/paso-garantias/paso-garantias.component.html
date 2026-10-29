@@ -20,7 +20,7 @@
         <span class="kpi-label">Amparos Configurados</span>
         <strong class="kpi-val">{{ totalAmparos }}</strong>
       </div>
-      <div class="kpi-card" [class.kpi-highlight]="form.valid && totalAmparos > 0">
+      <div class="kpi-card" [class.kpi-highlight]="estadoCobertura === 'Completo'">
         <span class="kpi-label">Estado Cobertura</span>
         <strong class="kpi-val">{{ estadoCobertura }}</strong>
       </div>

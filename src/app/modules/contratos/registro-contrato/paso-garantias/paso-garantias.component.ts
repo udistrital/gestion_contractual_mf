@@ -99,7 +99,22 @@ export class PasoGarantiasComponent implements OnInit {
     if (this.filasFormArray.length === 0) {
       return 'Sin amparos';
     }
-    return this.form.valid ? 'Completo' : 'Incompleto';
+    // Un formulario deshabilitado nunca es valid: en visualización se evalúan los datos.
+    const completo = this.viewMode()
+      ? (this.filasFormArray.controls as FormGroup[]).every((fila) => this.filaCompleta(fila))
+      : this.form.valid;
+    return completo ? 'Completo' : 'Incompleto';
+  }
+
+  /** Regla de completitud de la fila aplicada a sus valores: amparo, suficiencia y descripción. */
+  private filaCompleta(fila: FormGroup): boolean {
+    const { amparo, suficienciaPorcentaje, suficienciaSalarios, descripcion } = fila.getRawValue();
+    const suficiencia = this.mostrarSuficiencia(fila, 'suficienciaSalarios')
+      ? suficienciaSalarios
+      : suficienciaPorcentaje;
+    return [amparo, suficiencia, descripcion].every(
+      (valor) => valor !== null && valor !== undefined && `${valor}`.trim() !== ''
+    );
   }
 
   private async loadSavedData(): Promise<void> {

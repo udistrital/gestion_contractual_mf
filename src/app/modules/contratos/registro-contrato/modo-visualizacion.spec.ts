@@ -427,7 +427,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     let component: PasoGarantiasComponent;
     let polizasService: { getAmparos: jest.Mock };
 
-    async function montar(amparos: unknown[]) {
+    async function montar(amparos: unknown[], viewMode = true) {
       polizasService = { getAmparos: jest.fn().mockReturnValue(of({ Success: true, Data: amparos })) };
       TestBed.configureTestingModule({
         declarations: [PasoGarantiasComponent],
@@ -443,7 +443,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       });
       fixture = TestBed.createComponent(PasoGarantiasComponent);
       component = fixture.componentInstance;
-      fixture.componentRef.setInput('viewMode', true);
+      fixture.componentRef.setInput('viewMode', viewMode);
       fixture.componentRef.setInput('contratoGeneral', contrato);
       fixture.detectChanges();
       await fixture.whenStable();
@@ -475,6 +475,29 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       expect(component.mostrarSuficiencia(crec, 'suficienciaPorcentaje')).toBe(false);
       expect(component.mostrarSuficiencia(otro, 'suficienciaPorcentaje')).toBe(true);
       expect(component.mostrarSuficiencia(otro, 'suficienciaSalarios')).toBe(false);
+    });
+
+    it('calcula el estado de cobertura con los datos aunque el formulario esté deshabilitado', async () => {
+      await montar([
+        { amparo_id: environment.AMPARO_CREC_ID, tipo_valor_amparo_id: 1, suficiencia: 5, descripcion: 'Amparo' },
+        { amparo_id: 1, tipo_valor_amparo_id: 2, suficiencia: 20, descripcion: 'Cumplimiento' },
+      ]);
+      expect(component.form.valid).toBe(false);
+      expect(component.estadoCobertura).toBe('Completo');
+    });
+
+    it('el estado de cobertura es incompleto si falta un dato en visualización', async () => {
+      await montar([{ amparo_id: 1, tipo_valor_amparo_id: 2, suficiencia: 20, descripcion: '' }]);
+      expect(component.estadoCobertura).toBe('Incompleto');
+    });
+
+    it('en edición el estado de cobertura sigue dependiendo de la validez del formulario', async () => {
+      await montar([{ amparo_id: 1, tipo_valor_amparo_id: 2, suficiencia: 20, descripcion: 'Cumplimiento' }], false);
+      expect(component.form.valid).toBe(true);
+      expect(component.estadoCobertura).toBe('Completo');
+
+      component.filasFormArray.at(0).get('descripcion')?.setValue('');
+      expect(component.estadoCobertura).toBe('Incompleto');
     });
 
     it('sin amparos guardados no agrega una fila vacía', async () => {
