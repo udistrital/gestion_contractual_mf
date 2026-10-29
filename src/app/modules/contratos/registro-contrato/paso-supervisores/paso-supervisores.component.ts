@@ -14,8 +14,11 @@ import {
   ApiResponse,
   ContratoGeneral,
   DependenciaContratoMidResponse,
+  ParametroResponse,
   SedeContratoMidResponse, Solicitante, SupervisorResponse, SupervisorToSave,
 } from 'src/app/types/types';
+import { environment } from 'src/environments/environment';
+import { ParametrosService } from 'src/app/services/parametros.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { AlertService } from 'src/app/services/alert.service';
@@ -57,6 +60,10 @@ export class PasoSupervisoresComponent implements OnInit {
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly ordenadoresSupervisoresMidService = inject(OrdenadoresSupervisoresContratacionMidService);
   private readonly cdRef = inject(ChangeDetectorRef);
+  private readonly parametrosService = inject(ParametrosService);
+
+  /** Opciones de "Tipo y Alcance del Control" (Parámetros, tipo 119). */
+  tiposControl: ParametroResponse[] = [];
 
   constructor() {
     this.form = this._formBuilder.group({
@@ -75,8 +82,19 @@ export class PasoSupervisoresComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarSedes();
+    this.cargarTiposControl();
     this.setupFormListeners();
     this.aplicarModoVisualizacion();
+  }
+
+  private cargarTiposControl(): void {
+    this.parametrosService
+      .getParametrosPorTipo([environment.TIPO_CONTROL_ID])
+      .then((parametros) => {
+        this.tiposControl = parametros[environment.TIPO_CONTROL_ID] ?? [];
+        this.cdRef.detectChanges();
+      })
+      .catch(() => console.log('No se pudieron cargar los tipos de control.'));
   }
 
   /** En modo visualización el formulario queda en solo lectura. */
@@ -124,6 +142,8 @@ export class PasoSupervisoresComponent implements OnInit {
             sede: Number(supervisor.sede_id),
             dependencia: Number(supervisor.dependencia_id),
             codigoVerificacion: supervisor.digito_verificacion,
+            // Se guarda una sola vez en el contrato (ContratoGeneral.TipoControlId).
+            tipoControl: this.contratoGeneral()?.tipo_control_id ?? null,
           });
         });
         this.aplicarModoVisualizacion();
@@ -250,6 +270,17 @@ export class PasoSupervisoresComponent implements OnInit {
 
       // Actualizar los IDs de los supervisores guardados
       this.supervisoresIds = results.map(result => result.id);
+
+      // "Tipo y Alcance del Control" se guarda en el contrato (uno para el contrato).
+      const tipoControl = supervisoresArray.at(0)?.get('tipoControl')?.value;
+      if (tipoControl) {
+        await firstValueFrom(
+          this.contratoGeneralCrudService.putTipoControl(
+            this.contratoGeneral()?.id as number,
+            Number(tipoControl)
+          )
+        );
+      }
 
       this.checkStepCompleted();
 
