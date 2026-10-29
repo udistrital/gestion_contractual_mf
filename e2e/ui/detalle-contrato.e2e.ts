@@ -473,6 +473,10 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
     });
     await expect.soft(seccion).toContainText('CARLOS ANDRÉS RUIZ MORENO');
     await expect.soft(seccion).toContainText('Decano');
+    // "Tipo y Alcance del Control" sale vacío porque en develop no se guarda ni se carga:
+    // no está en el payload del supervisor ni en el CRUD (contrato_general.tipo_control_id
+    // existe, pero el MF no lo usa). No es de la simulación ni del modo visualización.
+    test.info().annotations.push({ type: 'conocido-develop', description: 'Tipo y Alcance del Control no se persiste' });
 
     await verificarSoloLectura(seccion);
     await capturar(page, seccion, '03-supervisores');

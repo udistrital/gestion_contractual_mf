@@ -96,7 +96,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     let fixture: ComponentFixture<PasoInfoGeneralComponent>;
     let component: PasoInfoGeneralComponent;
 
-    async function montar(viewMode: boolean) {
+    async function montar(viewMode: boolean, datos = contrato, parametros: Record<number, unknown[]> = {}) {
       TestBed.configureTestingModule({
         declarations: [PasoInfoGeneralComponent],
         providers: [
@@ -105,7 +105,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ParametrosService,
             useValue: {
-              getParametrosPorTipo: jest.fn().mockResolvedValue({}),
+              getParametrosPorTipo: jest.fn().mockResolvedValue(parametros),
               getParametroPorPadreIdyTipoId: jest.fn().mockReturnValue([]),
             },
           },
@@ -118,7 +118,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       fixture = TestBed.createComponent(PasoInfoGeneralComponent);
       component = fixture.componentInstance;
       fixture.componentRef.setInput('viewMode', viewMode);
-      fixture.componentRef.setInput('contratoGeneral', contrato);
+      fixture.componentRef.setInput('contratoGeneral', datos);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
@@ -153,6 +153,22 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
 
       component.formInfoGeneral.get('tipoContratoId')?.setValue(6541, { emitEvent: false });
       expect(component.campoAplica('perfilContratistaId')).toBe(false);
+    });
+
+    it('calcula la estimación de término con los datos cargados', async () => {
+      const conFecha = {
+        ...contrato,
+        fecha_suscripcion_estudios: '2026-02-01T12:00:00',
+        plazo_ejecucion: 12,
+      } as unknown as ContratoGeneral;
+      await montar(true, conFecha, { [environment.UNIDAD_EJECUCION_ID]: [{ Id: 6, Nombre: 'MESES' }] });
+      expect(component.formInfoGeneral.disabled).toBe(true);
+      expect(component.estimacionTermino).toBe('1 Febrero 2027');
+    });
+
+    it('sin fecha de estudios previos la estimación queda pendiente también en visualización', async () => {
+      await montar(true, contrato, { [environment.UNIDAD_EJECUCION_ID]: [{ Id: 6, Nombre: 'MESES' }] });
+      expect(component.estimacionTermino).toBe('Pendiente de cálculo');
     });
 
     it('oculta el botón de guardar en visualización', async () => {
