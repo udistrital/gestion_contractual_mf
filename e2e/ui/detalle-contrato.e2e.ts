@@ -307,7 +307,7 @@ async function prepararContexto(ctx: BrowserContext) {
 // ---------------------------------------------------------------------------
 
 const ACCIONES_DE_EDICION =
-  /guardar|agregar|añadir|eliminar|remover|asociar|cargue|plantilla|seleccionar pdf|subir|nueva actividad|cláusula especial|re-sincronizar|consultar registro|siguiente|\bsave\b|\bdelete\b|upload|add_circle|\bedit\b/i;
+  /guardar|agregar|añadir|eliminar|remover|asociar|cargue|plantilla|seleccionar pdf|subir|nueva actividad|cláusula especial|re-sincronizar|consultar registro|siguiente:|\bsave\b|\bdelete\b|upload|add_circle|\bedit\b/i;
 
 /** Describe un control para identificarlo en el reporte. */
 async function nombreControl(control: Locator): Promise<string> {
@@ -369,6 +369,13 @@ function valorSelect(contenedor: Locator): Locator {
 
 async function irAlPaso(page: Page, titulo: string) {
   await page.locator(`.step-pill[aria-label="${titulo}"]`).click();
+  await page.waitForTimeout(400);
+}
+
+/** Avanza con el botón "Siguiente" del modo visualización y verifica el paso activo. */
+async function avanzarConSiguiente(page: Page, seccionActual: Locator, titulo: string) {
+  await seccionActual.getByRole('button', { name: /^\s*Siguiente\b/ }).click();
+  await expect.soft(page.locator(`.step-pill[aria-label="${titulo}"] .step-sublabel`)).toContainText('ACTIVO');
   await page.waitForTimeout(400);
 }
 
@@ -447,7 +454,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
   });
 
   await test.step('03 supervisores y solicitante: datos visibles y en solo lectura', async () => {
-    await irAlPaso(page, 'Solicitante y Supervisor');
+    await avanzarConSiguiente(page, page.locator('app-paso-info-presupuestal'), 'Solicitante y Supervisor');
     const seccion = page.locator('app-paso-supervisores');
     const formField = (control: string) =>
       seccion.locator('mat-form-field', { has: page.locator(`mat-select[formcontrolname="${control}"]`) });
@@ -482,7 +489,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
   });
 
   await test.step('05 obligaciones: justificación, objeto y actividades en solo lectura', async () => {
-    await irAlPaso(page, 'Estructura y Necesidad');
+    await avanzarConSiguiente(page, page.locator('app-paso-contratistas'), 'Estructura y Necesidad');
     const seccion = page.locator('app-paso-obligaciones');
     await expect.soft(seccion).toContainText('renovar los equipos del laboratorio');
     await expect.soft(seccion).toContainText('Suministro e instalación de equipos');
@@ -494,7 +501,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
   });
 
   await test.step('06 especificaciones técnicas: tabla sin acciones', async () => {
-    await irAlPaso(page, 'Especificaciones Técnicas');
+    await avanzarConSiguiente(page, page.locator('app-paso-obligaciones'), 'Especificaciones Técnicas');
     const seccion = page.locator('app-paso-especificaciones');
     await expect.soft(seccion).toContainText('Osciloscopio digital de 4 canales 200 MHz');
     await expect.soft(seccion).toContainText('Fuente de alimentación DC programable');
@@ -505,7 +512,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
   });
 
   await test.step('07 garantías: amparos visibles y en solo lectura', async () => {
-    await irAlPaso(page, 'Garantías y Mecanismos de Cobertura del Riesgo');
+    await avanzarConSiguiente(page, page.locator('app-paso-especificaciones'), 'Garantías y Mecanismos de Cobertura del Riesgo');
     const seccion = page.locator('app-paso-garantias');
     const filas = seccion.locator('tr.fila-tabla');
     await expect.soft(filas).toHaveCount(2);
@@ -522,7 +529,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
   });
 
   await test.step('08 cláusulas y parágrafos: contenido en solo lectura', async () => {
-    await irAlPaso(page, 'Clausulado y Parágrafos');
+    await avanzarConSiguiente(page, page.locator('app-paso-garantias'), 'Clausulado y Parágrafos');
     const seccion = page.locator('app-paso-clausulas-paragrafos');
     await expect.soft(seccion).toContainText('PRIMERA');
     await expect.soft(seccion).toContainText('suministrar e instalar los equipos');

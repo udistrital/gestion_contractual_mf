@@ -425,6 +425,16 @@
             <mat-icon>save</mat-icon>
             Guardar y Continuar
           </button>
+          } @else {
+          <button
+            type="button"
+            mat-raised-button
+            color="primary"
+            (click)="nextStep.emit()"
+          >
+            <span>Siguiente</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
           }
         </div>
       </form>

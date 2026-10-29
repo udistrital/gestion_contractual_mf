@@ -217,6 +217,16 @@
         <span>Siguiente: Estructura y Necesidad</span>
         <mat-icon>arrow_forward</mat-icon>
       </button>
+      } @else {
+      <button
+        type="button"
+        mat-raised-button
+        class="btn-dock-siguiente"
+        (click)="nextStep.emit()"
+      >
+        <span>Siguiente</span>
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
       }
     </div>
   </div>

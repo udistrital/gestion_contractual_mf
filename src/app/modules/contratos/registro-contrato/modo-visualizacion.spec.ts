@@ -39,7 +39,7 @@ import { RegistroContratoComponent } from './registro-contrato.component';
  */
 
 const ACCIONES_DE_EDICION =
-  /guardar|agregar|añadir|eliminar|remover|asociar|cargue|plantilla|seleccionar pdf|nueva actividad|cláusula especial|re-sincronizar|consultar registro|siguiente/i;
+  /guardar|agregar|añadir|eliminar|remover|asociar|cargue|plantilla|seleccionar pdf|nueva actividad|cláusula especial|re-sincronizar|consultar registro|siguiente:/i;
 
 /** Textos de los botones visibles en el template del componente. */
 function textosDeBotones(fixture: ComponentFixture<unknown>): string[] {
@@ -54,6 +54,15 @@ function esperarSinAccionesDeEdicion(fixture: ComponentFixture<unknown>): void {
 
 /** Emisiones de stepCompleted del paso montado (estado del paso en el stepper). */
 let pasoCompleto: boolean[] = [];
+
+/** Pulsa el botón "Siguiente" del modo visualización. */
+function pulsarSiguiente(fixture: ComponentFixture<unknown>): void {
+  const boton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find((b) =>
+    (b.textContent ?? '').trim().startsWith('Siguiente')
+  );
+  expect(boton).toBeTruthy();
+  boton!.click();
+}
 
 const alertServiceMock = () => ({
   showAlert: jest.fn(),
@@ -218,6 +227,13 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       expect(component.form.disabled).toBe(true);
     });
 
+    it('en visualización "Siguiente" solo navega al paso siguiente', () => {
+      const navegar = jest.fn();
+      component.nextStep.subscribe(navegar);
+      pulsarSiguiente(fixture);
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+
     it('oculta asociar CDP y guardar', () => {
       esperarSinAccionesDeEdicion(fixture);
     });
@@ -350,7 +366,14 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       expect(component.form.disabled).toBe(true);
     });
 
-    it('oculta consultar y siguiente', () => {
+    it('en visualización "Siguiente" solo navega al paso siguiente', () => {
+      const navegar = jest.fn();
+      component.nextStep.subscribe(navegar);
+      pulsarSiguiente(fixture);
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+
+    it('oculta consultar y el guardado', () => {
       esperarSinAccionesDeEdicion(fixture);
     });
   });
@@ -385,6 +408,13 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       expect(component.form.getRawValue().objetoContrato).toBe('Objeto guardado');
       expect(component.actividadesList.length).toBeGreaterThan(0);
       expect(component.form.disabled).toBe(true);
+    });
+
+    it('en visualización "Siguiente" solo navega al paso siguiente', () => {
+      const navegar = jest.fn();
+      component.nextStep.subscribe(navegar);
+      pulsarSiguiente(fixture);
+      expect(navegar).toHaveBeenCalledTimes(1);
     });
 
     it('oculta las acciones de actividades y el guardado', () => {
@@ -436,6 +466,13 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     it('carga las especificaciones y omite la columna de acciones', () => {
       expect(component.especificaciones.length).toBe(1);
       expect(component.columnasVisibles).not.toContain('acciones');
+    });
+
+    it('en visualización "Siguiente" solo navega al paso siguiente', () => {
+      const navegar = jest.fn();
+      component.nextStep.subscribe(navegar);
+      pulsarSiguiente(fixture);
+      expect(navegar).toHaveBeenCalledTimes(1);
     });
 
     it('oculta añadir, cargue masivo, plantilla y guardar', () => {
@@ -533,6 +570,14 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     it('sin amparos guardados no agrega una fila vacía', async () => {
       await montar([]);
       expect(component.filasFormArray.length).toBe(0);
+    });
+
+    it('en visualización "Siguiente" solo navega al paso siguiente', async () => {
+      await montar([{ amparo_id: 1, tipo_valor_amparo_id: 2, suficiencia: 20, descripcion: 'Cumplimiento' }]);
+      const navegar = jest.fn();
+      component.nextStep.subscribe(navegar);
+      pulsarSiguiente(fixture);
+      expect(navegar).toHaveBeenCalledTimes(1);
     });
 
     it('oculta agregar, eliminar y guardar', async () => {
