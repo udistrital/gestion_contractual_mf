@@ -37,6 +37,12 @@ export interface ContratoGeneral {
   unidad_ejecutora_id: number;
   estados?: any;
   contratista?: any;
+  // Modelo v2 (CRUD Beego): contratista y solicitante viven en contrato_general.
+  proveedor_numero_documento?: string;
+  tipo_persona_id?: number | null;
+  clase_proveedor_id?: number | null;
+  sede_solicitante_id?: number | null;
+  dependencia_solicitante_id?: number | null;
 }
 
 export interface CDPContratoCRUD {

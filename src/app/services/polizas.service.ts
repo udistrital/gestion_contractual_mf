@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { RequestManager } from '../managers/requestManager';
+import { AmparoPolizaService } from './crud-beego/amparo-poliza.service';
 import { Observable } from 'rxjs';
 import { GestorDocumentalService } from './gestor-documental.service';
 import { environment } from '../../environments/environment';
@@ -16,6 +17,8 @@ import { ApiResponse, AmparoPolizaDto } from '../types/types';
   providedIn: 'root',
 })
 export class PolizasService {
+  private readonly amparoPolizaService = inject(AmparoPolizaService);
+
   constructor(
     private requestManager: RequestManager,
     private gestorDocumentalService: GestorDocumentalService
@@ -58,9 +61,9 @@ export class PolizasService {
     return this.requestManager.get(`polizas?query=${query}&limit=1`);
   }
   
+  /** Amparos activos del contrato, directo en el CRUD Beego v2 (/v1/amparo_poliza). */
   getAmparos(contratoId: number): Observable<ApiResponse<AmparoPolizaDto[]>> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get('amparos-polizas/contrato/' + contratoId);
+    return this.amparoPolizaService.listarPorContrato(contratoId);
   }
 
   postPoliza(poliza: any): Observable<any> {
