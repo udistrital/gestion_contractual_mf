@@ -1,26 +1,28 @@
-import {Component} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
-
+/**
+ * Detalle del contrato en solo lectura: reutiliza el stepper de
+ * RegistroContratoComponent en modo visualización.
+ */
 @Component({
-    selector: 'app-detalle-contrato',
-    templateUrl: './detalle-contrato.component.html',
-    styleUrl: './detalle-contrato.component.css',
-    standalone: false,
+  selector: 'app-detalle-contrato',
+  templateUrl: './detalle-contrato.component.html',
+  styleUrl: './detalle-contrato.component.css',
+  standalone: false
 })
-export class DetalleContratoComponent {
+export class DetalleContratoComponent implements OnInit {
+  route = inject(ActivatedRoute)
 
-  formGroups: FormGroup[];
-
-  constructor(private _formBuilder: FormBuilder) {
-    this.formGroups = Array(9).fill(null).map(() => this._formBuilder.group({}));
-  }
+  contratoGeneralId: number = 0;
 
   ngOnInit() {
-    this.formGroups = this.formGroups.map((_, index) => this._formBuilder.group({
-      [`paso${index + 1}Ctrl`]: ['', Validators.required],
-    }));
+    this.route.paramMap.subscribe(params => {
+      const contratoIdParam = params.get('contratoId');
+      if (contratoIdParam) {
+        this.contratoGeneralId = parseInt(contratoIdParam, 10);
+      }
+    });
   }
-
 
 }
