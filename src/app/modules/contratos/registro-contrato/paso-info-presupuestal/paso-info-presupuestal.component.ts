@@ -15,7 +15,7 @@ import { CdpsService } from 'src/app/services/cdps.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
-import { ApiResponse, CDP, CDPContratoCRUD, CDPData, CDPItem, ContratoGeneral, OrdenadorContratoData, ParametroListResponse } from 'src/app/types/types';
+import { ApiResponse, CDP, CDPContratoCRUD, CDPData, CDPItem, ContratoGeneral, OrdenadorContratoData, ParametroResponse } from 'src/app/types/types';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
 import { cdpConstructorTabla, numeroALetras } from './paso-info-presupuestal.utilidades';
 import { AlertService } from 'src/app/services/alert.service';
@@ -85,12 +85,21 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     return numeroALetras(this.valorContratoNum);
   }
 
-  monedas: any[] = [];
-  gastos: any[] = [];
-  origen_recursos: any[] = [];
-  origen_presupuestos: any[] = [];
-  tema_gasto: any[] = [];
-  medios_pago: any[] = [];
+  monedas: ParametroResponse[] = [];
+  gastos: ParametroResponse[] = [];
+  origen_recursos: ParametroResponse[] = [];
+  origen_presupuestos: ParametroResponse[] = [];
+  tema_gasto: ParametroResponse[] = [];
+  medios_pago: ParametroResponse[] = [];
+
+  tiposParametrosRequeridos = [
+    environment.TIPO_MONEDA,
+    environment.TIPO_GASTO_ID,
+    environment.ORIGEN_RECURSOS_ID,
+    environment.ORIGEN_PRESUPUESTO_ID,
+    environment.TEMA_GASTO_ID,
+    environment.MEDIO_PAGO_ID,
+  ]
 
   showCambioMonedaFields = false;
 
@@ -139,15 +148,8 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     this.cargarCDPs();
     this.setupVigenciaListener();
     this.setupCdpListener();
-    Promise.all([
-      this.CargarMonedas(),
-      this.CargarGastos(),
-      this.CargarOrigenRecursos(),
-      this.CargarOrigenPresupuesto(),
-      this.CargarTemaGasto(),
-      this.CargarMediosPago(),
-      this.CargarRolOrdenadores(),
-    ]).then(() => {
+    this.CargarRolOrdenadores();
+    this.loadInitialData().then(() => {
       this.loadSavedData();
     });
 
@@ -178,6 +180,22 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private async loadInitialData(): Promise<void> {
+    return this.parametrosService.getParametrosPorTipo(this.tiposParametrosRequeridos).then(
+      (data: Record<number, ParametroResponse[]>) => {
+        this.monedas = data[environment.TIPO_MONEDA];
+        this.gastos = data[environment.TIPO_GASTO_ID];
+        this.origen_recursos = data[environment.ORIGEN_RECURSOS_ID];
+        this.origen_presupuestos = data[environment.ORIGEN_PRESUPUESTO_ID];
+        this.tema_gasto = data[environment.TEMA_GASTO_ID];
+        this.medios_pago = data[environment.MEDIO_PAGO_ID];
+        this.cdRef.detectChanges();
+      }).catch((error: any) => {
+        this.handleError(error);
+      }
+    );
   }
 
   private loadSavedData(): void {
@@ -560,127 +578,6 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     this.form.get('valorAcumulado')?.setValue(valorAcumulado);
   }
 
-  CargarMonedas() {
-    return new Promise((resolve, reject) => {
-      this.parametrosService.get<ParametroListResponse>(
-        `parametro?query=TipoParametroId:${environment.TIPO_MONEDA},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe({
-        next: (response: ParametroListResponse) => {
-          if (response.Status == '200') {
-            this.monedas = response.Data;
-            resolve(true);
-          } else {
-            reject('Error en la respuesta del servidor');
-          }
-        },
-        error: (error) => {
-          reject(error);
-        }
-      });
-    });
-  }
-
-  CargarGastos(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.parametrosService
-        .get<ParametroListResponse>(
-          `parametro?query=TipoParametroId:${environment.TIPO_GASTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
-        )
-        .subscribe({
-          next: (response: ParametroListResponse) => {
-            if (response.Status == '200') {
-              this.gastos = response.Data;
-              resolve(true);
-            } else {
-              reject('Error en la respuesta del servidor');
-            }
-          },
-          error: (error) => reject(error),
-        });
-    });
-  }
-
-  CargarOrigenRecursos(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.parametrosService
-        .get<ParametroListResponse>(
-          `parametro?query=TipoParametroId:${environment.ORIGEN_RECURSOS_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
-        )
-        .subscribe({
-          next: (response: ParametroListResponse) => {
-            if (response.Status == '200') {
-              this.origen_recursos = response.Data;
-              resolve(true);
-            } else {
-              reject('Error en la respuesta del servidor');
-            }
-          },
-          error: (error) => reject(error),
-        });
-    });
-  }
-
-  CargarOrigenPresupuesto(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.parametrosService
-        .get<ParametroListResponse>(
-          `parametro?query=TipoParametroId:${environment.ORIGEN_PRESUPUESTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
-        )
-        .subscribe({
-          next: (response: ParametroListResponse) => {
-            if (response.Status == '200') {
-              this.origen_presupuestos = response.Data;
-              resolve(true);
-            } else {
-              reject('Error en la respuesta del servidor');
-            }
-          },
-          error: (error) => reject(error),
-        });
-    });
-  }
-
-  CargarTemaGasto(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.parametrosService
-        .get<ParametroListResponse>(
-          `parametro?query=TipoParametroId:${environment.TEMA_GASTO_ID},Activo:true&limit=0&sortby=numeroOrden&order=asc&fields=Id,Nombre`
-        )
-        .subscribe({
-          next: (response: ParametroListResponse) => {
-            if (response.Status == '200') {
-              this.tema_gasto = response.Data;
-              resolve(true);
-            } else {
-              reject('Error en la respuesta del servidor');
-            }
-          },
-          error: (error) => reject(error),
-        });
-    });
-  }
-
-  CargarMediosPago(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.parametrosService
-        .get<ParametroListResponse>(
-          `parametro?query=TipoParametroId:${environment.MEDIO_PAGO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-        )
-        .subscribe({
-          next: (response: ParametroListResponse) => {
-            if (response.Status == '200') {
-              this.medios_pago = response.Data;
-              resolve(true);
-            } else {
-              reject('Error en la respuesta del servidor');
-            }
-          },
-          error: (error) => reject(error),
-        });
-    });
-  }
-
   CargarRolOrdenadores(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       this.ordenadoresSupervisoresMidService
@@ -720,10 +617,9 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
   }
 
   CambioMoneda(id_moneda: number) {
-    const idMonedaStr = id_moneda.toString();
 
     this.showCambioMonedaFields =
-      idMonedaStr !== environment.PESO_COLOMBIANO_ID;
+      id_moneda !== environment.PESO_COLOMBIANO_ID;
 
     const monedaFields = ['monedaExtranjera', 'tasaCambio'];
 
@@ -817,5 +713,12 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     } else {
       console.log('Paso Info Presupuestal - out of view');
     }
+  }
+
+  private async handleError(error: any): Promise<void> {
+    this.alertService.showErrorAlert(
+      'Ocurrió un error al cargar los datos iniciales',
+      'Error al cargar los datos iniciales'
+    );
   }
 }

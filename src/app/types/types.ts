@@ -123,6 +123,7 @@ export interface ParametroResponse {
   Descripcion?: string;
   CodigoAbreviacion?: string;
   Activo?: boolean;
+  ParametroPadreId?: ParametroResponse; 
 }
 
 /** DTO para crear/actualizar un amparo en gestion_contractual_crud (amparos-polizas). */
