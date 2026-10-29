@@ -373,6 +373,13 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       expect(navegar).toHaveBeenCalledTimes(1);
     });
 
+    it('el documento del contratista se ve bloqueado y está deshabilitado', () => {
+      const elemento = fixture.nativeElement as HTMLElement;
+      expect(elemento.querySelector('.search-input-wrapper')?.classList).toContain('wrapper-locked');
+      expect(elemento.querySelector('input.search-input-field')?.classList).toContain('field-locked');
+      expect(component.form.get('documentoContratista')?.disabled).toBe(true);
+    });
+
     it('oculta consultar y el guardado', () => {
       esperarSinAccionesDeEdicion(fixture);
     });

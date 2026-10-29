@@ -481,6 +481,8 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
   await test.step('04 contratista: datos visibles y en solo lectura', async () => {
     const seccion = page.locator('app-paso-contratistas');
     await expect.soft(seccion.locator('input[formcontrolname="documentoContratista"]')).toHaveValue('1014285890');
+    await expect.soft(seccion.locator('input[formcontrolname="documentoContratista"]')).toBeDisabled();
+    await expect.soft(seccion.locator('.search-input-wrapper')).toHaveClass(/wrapper-locked/);
     await expect.soft(seccion).toContainText('INGRID PAOLA MORALES MORALES');
     await expect.soft(seccion).toContainText('ingrid.morales@correo.com');
 
