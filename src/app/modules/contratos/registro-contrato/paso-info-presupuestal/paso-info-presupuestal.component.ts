@@ -1,10 +1,13 @@
 import {
   ChangeDetectorRef,
   Component,
+  effect,
   input,
   OnDestroy,
   OnInit,
   output,
+  signal,
+  untracked,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { finalize, firstValueFrom, Subject } from 'rxjs';
@@ -132,7 +135,17 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     private cdpsService: CdpsService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService,
-  ) {}
+  ) {
+    // El contrato puede llegar antes o después que los parámetros: se cargan los
+    // datos guardados cuando ambos están disponibles (y cada vez que cambia el contrato).
+    effect(() => {
+      if (this.parametrosCargados() && this.contratoGeneral()) {
+        untracked(() => this.loadSavedData());
+      }
+    });
+  }
+
+  private readonly parametrosCargados = signal(false);
 
   ngOnInit() {
     this.cargarCDPs();
@@ -140,7 +153,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     this.setupCdpListener();
     this.CargarRolOrdenadores();
     this.loadInitialData().then(() => {
-      this.loadSavedData();
+      this.parametrosCargados.set(true);
     });
 
     this.form.get('tipoMoneda')?.valueChanges.subscribe((id_moneda) => {

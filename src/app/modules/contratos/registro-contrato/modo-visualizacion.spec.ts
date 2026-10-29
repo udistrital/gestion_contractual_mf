@@ -229,12 +229,27 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
+      // Los datos se cargan cuando ya están el contrato y los parámetros (efecto).
+      await fixture.whenStable();
+      fixture.detectChanges();
     });
 
     it('deshabilita el formulario después de cargar el contrato y el ordenador', () => {
       expect(component.form.disabled).toBe(true);
       expect(component.form.getRawValue().valorContrato).toBe('1000000');
       expect(component.form.getRawValue().ordenadorGasto).toBe(3);
+    });
+
+    it('carga el contrato aunque llegue después de los parámetros', async () => {
+      const tardio = TestBed.createComponent(PasoInfoPresupuestalComponent);
+      tardio.componentRef.setInput('viewMode', true);
+      tardio.detectChanges();
+      await tardio.whenStable();
+      tardio.componentRef.setInput('contratoGeneral', contrato);
+      tardio.detectChanges();
+      await tardio.whenStable();
+      tardio.detectChanges();
+      expect(tardio.componentInstance.form.getRawValue().valorContrato).toBe('1000000');
     });
 
     it('el cambio de moneda no reactiva los campos de moneda extranjera', () => {
