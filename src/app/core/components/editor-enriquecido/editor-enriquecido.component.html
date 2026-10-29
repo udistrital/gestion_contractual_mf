@@ -1,5 +1,5 @@
-<form [formGroup]="editorForm">
-  <quill-editor formControlName="editorContent" placeholder="placeholder">
+<form [formGroup]="editorForm" [class.solo-lectura]="soloLectura">
+  <quill-editor formControlName="editorContent" placeholder="placeholder" [readOnly]="soloLectura">
     <div quill-editor-toolbar>
       <span class="ql-formats">
         <button class="ql-bold" [title]="'Bold'"></button>

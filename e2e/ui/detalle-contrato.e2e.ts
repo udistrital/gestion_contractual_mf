@@ -350,6 +350,16 @@ async function verificarSoloLectura(seccion: Locator, excluir: string[] = []) {
   expect.soft(await controlesHabilitados(seccion, excluir), 'controles habilitados').toEqual([]);
   expect.soft(await accionesDeEdicion(seccion), 'botones de edición visibles').toEqual([]);
   expect.soft(await seccion.locator('input[type="file"]').count(), 'carga de archivos').toBe(0);
+  expect.soft(await visibles(seccion.locator('[contenteditable="true"]')), 'contenido editable visible').toBe(0);
+  expect.soft(await visibles(seccion.locator('.ql-toolbar')), 'barra de herramientas de Quill visible').toBe(0);
+}
+
+async function visibles(elementos: Locator): Promise<number> {
+  let total = 0;
+  for (const elemento of await elementos.all()) {
+    if (await elemento.isVisible()) total++;
+  }
+  return total;
 }
 
 /** Valor mostrado por un mat-select (directo o dentro de app-searchable-select). */
