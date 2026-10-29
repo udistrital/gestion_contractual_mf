@@ -68,6 +68,18 @@ export class PasoGarantiasComponent implements OnInit {
     }
   }
 
+  /**
+   * Indica qué suficiencia se muestra en la fila. En edición se usa el estado del
+   * control; en visualización todo está deshabilitado, así que se decide por el amparo.
+   */
+  mostrarSuficiencia(fila: FormGroup, campo: 'suficienciaPorcentaje' | 'suficienciaSalarios'): boolean {
+    if (!this.viewMode()) {
+      return !!fila.get(campo)?.enabled;
+    }
+    const esCrec = fila.get('amparo')?.value?.toString() === environment.AMPARO_CREC_ID.toString();
+    return campo === 'suficienciaSalarios' ? esCrec : !esCrec;
+  }
+
   /** En modo visualización se omite la columna de acciones. */
   get columnasVisibles(): string[] {
     return this.viewMode()

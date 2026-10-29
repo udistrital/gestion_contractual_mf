@@ -450,6 +450,20 @@ export class PasoInfoGeneralComponent implements OnInit {
     }
   }
 
+  /**
+   * Indica si el campo aplica al contrato. En edición se usa el estado del control;
+   * en visualización todo está deshabilitado, así que se decide por los valores.
+   */
+  campoAplica(campo: 'perfilContratistaId' | 'aplicaPoliza' | 'fechaSuscripcionEstudios'): boolean {
+    if (!this.viewMode()) {
+      return !!this.formInfoGeneral.get(campo)?.enabled;
+    }
+    const { tipoCompromisoId, tipoContratoId } = this.formInfoGeneral.getRawValue();
+    return campo === 'aplicaPoliza'
+      ? tipoCompromisoId === environment.ORDEN_ID
+      : tipoContratoId === environment.CONTRATO_PSPAG_ID;
+  }
+
   guardarYContinuar() {
     const formData = this.formInfoGeneral.value;
     const unidad_ejecutora_id = String(formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id);

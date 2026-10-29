@@ -25,6 +25,12 @@ export class SearchableSelectComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
+  /**
+   * Solo lectura (modo visualización): el control queda deshabilitado y las
+   * opciones que lleguen después no lo reactivan ni cambian el valor guardado.
+   */
+  @Input() soloLectura: boolean = false;
+
   private _items: ItemType[] = [];
   @Input() set items(value: ItemType[]) {
     this._items = value || [];
@@ -65,13 +71,15 @@ export class SearchableSelectComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['items']) {
+    if (changes['items'] || (changes['soloLectura'] && this.soloLectura)) {
       this.handleItemsChange();
     }
   }
 
   private handleItemsChange() {
-    if (this._items && this._items.length === 1 && !this.disabled) {
+    if (this.soloLectura) {
+      this.controlValue.disable({emitEvent: false});
+    } else if (this._items && this._items.length === 1 && !this.disabled) {
       this.selectedItem = this._items[0];
       this.controlValue.setValue(this.getValue(this._items[0]));
       this.controlValue.disable({emitEvent: false});

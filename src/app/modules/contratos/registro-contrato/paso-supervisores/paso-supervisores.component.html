@@ -36,6 +36,7 @@
               label="Sede Universitaria Solicitante"
               [items]="sedes"
               [control]="form.get('solicitante.sede')"
+              [soloLectura]="viewMode()"
               [required]="true">
             </app-searchable-select>
           </div>
@@ -45,6 +46,7 @@
               label="Dependencia Solicitante"
               [items]="getDependenciasSolicitante()"
               [control]="form.get('solicitante.dependencia')"
+              [soloLectura]="viewMode()"
               [required]="true">
             </app-searchable-select>
           </div>
@@ -140,7 +142,7 @@
                     <mat-icon matPrefix>account_balance</mat-icon>
                     <mat-select
                       formControlName="dependencia"
-                      [disabled]="!supervisorGroup.get('sede')?.value">
+                      [disabled]="viewMode() || !supervisorGroup.get('sede')?.value">
                       @for (dep of getDependenciasSupervisor(i); track dep.id) {
                         <mat-option [value]="dep.id">
                           {{ dep.nombre }}

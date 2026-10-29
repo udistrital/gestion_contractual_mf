@@ -106,7 +106,7 @@
             <ng-container matColumnDef="suficiencia">
               <th mat-header-cell *matHeaderCellDef class="th-suficiencia">SUFICIENCIA Y COBERTURA</th>
               <td mat-cell *matCellDef="let filaFormGroup" class="td-suficiencia">
-                @if (filaFormGroup.get('suficienciaPorcentaje').enabled) {
+                @if (mostrarSuficiencia(filaFormGroup, 'suficienciaPorcentaje')) {
                   <mat-form-field appearance="outline" class="w-100 dense-field">
                     <mat-label>Porcentaje (%)</mat-label>
                     <input
@@ -121,7 +121,7 @@
                     }
                   </mat-form-field>
                 }
-                @if (filaFormGroup.get('suficienciaSalarios').enabled) {
+                @if (mostrarSuficiencia(filaFormGroup, 'suficienciaSalarios')) {
                   <mat-form-field appearance="outline" class="w-100 dense-field">
                     <mat-label>Salarios Mínimos (SMLV)</mat-label>
                     <input

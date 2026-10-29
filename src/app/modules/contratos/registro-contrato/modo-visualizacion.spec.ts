@@ -1,6 +1,7 @@
 import { Component, Input, NO_ERRORS_SCHEMA, TemplateRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
+import { FormGroup } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatStepper } from '@angular/material/stepper';
 import { of } from 'rxjs';
@@ -130,6 +131,16 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       expect(form.get('fechaSuscripcionEstudios')?.disabled).toBe(true);
       expect(form.get('convenio')?.disabled).toBe(true);
       expect(form.disabled).toBe(true);
+    });
+
+    it('muestra los campos que aplican aunque estén deshabilitados', async () => {
+      await montar(true);
+      expect(component.campoAplica('aplicaPoliza')).toBe(true);
+      expect(component.campoAplica('perfilContratistaId')).toBe(true);
+      expect(component.campoAplica('fechaSuscripcionEstudios')).toBe(true);
+
+      component.formInfoGeneral.get('tipoContratoId')?.setValue(6541, { emitEvent: false });
+      expect(component.campoAplica('perfilContratistaId')).toBe(false);
     });
 
     it('oculta el botón de guardar en visualización', async () => {
@@ -452,6 +463,18 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       fila.get('amparo')?.setValue(environment.AMPARO_CREC_ID);
       expect(fila.get('suficienciaSalarios')?.disabled).toBe(true);
       expect(component.form.disabled).toBe(true);
+    });
+
+    it('muestra la suficiencia que corresponde al amparo aunque esté deshabilitada', async () => {
+      await montar([
+        { amparo_id: environment.AMPARO_CREC_ID, tipo_valor_amparo_id: 1, suficiencia: 5, descripcion: 'Amparo' },
+        { amparo_id: 1, tipo_valor_amparo_id: 2, suficiencia: 20, descripcion: 'Cumplimiento' },
+      ]);
+      const [crec, otro] = component.filasFormArray.controls as FormGroup[];
+      expect(component.mostrarSuficiencia(crec, 'suficienciaSalarios')).toBe(true);
+      expect(component.mostrarSuficiencia(crec, 'suficienciaPorcentaje')).toBe(false);
+      expect(component.mostrarSuficiencia(otro, 'suficienciaPorcentaje')).toBe(true);
+      expect(component.mostrarSuficiencia(otro, 'suficienciaSalarios')).toBe(false);
     });
 
     it('sin amparos guardados no agrega una fila vacía', async () => {
