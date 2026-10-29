@@ -26,6 +26,7 @@ export class PasoGarantiasComponent implements OnInit {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
+  viewMode = input<boolean>(false);
 
   form: FormGroup;
   datosExitentes = false;
@@ -57,6 +58,21 @@ export class PasoGarantiasComponent implements OnInit {
     this.form.statusChanges.subscribe(() => {
       this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
     });
+    this.aplicarModoVisualizacion();
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
+  }
+
+  /** En modo visualización se omite la columna de acciones. */
+  get columnasVisibles(): string[] {
+    return this.viewMode()
+      ? this.displayedColumns.filter((columna) => columna !== 'acciones')
+      : this.displayedColumns;
   }
 
   get totalAmparos(): number {
@@ -101,9 +117,10 @@ export class PasoGarantiasComponent implements OnInit {
         });
         this.datosExitentes = true;
         this.actualizarDataSource();
-      } else {
+      } else if (!this.viewMode()) {
         this.agregarFila();
       }
+      this.aplicarModoVisualizacion();
     }
   }
 
@@ -208,10 +225,14 @@ export class PasoGarantiasComponent implements OnInit {
         if (idAmparoStr === tipoAmparoIdStr) {
           suficienciaPorcentajeControl?.disable();
           suficienciaPorcentajeControl?.setValue('');
-          suficienciaSalariosControl?.enable();
+          if (!this.viewMode()) {
+            suficienciaSalariosControl?.enable();
+          }
           suficienciaSalariosControl?.setValidators(Validators.required);
         } else {
-          suficienciaPorcentajeControl?.enable();
+          if (!this.viewMode()) {
+            suficienciaPorcentajeControl?.enable();
+          }
           suficienciaPorcentajeControl?.setValidators(Validators.required);
           suficienciaSalariosControl?.disable();
           suficienciaSalariosControl?.setValue('');

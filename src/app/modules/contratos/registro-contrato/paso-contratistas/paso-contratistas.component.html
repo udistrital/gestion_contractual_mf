@@ -82,6 +82,7 @@
               }
             </div>
 
+            @if (!viewMode()) {
             <button
               type="button"
               mat-raised-button
@@ -93,6 +94,7 @@
                 <span>{{ bloquearContratista() ? 'Prevalidado' : 'Consultar Registro' }}</span>
               </div>
             </button>
+            }
           </div>
 
           @if (errorMessage) {
@@ -205,6 +207,7 @@
 
     <div class="dock-right">
       <span class="dock-indicator">Paso 2 de 5</span>
+      @if (!viewMode()) {
       <button
         type="button"
         mat-raised-button
@@ -214,6 +217,7 @@
         <span>Siguiente: Estructura y Necesidad</span>
         <mat-icon>arrow_forward</mat-icon>
       </button>
+      }
     </div>
   </div>
 </form>

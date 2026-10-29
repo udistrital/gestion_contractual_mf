@@ -18,6 +18,7 @@ export class PasoEspecificacionesComponent {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
+  viewMode = input<boolean>(false);
 
   displayedColumns = [
     'item',
@@ -40,6 +41,13 @@ export class PasoEspecificacionesComponent {
         this.getEspecificaciones();
       }
     })
+  }
+
+  /** En modo visualización se omite la columna de acciones. */
+  get columnasVisibles(): string[] {
+    return this.viewMode()
+      ? this.displayedColumns.filter((columna) => columna !== 'acciones')
+      : this.displayedColumns;
   }
 
   get valorTotalGeneral(): number {

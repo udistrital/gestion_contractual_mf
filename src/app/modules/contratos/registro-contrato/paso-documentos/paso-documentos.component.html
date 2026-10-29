@@ -27,6 +27,7 @@
             readonly
             aria-label="Nombre del archivo seleccionado"
             />
+            @if (!viewMode()) {
             <button
               type="button"
               mat-raised-button
@@ -37,6 +38,7 @@
               <mat-icon>upload</mat-icon>
               <span>Seleccionar PDF</span>
             </button>
+            }
           </div>
           <input
             #fileInput
@@ -76,6 +78,7 @@
             Ver
             <mat-icon>visibility</mat-icon>
           </button>
+          @if (!viewMode()) {
           <button
             mat-raised-button
             type="submit"
@@ -85,6 +88,7 @@
             <mat-icon>save</mat-icon>
             Guardar y Registrar
           </button>
+          }
         </div>
       </div>
     </form>

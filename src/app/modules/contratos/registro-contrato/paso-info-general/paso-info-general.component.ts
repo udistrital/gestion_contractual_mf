@@ -171,12 +171,12 @@ export class PasoInfoGeneralComponent implements OnInit {
   async ngOnInit() {
     this.roles = this.rolService.getRol();
     await this.loadInitialData();
-    if (this.viewMode()) {
-      this.formInfoGeneral.disable();
-    } else {
-      this.processRoles();
-      this.setuptipoCompromisoId();
-      this.setuptipoContratoId();
+    // Las opciones dependientes (tipo de contrato, tipología, perfil) también
+    // se cargan en modo visualización para poder mostrar los valores guardados.
+    this.processRoles();
+    this.setuptipoCompromisoId();
+    this.setuptipoContratoId();
+    if (!this.viewMode()) {
       this.setupAplicaPoliza();
 
       this.initialFormValue = this.formInfoGeneral.value;
@@ -184,6 +184,7 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.formSaved = false;
       });
     }
+    this.aplicarModoVisualizacion();
     this.formInfoGeneral.statusChanges.subscribe(() => {
       this.stepCompleted.emit(this.formInfoGeneral.valid);
     });
@@ -209,7 +210,9 @@ export class PasoInfoGeneralComponent implements OnInit {
               this.formInfoGeneral.get('aplicaPoliza');
             if (idCompromisoStr === perfilCompromisoIdStr) {
               perfilCompromisoControl?.setValidators(Validators.required);
-              perfilCompromisoControl?.enable();
+              if (!this.viewMode()) {
+                perfilCompromisoControl?.enable();
+              }
             } else {
               perfilCompromisoControl?.clearValidators();
               perfilCompromisoControl?.disable();
@@ -242,10 +245,11 @@ export class PasoInfoGeneralComponent implements OnInit {
           if (idContratoStr === tipoContratoIdIdStr) {
             this.CargarPerfilContratista(id_contrato);
             perfilContratistaControl?.setValidators(Validators.required);
-            perfilContratistaControl?.enable();
-
             fechaSuscripcionControl?.setValidators(Validators.required);
-            fechaSuscripcionControl?.enable();
+            if (!this.viewMode()) {
+              perfilContratistaControl?.enable();
+              fechaSuscripcionControl?.enable();
+            }
           } else {
             perfilContratistaControl?.clearValidators();
             perfilContratistaControl?.disable();
@@ -360,7 +364,9 @@ export class PasoInfoGeneralComponent implements OnInit {
         control.reset();
         if (this.showConvenioFields && convenioFields.includes(field)) {
           control.setValidators(Validators.required);
-          control.enable();
+          if (!this.viewMode()) {
+            control.enable();
+          }
         } else {
           control.clearValidators();
           control.disable();
@@ -434,6 +440,14 @@ export class PasoInfoGeneralComponent implements OnInit {
       unidadEjecucionId: data.unidad_ejecucion_id ?? 0,
     };
     this.formInfoGeneral.patchValue(formData);
+    this.aplicarModoVisualizacion();
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.formInfoGeneral.disable({ emitEvent: false });
+    }
   }
 
   guardarYContinuar() {

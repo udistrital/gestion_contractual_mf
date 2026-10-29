@@ -57,6 +57,7 @@
               <span>Solicitante guardado</span>
             </span>
           }
+          @if (!viewMode()) {
           <button
             type="button"
             mat-raised-button
@@ -72,6 +73,7 @@
               <span>{{ solicitanteSaved ? 'Actualizar Solicitante' : 'Guardar Solicitante' }}</span>
             </div>
           </button>
+          }
         </div>
       </div>
     </div>
@@ -100,7 +102,7 @@
                   <mat-icon class="subheading-icon">person</mat-icon>
                   <span>Supervisor Designado {{ i + 1 }}</span>
                 </span>
-                @if (getSupervisoresFormArray().length > 1) {
+                @if (!viewMode() && getSupervisoresFormArray().length > 1) {
                   <button
                     type="button"
                     mat-button
@@ -216,6 +218,7 @@
         </div>
 
         <!-- Acciones del Bloque 2 -->
+        @if (!viewMode()) {
         <div class="supervisores-actions-row">
           <div class="supervisores-left-action">
             <button
@@ -242,6 +245,7 @@
             </div>
           </button>
         </div>
+        }
       </div>
     </div>
   </form>
