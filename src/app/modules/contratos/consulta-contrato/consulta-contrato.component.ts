@@ -684,10 +684,6 @@ export class ConsultaContratoComponent implements OnInit {
     return `${activos.length} filtro(s) activo(s): ${activos.join(' • ')}`;
   }
 
-  verDetalle(contrato: ContratoGeneral) {
-    this.router.navigate(['/detalle', contrato.id]);
-  }
-
   private prepararParametros() {
     const formValues = this.form.value;
     const params: any = {
