@@ -34,6 +34,7 @@
                 icon="corporate_fare"
                 [items]="unidadesEjecutoras"
                 [control]="formInfoGeneral.get('unidadEjecutoraId')"
+                [soloLectura]="viewMode()"
                 [required]="true"
               >
               </app-searchable-select>
@@ -46,6 +47,7 @@
                 icon="feed"
                 [items]="tiposCompromisos"
                 [control]="formInfoGeneral.get('tipoCompromisoId')"
+                [soloLectura]="viewMode()"
                 [required]="true"
               >
               </app-searchable-select>
@@ -58,13 +60,14 @@
                 icon="description"
                 [items]="tiposContratos"
                 [control]="formInfoGeneral.get('tipoContratoId')"
+                [soloLectura]="viewMode()"
                 [required]="true"
               >
               </app-searchable-select>
             </div>
 
             @if (showContratoFields) {
-              @if (formInfoGeneral.get('perfilContratistaId')?.enabled) {
+              @if (campoAplica('perfilContratistaId')) {
                 <div class="col-12 col-md-6">
                   <mat-form-field class="w-100" appearance="outline">
                     <mat-label>Perfil del Contratista:</mat-label>
@@ -80,7 +83,7 @@
                 </div>
               }
 
-              @if (formInfoGeneral.get('aplicaPoliza')?.enabled) {
+              @if (campoAplica('aplicaPoliza')) {
                 <div class="col-12 col-md-6">
                   <mat-form-field class="w-100" appearance="outline">
                     <mat-label>Aplica Póliza:</mat-label>
@@ -142,6 +145,7 @@
                 icon="filter_alt"
                 [items]="modalidadesSeleccion"
                 [control]="formInfoGeneral.get('modalidadSeleccionId')"
+                [soloLectura]="viewMode()"
                 [required]="true"
               >
               </app-searchable-select>
@@ -154,6 +158,7 @@
                 icon="gavel"
                 [items]="regimenesContratacion"
                 [control]="formInfoGeneral.get('regimenContratacionId')"
+                [soloLectura]="viewMode()"
                 [required]="true"
               >
               </app-searchable-select>
@@ -166,6 +171,7 @@
                 icon="category"
                 [items]="tipologiasEspecificas"
                 [control]="formInfoGeneral.get('tipologiaEspecificaId')"
+                [soloLectura]="viewMode()"
                 [required]="true"
               >
               </app-searchable-select>
@@ -178,13 +184,14 @@
                 icon="rule"
                 [items]="procedimientos"
                 [control]="formInfoGeneral.get('procedimientoId')"
+                [soloLectura]="viewMode()"
                 [required]="true"
               >
               </app-searchable-select>
             </div>
 
             <!-- Fecha Suscripción Estudios Previos -->
-            @if (showContratoFields && formInfoGeneral.get('fechaSuscripcionEstudios')?.enabled) {
+            @if (showContratoFields && campoAplica('fechaSuscripcionEstudios')) {
               <div class="col-12 col-md-6">
                 <mat-form-field class="w-100" appearance="outline">
                   <mat-label>Fecha Suscripción Estudios Previos (DD/MM/AAAA):</mat-label>

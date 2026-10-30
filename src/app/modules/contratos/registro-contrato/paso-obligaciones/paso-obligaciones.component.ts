@@ -42,6 +42,7 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy, OnChanges {
   stepCompleted = output<boolean>();
   contratoGuardado = output<void>();
   contratoGeneral = input<ContratoGeneral>()
+  viewMode = input<boolean>(false);
 
   form: FormGroup;
   cdpData: CDP[] = [];
@@ -85,11 +86,20 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy, OnChanges {
     if (this.contratoGeneral()) {
       this.updateFormWithCDPData();
     }
+    this.aplicarModoVisualizacion();
   }
 
   ngOnChanges(): void {
     if (this.contratoGeneral()) {
       this.updateFormWithCDPData();
+    }
+    this.aplicarModoVisualizacion();
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
     }
   }
 
@@ -149,6 +159,7 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy, OnChanges {
     }
 
     this.previousCDPCount = currentCDPCount;
+    this.aplicarModoVisualizacion();
   }
 
   resetForm() {

@@ -13,6 +13,7 @@
           </p>
         </div>
       </div>
+      @if (!viewMode()) {
       <div class="banner-actions">
         <button
           type="button"
@@ -25,6 +26,7 @@
           <span>Re-sincronizar SICAPITAL</span>
         </button>
       </div>
+      }
     </div>
   </div>
 
@@ -116,6 +118,7 @@
           <mat-icon>checklist</mat-icon>
           <span>3. ACTIVIDADES ESPECÍFICAS Y ENTREGABLES (OBLIGACIONES TÉCNICAS)</span>
         </div>
+        @if (!viewMode()) {
         <div class="bloque-header-actions">
           <button
             type="button"
@@ -126,6 +129,7 @@
             <span>+ Nueva Actividad</span>
           </button>
         </div>
+        }
       </div>
 
       <div class="bloque-body">
@@ -172,6 +176,7 @@
                 </div>
 
                 <!-- Acciones de la actividad -->
+                @if (!viewMode()) {
                 <div class="actividad-actions-col">
                   <button
                     type="button"
@@ -208,6 +213,7 @@
                     <mat-icon>delete</mat-icon>
                   </button>
                 </div>
+                }
               </div>
             }
           </div>
@@ -216,6 +222,7 @@
             <mat-icon class="empty-icon">assignment_late</mat-icon>
             <p class="empty-title">No hay actividades u obligaciones registradas</p>
             <p class="empty-subtitle">Agregue las actividades y entregables específicos que deberá cumplir el contratista.</p>
+            @if (!viewMode()) {
             <button
               type="button"
               mat-raised-button
@@ -225,6 +232,7 @@
               <mat-icon>add_circle</mat-icon>
               <span>+ Agregar Primera Actividad</span>
             </button>
+            }
           </div>
         }
 
@@ -241,6 +249,7 @@
             </button>
           </div>
 
+          @if (!viewMode()) {
           <div class="footer-right-actions">
             <button
               type="button"
@@ -251,6 +260,7 @@
               <span>+ Agregar Actividad Específica Adicional</span>
             </button>
           </div>
+          }
         </div>
 
         <!-- Previsualización del Párrafo Consolidado Generado para el Contrato -->
@@ -296,6 +306,7 @@
       </div>
 
       <div class="dock-right-group">
+        @if (!viewMode()) {
         <button
           type="button"
           mat-raised-button
@@ -307,6 +318,18 @@
           <span>Guardar y Continuar</span>
           <mat-icon>arrow_forward</mat-icon>
         </button>
+        } @else {
+        <button
+          type="button"
+          mat-raised-button
+          color="primary"
+          class="dock-btn-continue"
+          (click)="nextStep.emit()"
+        >
+          <span>Siguiente</span>
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+        }
       </div>
     </div>
   </form>

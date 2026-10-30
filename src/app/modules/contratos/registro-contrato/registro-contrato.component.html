@@ -63,6 +63,7 @@
             <app-paso-info-general
               #pasoInfoGeneral
               [contratoGeneral]="contratoGeneral"
+              [viewMode]="viewMode()"
               (stepCompleted)="onPasoInfoGeneralCompleted($event)"
               (tipoCompromisoChange)="onTipoCompromisoChange($event)"
               (aplicaPolizaChange)="onAplicaPolizaChange($event)"
@@ -71,6 +72,7 @@
             <app-paso-info-presupuestal
               #pasoInfoPresupuestal
               [contratoGeneral]="contratoGeneral"
+              [viewMode]="viewMode()"
               (stepCompleted)="onPasoInfoPresupuestalCompleted($event)"
               (contratoGuardado)="onPresupuestalGuardado()"
               (nextStep)="goToNextStep()"
@@ -83,6 +85,7 @@
               #pasoSupervisores
               [contratoGeneral]="contratoGeneral"
               (stepCompleted)="onPasoSupervisoresCompleted($event)"
+              [viewMode]="viewMode()"
             />
             <app-paso-contratistas
               #pasoContratistas
@@ -91,6 +94,7 @@
               [bloquearContratista]="bloquearContratista"
               (stepCompleted)="onPasoContratistasCompleted($event)"
               (nextStep)="goToNextStep()"
+              [viewMode]="viewMode()"
             />
           </mat-step>
 
@@ -101,6 +105,7 @@
               [contratoGeneral]="contratoGeneral"
               (stepCompleted)="onPasoEstructuraCompleted($event)"
               (nextStep)="goToNextStep()"
+              [viewMode]="viewMode()"
             />
           </mat-step>
 
@@ -109,6 +114,7 @@
             <mat-step [editable]="true">
               <app-paso-especificaciones
                 [contratoGeneral]="contratoGeneral"
+                [viewMode]="viewMode()"
                 (stepCompleted)="onPasoEspecificacionesCompleted($event)"
                 (nextStep)="goToNextStep()"
               />
@@ -120,6 +126,7 @@
             <mat-step [editable]="true">
               <app-paso-garantias
                 [contratoGeneral]="contratoGeneral"
+                [viewMode]="viewMode()"
                 (stepCompleted)="onPasoGarantiasCompleted($event)"
                 (nextStep)="goToNextStep()"
               />
@@ -130,6 +137,7 @@
           <mat-step [editable]="true">
             <app-paso-clausulas-paragrafos
               [contratoGeneral]="contratoGeneral"
+              [viewMode]="viewMode()"
               (stepCompleted)="onPasoClausulasCompleted($event)"
             />
           </mat-step>

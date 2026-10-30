@@ -67,12 +67,12 @@
           </div>
 
           <div class="search-input-row">
-            <div class="search-input-wrapper" [class.wrapper-locked]="bloquearContratista()">
-              <mat-icon class="search-input-icon">{{ bloquearContratista() ? 'lock' : 'fingerprint' }}</mat-icon>
+            <div class="search-input-wrapper" [class.wrapper-locked]="bloquearContratista() || viewMode()">
+              <mat-icon class="search-input-icon">{{ bloquearContratista() || viewMode() ? 'lock' : 'fingerprint' }}</mat-icon>
               <input
                 type="text"
                 class="search-input-field"
-                [class.field-locked]="bloquearContratista()"
+                [class.field-locked]="bloquearContratista() || viewMode()"
                 formControlName="documentoContratista"
                 placeholder="Ej. 1013651454 o NIT de la entidad"
                 [readonly]="bloquearContratista()"
@@ -82,6 +82,7 @@
               }
             </div>
 
+            @if (!viewMode()) {
             <button
               type="button"
               mat-raised-button
@@ -93,6 +94,7 @@
                 <span>{{ bloquearContratista() ? 'Prevalidado' : 'Consultar Registro' }}</span>
               </div>
             </button>
+            }
           </div>
 
           @if (errorMessage) {
@@ -205,6 +207,7 @@
 
     <div class="dock-right">
       <span class="dock-indicator">Paso 2 de 5</span>
+      @if (!viewMode()) {
       <button
         type="button"
         mat-raised-button
@@ -214,6 +217,17 @@
         <span>Siguiente: Estructura y Necesidad</span>
         <mat-icon>arrow_forward</mat-icon>
       </button>
+      } @else {
+      <button
+        type="button"
+        mat-raised-button
+        class="btn-dock-siguiente"
+        (click)="nextStep.emit()"
+      >
+        <span>Siguiente</span>
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+      }
     </div>
   </div>
 </form>

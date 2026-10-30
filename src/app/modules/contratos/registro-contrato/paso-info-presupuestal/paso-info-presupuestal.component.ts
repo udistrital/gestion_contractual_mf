@@ -34,6 +34,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
 
   unidadEjecutora: string = '01'; //Valor que debe ser obtenido de algún flujo superior.
   contratoGeneral = input<ContratoGeneral>();
+  viewMode = input<boolean>(false);
 
   form = this._formBuilder.group({
     vigencia: [''],
@@ -169,6 +170,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     this.form.statusChanges.subscribe(() => {
       this.stepCompleted.emit(this.form.valid);
     });
+    this.aplicarModoVisualizacion();
   }
 
   ngOnChanges(): void {
@@ -239,10 +241,18 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     } catch (error) {
       console.error('Error loading saved data:', error);
     }
+    this.aplicarModoVisualizacion();
   }
 
   private setOrdenadorGuardado() {
     this.form.get('ordenadorGasto')?.setValue(this.ordenadorGastoId)
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
   }
 
   async guardarYContinuar() {
@@ -629,7 +639,9 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
         control.reset();
         if (this.showCambioMonedaFields && monedaFields.includes(field)) {
           control.setValidators(Validators.required);
-          control.enable();
+          if (!this.viewMode()) {
+            control.enable();
+          }
         } else {
           control.clearValidators();
           control.disable();

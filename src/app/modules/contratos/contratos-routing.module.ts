@@ -4,6 +4,7 @@ import { RegistroContratoComponent } from './registro-contrato/registro-contrato
 import { ConsultaContratoComponent } from './consulta-contrato/consulta-contrato.component';
 import { RevisionContratoComponent } from './revision-contrato/revision-contrato.component';
 import { EditarContratoComponent } from './consulta-contrato/editar-contrato/editar-contrato.component';
+import { DetalleContratoComponent } from './consulta-contrato/detalle-contrato/detalle-contrato.component';
 import { authGuard } from 'src/_guards/auth.guard';
 
 const routes: Routes = [
@@ -41,6 +42,11 @@ const routes: Routes = [
     path: 'documentos/:contratoId',
     canActivate: [authGuard],
     component: RevisionContratoComponent,
+  },
+  {
+    path: 'detalle/:contratoId',
+    canActivate: [authGuard],
+    component: DetalleContratoComponent,
   },
 ]
 

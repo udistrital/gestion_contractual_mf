@@ -18,6 +18,7 @@ export class PasoEspecificacionesComponent implements OnChanges {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
+  viewMode = input<boolean>(false);
 
   displayedColumns = [
     'item',
@@ -29,6 +30,7 @@ export class PasoEspecificacionesComponent implements OnChanges {
   ];
   editando: boolean = false;
   especificaciones: EspecificacionTecnica[] = [];
+  private contratoCargadoId: number | null = null;
 
   public readonly dialog = inject(MatDialog);
   private readonly alertService = inject(AlertService);
@@ -46,6 +48,13 @@ export class PasoEspecificacionesComponent implements OnChanges {
     if (this.contratoGeneral()) {
       this.getEspecificaciones();
     }
+  }
+
+  /** En modo visualización se omite la columna de acciones. */
+  get columnasVisibles(): string[] {
+    return this.viewMode()
+      ? this.displayedColumns.filter((columna) => columna !== 'acciones')
+      : this.displayedColumns;
   }
 
   get valorTotalGeneral(): number {
@@ -77,12 +86,19 @@ export class PasoEspecificacionesComponent implements OnChanges {
   }
 
   getEspecificaciones() {
+    const contratoId = this.contratoGeneral()?.id;
+    if (!contratoId || this.contratoCargadoId === contratoId) return;
+    this.contratoCargadoId = contratoId;
     this.contratoGeneralCrudService
-      .getEspecificacionesTecnicas(this.contratoGeneral()?.id as number)
+      .getEspecificacionesTecnicas(contratoId)
       .subscribe({
         next: (response: ApiResponse<EspecificacionTecnica[]>) => {
           if (response.Success && response.Data.length > 0) {
             this.especificaciones = response.Data;
+          }
+          // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+          if (this.viewMode()) {
+            this.stepCompleted.emit(this.especificaciones.length > 0);
           }
         },
         error: (error) =>

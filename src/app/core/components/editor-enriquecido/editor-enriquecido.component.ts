@@ -18,6 +18,13 @@ import {Component, forwardRef, Input, OnInit} from "@angular/core";
       width: 100%;
       margin-bottom: 20px;
     }
+    .solo-lectura ::ng-deep .ql-toolbar {
+      display: none;
+    }
+    .solo-lectura ::ng-deep .ql-container.ql-snow {
+      border-top: 1px solid #ccc;
+      background-color: #f8fafc;
+    }
   `]
 })
 export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor {
@@ -25,6 +32,8 @@ export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor 
   @Input() placeholder: string = 'Escribe aquí...';
 
   editorForm: FormGroup;
+  /** Control deshabilitado (p. ej. modo visualización): editor en solo lectura y sin barra. */
+  soloLectura: boolean = false;
   onChanges: any = () => {};
   onTouch: any = () => {};
   
@@ -79,6 +88,7 @@ export class EditorEnriquecidoComponent implements OnInit, ControlValueAccessor 
   }
 
   setDisabledState?(isDisabled: boolean): void {
+    this.soloLectura = isDisabled;
     isDisabled ? this.editorForm.disable() : this.editorForm.enable();
   }
 }

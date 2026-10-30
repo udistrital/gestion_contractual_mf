@@ -33,6 +33,7 @@
       <span class="toolbar-title">Catálogo de Especificaciones Técnicas</span>
       <span class="toolbar-badge">{{ especificaciones.length }} {{ especificaciones.length === 1 ? 'registro' : 'registros' }}</span>
     </div>
+    @if (!viewMode()) {
     <div class="toolbar-right">
       <button
         type="button"
@@ -63,6 +64,7 @@
         <span>Descargar Plantilla XLSX</span>
       </button>
     </div>
+    }
   </div>
 
   <!-- 3. Contenedor de Tabla Institucional -->
@@ -74,6 +76,7 @@
         </div>
         <h4>Sin especificaciones técnicas registradas</h4>
         <p>Añada las especificaciones manualmente con el botón superior o cargue masivamente una plantilla en formato Excel.</p>
+        @if (!viewMode()) {
         <button
           type="button"
           mat-stroked-button
@@ -83,6 +86,7 @@
           <mat-icon>add</mat-icon>
           <span>Agregar primera especificación</span>
         </button>
+        }
       </div>
     } @else {
       <div class="table-responsive">
@@ -154,8 +158,8 @@
             </td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns" class="fila-tabla"></tr>
+          <tr mat-header-row *matHeaderRowDef="columnasVisibles"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasVisibles" class="fila-tabla"></tr>
         </table>
       </div>
 
@@ -185,6 +189,7 @@
       <span class="dock-step-tag">Paso Condicional: Especificaciones Técnicas</span>
     </div>
     <div class="dock-right">
+      @if (!viewMode()) {
       <button
         type="button"
         mat-raised-button
@@ -195,6 +200,18 @@
         <span>Guardar y Continuar</span>
         <mat-icon>arrow_forward</mat-icon>
       </button>
+      } @else {
+      <button
+        type="button"
+        mat-raised-button
+        color="primary"
+        class="dock-btn-continue"
+        (click)="nextStep.emit()"
+      >
+        <span>Siguiente</span>
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+      }
     </div>
   </div>
 </div>

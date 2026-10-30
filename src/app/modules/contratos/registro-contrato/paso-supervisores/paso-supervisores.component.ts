@@ -36,6 +36,7 @@ export class PasoSupervisoresComponent implements OnInit, OnChanges {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>();
+  viewMode = input<boolean>(false);
 
   solicitanteId: number | null = null;
   supervisoresIds: number[] = [];
@@ -78,6 +79,14 @@ export class PasoSupervisoresComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.cargarSedes();
     this.setupFormListeners();
+    this.aplicarModoVisualizacion();
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
   }
 
   ngOnChanges(): void {
@@ -113,6 +122,7 @@ export class PasoSupervisoresComponent implements OnInit, OnChanges {
               dependencia: depId,
             });
             this.cdRef.detectChanges();
+            this.aplicarModoVisualizacion();
           }
         },
         error: () => {
@@ -168,6 +178,10 @@ export class PasoSupervisoresComponent implements OnInit, OnChanges {
 
             this.checkStepCompleted();
             this.cdRef.detectChanges();
+            this.aplicarModoVisualizacion();
+            if (this.viewMode()) {
+              this.stepCompleted.emit(supervisores.length > 0);
+            }
           }
           this.cargandoDatosGuardados = false;
         },

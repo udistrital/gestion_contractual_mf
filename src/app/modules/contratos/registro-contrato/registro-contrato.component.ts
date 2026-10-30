@@ -90,6 +90,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit, OnChang
 
   contratoGeneralId = model<number>(0);
   editMode = model<boolean>(false);
+  viewMode = model<boolean>(false);
   contratoGeneral: ContratoGeneral | undefined = undefined;
 
   contratistaPrevalidado: any = null;
@@ -144,6 +145,9 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit, OnChang
   }
 
   get tituloVista(): string {
+    if (this.viewMode()) {
+      return 'Detalle del Contrato';
+    }
     if (!this.editMode()) {
       return 'Registrar Contrato';
     }

@@ -56,6 +56,7 @@ export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
+  viewMode = input<boolean>(false);
 
   roles: string[] = [];
   usuario_id: number = 0;
@@ -365,7 +366,7 @@ export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
           } else if (cachedClausulas && cachedClausulas.length > 0) {
             this.contratoCargadoId = this.contratoId;
             this.cargarContratoExistente(cachedClausulas);
-          } else {
+          } else if (!this.viewMode()) {
             this.cargarPlantillaPorTipoContrato();
           }
         },
@@ -374,7 +375,7 @@ export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
           if (cachedClausulas && cachedClausulas.length > 0) {
             this.contratoCargadoId = this.contratoId;
             this.cargarContratoExistente(cachedClausulas);
-          } else {
+          } else if (!this.viewMode()) {
             this.cargarPlantillaPorTipoContrato();
           }
         },
@@ -731,7 +732,15 @@ export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
       this.clausulaSeleccionadaIndex = 0;
       this.stepCompleted.emit(this.clausulas.length > 0);
       this.cdr.detectChanges();
+      this.aplicarModoVisualizacion();
     });
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
   }
 
   private crearClausulaFormGroup(
@@ -817,12 +826,14 @@ export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
   }
 
   isClausulaEditable(index: number): boolean {
+    if (this.viewMode()) return false;
     const clausula = this.clausulas.at(index);
     if (!clausula) return false;
     return clausula.get('es_editable')?.value ?? false;
   }
 
   isParagrafoEditable(clausulaIndex: number, paragrafoIndex: number): boolean {
+    if (this.viewMode()) return false;
     const clausula = this.clausulas.at(clausulaIndex);
     if (!clausula) return false;
     const paragrafos = this.getParagrafos(clausula);
@@ -1589,8 +1600,10 @@ export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
     }
 
     try {
-      // 1. Sincronizar cláusulas actuales al backend sin mostrar alerta invasiva
-      await this.actualizarContrato(false);
+      if (!this.viewMode()) {
+        // 1. Sincronizar cláusulas actuales al backend sin mostrar alerta invasiva
+        await this.actualizarContrato(false);
+      }
     } catch (e) {
       console.warn('Advertencia al sincronizar estado antes de vista previa:', e);
     }
@@ -1616,9 +1629,10 @@ export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
         usuario_rol: this.getRolPorEstado(),
       };
 
+      // Sin datos de registro el visor no ofrece guardar la minuta (solo lectura).
       this.dialog.open(PdfViewerModalComponent, {
         width: '70vw',
-        data: { file, datos },
+        data: { file, datos: this.viewMode() ? null : datos },
       });
     } catch (error: any) {
       console.error('Error al generar la vista previa de minuta:', error);
