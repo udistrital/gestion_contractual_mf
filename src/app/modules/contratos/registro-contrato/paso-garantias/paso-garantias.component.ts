@@ -26,6 +26,7 @@ export class PasoGarantiasComponent implements OnInit {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
+  viewMode = input<boolean>(false);
 
   form: FormGroup;
   datosExitentes = false;
@@ -57,6 +58,33 @@ export class PasoGarantiasComponent implements OnInit {
     this.form.statusChanges.subscribe(() => {
       this.stepCompleted.emit(this.form.valid && this.filasFormArray.length > 0);
     });
+    this.aplicarModoVisualizacion();
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
+  }
+
+  /**
+   * Indica qué suficiencia se muestra en la fila. En edición se usa el estado del
+   * control; en visualización todo está deshabilitado, así que se decide por el amparo.
+   */
+  mostrarSuficiencia(fila: FormGroup, campo: 'suficienciaPorcentaje' | 'suficienciaSalarios'): boolean {
+    if (!this.viewMode()) {
+      return !!fila.get(campo)?.enabled;
+    }
+    const esCrec = fila.get('amparo')?.value?.toString() === environment.AMPARO_CREC_ID.toString();
+    return campo === 'suficienciaSalarios' ? esCrec : !esCrec;
+  }
+
+  /** En modo visualización se omite la columna de acciones. */
+  get columnasVisibles(): string[] {
+    return this.viewMode()
+      ? this.displayedColumns.filter((columna) => columna !== 'acciones')
+      : this.displayedColumns;
   }
 
   get totalAmparos(): number {
@@ -71,7 +99,22 @@ export class PasoGarantiasComponent implements OnInit {
     if (this.filasFormArray.length === 0) {
       return 'Sin amparos';
     }
-    return this.form.valid ? 'Completo' : 'Incompleto';
+    // Un formulario deshabilitado nunca es valid: en visualización se evalúan los datos.
+    const completo = this.viewMode()
+      ? (this.filasFormArray.controls as FormGroup[]).every((fila) => this.filaCompleta(fila))
+      : this.form.valid;
+    return completo ? 'Completo' : 'Incompleto';
+  }
+
+  /** Regla de completitud de la fila aplicada a sus valores: amparo, suficiencia y descripción. */
+  private filaCompleta(fila: FormGroup): boolean {
+    const { amparo, suficienciaPorcentaje, suficienciaSalarios, descripcion } = fila.getRawValue();
+    const suficiencia = this.mostrarSuficiencia(fila, 'suficienciaSalarios')
+      ? suficienciaSalarios
+      : suficienciaPorcentaje;
+    return [amparo, suficiencia, descripcion].every(
+      (valor) => valor !== null && valor !== undefined && `${valor}`.trim() !== ''
+    );
   }
 
   private async loadSavedData(): Promise<void> {
@@ -101,8 +144,13 @@ export class PasoGarantiasComponent implements OnInit {
         });
         this.datosExitentes = true;
         this.actualizarDataSource();
-      } else {
+      } else if (!this.viewMode()) {
         this.agregarFila();
+      }
+      this.aplicarModoVisualizacion();
+      // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+      if (this.viewMode()) {
+        this.stepCompleted.emit(this.estadoCobertura === 'Completo');
       }
     }
   }
@@ -208,10 +256,14 @@ export class PasoGarantiasComponent implements OnInit {
         if (idAmparoStr === tipoAmparoIdStr) {
           suficienciaPorcentajeControl?.disable();
           suficienciaPorcentajeControl?.setValue('');
-          suficienciaSalariosControl?.enable();
+          if (!this.viewMode()) {
+            suficienciaSalariosControl?.enable();
+          }
           suficienciaSalariosControl?.setValidators(Validators.required);
         } else {
-          suficienciaPorcentajeControl?.enable();
+          if (!this.viewMode()) {
+            suficienciaPorcentajeControl?.enable();
+          }
           suficienciaPorcentajeControl?.setValidators(Validators.required);
           suficienciaSalariosControl?.disable();
           suficienciaSalariosControl?.setValue('');

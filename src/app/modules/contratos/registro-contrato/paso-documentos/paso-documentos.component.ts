@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
@@ -15,6 +15,7 @@ import { environment } from 'src/environments/environment';
 export class PasoDocumentosComponent implements OnInit {
   @Output() nextStep = new EventEmitter<void>();
   @Output() stepCompleted = new EventEmitter<boolean>();
+  viewMode = input<boolean>(false);
 
   form: FormGroup = this.formBuilder.group({
     pdfFileName: ['', Validators.required],
@@ -29,7 +30,16 @@ export class PasoDocumentosComponent implements OnInit {
     private gestorDocumentalService: GestorDocumentalService
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.aplicarModoVisualizacion();
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
+  }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;

@@ -35,6 +35,7 @@ export class PasoSupervisoresComponent implements OnInit {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>();
+  viewMode = input<boolean>(false);
 
   solicitanteId: number | null = null;
   supervisoresIds: number[] = [];
@@ -75,6 +76,14 @@ export class PasoSupervisoresComponent implements OnInit {
   ngOnInit(): void {
     this.cargarSedes();
     this.setupFormListeners();
+    this.aplicarModoVisualizacion();
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
   }
 
   private loadSavedData(): void {
@@ -87,6 +96,7 @@ export class PasoSupervisoresComponent implements OnInit {
         });
         this.solicitanteId = response.Data?.id as number;
         this.solicitanteSaved = true;
+        this.aplicarModoVisualizacion();
       }, error: () => {
         console.log('No se pudo cargar el solicitante.')
       }
@@ -116,7 +126,12 @@ export class PasoSupervisoresComponent implements OnInit {
             codigoVerificacion: supervisor.digito_verificacion,
           });
         });
-        
+        this.aplicarModoVisualizacion();
+        // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+        if (this.viewMode()) {
+          this.stepCompleted.emit(response.Data.length > 0);
+        }
+
       }, error: () => {
         console.log('No se pudo cargar el supervisor.')
       }

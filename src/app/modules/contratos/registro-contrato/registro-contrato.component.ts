@@ -87,6 +87,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   contratoGeneralId = model<number>(0);
   editMode = model<boolean>(false);
+  viewMode = model<boolean>(false);
   contratoGeneral: ContratoGeneral | undefined = undefined;
 
   contratistaPrevalidado: any = null;

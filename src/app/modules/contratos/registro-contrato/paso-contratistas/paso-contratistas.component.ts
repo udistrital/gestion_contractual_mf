@@ -38,6 +38,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   contratoGeneral = input<ContratoGeneral>();
   contratistaPrevalidado = input<any>();
   bloquearContratista = input<boolean>(false);
+  viewMode = input<boolean>(false);
 
   form: FormGroup;
   tiposContratista = [{ value: 'clase1', viewValue: 'Contratista Único' }];
@@ -103,6 +104,14 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
           this.resetContratista();
         }
       });
+    this.aplicarModoVisualizacion();
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
   }
 
   private aplicarContratistaPrevalidado(prevalidado: any): void {
@@ -297,6 +306,11 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
               documentoContratista: contratista.numero_documento,
             });
             this.buscarContratista();
+          }
+          this.aplicarModoVisualizacion();
+          // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+          if (this.viewMode()) {
+            this.stepCompleted.emit(!!contratista);
           }
         },
         error: (error) => {

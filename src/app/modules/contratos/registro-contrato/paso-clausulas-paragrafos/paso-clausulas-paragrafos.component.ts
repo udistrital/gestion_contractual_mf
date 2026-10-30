@@ -56,6 +56,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
+  viewMode = input<boolean>(false);
 
   roles: string[] = [];
   usuario_id: number = 0;
@@ -267,14 +268,17 @@ export class PasoClausulasParagrafosComponent implements OnInit {
         next: (response: { Success: boolean; Data: Clausula[] }) => {
           if (response.Success && response.Data?.length > 0) {
             this.cargarContratoExistente(response.Data);
-          } else {
+          } else if (!this.viewMode()) {
+            // Crear el contrato desde la plantilla escribe en el CRUD: no aplica en visualización.
             this.cargarPlantillaPorTipoContrato();
           }
         },
         error: (error) =>
-          this.handleError('Error al cargar el contrato', error, () =>
-            this.cargarPlantillaPorTipoContrato()
-          ),
+          this.handleError('Error al cargar el contrato', error, () => {
+            if (!this.viewMode()) {
+              this.cargarPlantillaPorTipoContrato();
+            }
+          }),
       });
   }
 
@@ -397,7 +401,19 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       this.actualizarIndices();
       this.form.updateValueAndValidity();
       this.form.markAsDirty();
+      this.aplicarModoVisualizacion();
+      // En visualización no hay guardado: el estado del paso sale de los datos cargados.
+      if (this.viewMode()) {
+        this.stepCompleted.emit(this.clausulas.length > 0);
+      }
     });
+  }
+
+  /** En modo visualización el formulario queda en solo lectura. */
+  private aplicarModoVisualizacion(): void {
+    if (this.viewMode()) {
+      this.form.disable({ emitEvent: false });
+    }
   }
 
   private crearClausulaFormGroup(
@@ -468,12 +484,14 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   isClausulaEditable(index: number): boolean {
+    if (this.viewMode()) return false;
     const clausula = this.clausulas.at(index);
     if (!clausula) return false;
     return clausula.get('es_editable')?.value ?? false;
   }
 
   isParagrafoEditable(clausulaIndex: number, paragrafoIndex: number): boolean {
+    if (this.viewMode()) return false;
     const clausula = this.clausulas.at(clausulaIndex);
     if (!clausula) return false;
     const paragrafos = this.getParagrafos(clausula);
@@ -1148,9 +1166,10 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       usuario_rol: this.getRolPorEstado(),
     };
 
+    // Sin datos de registro el visor no ofrece guardar la minuta (solo lectura).
     this.dialog.open(PdfViewerModalComponent, {
       width: '70vw',
-      data: { file, datos },
+      data: { file, datos: this.viewMode() ? null : datos },
     });
   }
 

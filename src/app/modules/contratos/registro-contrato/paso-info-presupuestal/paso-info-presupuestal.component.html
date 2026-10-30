@@ -17,6 +17,7 @@
 
           <div class="bloque-body p-3">
             <!-- Panel Vincular Nueva Disponibilidad -->
+            @if (!viewMode()) {
             <div class="subpanel-vincular mb-3">
               <span class="subpanel-titulo">Vincular Nueva Disponibilidad</span>
               <div class="row g-2 align-items-center">
@@ -54,6 +55,7 @@
                 </div>
               </div>
             </div>
+            }
 
             <!-- Tabla de CDPs asociados -->
             <div class="table-container rounded-table table-scroll">
@@ -77,6 +79,7 @@
                           @switch (colDef) {
                             @case ('acciones') {
                               <div>
+                                @if (!viewMode()) {
                                 <button
                                   mat-icon-button
                                   color="warn"
@@ -85,6 +88,7 @@
                                 >
                                   <mat-icon>delete</mat-icon>
                                 </button>
+                                }
                               </div>
                             }
                             @case ('valor') {
@@ -101,6 +105,7 @@
                                     [max]="parseNumero(element.valor_contratacion)"
                                     [(ngModel)]="element.valor_a_tomar"
                                     [ngModelOptions]="{standalone: true}"
+                                    [disabled]="viewMode()"
                                     (ngModelChange)="onValorTomarChange(element)"
                                     placeholder="0"
                                   />
@@ -410,6 +415,7 @@
             <mat-icon>arrow_back</mat-icon>
             Volver
           </button>
+          @if (!viewMode()) {
           <button
             mat-raised-button
             (click)="guardarYContinuar()"
@@ -419,6 +425,17 @@
             <mat-icon>save</mat-icon>
             Guardar y Continuar
           </button>
+          } @else {
+          <button
+            type="button"
+            mat-raised-button
+            color="primary"
+            (click)="nextStep.emit()"
+          >
+            <span>Siguiente</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+          }
         </div>
       </form>
     </div>
