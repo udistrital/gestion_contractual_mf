@@ -358,7 +358,7 @@ export class ConsultaContratoComponent implements OnInit {
     });
   }
 
-  // Obtiene de forma resiliente el identificador de estado interno del contrato
+  // Obtiene el identificador de estado interno del contrato a partir de estado_interno_parametro_id
   getEstadoInternoId(contrato: ContratoGeneral): number | undefined {
     const raw =
       contrato?.estados?.estado_interno_parametro_id ??
@@ -367,29 +367,6 @@ export class ConsultaContratoComponent implements OnInit {
 
     if (raw !== undefined && raw !== null && !isNaN(Number(raw)) && Number(raw) > 0) {
       return Number(raw);
-    }
-
-    const nombre = String(
-      contrato?.estados?.nombre_estado ||
-      contrato?.estados?.estado_nombre ||
-      (contrato as any)?.estado_nombre ||
-      ''
-    )
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-
-    if (nombre.includes('aprobar') || nombre.includes('revision jefe')) {
-      return environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
-    }
-    if (nombre.includes('vobo') || nombre.includes('aprobado jefe')) {
-      return environment.ESTADOS_INTERNOS.APROBADO_JEFE;
-    }
-    if (nombre.includes('rechazado')) {
-      return environment.ESTADOS_INTERNOS.RECHAZADO;
-    }
-    if (nombre.includes('borrador')) {
-      return environment.ESTADOS_INTERNOS.BORRADOR;
     }
 
     return undefined;
@@ -754,20 +731,6 @@ export class ConsultaContratoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((res: ModalEnviarAprobacionResultado) => {
       if (res && res.confirmado) {
-        if (!contrato.estados) {
-          contrato.estados = {};
-        }
-        contrato.estados.estado_interno_parametro_id =
-          environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
-        contrato.estados.nombre_estado = 'Por aprobar';
-        if (res.observacion) {
-          contrato.observaciones = res.observacion;
-        }
-        this.alertService.showSuccessAlert(
-          'El contrato fue enviado para aprobación de la Jefatura con éxito.'
-        );
-        this.actualizarMetricasYAlertas();
-
         const rolUsuario =
           (this.roles || []).find((r) => r.includes('ABOGADO')) ||
           (this.rolActivo === 'ABOGADO'
@@ -786,15 +749,34 @@ export class ConsultaContratoComponent implements OnInit {
         };
 
         this.contratoGeneralCrudService.postEstadoContrato(nuevoEstado).subscribe({
-          next: () => {},
-          error: (err) => console.error('Error al persistir estado en backend:', err),
+          next: () => {
+            if (!contrato.estados) {
+              contrato.estados = {};
+            }
+            contrato.estados.estado_interno_parametro_id =
+              environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
+            contrato.estados.nombre_estado = 'Por aprobar';
+            if (res.observacion) {
+              contrato.observaciones = res.observacion;
+            }
+            this.actualizarMetricasYAlertas();
+            this.alertService.showSuccessAlert(
+              'El contrato fue enviado para aprobación de la Jefatura con éxito.'
+            );
+          },
+          error: (err) => {
+            console.error('Error al persistir estado en backend:', err);
+            this.alertService.showErrorAlert(
+              'No fue posible enviar el contrato para aprobación.'
+            );
+          },
         });
       }
     });
   }
 
   abrirModalAprobacionMasiva(): void {
-    const seleccionados = this.seleccionContratos.selected;
+    const seleccionados = [...this.seleccionContratos.selected];
     if (seleccionados.length === 0) return;
 
     const dialogRef = this.dialog.open(ModalAprobacionMasivaComponent, {
@@ -806,23 +788,6 @@ export class ConsultaContratoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((res: ModalAprobacionMasivaResultado) => {
       if (res && res.confirmado) {
-        seleccionados.forEach((c) => {
-          if (!c.estados) c.estados = {};
-          c.estados.estado_interno_parametro_id =
-            environment.ESTADOS_INTERNOS.APROBADO_JEFE;
-          c.estados.nombre_estado = 'VoBo Jefatura';
-          (c as any).fecha_aprobado = new Date();
-          if (res.observacion) {
-            c.observaciones = res.observacion;
-          }
-        });
-
-        this.seleccionContratos.clear();
-        this.alertService.showSuccessAlert(
-          `Se ha registrado el VoBo oficial para ${seleccionados.length} contrato(s) satisfactoriamente.`
-        );
-        this.actualizarMetricasYAlertas();
-
         const rolUsuario =
           (this.roles || []).find((r) => r.includes('JEFE')) ||
           'JEFE_CONTRATACION_RECTOR';
@@ -843,10 +808,29 @@ export class ConsultaContratoComponent implements OnInit {
 
         forkJoin(peticiones).subscribe({
           next: () => {
+            seleccionados.forEach((c) => {
+              if (!c.estados) c.estados = {};
+              c.estados.estado_interno_parametro_id =
+                environment.ESTADOS_INTERNOS.APROBADO_JEFE;
+              c.estados.nombre_estado = 'VoBo Jefatura';
+              (c as any).fecha_aprobado = new Date();
+              if (res.observacion) {
+                c.observaciones = res.observacion;
+              }
+            });
+
+            this.seleccionContratos.clear();
+            this.actualizarMetricasYAlertas();
+            this.alertService.showSuccessAlert(
+              `Se ha registrado el VoBo oficial para ${seleccionados.length} contrato(s) satisfactoriamente.`
+            );
             this.consultar(false);
           },
           error: (err) => {
             console.error('Error al persistir aprobación masiva:', err);
+            this.alertService.showErrorAlert(
+              'Ocurrió un error al registrar la aprobación masiva de contratos.'
+            );
             this.consultar(false);
           },
         });
@@ -855,7 +839,7 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   abrirModalRechazoMasivo(): void {
-    const seleccionados = this.seleccionContratos.selected;
+    const seleccionados = [...this.seleccionContratos.selected];
     if (seleccionados.length === 0) return;
 
     const dialogRef = this.dialog.open(ModalRechazoMasivoComponent, {
@@ -867,28 +851,6 @@ export class ConsultaContratoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((res: ModalRechazoMasivoResultado) => {
       if (res && res.confirmado) {
-        seleccionados.forEach((c) => {
-          if (!c.estados) c.estados = {};
-          c.estados.estado_interno_parametro_id =
-            environment.ESTADOS_INTERNOS.RECHAZADO;
-          c.estados.nombre_estado = 'Rechazado';
-          const motivoContrato =
-            (res.tipoObservacion === 'individual' &&
-              res.motivosPorContrato &&
-              c.id &&
-              res.motivosPorContrato[c.id]?.trim()) ||
-            res.motivoGeneral?.trim() ||
-            res.motivo?.trim() ||
-            '';
-          c.observaciones = motivoContrato;
-        });
-
-        this.seleccionContratos.clear();
-        this.alertService.showSuccessAlert(
-          `Se devolvieron ${seleccionados.length} contrato(s) con las observaciones de rechazo.`
-        );
-        this.actualizarMetricasYAlertas();
-
         const rolUsuario =
           (this.roles || []).find((r) => r.includes('JEFE')) ||
           'JEFE_CONTRATACION_RECTOR';
@@ -918,10 +880,34 @@ export class ConsultaContratoComponent implements OnInit {
 
         forkJoin(peticiones).subscribe({
           next: () => {
+            seleccionados.forEach((c) => {
+              if (!c.estados) c.estados = {};
+              c.estados.estado_interno_parametro_id =
+                environment.ESTADOS_INTERNOS.RECHAZADO;
+              c.estados.nombre_estado = 'Rechazado';
+              const motivoContrato =
+                (res.tipoObservacion === 'individual' &&
+                  res.motivosPorContrato &&
+                  c.id &&
+                  res.motivosPorContrato[c.id]?.trim()) ||
+                res.motivoGeneral?.trim() ||
+                res.motivo?.trim() ||
+                '';
+              c.observaciones = motivoContrato;
+            });
+
+            this.seleccionContratos.clear();
+            this.actualizarMetricasYAlertas();
+            this.alertService.showSuccessAlert(
+              `Se devolvieron ${seleccionados.length} contrato(s) con las observaciones de rechazo.`
+            );
             this.consultar(false);
           },
           error: (err) => {
             console.error('Error al persistir rechazo masivo:', err);
+            this.alertService.showErrorAlert(
+              'Ocurrió un error al registrar el rechazo masivo de contratos.'
+            );
             this.consultar(false);
           },
         });
