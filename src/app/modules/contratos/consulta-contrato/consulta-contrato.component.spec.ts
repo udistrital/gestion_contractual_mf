@@ -352,12 +352,15 @@ describe('ConsultaContratoComponent', () => {
       expect(component.columnasVisibles).not.toContain('select');
     });
 
-    it('debe identificar contratos pendientes de aprobación (EN_REVISION_JEFE = 6800)', () => {
+    it('debe identificar contratos pendientes de aprobación (EN_REVISION_JEFE = 6800) únicamente por estado_interno_parametro_id', () => {
       const c1: any = { id: 1, estados: { estado_interno_parametro_id: 6800 } };
       const c2: any = { id: 2, estados: { estado_interno_parametro_id: 6799 } };
+      const cSinId: any = { id: 3, estados: { nombre_estado: 'No aprobar sin revisión' } };
 
       expect(component.esContratoPorAprobar(c1)).toBe(true);
       expect(component.esContratoPorAprobar(c2)).toBe(false);
+      expect(component.getEstadoInternoId(cSinId)).toBeUndefined();
+      expect(component.esContratoPorAprobar(cSinId)).toBe(false);
     });
 
     it('debe seleccionar y deseleccionar contratos por aprobar masivamente con toggleTodosLosContratos()', () => {
@@ -505,6 +508,38 @@ describe('ConsultaContratoComponent', () => {
 
       component.realizarAccion(contrato, 'Enviar Aprobación Jefe OC');
       expect(spyModal).toHaveBeenCalledWith(contrato);
+    });
+
+    it('no debe mostrar showSuccessAlert ni mutar el estado si postEstadoContrato falla en envío, aprobación o rechazo masivo', () => {
+      mockCrudService.postEstadoContrato.mockReturnValue(throwError(() => new Error('Fallo backend')));
+
+      const contratoEnvio: any = {
+        id: 77,
+        estados: { estado_interno_parametro_id: 6799, nombre_estado: 'Borrador' },
+      };
+      mockMatDialog.open.mockReturnValueOnce({
+        afterClosed: () => of({ confirmado: true, observacion: 'Revisión urgente' }),
+      });
+
+      component.abrirModalEnviarAprobacion(contratoEnvio);
+      expect(contratoEnvio.estados.estado_interno_parametro_id).toBe(6799);
+      expect(mockAlertService.showSuccessAlert).not.toHaveBeenCalled();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
+        'No fue posible enviar el contrato para aprobación.'
+      );
+
+      const cLote: any = { id: 1, estados: { estado_interno_parametro_id: 6800 } };
+      component.seleccionContratos.select(cLote);
+      mockMatDialog.open.mockReturnValueOnce({
+        afterClosed: () => of({ confirmado: true, observacion: 'VoBo' }),
+      });
+
+      component.abrirModalAprobacionMasiva();
+      expect(cLote.estados.estado_interno_parametro_id).toBe(6800);
+      expect(mockAlertService.showSuccessAlert).not.toHaveBeenCalled();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
+        'Ocurrió un error al registrar la aprobación masiva de contratos.'
+      );
     });
   });
 
