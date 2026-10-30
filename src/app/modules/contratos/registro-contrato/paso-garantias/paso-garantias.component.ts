@@ -23,7 +23,7 @@ import { AlertService } from 'src/app/services/alert.service';
     styleUrls: ['./paso-garantias.component.css'],
     standalone: false
 })
-export class PasoGarantiasComponent implements OnInit, OnChanges {
+export class PasoGarantiasComponent implements OnInit {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
@@ -86,12 +86,6 @@ export class PasoGarantiasComponent implements OnInit, OnChanges {
     return this.viewMode()
       ? this.displayedColumns.filter((columna) => columna !== 'acciones')
       : this.displayedColumns;
-  }
-
-  ngOnChanges(): void {
-    if (this.contratoGeneral()) {
-      this.loadSavedData();
-    }
   }
 
   get totalAmparos(): number {

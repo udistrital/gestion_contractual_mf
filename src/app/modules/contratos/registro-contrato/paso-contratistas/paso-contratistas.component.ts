@@ -31,7 +31,7 @@ import { AlertService } from 'src/app/services/alert.service';
     styleUrls: ['./paso-contratistas.component.css'],
     standalone: false
 })
-export class PasoContratistasComponent implements OnInit, OnDestroy, OnChanges {
+export class PasoContratistasComponent implements OnInit, OnDestroy {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
 
@@ -118,12 +118,6 @@ export class PasoContratistasComponent implements OnInit, OnDestroy, OnChanges {
     if (this.viewMode()) {
       this.mostrarConsulta = true;
       this.form.disable({ emitEvent: false });
-    }
-  }
-
-  ngOnChanges(): void {
-    if (this.contratoGeneral()?.id) {
-      this.cargarContratistaExistente();
     }
   }
 

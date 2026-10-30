@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, effect, inject, input, OnInit, OnChanges, output } from '@angular/core';
+import { ChangeDetectorRef, Component, effect, inject, input, OnInit, output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
@@ -52,7 +52,7 @@ interface Paragrafo {
     styleUrls: ['./paso-clausulas-paragrafos.component.css'],
     standalone: false
 })
-export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
+export class PasoClausulasParagrafosComponent implements OnInit {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
@@ -114,10 +114,6 @@ export class PasoClausulasParagrafosComponent implements OnInit, OnChanges {
     if (this.contratoGeneral()) {
       this.sincronizarContratoGeneral();
     }
-  }
-
-  ngOnChanges(): void {
-    this.sincronizarContratoGeneral();
   }
 
   private sincronizarContratoGeneral(): void {

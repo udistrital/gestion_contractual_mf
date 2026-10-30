@@ -37,7 +37,7 @@ export interface ActividadEspecifica {
     styleUrls: ['./paso-obligaciones.component.css'],
     standalone: false
 })
-export class PasoObligacionesComponent implements OnInit, OnDestroy, OnChanges {
+export class PasoObligacionesComponent implements OnInit, OnDestroy {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGuardado = output<void>();
@@ -75,6 +75,7 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy, OnChanges {
       if (c) {
         this.updateFormWithCDPData();
       }
+      this.aplicarModoVisualizacion();
     });
   }
 
@@ -83,13 +84,6 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy, OnChanges {
       this.cdpData = data;
       this.updateFormWithCDPData();
     });
-    if (this.contratoGeneral()) {
-      this.updateFormWithCDPData();
-    }
-    this.aplicarModoVisualizacion();
-  }
-
-  ngOnChanges(): void {
     if (this.contratoGeneral()) {
       this.updateFormWithCDPData();
     }

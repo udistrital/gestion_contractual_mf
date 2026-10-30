@@ -46,7 +46,7 @@ export interface PasoDinamico {
   ],
   standalone: false,
 })
-export class RegistroContratoComponent implements OnInit, AfterViewInit, OnChanges {
+export class RegistroContratoComponent implements OnInit, AfterViewInit {
   @ViewChildren(MatStep) steps!: QueryList<MatStep>;
   @ViewChild('stepper') stepper!: MatStepper;
 
@@ -116,15 +116,6 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit, OnChang
       this.cargarContratoGeneral();
     }
     this.verificarPasosGuardadosIniciales();
-  }
-
-  ngOnChanges(): void {
-    if (
-      this.contratoGeneralId() &&
-      (!this.contratoGeneral || this.contratoGeneral.id !== this.contratoGeneralId())
-    ) {
-      this.cargarContratoGeneral();
-    }
   }
 
   private recuperarEstadoNavegacion(): void {

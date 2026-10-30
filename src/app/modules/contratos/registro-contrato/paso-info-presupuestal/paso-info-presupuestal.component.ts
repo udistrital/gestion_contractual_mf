@@ -3,10 +3,10 @@ import {
   Component,
   effect,
   input,
-  OnChanges,
   OnDestroy,
   OnInit,
   output,
+  signal,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { finalize, firstValueFrom, Subject } from 'rxjs';
@@ -26,7 +26,7 @@ import { AlertService } from 'src/app/services/alert.service';
     styleUrls: ['./paso-info-presupuestal.component.css'],
     standalone: false
 })
-export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChanges {
+export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   stepCompleted = output<boolean>();
   nextStep = output<void>();
   cdpGuardado = output<CDP[]>();
@@ -125,6 +125,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
   cargoIdOrdenador: number | null = null;
   idSicapitalOrdenador: number | null = null;
   ordenadorGastoId: number | null = null;
+  loadedData = signal<boolean>(false);
   private contratoCargadoId: number = 0;
   private cargandoPresupuestal: boolean = false;
 
@@ -138,8 +139,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService,
   ) {
     effect(() => {
-      const c = this.contratoGeneral();
-      if (c && c.id) {
+      if (this.loadedData() && this.contratoGeneral()?.id) {
         this.loadSavedData();
       }
     });
@@ -150,9 +150,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     this.setupVigenciaListener();
     this.setupCdpListener();
     this.CargarRolOrdenadores();
-    this.loadInitialData().then(() => {
-      this.loadSavedData();
-    });
+    this.loadInitialData();
 
     this.form.get('tipoMoneda')?.valueChanges.subscribe((id_moneda) => {
       if (id_moneda) {
@@ -173,12 +171,6 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
     this.aplicarModoVisualizacion();
   }
 
-  ngOnChanges(): void {
-    if (this.contratoGeneral()?.id) {
-      this.loadSavedData();
-    }
-  }
-
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
@@ -193,6 +185,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy, OnChang
         this.origen_presupuestos = data[environment.ORIGEN_PRESUPUESTO_ID];
         this.tema_gasto = data[environment.TEMA_GASTO_ID];
         this.medios_pago = data[environment.MEDIO_PAGO_ID];
+        this.loadedData.set(true);
         this.cdRef.detectChanges();
       }).catch((error: any) => {
         this.handleError(error);

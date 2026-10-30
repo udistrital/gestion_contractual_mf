@@ -14,7 +14,7 @@ import { environment } from 'src/environments/environment';
     styleUrls: ['./paso-especificaciones.component.css'],
     standalone: false
 })
-export class PasoEspecificacionesComponent implements OnChanges {
+export class PasoEspecificacionesComponent {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
@@ -42,12 +42,6 @@ export class PasoEspecificacionesComponent implements OnChanges {
         this.getEspecificaciones();
       }
     });
-  }
-
-  ngOnChanges(): void {
-    if (this.contratoGeneral()) {
-      this.getEspecificaciones();
-    }
   }
 
   /** En modo visualización se omite la columna de acciones. */

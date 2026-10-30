@@ -32,7 +32,7 @@ import {firstValueFrom} from "rxjs";
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class PasoSupervisoresComponent implements OnInit, OnChanges {
+export class PasoSupervisoresComponent implements OnInit {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>();
@@ -86,12 +86,6 @@ export class PasoSupervisoresComponent implements OnInit, OnChanges {
   private aplicarModoVisualizacion(): void {
     if (this.viewMode()) {
       this.form.disable({ emitEvent: false });
-    }
-  }
-
-  ngOnChanges(): void {
-    if (this.contratoGeneral()?.id) {
-      this.loadSavedData();
     }
   }
 
