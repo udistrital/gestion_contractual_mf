@@ -5,9 +5,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { environment } from 'src/environments/environment';
 import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { RolService } from 'src/app/services/rol.service';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { UserService } from 'src/app/services/user.service';
 import { ConsultaContratoComponent } from './consulta-contrato.component';
 import { ModalSeleccionarUeComponent } from './modal-seleccionar-ue/modal-seleccionar-ue.component';
 import { ModalValidarContratistaComponent } from './modal-validar-contratista/modal-validar-contratista.component';
@@ -17,10 +20,12 @@ describe('ConsultaContratoComponent', () => {
   let fixture: ComponentFixture<ConsultaContratoComponent>;
   let mockAlertService: { showErrorAlert: jest.Mock; showSuccessAlert: jest.Mock };
   let mockMatDialog: { open: jest.Mock };
-  let mockParametrosService: { get: jest.Mock };
+  let mockParametrosService: { get: jest.Mock; getParametrosPorTipo: jest.Mock; getParametroPorPadreIdyTipoId: jest.Mock; };
   let mockContratoMidService: { getContratos: jest.Mock; getEstados: jest.Mock };
   let mockRolService: { getRol: jest.Mock };
   let mockRouter: { navigate: jest.Mock };
+  let mockCrudService: { postEstadoContrato: jest.Mock };
+  let mockUserService: { getPersonaId: jest.Mock };
 
   beforeEach(() => {
     mockAlertService = {
@@ -34,6 +39,23 @@ describe('ConsultaContratoComponent', () => {
 
     mockParametrosService = {
       get: jest.fn().mockReturnValue(of({ Status: '200', Data: [{ Id: 1, Nombre: '01 - Rectoría' }] })),
+      getParametrosPorTipo: jest.fn().mockResolvedValue({
+        [environment.UNIDAD_EJECUTORA_ID]: [
+          { Id: 1, Nombre: '01 - Rectoría' },
+          { Id: 2, Nombre: '02 - IDEXUD' },
+        ],
+        [environment.VIGENCIA_ID]: [
+          { Id: 1, Nombre: '2026' },
+          { Id: 2, Nombre: '2025' },
+        ],
+        [environment.TIPO_CONTRATO_ID]: [{ Id: 1, Nombre: 'Prestación de Servicios' }],
+        [environment.TIPO_PERSONA_ID]: [{ Id: 1, Nombre: 'Natural' }],
+        [environment.TIPO_ESTADO_ID]: [
+          { Id: 6774, Nombre: 'Suscrito' },
+          { Id: 6773, Nombre: 'Por suscribir' },
+        ],
+      }),
+      getParametroPorPadreIdyTipoId: jest.fn().mockReturnValue([]),
     };
 
     mockContratoMidService = {
@@ -73,6 +95,14 @@ describe('ConsultaContratoComponent', () => {
       navigate: jest.fn(),
     };
 
+    mockCrudService = {
+      postEstadoContrato: jest.fn().mockReturnValue(of({ id: 1 })),
+    };
+
+    mockUserService = {
+      getPersonaId: jest.fn().mockResolvedValue(1),
+    };
+
     TestBed.configureTestingModule({
       declarations: [ConsultaContratoComponent],
       providers: [
@@ -81,6 +111,8 @@ describe('ConsultaContratoComponent', () => {
         { provide: MatDialog, useValue: mockMatDialog },
         { provide: ParametrosService, useValue: mockParametrosService },
         { provide: ContratoGeneralMidService, useValue: mockContratoMidService },
+        { provide: ContratoGeneralCrudService, useValue: mockCrudService },
+        { provide: UserService, useValue: mockUserService },
         { provide: RolService, useValue: mockRolService },
         { provide: Router, useValue: mockRouter },
         { provide: ActivatedRoute, useValue: { snapshot: {}, paramMap: of({ get: () => null }), parent: {} } },
@@ -306,6 +338,231 @@ describe('ConsultaContratoComponent', () => {
     expect(component.getValorContrato({ valor: '3500000' })).toContain('3.500.000');
     expect(component.getValorContrato({ valor_pesos: null, valor: undefined })).toBe('N/A');
     expect(component.getValorContrato(null)).toBe('N/A');
+  });
+
+  describe('Flujo de Aprobación y Rechazo Masivo (Issue #382)', () => {
+    it('debe incluir la columna "select" en columnasVisibles cuando el rol activo es JEFE', () => {
+      component.rolActivo = 'JEFE';
+      expect(component.columnasVisibles).toContain('select');
+      expect(component.columnasVisibles[0]).toBe('select');
+    });
+
+    it('no debe incluir la columna "select" en columnasVisibles cuando el rol activo es ABOGADO', () => {
+      component.rolActivo = 'ABOGADO';
+      expect(component.columnasVisibles).not.toContain('select');
+    });
+
+    it('debe identificar contratos pendientes de aprobación (EN_REVISION_JEFE = 6800) únicamente por estado_interno_parametro_id', () => {
+      const c1: any = { id: 1, estados: { estado_interno_parametro_id: 6800 } };
+      const c2: any = { id: 2, estados: { estado_interno_parametro_id: 6799 } };
+      const cSinId: any = { id: 3, estados: { nombre_estado: 'No aprobar sin revisión' } };
+
+      expect(component.esContratoPorAprobar(c1)).toBe(true);
+      expect(component.esContratoPorAprobar(c2)).toBe(false);
+      expect(component.getEstadoInternoId(cSinId)).toBeUndefined();
+      expect(component.esContratoPorAprobar(cSinId)).toBe(false);
+    });
+
+    it('debe seleccionar y deseleccionar contratos por aprobar masivamente con toggleTodosLosContratos()', () => {
+      component.dataSource.data = [
+        { id: 1, estados: { estado_interno_parametro_id: 6800 }, valor_pesos: 10000000 } as any,
+        { id: 2, estados: { estado_interno_parametro_id: 6800 }, valor_pesos: 20000000 } as any,
+        { id: 3, estados: { estado_interno_parametro_id: 6799 }, valor_pesos: 5000000 } as any,
+      ];
+
+      expect(component.contratosPorAprobarVisibles.length).toBe(2);
+      expect(component.estanTodosSeleccionados()).toBe(false);
+
+      component.toggleTodosLosContratos();
+      expect(component.seleccionContratos.selected.length).toBe(2);
+      expect(component.estanTodosSeleccionados()).toBe(true);
+      expect(component.valorTotalSeleccionado).toBe(30000000);
+      expect(component.valorTotalSeleccionadoFormateado).toContain('30.000.000');
+
+      component.toggleTodosLosContratos();
+      expect(component.seleccionContratos.selected.length).toBe(0);
+      expect(component.estanTodosSeleccionados()).toBe(false);
+    });
+
+    it('debe abrir ModalEnviarAprobacionComponent y actualizar estado a EN_REVISION_JEFE', () => {
+      const contrato: any = {
+        id: 77,
+        estados: { estado_interno_parametro_id: 6799, nombre_estado: 'Borrador' },
+      };
+      mockMatDialog.open.mockReturnValue({
+        afterClosed: () => of({ confirmado: true, observacion: 'Revisión urgente' }),
+      });
+
+      component.abrirModalEnviarAprobacion(contrato);
+
+      expect(mockMatDialog.open).toHaveBeenCalled();
+      expect(contrato.estados.estado_interno_parametro_id).toBe(6800);
+      expect(contrato.estados.nombre_estado).toBe('Por aprobar');
+      expect(contrato.observaciones).toBe('Revisión urgente');
+      expect(mockAlertService.showSuccessAlert).toHaveBeenCalledWith(
+        'El contrato fue enviado para aprobación de la Jefatura con éxito.'
+      );
+    });
+
+    it('debe abrir ModalAprobacionMasivaComponent y aplicar VoBo oficial a los contratos seleccionados', () => {
+      const c1: any = { id: 1, estados: { estado_interno_parametro_id: 6800 }, valor_pesos: 15000000 };
+      const c2: any = { id: 2, estados: { estado_interno_parametro_id: 6800 }, valor_pesos: 25000000 };
+      component.seleccionContratos.select(c1, c2);
+
+      mockMatDialog.open.mockReturnValue({
+        afterClosed: () => of({ confirmado: true, observacion: 'VoBo registrado por Jefatura' }),
+      });
+
+      component.abrirModalAprobacionMasiva();
+
+      expect(mockMatDialog.open).toHaveBeenCalled();
+      expect(c1.estados.estado_interno_parametro_id).toBe(6809);
+      expect(c1.estados.nombre_estado).toBe('VoBo Jefatura');
+      expect(c1.observaciones).toBe('VoBo registrado por Jefatura');
+      expect(c2.estados.estado_interno_parametro_id).toBe(6809);
+      expect(component.seleccionContratos.selected.length).toBe(0);
+      expect(mockAlertService.showSuccessAlert).toHaveBeenCalledWith(
+        'Se ha registrado el VoBo oficial para 2 contrato(s) satisfactoriamente.'
+      );
+    });
+
+    it('debe abrir ModalRechazoMasivoComponent y aplicar estado RECHAZADO con motivo obligatorio', () => {
+      const c1: any = { id: 1, estados: { estado_interno_parametro_id: 6800 } };
+      component.seleccionContratos.select(c1);
+
+      mockMatDialog.open.mockReturnValue({
+        afterClosed: () => of({ confirmado: true, motivo: 'Corregir pólizas de cumplimiento' }),
+      });
+
+      component.abrirModalRechazoMasivo();
+
+      expect(mockMatDialog.open).toHaveBeenCalled();
+      expect(c1.estados.estado_interno_parametro_id).toBe(6803);
+      expect(c1.estados.nombre_estado).toBe('Rechazado');
+      expect(c1.observaciones).toBe('Corregir pólizas de cumplimiento');
+      expect(component.seleccionContratos.selected.length).toBe(0);
+      expect(mockAlertService.showSuccessAlert).toHaveBeenCalledWith(
+        'Se devolvieron 1 contrato(s) con las observaciones de rechazo.'
+      );
+    });
+
+    it('debe abrir ModalRechazoMasivoComponent y aplicar motivos individuales por contrato cuando se seleccione modalidad individual', () => {
+      const c1: any = { id: 10, estados: { estado_interno_parametro_id: 6800 } };
+      const c2: any = { id: 20, estados: { estado_interno_parametro_id: 6800 } };
+      component.seleccionContratos.select(c1, c2);
+
+      mockMatDialog.open.mockReturnValue({
+        afterClosed: () =>
+          of({
+            confirmado: true,
+            tipoObservacion: 'individual',
+            motivosPorContrato: {
+              10: 'Subsanar CDP para contrato 10',
+              20: 'Falta acta de inicio en contrato 20',
+            },
+          }),
+      });
+
+      component.abrirModalRechazoMasivo();
+
+      expect(c1.estados.estado_interno_parametro_id).toBe(6803);
+      expect(c1.observaciones).toBe('Subsanar CDP para contrato 10');
+      expect(c2.estados.estado_interno_parametro_id).toBe(6803);
+      expect(c2.observaciones).toBe('Falta acta de inicio en contrato 20');
+      expect(component.seleccionContratos.selected.length).toBe(0);
+    });
+
+    it('debe identificar contratos con VoBo de Jefatura y rechazados', () => {
+      const cVobo: any = { estados: { estado_interno_parametro_id: 6809 } };
+      const cRechazado: any = { estados: { estado_interno_parametro_id: 6803 } };
+      const cBorrador: any = { estados: { estado_interno_parametro_id: 6799 } };
+
+      expect(component.tieneVoBoJefatura(cVobo)).toBe(true);
+      expect(component.tieneVoBoJefatura(cBorrador)).toBe(false);
+      expect(component.esContratoRechazado(cRechazado)).toBe(true);
+      expect(component.esContratoRechazado(cBorrador)).toBe(false);
+    });
+
+    it('debe asignar badges y nombres de estado acordes para estados internos', () => {
+      const cVobo: any = { estados: { estado_interno_parametro_id: 6809 } };
+      const cAprobar: any = { estados: { estado_interno_parametro_id: 6800 } };
+      const cRech: any = { estados: { estado_interno_parametro_id: 6803 } };
+      const cBorrador: any = { estados: { estado_interno_parametro_id: 6799 } };
+
+      expect(component.getEstadoBadgeClass(cVobo)).toBe('status-vobo');
+      expect(component.getEstadoNombre(cVobo)).toBe('VoBo Jefatura');
+
+      expect(component.getEstadoBadgeClass(cAprobar)).toBe('status-por-aprobar');
+      expect(component.getEstadoNombre(cAprobar)).toBe('Por aprobar');
+
+      expect(component.getEstadoBadgeClass(cRech)).toBe('status-rechazado');
+      expect(component.getEstadoNombre(cRech)).toBe('Rechazado');
+
+      expect(component.getEstadoBadgeClass(cBorrador)).toBe('status-borrador');
+      expect(component.getEstadoNombre(cBorrador)).toBe('Borrador');
+    });
+
+    it('debe ejecutar abrirModalEnviarAprobacion al realizarAccion con Enviar Aprobación Jefe OC', () => {
+      const spyModal = jest.spyOn(component, 'abrirModalEnviarAprobacion').mockImplementation();
+      const contrato: any = { id: 8 };
+
+      component.realizarAccion(contrato, 'Enviar Aprobación Jefe OC');
+      expect(spyModal).toHaveBeenCalledWith(contrato);
+    });
+
+    it('no debe mostrar showSuccessAlert ni mutar el estado si postEstadoContrato falla en envío, aprobación o rechazo masivo', () => {
+      mockCrudService.postEstadoContrato.mockReturnValue(throwError(() => new Error('Fallo backend')));
+
+      const contratoEnvio: any = {
+        id: 77,
+        estados: { estado_interno_parametro_id: 6799, nombre_estado: 'Borrador' },
+      };
+      mockMatDialog.open.mockReturnValueOnce({
+        afterClosed: () => of({ confirmado: true, observacion: 'Revisión urgente' }),
+      });
+
+      component.abrirModalEnviarAprobacion(contratoEnvio);
+      expect(contratoEnvio.estados.estado_interno_parametro_id).toBe(6799);
+      expect(mockAlertService.showSuccessAlert).not.toHaveBeenCalled();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
+        'No fue posible enviar el contrato para aprobación.'
+      );
+
+      const cLote: any = { id: 1, estados: { estado_interno_parametro_id: 6800 } };
+      component.seleccionContratos.select(cLote);
+      mockMatDialog.open.mockReturnValueOnce({
+        afterClosed: () => of({ confirmado: true, observacion: 'VoBo' }),
+      });
+
+      component.abrirModalAprobacionMasiva();
+      expect(cLote.estados.estado_interno_parametro_id).toBe(6800);
+      expect(mockAlertService.showSuccessAlert).not.toHaveBeenCalled();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
+        'Ocurrió un error al registrar la aprobación masiva de contratos.'
+      );
+    });
+  });
+
+  describe('Carga y consumo de parámetros con caché', () => {
+    it('debe precargar los parámetros maestros usando getParametrosPorTipo en loadInitialData', async () => {
+      await component['loadInitialData']();
+      expect(mockParametrosService.getParametrosPorTipo).toHaveBeenCalledWith(component.tiposParametrosRequeridos);
+      expect(component.unidadEjecutora.length).toBe(2);
+      expect(component.vigencia.length).toBe(2);
+      expect(component.vigencia[0].Nombre).toBe('2026');
+      expect(component.tipoContratoId.length).toBe(1);
+      expect(component.tipoPersona.length).toBe(1);
+      expect(component.estado.length).toBe(2);
+    });
+
+    it('debe manejar error al fallar la carga de parámetros iniciales', async () => {
+      mockParametrosService.getParametrosPorTipo.mockRejectedValueOnce(new Error('Fallo MID'));
+      await component['loadInitialData']();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
+        'Ocurrió un error al cargar los datos iniciales',
+        'Error al cargar los datos iniciales'
+      );
+    });
   });
 });
 

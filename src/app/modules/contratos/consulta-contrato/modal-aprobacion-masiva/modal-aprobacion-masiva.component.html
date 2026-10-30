@@ -1,0 +1,104 @@
+<div class="modal-aprobacion-container">
+  <div class="modal-header">
+    <div class="header-icon-badge">
+      <mat-icon>verified</mat-icon>
+    </div>
+    <div class="header-text">
+      <h2 mat-dialog-title class="dialog-title">Aprobación Masiva con VoBo</h2>
+      <p class="dialog-subtitle">Jefatura de Contratación · Aplicación de visto bueno por lotes</p>
+    </div>
+    <button mat-icon-button (click)="cancelar()" class="btn-close" aria-label="Cerrar modal">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="modal-body">
+    <!-- Banner de Resumen de Lote con VoBo -->
+    <div class="banner-vobo">
+      <div class="vobo-badge">
+        <mat-icon>check_circle</mat-icon>
+        <span>VoBo Oficial</span>
+      </div>
+      <div class="vobo-info">
+        <div class="metric">
+          <span class="metric-num">{{ totalContratos }}</span>
+          <span class="metric-label">Contratos a Aprobar</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric">
+          <span class="metric-num valor">{{ valorTotalFormateado }}</span>
+          <span class="metric-label">Monto Total del Lote</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista Resumida de Contratos Afectados -->
+    <div class="seccion-lista">
+      <h3 class="lista-titulo">
+        <mat-icon>format_list_bulleted</mat-icon>
+        Contratos que recibirán VoBo ({{ totalContratos }})
+      </h3>
+      <div class="tabla-scroll-wrap">
+        <table class="tabla-resumen">
+          <thead>
+            <tr>
+              <th>No. Contrato</th>
+              <th>Vigencia</th>
+              <th>Contratista</th>
+              <th class="text-right">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (contrato of contratos; track contrato.id || $index) {
+              <tr>
+                <td class="font-bold">{{ getNumeroContrato(contrato) }}</td>
+                <td>{{ contrato.vigencia || '—' }}</td>
+                <td class="truncate" [title]="getNombreContratista(contrato)">{{ getNombreContratista(contrato) }}</td>
+                <td class="text-right valor-celda">{{ formatearValor(contrato.valor_pesos) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Observaciones Opcionales de VoBo -->
+    <div class="form-section">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Observaciones o nota de aprobación (opcional)</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          [(ngModel)]="observacion"
+          placeholder="Ej: VoBo favorable de la Jefatura. Cumple con los requisitos y disponibilidad presupuestal..."
+          maxlength="500"
+        ></textarea>
+        <mat-hint align="end">{{ observacion.length }}/500</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div class="aviso-info">
+      <mat-icon class="aviso-icon">info</mat-icon>
+      <div class="aviso-texto">
+        Al confirmar, los contratos seleccionados cambiarán a estado <strong>"Aprobado Jefatura"</strong>
+        y avanzarán a la siguiente etapa de firmas y formalización.
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="modal-actions">
+    <button mat-stroked-button type="button" (click)="cancelar()" class="btn-cancelar">
+      Cancelar
+    </button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="confirmar()"
+      class="btn-aprobar"
+    >
+      <mat-icon>verified</mat-icon>
+      Aprobar y Asignar VoBo ({{ totalContratos }})
+    </button>
+  </mat-dialog-actions>
+</div>

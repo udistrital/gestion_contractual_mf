@@ -11,9 +11,25 @@ import { RolService } from 'src/app/services/rol.service';
 import { ModalObservacionesComponent } from './modal-observaciones/modal-observaciones.component';
 import { ModalSeleccionarUeComponent } from './modal-seleccionar-ue/modal-seleccionar-ue.component';
 import { ModalValidarContratistaComponent } from './modal-validar-contratista/modal-validar-contratista.component';
+import {
+  ModalEnviarAprobacionComponent,
+  ModalEnviarAprobacionResultado,
+} from './modal-enviar-aprobacion/modal-enviar-aprobacion.component';
+import {
+  ModalAprobacionMasivaComponent,
+  ModalAprobacionMasivaResultado,
+} from './modal-aprobacion-masiva/modal-aprobacion-masiva.component';
+import {
+  ModalRechazoMasivoComponent,
+  ModalRechazoMasivoResultado,
+} from './modal-rechazo-masivo/modal-rechazo-masivo.component';
+import { SelectionModel } from '@angular/cdk/collections';
 import { MatDialog } from '@angular/material/dialog';
-import { ContratoGeneral } from 'src/app/types/types';
+import { ContratoGeneral, EstadoContrato, ParametroResponse } from 'src/app/types/types';
 import { accionesPorRolYEstado } from 'src/app/utils/accionesPorRolYEstado';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { UserService } from 'src/app/services/user.service';
+import { forkJoin } from 'rxjs';
 import {
   MomentDateAdapter,
   MAT_MOMENT_DATE_ADAPTER_OPTIONS,
@@ -67,6 +83,7 @@ export class ConsultaContratoComponent implements OnInit {
   tamanioPagina = 10;
   paginaActual = 0;
   roles: string[] = [];
+  usuarioId: number = 1;
 
   // Control de Rol y Modo Pruebas
   rolActivo: 'JEFE' | 'ABOGADO' = 'JEFE';
@@ -75,15 +92,24 @@ export class ConsultaContratoComponent implements OnInit {
   // Selector de Vigencia (Por defecto el año de la vigencia presente)
   vigenciaSeleccionada: string = new Date().getFullYear().toString();
 
+  // Tipos de parámetros requeridos para la consulta y filtros
+  tiposParametrosRequeridos: number[] = [
+    environment.UNIDAD_EJECUTORA_ID,
+    environment.VIGENCIA_ID,
+    environment.TIPO_CONTRATO_ID,
+    environment.TIPO_PERSONA_ID,
+    environment.TIPO_ESTADO_ID,
+  ];
+
   // Parámetros maestros
-  unidadEjecutora: any[] = [];
-  vigencia: any[] = [];
-  tipoContratoId: any[] = [];
-  tipoPersona: any[] = [];
+  unidadEjecutora: ParametroResponse[] = [];
+  vigencia: ParametroResponse[] = [];
+  tipoContratoId: ParametroResponse[] = [];
+  tipoPersona: ParametroResponse[] = [];
   numeroElaboracion: any[] = [];
   numeroContrato: any[] = [];
   contratista: any[] = [];
-  estado: any[] = [];
+  estado: ParametroResponse[] = [];
   fechaDesde: any[] = [];
   fechaHasta: any[] = [];
 
@@ -121,6 +147,9 @@ export class ConsultaContratoComponent implements OnInit {
     },
   ];
 
+  // Selección múltiple para aprobación/rechazo masivo del Jefe de Contratación
+  seleccionContratos = new SelectionModel<ContratoGeneral>(true, []);
+
   // Columnas de la tabla (Incluye columna propia de estado con diseño de píldora)
   displayedColumns: string[] = [
     'numero_contrato',
@@ -136,12 +165,21 @@ export class ConsultaContratoComponent implements OnInit {
     'acciones',
   ];
 
+  get columnasVisibles(): string[] {
+    if (this.rolActivo === 'JEFE') {
+      return ['select', ...this.displayedColumns];
+    }
+    return this.displayedColumns;
+  }
+
   constructor(
     private alertService: AlertService,
     public dialog: MatDialog,
     private _formBuilder: FormBuilder,
     private parametrosService: ParametrosService,
     private contratoMidService: ContratoGeneralMidService,
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private userService: UserService,
     private rolService: RolService,
     private router: Router,
     private route: ActivatedRoute
@@ -160,14 +198,24 @@ export class ConsultaContratoComponent implements OnInit {
     fechaHasta: [''],
   });
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    try {
+      if (!this.rolService.getRol() || this.rolService.getRol().length === 0) {
+        await this.rolService.cargarRol();
+      }
+    } catch {
+      // Ignorar fallback en pruebas
+    }
+    try {
+      this.userService.getPersonaId().then((id) => {
+        if (id) this.usuarioId = id;
+      });
+    } catch {
+      // Ignorar fallback en pruebas
+    }
     this.roles = this.rolService.getRol();
     this.determinarRolInicial();
-    this.CargarunidadEjecutoraId();
-    this.CargarVigencia();
-    this.CargartipoContratoIds();
-    this.CargarTipoPersona();
-    this.CargarEstado();
+    await this.loadInitialData();
 
     this.form.get('fechaDesde')?.valueChanges.subscribe((value) => {
       if (value) {
@@ -212,6 +260,7 @@ export class ConsultaContratoComponent implements OnInit {
 
   cambiarRolPruebas(nuevoRol: 'JEFE' | 'ABOGADO'): void {
     this.rolActivo = nuevoRol;
+    this.seleccionContratos.clear();
     this.actualizarMetricasYAlertas();
   }
 
@@ -309,8 +358,36 @@ export class ConsultaContratoComponent implements OnInit {
     });
   }
 
+  // Obtiene el identificador de estado interno del contrato a partir de estado_interno_parametro_id
+  getEstadoInternoId(contrato: ContratoGeneral): number | undefined {
+    const raw =
+      contrato?.estados?.estado_interno_parametro_id ??
+      (Array.isArray(contrato?.estados) ? contrato.estados[0]?.estado_interno_parametro_id : undefined) ??
+      (contrato as any)?.estado_interno_parametro_id;
+
+    if (raw !== undefined && raw !== null && !isNaN(Number(raw)) && Number(raw) > 0) {
+      return Number(raw);
+    }
+
+    return undefined;
+  }
+
   // Ayudante de clases de color para la píldora de estado (Estilos refinados con dot)
   getEstadoBadgeClass(contrato: ContratoGeneral): string {
+    const estadoInternoId = this.getEstadoInternoId(contrato);
+    if (estadoInternoId === environment.ESTADOS_INTERNOS.APROBADO_JEFE) {
+      return 'status-vobo';
+    }
+    if (estadoInternoId === environment.ESTADOS_INTERNOS.EN_REVISION_JEFE) {
+      return 'status-por-aprobar';
+    }
+    if (estadoInternoId === environment.ESTADOS_INTERNOS.RECHAZADO) {
+      return 'status-rechazado';
+    }
+    if (estadoInternoId === environment.ESTADOS_INTERNOS.BORRADOR) {
+      return 'status-borrador';
+    }
+
     const estadoParamId =
       contrato?.estados?.estado_parametro_id ||
       (contrato as any)?.estado ||
@@ -374,6 +451,20 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   getEstadoNombre(contrato: ContratoGeneral): string {
+    const estadoInternoId = this.getEstadoInternoId(contrato);
+    if (estadoInternoId === environment.ESTADOS_INTERNOS.APROBADO_JEFE) {
+      return 'VoBo Jefatura';
+    }
+    if (estadoInternoId === environment.ESTADOS_INTERNOS.EN_REVISION_JEFE) {
+      return 'Por aprobar';
+    }
+    if (estadoInternoId === environment.ESTADOS_INTERNOS.RECHAZADO) {
+      return 'Rechazado';
+    }
+    if (estadoInternoId === environment.ESTADOS_INTERNOS.BORRADOR) {
+      return 'Borrador';
+    }
+
     const rawNombre =
       contrato?.estados?.nombre_estado ||
       contrato?.estados?.estado_nombre ||
@@ -403,6 +494,55 @@ export class ConsultaContratoComponent implements OnInit {
     }
 
     return 'Sin estado';
+  }
+
+  tieneVoBoJefatura(contrato: ContratoGeneral): boolean {
+    return this.getEstadoInternoId(contrato) === environment.ESTADOS_INTERNOS.APROBADO_JEFE;
+  }
+
+  esContratoRechazado(contrato: ContratoGeneral): boolean {
+    return this.getEstadoInternoId(contrato) === environment.ESTADOS_INTERNOS.RECHAZADO;
+  }
+
+  esContratoPorAprobar(contrato: ContratoGeneral): boolean {
+    return this.getEstadoInternoId(contrato) === environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
+  }
+
+  get contratosPorAprobarVisibles(): ContratoGeneral[] {
+    return (this.dataSource.data || []).filter((c) => this.esContratoPorAprobar(c));
+  }
+
+  estanTodosSeleccionados(): boolean {
+    const numSeleccionados = this.seleccionContratos.selected.length;
+    const numPorAprobar = this.contratosPorAprobarVisibles.length;
+    return numPorAprobar > 0 && numSeleccionados === numPorAprobar;
+  }
+
+  toggleTodosLosContratos(): void {
+    if (this.estanTodosSeleccionados()) {
+      this.seleccionContratos.clear();
+      return;
+    }
+    this.contratosPorAprobarVisibles.forEach((row) => this.seleccionContratos.select(row));
+  }
+
+  get valorTotalSeleccionado(): number {
+    return this.seleccionContratos.selected.reduce(
+      (acc, c) => acc + (Number(c.valor_pesos) || 0),
+      0
+    );
+  }
+
+  get valorTotalSeleccionadoFormateado(): string {
+    try {
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        maximumFractionDigits: 0,
+      }).format(this.valorTotalSeleccionado);
+    } catch {
+      return `$ ${this.valorTotalSeleccionado.toLocaleString('es-CO')}`;
+    }
   }
 
   private capitalizarTexto(texto: string): string {
@@ -483,14 +623,49 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   getAccionesPorRolYEstado(contrato: ContratoGeneral): string[] {
-    const estado = contrato.estados?.estado_interno_parametro_id;
+    const estado = this.getEstadoInternoId(contrato) ?? environment.ESTADOS_INTERNOS.BORRADOR;
     const accionesSet = new Set<string>();
-    this.roles.forEach((rol) => {
+
+    let rolesAEvaluar: string[] = [];
+
+    if (this.rolActivo === 'ABOGADO') {
+      const rolesAbogado = (this.roles || []).filter((r) => r.includes('ABOGADO'));
+      rolesAEvaluar = rolesAbogado.length > 0 ? rolesAbogado : ['ABOGADO_CONTRATACION_RECTOR'];
+    } else {
+      const rolesJefe = (this.roles || []).filter(
+        (r) => r.includes('JEFE') || r === 'ADMIN_ARGO' || r.includes('ORDENADOR')
+      );
+      rolesAEvaluar = rolesJefe.length > 0 ? rolesJefe : ['JEFE_CONTRATACION_RECTOR'];
+    }
+
+    rolesAEvaluar.forEach((rol) => {
       const acciones = accionesPorRolYEstado[rol]?.[estado];
-      if (acciones) {
+      if (acciones && acciones.length > 0) {
         acciones.forEach((accion: any) => accionesSet.add(accion));
       }
     });
+
+    // En rol Abogado, garantizar edición y envío a revisión para contratos en Borrador y Rechazado
+    if (this.rolActivo === 'ABOGADO') {
+      if (
+        estado === environment.ESTADOS_INTERNOS.BORRADOR ||
+        estado === environment.ESTADOS_INTERNOS.RECHAZADO
+      ) {
+        accionesSet.add('Editar Contrato');
+        accionesSet.add('Enviar Aprobación Jefe OC');
+      }
+      accionesSet.add('Ver Contrato');
+      accionesSet.add('Ver Historial');
+    }
+
+    // En rol Jefe, para contratos por aprobar incluir Revisar Contrato
+    if (this.rolActivo === 'JEFE') {
+      if (estado === environment.ESTADOS_INTERNOS.EN_REVISION_JEFE) {
+        accionesSet.add('Revisar Contrato');
+      }
+      accionesSet.add('Ver Contrato');
+      accionesSet.add('Ver Historial');
+    }
 
     // Fallback por defecto si no vienen configuradas por rol
     if (accionesSet.size === 0) {
@@ -517,13 +692,23 @@ export class ConsultaContratoComponent implements OnInit {
   realizarAccion(contrato: ContratoGeneral, accion: string) {
     switch (accion) {
       case 'Ver Contrato':
-        this.router.navigate(['registrar']);
+      case 'Revisar Contrato':
+      case 'Ver Documentos': {
+        const docBase = this.router.url.includes('gestion-contractual')
+          ? '/gestion-contractual/contratos/documentos'
+          : '/contratos/documentos';
+        this.router.navigate([docBase, contrato.id]);
         break;
-      case 'Editar Contrato':
-        this.router.navigate(['editar', contrato.id], { relativeTo: this.route.parent });
+      }
+      case 'Editar Contrato': {
+        const editBase = this.router.url.includes('gestion-contractual')
+          ? '/gestion-contractual/contratos/editar'
+          : '/contratos/editar';
+        this.router.navigate([editBase, contrato.id]);
         break;
+      }
       case 'Enviar Aprobación Jefe OC':
-        this.alertService.showSuccessAlert('Contrato enviado para aprobación de Jefatura');
+        this.abrirModalEnviarAprobacion(contrato);
         break;
       case 'Ver Historial':
         this.openModalObservaciones(contrato.id!);
@@ -531,13 +716,203 @@ export class ConsultaContratoComponent implements OnInit {
       case 'Declinar':
         this.alertService.showErrorAlert('Trámite de contrato declinado');
         break;
-      case 'Revisar Contrato':
-      case 'Ver Documentos':
-        this.router.navigate(['documentos', contrato.id], { relativeTo: this.route.parent });
-        break;
       default:
         break;
     }
+  }
+
+  abrirModalEnviarAprobacion(contrato: ContratoGeneral): void {
+    const dialogRef = this.dialog.open(ModalEnviarAprobacionComponent, {
+      width: '640px',
+      maxWidth: '92vw',
+      disableClose: false,
+      data: { contrato },
+    });
+
+    dialogRef.afterClosed().subscribe((res: ModalEnviarAprobacionResultado) => {
+      if (res && res.confirmado) {
+        const rolUsuario =
+          (this.roles || []).find((r) => r.includes('ABOGADO')) ||
+          (this.rolActivo === 'ABOGADO'
+            ? 'ABOGADO_CONTRATACION_RECTOR'
+            : 'JEFE_CONTRATACION_RECTOR');
+
+        const nuevoEstado: EstadoContrato = {
+          contrato_general_id: contrato.id as number,
+          usuario_id: this.usuarioId || 1,
+          usuario_rol: rolUsuario,
+          estado_parametro_id:
+            environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773,
+          estado_interno_parametro_id:
+            environment.ESTADOS_INTERNOS.EN_REVISION_JEFE,
+          motivo: res.observacion || 'Envío a revisión y aprobación de Jefatura',
+        };
+
+        this.contratoGeneralCrudService.postEstadoContrato(nuevoEstado).subscribe({
+          next: () => {
+            if (!contrato.estados) {
+              contrato.estados = {};
+            }
+            contrato.estados.estado_interno_parametro_id =
+              environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
+            contrato.estados.nombre_estado = 'Por aprobar';
+            if (res.observacion) {
+              contrato.observaciones = res.observacion;
+            }
+            this.actualizarMetricasYAlertas();
+            this.alertService.showSuccessAlert(
+              'El contrato fue enviado para aprobación de la Jefatura con éxito.'
+            );
+          },
+          error: (err) => {
+            console.error('Error al persistir estado en backend:', err);
+            this.alertService.showErrorAlert(
+              'No fue posible enviar el contrato para aprobación.'
+            );
+          },
+        });
+      }
+    });
+  }
+
+  abrirModalAprobacionMasiva(): void {
+    const seleccionados = [...this.seleccionContratos.selected];
+    if (seleccionados.length === 0) return;
+
+    const dialogRef = this.dialog.open(ModalAprobacionMasivaComponent, {
+      width: '780px',
+      maxWidth: '94vw',
+      disableClose: false,
+      data: { contratos: seleccionados },
+    });
+
+    dialogRef.afterClosed().subscribe((res: ModalAprobacionMasivaResultado) => {
+      if (res && res.confirmado) {
+        const rolUsuario =
+          (this.roles || []).find((r) => r.includes('JEFE')) ||
+          'JEFE_CONTRATACION_RECTOR';
+
+        const peticiones = seleccionados.map((c) => {
+          const nuevoEstado: EstadoContrato = {
+            contrato_general_id: c.id as number,
+            usuario_id: this.usuarioId || 1,
+            usuario_rol: rolUsuario,
+            estado_parametro_id:
+              environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773,
+            estado_interno_parametro_id:
+              environment.ESTADOS_INTERNOS.APROBADO_JEFE,
+            motivo: res.observacion || 'Aprobación oficial con VoBo de Jefatura',
+          };
+          return this.contratoGeneralCrudService.postEstadoContrato(nuevoEstado);
+        });
+
+        forkJoin(peticiones).subscribe({
+          next: () => {
+            seleccionados.forEach((c) => {
+              if (!c.estados) c.estados = {};
+              c.estados.estado_interno_parametro_id =
+                environment.ESTADOS_INTERNOS.APROBADO_JEFE;
+              c.estados.nombre_estado = 'VoBo Jefatura';
+              (c as any).fecha_aprobado = new Date();
+              if (res.observacion) {
+                c.observaciones = res.observacion;
+              }
+            });
+
+            this.seleccionContratos.clear();
+            this.actualizarMetricasYAlertas();
+            this.alertService.showSuccessAlert(
+              `Se ha registrado el VoBo oficial para ${seleccionados.length} contrato(s) satisfactoriamente.`
+            );
+            this.consultar(false);
+          },
+          error: (err) => {
+            console.error('Error al persistir aprobación masiva:', err);
+            this.alertService.showErrorAlert(
+              'Ocurrió un error al registrar la aprobación masiva de contratos.'
+            );
+            this.consultar(false);
+          },
+        });
+      }
+    });
+  }
+
+  abrirModalRechazoMasivo(): void {
+    const seleccionados = [...this.seleccionContratos.selected];
+    if (seleccionados.length === 0) return;
+
+    const dialogRef = this.dialog.open(ModalRechazoMasivoComponent, {
+      width: '720px',
+      maxWidth: '92vw',
+      disableClose: false,
+      data: { contratos: seleccionados },
+    });
+
+    dialogRef.afterClosed().subscribe((res: ModalRechazoMasivoResultado) => {
+      if (res && res.confirmado) {
+        const rolUsuario =
+          (this.roles || []).find((r) => r.includes('JEFE')) ||
+          'JEFE_CONTRATACION_RECTOR';
+
+        const peticiones = seleccionados.map((c) => {
+          const motivoContrato =
+            (res.tipoObservacion === 'individual' &&
+              res.motivosPorContrato &&
+              c.id &&
+              res.motivosPorContrato[c.id]?.trim()) ||
+            res.motivoGeneral?.trim() ||
+            res.motivo?.trim() ||
+            'Rechazo de contrato por Jefatura';
+
+          const nuevoEstado: EstadoContrato = {
+            contrato_general_id: c.id as number,
+            usuario_id: this.usuarioId || 1,
+            usuario_rol: rolUsuario,
+            estado_parametro_id:
+              environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773,
+            estado_interno_parametro_id:
+              environment.ESTADOS_INTERNOS.RECHAZADO,
+            motivo: motivoContrato,
+          };
+          return this.contratoGeneralCrudService.postEstadoContrato(nuevoEstado);
+        });
+
+        forkJoin(peticiones).subscribe({
+          next: () => {
+            seleccionados.forEach((c) => {
+              if (!c.estados) c.estados = {};
+              c.estados.estado_interno_parametro_id =
+                environment.ESTADOS_INTERNOS.RECHAZADO;
+              c.estados.nombre_estado = 'Rechazado';
+              const motivoContrato =
+                (res.tipoObservacion === 'individual' &&
+                  res.motivosPorContrato &&
+                  c.id &&
+                  res.motivosPorContrato[c.id]?.trim()) ||
+                res.motivoGeneral?.trim() ||
+                res.motivo?.trim() ||
+                '';
+              c.observaciones = motivoContrato;
+            });
+
+            this.seleccionContratos.clear();
+            this.actualizarMetricasYAlertas();
+            this.alertService.showSuccessAlert(
+              `Se devolvieron ${seleccionados.length} contrato(s) con las observaciones de rechazo.`
+            );
+            this.consultar(false);
+          },
+          error: (err) => {
+            console.error('Error al persistir rechazo masivo:', err);
+            this.alertService.showErrorAlert(
+              'Ocurrió un error al registrar el rechazo masivo de contratos.'
+            );
+            this.consultar(false);
+          },
+        });
+      }
+    });
   }
 
   openModalObservaciones(idContrato: number): void {
@@ -549,12 +924,14 @@ export class ConsultaContratoComponent implements OnInit {
   }
 
   cambiarPagina(event: PageEvent) {
+    this.seleccionContratos.clear();
     this.paginaActual = event.pageIndex;
     this.tamanioPagina = event.pageSize;
     this.consultar(false);
   }
 
   consultar(resetPage: boolean = true) {
+    this.seleccionContratos.clear();
     if (resetPage) {
       if (this.paginator) {
         this.paginator.firstPage();
@@ -766,63 +1143,27 @@ export class ConsultaContratoComponent implements OnInit {
     return params;
   }
 
-  CargarunidadEjecutoraId() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUTORA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.unidadEjecutora = Response.Data || [];
-        }
+  private async loadInitialData(): Promise<void> {
+    return this.parametrosService
+      .getParametrosPorTipo(this.tiposParametrosRequeridos)
+      .then((data: Record<number, ParametroResponse[]>) => {
+        this.unidadEjecutora = data[environment.UNIDAD_EJECUTORA_ID] || [];
+        this.vigencia = (data[environment.VIGENCIA_ID] || []).sort((a, b) =>
+          (b.Nombre || '').localeCompare(a.Nombre || '')
+        );
+        this.tipoContratoId = data[environment.TIPO_CONTRATO_ID] || [];
+        this.tipoPersona = data[environment.TIPO_PERSONA_ID] || [];
+        this.estado = data[environment.TIPO_ESTADO_ID] || [];
+      })
+      .catch((error: any) => {
+        this.handleError(error);
       });
   }
 
-  CargarVigencia() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.vigencia = Response.Data || [];
-        }
-      });
-  }
-
-  CargartipoContratoIds() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.tipoContratoId = Response.Data || [];
-        }
-      });
-  }
-
-  CargarTipoPersona() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.TIPO_PERSONA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.tipoPersona = Response.Data || [];
-        }
-      });
-  }
-
-  CargarEstado() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.TIPO_ESTADO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.estado = Response.Data || [];
-        }
-      });
+  private handleError(error: any): void {
+    this.alertService.showErrorAlert(
+      'Ocurrió un error al cargar los datos iniciales',
+      'Error al cargar los datos iniciales'
+    );
   }
 }

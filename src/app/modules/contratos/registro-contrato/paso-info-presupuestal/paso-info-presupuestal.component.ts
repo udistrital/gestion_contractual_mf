@@ -1,10 +1,12 @@
 import {
   ChangeDetectorRef,
   Component,
+  effect,
   input,
   OnDestroy,
   OnInit,
   output,
+  signal,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { finalize, firstValueFrom, Subject } from 'rxjs';
@@ -123,6 +125,9 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   cargoIdOrdenador: number | null = null;
   idSicapitalOrdenador: number | null = null;
   ordenadorGastoId: number | null = null;
+  loadedData = signal<boolean>(false);
+  private contratoCargadoId: number = 0;
+  private cargandoPresupuestal: boolean = false;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -132,16 +137,20 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     private cdpsService: CdpsService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
     private ordenadoresSupervisoresMidService: OrdenadoresSupervisoresContratacionMidService,
-  ) {}
+  ) {
+    effect(() => {
+      if (this.loadedData() && this.contratoGeneral()?.id) {
+        this.loadSavedData();
+      }
+    });
+  }
 
   ngOnInit() {
     this.cargarCDPs();
     this.setupVigenciaListener();
     this.setupCdpListener();
     this.CargarRolOrdenadores();
-    this.loadInitialData().then(() => {
-      this.loadSavedData();
-    });
+    this.loadInitialData();
 
     this.form.get('tipoMoneda')?.valueChanges.subscribe((id_moneda) => {
       if (id_moneda) {
@@ -176,6 +185,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
         this.origen_presupuestos = data[environment.ORIGEN_PRESUPUESTO_ID];
         this.tema_gasto = data[environment.TEMA_GASTO_ID];
         this.medios_pago = data[environment.MEDIO_PAGO_ID];
+        this.loadedData.set(true);
         this.cdRef.detectChanges();
       }).catch((error: any) => {
         this.handleError(error);
@@ -186,7 +196,10 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   private loadSavedData(): void {
     try {
       const contratoGeneral = this.contratoGeneral();
-      if (contratoGeneral) {
+      if (!contratoGeneral?.id || this.contratoCargadoId === contratoGeneral.id || this.cargandoPresupuestal) return;
+
+      this.contratoCargadoId = contratoGeneral.id;
+      this.cargandoPresupuestal = true;
         const formValues = {
           tipoGasto: contratoGeneral.tipo_gasto_id,
           origenPresupuesto: contratoGeneral.origen_presupuestos_id,
@@ -199,20 +212,25 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           formaPago: contratoGeneral.modo_pago,
         };
 
-        this.contratoGeneralCrudService.gerOrdenadorGuardado(contratoGeneral.id as number).subscribe({
-          next: (response: ApiResponse<OrdenadorContratoData>) => {
-            this.ordenadorGastoId = response.Data.ordenador_argo_id;
-            this.setOrdenadorGuardado();
-          }
-        });
+        this.contratoGeneralCrudService
+          .gerOrdenadorGuardado(contratoGeneral.id as number)
+          .subscribe({
+            next: (response: any) => {
+              const data = response?.Data ?? response;
+              if (data && data.ordenador_argo_id) {
+                this.ordenadorGastoId = data.ordenador_argo_id;
+                this.setOrdenadorGuardado();
+              }
+            },
+            error: () => {
+              console.log('No se pudo cargar ordenador guardado.');
+            },
+          });
 
         this.form.patchValue(formValues);
+        this.cdRef.detectChanges();
 
-        if (contratoGeneral.id) {
-          this.cargarCDPsContrato(contratoGeneral.id);
-        }
-      }
-
+        this.cargarCDPsContrato(contratoGeneral.id);
     } catch (error) {
       console.error('Error loading saved data:', error);
     }
@@ -301,7 +319,12 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   private cargarCDPsContrato(contratoId: number) {
     this.contratoGeneralCrudService
       .getCdpContrato(contratoId)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.cargandoPresupuestal = false;
+        })
+      )
       .subscribe({
         next: async (response) => {
           if (response && response.Data) {

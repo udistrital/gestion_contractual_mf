@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, output, input, effect } from '@angular/core';
+import { Component, OnInit, OnChanges, OnDestroy, inject, output, input, effect } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CdpsService } from "src/app/services/cdps.service";
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
@@ -75,15 +75,18 @@ export class PasoObligacionesComponent implements OnInit, OnDestroy {
       if (c) {
         this.updateFormWithCDPData();
       }
+      this.aplicarModoVisualizacion();
     });
   }
 
   ngOnInit() {
-    //this.loadCDPData();
     this.cdpSubscription = this.cdpService.cdp$.subscribe(data => {
       this.cdpData = data;
       this.updateFormWithCDPData();
     });
+    if (this.contratoGeneral()) {
+      this.updateFormWithCDPData();
+    }
     this.aplicarModoVisualizacion();
   }
 

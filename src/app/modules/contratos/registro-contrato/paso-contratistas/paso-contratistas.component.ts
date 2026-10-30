@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnChanges,
   OnDestroy,
   Output,
   EventEmitter,
@@ -18,7 +19,7 @@ import {
 import { ProveedoresService } from 'src/app/services/proveedores.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { finalize, takeUntil } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { ApiResponse, ContratistaCRUD, ContratistaResponse, ContratoGeneral, DatosContratista, ProveedorObject } from 'src/app/types/types';
 import { AlertService } from 'src/app/services/alert.service';
@@ -57,6 +58,8 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
   mostrarConsulta = false;
   errorMessage = '';
+  private contratoCargadoId: number = 0;
+  private cargandoContratista: boolean = false;
 
   private destroy$ = new Subject<void>();
 
@@ -93,6 +96,9 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     if (this.contratistaPrevalidado()) {
       this.aplicarContratistaPrevalidado(this.contratistaPrevalidado());
     }
+    if (this.contratoGeneral()?.id) {
+      this.cargarContratistaExistente();
+    }
 
     this.form
       .get('claseContratista')
@@ -110,6 +116,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   /** En modo visualización el formulario queda en solo lectura. */
   private aplicarModoVisualizacion(): void {
     if (this.viewMode()) {
+      this.mostrarConsulta = true;
       this.form.disable({ emitEvent: false });
     }
   }
@@ -290,31 +297,57 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
 
   private async cargarContratistaExistente() {
-    if (!this.contratoGeneral()?.id) return;
+    const contratoId = this.contratoGeneral()?.id;
+    if (!contratoId || this.contratoCargadoId === contratoId || this.cargandoContratista) return;
+
+    this.contratoCargadoId = contratoId;
+    this.cargandoContratista = true;
+
+    const docFallback =
+      this.contratoGeneral()?.contratista?.numero_documento ||
+      (this.contratoGeneral() as any)?.contratista?.num_documento ||
+      (this.contratoGeneral() as any)?.contratista?.identificacion ||
+      (this.contratoGeneral() as any)?.numero_documento;
 
     this.contratoGeneralCrudService
-      .getContratista(this.contratoGeneral()?.id as number)
-      .pipe(takeUntil(this.destroy$))
+      .getContratista(contratoId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.cargandoContratista = false;
+        })
+      )
       .subscribe({
-        next: (response: ApiResponse<ContratistaResponse>) => {
-          const contratista = response?.Success ? response.Data : null;
-          if (contratista) {
+        next: (response: any) => {
+          const contratista =
+            response?.Data || (response?.numero_documento ? response : null);
+          const doc = contratista?.numero_documento || docFallback;
+          if (contratista?.id) {
             this.contratistaId = contratista.id;
-
+          }
+          if (doc) {
             this.form.patchValue({
               claseContratista: 'clase1',
-              documentoContratista: contratista.numero_documento,
+              documentoContratista: doc,
             });
             this.buscarContratista();
           }
           this.aplicarModoVisualizacion();
           // En visualización no hay guardado: el estado del paso sale de los datos cargados.
           if (this.viewMode()) {
+            this.mostrarConsulta = true;
             this.stepCompleted.emit(!!contratista);
           }
         },
         error: (error) => {
           console.error('Error al cargar contratista:', error);
+          if (docFallback) {
+            this.form.patchValue({
+              claseContratista: 'clase1',
+              documentoContratista: docFallback,
+            });
+            this.buscarContratista();
+          }
         },
       });
   }

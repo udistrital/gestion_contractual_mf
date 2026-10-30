@@ -34,7 +34,7 @@
           mat-raised-button
           class="banner-action-btn save-quick-btn"
           (click)="guardarClausula(clausulaSeleccionadaIndex)"
-          [disabled]="!isClausulaModificada(clausulaSeleccionadaIndex) || !isClausulaEditable(clausulaSeleccionadaIndex)"
+          [disabled]="!clausulaActual || !isClausulaEditable(clausulaSeleccionadaIndex)"
           title="Guardar cambios de la cláusula activa"
         >
           <mat-icon>save</mat-icon>
