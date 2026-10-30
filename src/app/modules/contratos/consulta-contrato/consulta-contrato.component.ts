@@ -25,7 +25,7 @@ import {
 } from './modal-rechazo-masivo/modal-rechazo-masivo.component';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatDialog } from '@angular/material/dialog';
-import { ContratoGeneral, EstadoContrato } from 'src/app/types/types';
+import { ContratoGeneral, EstadoContrato, ParametroResponse } from 'src/app/types/types';
 import { accionesPorRolYEstado } from 'src/app/utils/accionesPorRolYEstado';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { UserService } from 'src/app/services/user.service';
@@ -92,15 +92,24 @@ export class ConsultaContratoComponent implements OnInit {
   // Selector de Vigencia (Por defecto el año de la vigencia presente)
   vigenciaSeleccionada: string = new Date().getFullYear().toString();
 
+  // Tipos de parámetros requeridos para la consulta y filtros
+  tiposParametrosRequeridos: number[] = [
+    environment.UNIDAD_EJECUTORA_ID,
+    environment.VIGENCIA_ID,
+    environment.TIPO_CONTRATO_ID,
+    environment.TIPO_PERSONA_ID,
+    environment.TIPO_ESTADO_ID,
+  ];
+
   // Parámetros maestros
-  unidadEjecutora: any[] = [];
-  vigencia: any[] = [];
-  tipoContratoId: any[] = [];
-  tipoPersona: any[] = [];
+  unidadEjecutora: ParametroResponse[] = [];
+  vigencia: ParametroResponse[] = [];
+  tipoContratoId: ParametroResponse[] = [];
+  tipoPersona: ParametroResponse[] = [];
   numeroElaboracion: any[] = [];
   numeroContrato: any[] = [];
   contratista: any[] = [];
-  estado: any[] = [];
+  estado: ParametroResponse[] = [];
   fechaDesde: any[] = [];
   fechaHasta: any[] = [];
 
@@ -206,11 +215,7 @@ export class ConsultaContratoComponent implements OnInit {
     }
     this.roles = this.rolService.getRol();
     this.determinarRolInicial();
-    this.CargarunidadEjecutoraId();
-    this.CargarVigencia();
-    this.CargartipoContratoIds();
-    this.CargarTipoPersona();
-    this.CargarEstado();
+    await this.loadInitialData();
 
     this.form.get('fechaDesde')?.valueChanges.subscribe((value) => {
       if (value) {
@@ -1156,63 +1161,27 @@ export class ConsultaContratoComponent implements OnInit {
     return params;
   }
 
-  CargarunidadEjecutoraId() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.UNIDAD_EJECUTORA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.unidadEjecutora = Response.Data || [];
-        }
+  private async loadInitialData(): Promise<void> {
+    return this.parametrosService
+      .getParametrosPorTipo(this.tiposParametrosRequeridos)
+      .then((data: Record<number, ParametroResponse[]>) => {
+        this.unidadEjecutora = data[environment.UNIDAD_EJECUTORA_ID] || [];
+        this.vigencia = (data[environment.VIGENCIA_ID] || []).sort((a, b) =>
+          (b.Nombre || '').localeCompare(a.Nombre || '')
+        );
+        this.tipoContratoId = data[environment.TIPO_CONTRATO_ID] || [];
+        this.tipoPersona = data[environment.TIPO_PERSONA_ID] || [];
+        this.estado = data[environment.TIPO_ESTADO_ID] || [];
+      })
+      .catch((error: any) => {
+        this.handleError(error);
       });
   }
 
-  CargarVigencia() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.vigencia = Response.Data || [];
-        }
-      });
-  }
-
-  CargartipoContratoIds() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.TIPO_CONTRATO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.tipoContratoId = Response.Data || [];
-        }
-      });
-  }
-
-  CargarTipoPersona() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.TIPO_PERSONA_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.tipoPersona = Response.Data || [];
-        }
-      });
-  }
-
-  CargarEstado() {
-    this.parametrosService
-      .get(
-        `parametro?query=TipoParametroId:${environment.TIPO_ESTADO_ID},Activo:true&limit=0&sortby=nombre&order=asc&fields=Id,Nombre`
-      )
-      .subscribe((Response: any) => {
-        if (Response?.Status == '200') {
-          this.estado = Response.Data || [];
-        }
-      });
+  private handleError(error: any): void {
+    this.alertService.showErrorAlert(
+      'Ocurrió un error al cargar los datos iniciales',
+      'Error al cargar los datos iniciales'
+    );
   }
 }
