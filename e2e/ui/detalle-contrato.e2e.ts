@@ -15,8 +15,8 @@ import {
 /**
  * E2E de #390: detalle del contrato en solo lectura (/contratos/detalle/:id) con
  * backend SIMULADO. Ninguna petición sale a los servicios. gestion_contractual_crud
- * se responde en el formato del CRUD Go/Beego v2 de la #385 (rutas /v1/<recurso>/,
- * PascalCase, Status como texto, lista vacía [{}], fechas cero); el MID y los demás
+ * se responde en el formato que el CRUD Go/Beego v2 de la #385 debe devolver para el MF
+ * (rutas /v1/<recurso>/, snake_case, Status numérico, [] en listas vacías, null en nulos); el MID y los demás
  * servicios, con las simulaciones de e2e/support. Se verifica, paso por paso, que
  * los datos se ven, que los controles están deshabilitados, que no hay acciones de
  * edición y que el detalle no hace ningún POST, PUT, PATCH ni DELETE.
@@ -34,90 +34,84 @@ const usuario = Buffer.from(
 ).toString('base64');
 
 // ---------------------------------------------------------------------------
-// Datos simulados del contrato de prueba, en el formato del CRUD Beego v2
+// Datos simulados del contrato de prueba, en el formato que el CRUD Beego v2
+// debe devolver para el MF: snake_case, Status numérico, [] en listas vacías y
+// null en nulos. Las FK se simulan como id plano (formato por confirmar con el CRUD).
 // ---------------------------------------------------------------------------
 
-/** Respuesta del CRUD Beego: Status como texto. */
-const beego = (Data: unknown, Status = '200') => ({ Success: true, Status, Message: 'Request successful', Data });
-const FECHA_CERO = '0001-01-01T00:00:00Z';
-const DEL_CONTRATO = { Id: CONTRATO_ID };
+const ok = (Data: unknown) => ({ Success: true, Status: 200, Message: 'Request successful', Data });
 
 const ACTIVIDADES =
   '1. Entregar los equipos de laboratorio descritos en la ficha técnica. Entregable(s): Acta de entrega; Factura. Plazo/Periodicidad: 30 días.\n\n' +
   '2. Realizar la instalación y prueba de funcionamiento de los equipos. Entregable(s): Informe de instalación. Plazo/Periodicidad: 45 días.';
 
 const contrato = {
-  Id: CONTRATO_ID,
-  NumeroContrato: null,
-  VigenciaId: 2026,
-  ConsecutivoElaboracion: '27',
-  UnidadEjecutoraId: 6818,
-  TipoCompromisoId: ORDEN_ID,
-  TipoContratoId: 6541,
-  PerfilContratistaId: 0,
-  FechaSuscripcionEstudio: FECHA_CERO,
-  AplicaPoliza: true,
-  ModalidadSeleccionId: 6571,
-  TipoControlId: TIPO_CONTROL_TECNICO,
-  TipologiaEspecificaId: 6583,
-  RegimenContratacionId: 6591,
-  ProcedimientoId: 6596,
-  PlazoEjecucion: 6,
-  UnidadEjecucionId: 211,
-  TipoMonedaId: PESO_COLOMBIANO_ID,
-  ValorPesos: 45000000,
-  ValorContratoMe: 0,
-  ValorTasaCambio: 0,
-  TipoGastoId: 6642,
-  OrigenRecursosId: 6651,
-  OrigenPresupuestoId: 6661,
-  TemaGastoInversionId: 6671,
-  MedioPagoId: 6681,
-  ClausulaRegistroPresupuestal: true,
-  ModoPago: '<p>Un único pago contra entrega a satisfacción, previa certificación del supervisor.</p>',
-  Objeto: '<p>Suministro e instalación de equipos para el laboratorio de electrónica de la Facultad de Ingeniería.</p>',
-  Justificacion: '<p>La Facultad requiere renovar los equipos del laboratorio para garantizar las prácticas académicas.</p>',
-  Actividades: ACTIVIDADES,
-  Condiciones: '',
-  Observaciones: '',
-  FechaInicial: FECHA_CERO,
-  FechaFinal: FECHA_CERO,
-  FechaSuscripcion: FECHA_CERO,
-  ProveedorNumeroDocumento: '1014285890',
-  TipoPersonaId: 1,
-  ClaseProveedorId: 0,
-  DependenciaSolicitanteId: 20,
-  SedeSolicitanteId: 10,
-  DependenciaSolicitanteLegadoId: 0,
-  SedeSolicitanteLegadoId: 0,
-  UsuarioId: 0,
-  UsuarioRol: '',
-  UsuarioLegado: '',
-  Activo: true,
-  FechaCreacion: '2026-10-20T15:04:11Z',
-  FechaModificacion: '2026-10-27T10:12:45Z',
+  id: CONTRATO_ID,
+  numero_contrato: null,
+  vigencia_id: null,
+  consecutivo_elaboracion: '27',
+  unidad_ejecutora_id: 6818,
+  tipo_compromiso_id: ORDEN_ID,
+  tipo_contrato_id: 6541,
+  perfil_contratista_id: null,
+  fecha_suscripcion_estudios: null,
+  aplica_poliza: true,
+  modalidad_seleccion_id: 6571,
+  tipo_control_id: TIPO_CONTROL_TECNICO,
+  tipologia_especifica_id: 6583,
+  regimen_contratacion_id: 6591,
+  procedimiento_id: 6596,
+  plazo_ejecucion: 6,
+  unidad_ejecucion_id: 211,
+  tipo_moneda_id: PESO_COLOMBIANO_ID,
+  valor_pesos: 45000000,
+  valor_contrato_me: null,
+  valor_tasa_cambio: null,
+  tipo_gasto_id: 6642,
+  origen_recursos_id: 6651,
+  origen_presupuestos_id: 6661,
+  tema_gasto_inversion_id: 6671,
+  medio_pago_id: 6681,
+  clausula_registro_presupuestal: true,
+  modo_pago: '<p>Un único pago contra entrega a satisfacción, previa certificación del supervisor.</p>',
+  objeto: '<p>Suministro e instalación de equipos para el laboratorio de electrónica de la Facultad de Ingeniería.</p>',
+  justificacion: '<p>La Facultad requiere renovar los equipos del laboratorio para garantizar las prácticas académicas.</p>',
+  actividades: ACTIVIDADES,
+  condiciones: null,
+  observaciones: null,
+  fecha_inicial: null,
+  fecha_final: null,
+  fecha_suscripcion: null,
+  proveedor_numero_documento: '1014285890',
+  tipo_persona_id: 1,
+  clase_proveedor_id: null,
+  dependencia_solicitante_id: 20,
+  sede_solicitante_id: 10,
+  activo: true,
+  fecha_creacion: '2026-10-20T15:04:11Z',
+  fecha_modificacion: '2026-10-27T10:12:45Z',
 };
 
 const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
   ordenador_contrato: [
-    { Id: 71, ContratoGeneralId: DEL_CONTRATO, TerceroId: 0, CargoId: 12, DocumentoIdentidad: '19456789', Resolucion: '', OrdenadorArgoId: 1, OrdenadorSicapitalId: 1001, Activo: true },
+    { id: 71, contrato_general_id: CONTRATO_ID, tercero_id: null, cargo_id: 12, documento_identidad: '19456789', resolucion: null, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
   ],
   disponibilidad_presupuestal: [
-    { Id: 501, ContratoGeneralId: DEL_CONTRATO, NumeroCdpId: 1234, VigenciaCdpId: 2024, FechaRegistro: '2026-10-21T00:00:00Z', Activo: true },
+    { id: 501, contrato_general_id: CONTRATO_ID, numero_cdp_id: 1234, vigencia_cdp: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
   ],
   supervisor_contrato: [
-    { Id: 61, ContratoGeneralId: DEL_CONTRATO, SupervisorId: 7788, Documento: 79865432, DigitoVerificacion: 3, CargoId: 45, SedeId: 10, DependenciaId: 20, SedeLegado: 'Sede Calle 40', DependenciaLegado: 'Facultad de Ingeniería', CargoLegado: 'Decano', Activo: true },
+    { id: 61, contrato_general_id: CONTRATO_ID, supervisor_id: 7788, documento: 79865432, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
   ],
   especificacion_tecnica: [
-    { Id: 801, ContratoGeneralId: DEL_CONTRATO, Descripcion: 'Osciloscopio digital de 4 canales 200 MHz', Cantidad: 3, ValorUnitario: 9500000, ValorTotal: 28500000, Activo: true },
-    { Id: 802, ContratoGeneralId: DEL_CONTRATO, Descripcion: 'Fuente de alimentación DC programable', Cantidad: 5, ValorUnitario: 3300000, ValorTotal: 16500000, Activo: true },
+    { id: 801, contrato_general_id: CONTRATO_ID, descripcion: 'Osciloscopio digital de 4 canales 200 MHz', cantidad: 3, valor_unitario: 9500000, valor_total: 28500000, activo: true },
+    { id: 802, contrato_general_id: CONTRATO_ID, descripcion: 'Fuente de alimentación DC programable', cantidad: 5, valor_unitario: 3300000, valor_total: 16500000, activo: true },
   ],
   amparo_poliza: [
-    { Id: 901, ContratoGeneralId: DEL_CONTRATO, PolizaId: null, AmparoId: AMPARO_CUMPLIMIENTO, TipoValorAmparoId: 2, Suficiencia: 20, Valor: 0, Descripcion: 'Cumplimiento del contrato por el 20 % del valor', FechaInicio: FECHA_CERO, FechaFin: FECHA_CERO, Activo: true },
-    { Id: 902, ContratoGeneralId: DEL_CONTRATO, PolizaId: null, AmparoId: AMPARO_CALIDAD, TipoValorAmparoId: 2, Suficiencia: 10, Valor: 0, Descripcion: 'Calidad de los bienes por el 10 % del valor', FechaInicio: FECHA_CERO, FechaFin: FECHA_CERO, Activo: true },
+    { id: 901, contrato_general_id: CONTRATO_ID, poliza_id: null, amparo_id: AMPARO_CUMPLIMIENTO, tipo_valor_amparo_id: 2, suficiencia: 20, valor: null, descripcion: 'Cumplimiento del contrato por el 20 % del valor', fecha_inicio: null, fecha_fin: null, activo: true },
+    { id: 902, contrato_general_id: CONTRATO_ID, poliza_id: null, amparo_id: AMPARO_CALIDAD, tipo_valor_amparo_id: 2, suficiencia: 10, valor: null, descripcion: 'Calidad de los bienes por el 10 % del valor', fecha_inicio: null, fecha_fin: null, activo: true },
   ],
   estado_contrato: [
-    { Id: 3, ContratoGeneralId: DEL_CONTRATO, EstadoParametroId: 6773, EstadoInternoParametroId: 6799, Actual: true, Motivo: '', FechaEvento: FECHA_CERO, UsuarioId: 1, UsuarioRol: 'ABOGADO_CONTRATACION_RECTOR', Activo: true },
+    { id: 3, contrato_general_id: CONTRATO_ID, estado_parametro_id: 6773, estado_interno_parametro_id: 6799, actual: true, motivo: null, fecha_evento: null, usuario_id: 1, usuario_rol: 'ABOGADO_CONTRATACION_RECTOR', activo: true },
   ],
 };
 
@@ -127,16 +121,17 @@ const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
 
 const escrituras: string[] = [];
 const noSimuladas: string[] = [];
+const consultasCrud: string[] = [];
 
-/** Responde gestion_contractual_crud como el CRUD Beego v2. */
+/** Responde gestion_contractual_crud en el formato esperado del CRUD Beego v2. */
 function responderCrudBeego(route: Route, ruta: string, query: URLSearchParams): Promise<void> | null {
   const json = (data: unknown) => route.fulfill({ status: 200, json: data });
-  if (ruta === `gestion_contractual_crud/v1/contrato_general/${CONTRATO_ID}`) return json(beego(contrato));
+  if (ruta === `gestion_contractual_crud/v1/contrato_general/${CONTRATO_ID}`) return json(ok(contrato));
   const lista = ruta.match(/^gestion_contractual_crud\/v1\/(\w+)\/$/);
-  if (lista && (query.get('query') ?? '').includes(`ContratoGeneralId.Id:${CONTRATO_ID}`)) {
-    const registros = RECURSOS_DEL_CONTRATO[lista[1]];
-    // Lista vacía como la devuelve hoy el CRUD Beego.
-    return json(beego(registros?.length ? registros : [{}]));
+  // Filtro por FK en snake_case (sintaxis por confirmar con el CRUD).
+  if (lista && (query.get('query') ?? '').includes(`contrato_general_id.id:${CONTRATO_ID}`)) {
+    consultasCrud.push(`${lista[1]}?${query.toString()}`);
+    return json(ok(RECURSOS_DEL_CONTRATO[lista[1]] ?? []));
   }
   return null;
 }
@@ -427,5 +422,8 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
   await test.step('el detalle no escribe nada y todas las peticiones están simuladas', async () => {
     expect(escrituras, 'peticiones de escritura').toEqual([]);
     expect(noSimuladas, 'peticiones sin simular').toEqual([]);
+    // Todas las listas del CRUD se piden con filtro de activos y limit explícito.
+    expect(consultasCrud.length, 'consultas al CRUD').toBeGreaterThan(0);
+    expect(consultasCrud.filter((c) => !/activo%3Atrue|activo:true/.test(c) || !/limit=\d/.test(c)), 'consultas sin activo o limit').toEqual([]);
   });
 });

@@ -25,6 +25,20 @@ const CRUD_BEEGO_URL = process.env.CRUD_BEEGO_URL;
 const CONTENEDOR_BD = process.env.CRUD_BEEGO_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
 const EVIDENCIAS = process.env.EVIDENCIAS_390_BEEGO ?? join(homedir(), 'argo_repos', 'evidencias-390-beego');
 
+/*
+ * EN PAUSA hasta que el CRUD Beego v2 se ajuste al MF (criterio del equipo: el CRUD se
+ * adapta al MF; el MF ya no tiene adaptador). Con el CRUD de la rama de la #385 tal
+ * como está, esta prueba falla. Ajustes que necesita el CRUD:
+ *  - etiquetas json en snake_case con los nombres que usa el MF (p. ej.
+ *    fecha_suscripcion_estudios, origen_presupuestos_id, vigencia_cdp, valor_a_tomar);
+ *  - filtros por FK en snake_case (contrato_general_id.id:<id>) y FK en snake_case en
+ *    cuerpos y respuestas (formato por confirmar);
+ *  - lista vacía como [] (hoy [{}]) y Status numérico (hoy "200");
+ *  - null en columnas nulas (hoy 0, "" o 0001-01-01);
+ *  - aceptar los tipos que envía el MF (números como texto en algunos campos, fechas).
+ * Para volver a activarla: quitar esta línea y correr con CRUD_BEEGO_URL.
+ */
+test.skip(true, 'En pausa: requiere que el CRUD Beego v2 exponga snake_case, [] , Status numérico y null (ver comentario)');
 test.skip(!CRUD_BEEGO_URL, 'Requiere CRUD_BEEGO_URL con el CRUD Beego v2 corriendo en local');
 
 const usuario = Buffer.from(
