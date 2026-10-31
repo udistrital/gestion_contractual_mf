@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { accionesPorRolYEstado } from 'src/app/utils/accionesPorRolYEstado';
 import { environment } from 'src/environments/environment';
 import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
@@ -564,5 +565,76 @@ describe('ConsultaContratoComponent', () => {
       );
     });
   });
-});
 
+  describe('Acción Ver Detalle (Issue #390)', () => {
+    const estados = Object.values(environment.ESTADOS_INTERNOS) as number[];
+    const contratoEn = (estado: number): any => ({
+      id: 55,
+      estados: { estado_interno_parametro_id: estado },
+    });
+
+    it('en la tabla de acciones aparece justo después de "Ver Contrato" y solo donde está', () => {
+      Object.entries(accionesPorRolYEstado).forEach(([rol, porEstado]) => {
+        Object.entries(porEstado).forEach(([estado, acciones]) => {
+          const iContrato = acciones.indexOf('Ver Contrato');
+          const iDetalle = acciones.indexOf('Ver Detalle');
+          if (iContrato === -1) {
+            expect({ rol, estado, iDetalle }).toEqual({ rol, estado, iDetalle: -1 });
+          } else {
+            expect({ rol, estado, iDetalle }).toEqual({ rol, estado, iDetalle: iContrato + 1 });
+          }
+        });
+      });
+    });
+
+    it.each([
+      ['ABOGADO', ['ABOGADO_CONTRATACION_RECTOR']],
+      ['ABOGADO', ['ABOGADO_CONTRATACION_IDEXUD']],
+      ['JEFE', ['JEFE_CONTRATACION_RECTOR']],
+      ['JEFE', ['ORDENADOR_DEL_GASTO']],
+    ])('rol %s %p: "Ver Detalle" acompaña a "Ver Contrato" en cada estado', (rolActivo, roles) => {
+      component.rolActivo = rolActivo as any;
+      component.roles = roles as string[];
+      estados.forEach((estado) => {
+        const acciones = component.getAccionesPorRolYEstado(contratoEn(estado));
+        expect({ estado, detalle: acciones.includes('Ver Detalle') }).toEqual({
+          estado,
+          detalle: acciones.includes('Ver Contrato'),
+        });
+      });
+    });
+
+    it('el abogado ve "Ver Detalle" también en Borrador, junto a "Editar Contrato"', () => {
+      component.rolActivo = 'ABOGADO' as any;
+      component.roles = ['ABOGADO_CONTRATACION_RECTOR'];
+      const acciones = component.getAccionesPorRolYEstado(
+        contratoEn(environment.ESTADOS_INTERNOS.BORRADOR)
+      );
+      expect(acciones).toEqual(
+        expect.arrayContaining(['Editar Contrato', 'Ver Contrato', 'Ver Detalle'])
+      );
+    });
+
+    it('usa el icono "article"', () => {
+      expect(component.getIconoAccion('Ver Detalle')).toBe('article');
+      expect(component.getIconoAccion('Ver Contrato')).toBe('visibility');
+    });
+
+    it.each([
+      ['/gestion-contractual/contratos/consulta', '/gestion-contractual/contratos/detalle'],
+      ['/contratos/consulta', '/contratos/detalle'],
+    ])('desde %s navega a %s/:id', (urlActual, destino) => {
+      (mockRouter as any).url = urlActual;
+      component.realizarAccion({ id: 55 } as any, 'Ver Detalle');
+      expect(mockRouter.navigate).toHaveBeenCalledWith([destino, 55]);
+    });
+
+    it('"Ver Contrato" y "Editar Contrato" conservan sus rutas', () => {
+      (mockRouter as any).url = '/contratos/consulta';
+      component.realizarAccion({ id: 55 } as any, 'Ver Contrato');
+      expect(mockRouter.navigate).toHaveBeenLastCalledWith(['/contratos/documentos', 55]);
+      component.realizarAccion({ id: 55 } as any, 'Editar Contrato');
+      expect(mockRouter.navigate).toHaveBeenLastCalledWith(['/contratos/editar', 55]);
+    });
+  });
+});

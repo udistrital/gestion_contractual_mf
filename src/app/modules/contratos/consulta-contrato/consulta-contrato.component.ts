@@ -655,6 +655,7 @@ export class ConsultaContratoComponent implements OnInit {
         accionesSet.add('Enviar Aprobación Jefe OC');
       }
       accionesSet.add('Ver Contrato');
+      accionesSet.add('Ver Detalle');
       accionesSet.add('Ver Historial');
     }
 
@@ -664,12 +665,14 @@ export class ConsultaContratoComponent implements OnInit {
         accionesSet.add('Revisar Contrato');
       }
       accionesSet.add('Ver Contrato');
+      accionesSet.add('Ver Detalle');
       accionesSet.add('Ver Historial');
     }
 
     // Fallback por defecto si no vienen configuradas por rol
     if (accionesSet.size === 0) {
       accionesSet.add('Ver Contrato');
+      accionesSet.add('Ver Detalle');
       accionesSet.add('Ver Historial');
     }
 
@@ -679,6 +682,7 @@ export class ConsultaContratoComponent implements OnInit {
   getIconoAccion(accion: string): string {
     const iconos: { [key: string]: string } = {
       'Ver Contrato': 'visibility',
+      'Ver Detalle': 'article',
       'Editar Contrato': 'edit',
       'Enviar Aprobación Jefe OC': 'send',
       'Ver Historial': 'info',
@@ -698,6 +702,13 @@ export class ConsultaContratoComponent implements OnInit {
           ? '/gestion-contractual/contratos/documentos'
           : '/contratos/documentos';
         this.router.navigate([docBase, contrato.id]);
+        break;
+      }
+      case 'Ver Detalle': {
+        const detalleBase = this.router.url.includes('gestion-contractual')
+          ? '/gestion-contractual/contratos/detalle'
+          : '/contratos/detalle';
+        this.router.navigate([detalleBase, contrato.id]);
         break;
       }
       case 'Editar Contrato': {
