@@ -12,28 +12,39 @@ export const accionesPorRolYEstado: {
     ],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
       'Ver Contrato',
+      'Ver Detalle',
       'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: [
       'Ver Contrato',
+      'Ver Detalle',
       'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
       'Ver Contrato',
+      'Ver Detalle',
       'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: [
       'Ver Contrato',
+      'Ver Detalle',
       'Ver Historial',
     ],
-    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Contrato'],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: [
+      'Ver Contrato',
+      'Ver Detalle',
+    ],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: [
       'Editar Contrato',
       'Enviar Aprobación Jefe OC',
       'Ver Historial',
       'Declinar',
     ],
-    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Contrato', 'Ver Historial'],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: [
+      'Ver Contrato',
+      'Ver Detalle',
+      'Ver Historial',
+    ],
   },
   ABOGADO_CONTRATACION_IDEXUD: {
     //ABOGADO_CONTRATACION_IDEXUD
@@ -44,28 +55,39 @@ export const accionesPorRolYEstado: {
     ],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [
       'Ver Contrato',
+      'Ver Detalle',
       'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: [
       'Ver Contrato',
+      'Ver Detalle',
       'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [
       'Ver Contrato',
+      'Ver Detalle',
       'Ver Historial',
     ],
     [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: [
       'Ver Contrato',
+      'Ver Detalle',
       'Ver Historial',
     ],
-    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Contrato'],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: [
+      'Ver Contrato',
+      'Ver Detalle',
+    ],
     [environment.ESTADOS_INTERNOS.RECHAZADO]: [
       'Editar Contrato',
       'Enviar Aprobación Jefe OC',
       'Ver Historial',
       'Declinar',
     ],
-    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Contrato', 'Ver Historial'],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: [
+      'Ver Contrato',
+      'Ver Detalle',
+      'Ver Historial',
+    ],
   },
   JEFE_CONTRATACION_RECTOR: {
     //JEFE_CONTRATACION_RECTOR
