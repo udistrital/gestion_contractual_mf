@@ -28,6 +28,9 @@ import { DetalleContratoComponent } from './consulta-contrato/detalle-contrato/d
 import { EditarContratoComponent } from './consulta-contrato/editar-contrato/editar-contrato.component';
 import { ModalSeleccionarUeComponent } from './consulta-contrato/modal-seleccionar-ue/modal-seleccionar-ue.component';
 import { ModalValidarContratistaComponent } from './consulta-contrato/modal-validar-contratista/modal-validar-contratista.component';
+import { ModalEnviarAprobacionComponent } from './consulta-contrato/modal-enviar-aprobacion/modal-enviar-aprobacion.component';
+import { ModalAprobacionMasivaComponent } from './consulta-contrato/modal-aprobacion-masiva/modal-aprobacion-masiva.component';
+import { ModalRechazoMasivoComponent } from './consulta-contrato/modal-rechazo-masivo/modal-rechazo-masivo.component';
 import { TableroModule } from 'src/app/modules/tablero/tablero.module';
 
 const registrarComponents = [
@@ -63,6 +66,9 @@ const consultaComponents = [
   EditarContratoComponent,
   ModalSeleccionarUeComponent,
   ModalValidarContratistaComponent,
+  ModalEnviarAprobacionComponent,
+  ModalAprobacionMasivaComponent,
+  ModalRechazoMasivoComponent,
 ]
 
 @NgModule({

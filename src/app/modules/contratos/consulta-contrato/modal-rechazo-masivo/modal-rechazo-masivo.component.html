@@ -1,0 +1,183 @@
+<div class="modal-rechazo-container">
+  <div class="modal-header">
+    <div class="header-icon-badge">
+      <mat-icon>cancel</mat-icon>
+    </div>
+    <div class="header-text">
+      <h2 mat-dialog-title class="dialog-title">Rechazo Masivo de Contratos</h2>
+      <p class="dialog-subtitle">Devolución con observaciones para subsanación del abogado</p>
+    </div>
+    <button mat-icon-button (click)="cancelar()" class="btn-close" aria-label="Cerrar modal">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="modal-body">
+    <!-- Alerta de Advertencia de Impacto -->
+    <div class="aviso-peligro">
+      <mat-icon class="aviso-icon">warning_amber</mat-icon>
+      <div class="aviso-texto">
+        <strong>Atención: Se devolverán {{ totalContratos }} contrato(s)</strong>
+        <span>
+          Los contratos seleccionados regresarán a estado <em>"Rechazado"</em>. Los abogados asignados recibirán
+          las observaciones para corregir las inconsistencias y volver a enviar a revisión.
+        </span>
+      </div>
+    </div>
+
+    <!-- Selector de Modalidad: Mismo mensaje vs Mensaje individual -->
+    <div class="modalidad-card">
+      <div class="modalidad-header">
+        <mat-icon>tune</mat-icon>
+        <span>¿Cómo deseas enviar las observaciones de rechazo?</span>
+      </div>
+      <div class="segmented-control">
+        <button
+          type="button"
+          class="segment-btn"
+          [class.active]="tipoObservacion === 'general'"
+          (click)="cambiarTipo('general')"
+        >
+          <mat-icon>dynamic_feed</mat-icon>
+          <div class="segment-text">
+            <strong>Mismo mensaje para todos</strong>
+            <small>Un único motivo aplicable a todo el lote</small>
+          </div>
+        </button>
+        <button
+          type="button"
+          class="segment-btn"
+          [class.active]="tipoObservacion === 'individual'"
+          (click)="cambiarTipo('individual')"
+        >
+          <mat-icon>edit_note</mat-icon>
+          <div class="segment-text">
+            <strong>Mensaje individual por contrato</strong>
+            <small>Motivo específico para cada contrato</small>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- MODO 1: MISMO MENSAJE PARA TODOS -->
+    @if (tipoObservacion === 'general') {
+      <!-- Lista resumida de contratos -->
+      <div class="seccion-lista">
+        <h3 class="lista-titulo">
+          <mat-icon>list_alt</mat-icon>
+          Contratos que serán devueltos ({{ totalContratos }})
+        </h3>
+        <div class="tabla-scroll-wrap">
+          <table class="tabla-resumen">
+            <thead>
+              <tr>
+                <th>No. Contrato</th>
+                <th>Vigencia</th>
+                <th>Contratista</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (contrato of contratos; track contrato.id || $index) {
+                <tr>
+                  <td class="font-bold">{{ getNumeroContrato(contrato) }}</td>
+                  <td>{{ contrato.vigencia || '—' }}</td>
+                  <td class="truncate" [title]="getNombreContratista(contrato)">{{ getNombreContratista(contrato) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Campo general de Motivo -->
+      <div class="form-section">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Motivo o justificación general del rechazo *</mat-label>
+          <textarea
+            matInput
+            rows="4"
+            required
+            [(ngModel)]="motivoGeneral"
+            placeholder="Escribe el motivo por el cual se devuelven estos contratos a los abogados..."
+            maxlength="600"
+          ></textarea>
+          <mat-hint align="start">Este mensaje se notificará a los abogados asignados a cada contrato del lote.</mat-hint>
+          <mat-hint align="end">{{ motivoGeneral.length }}/600</mat-hint>
+        </mat-form-field>
+      </div>
+    }
+
+    <!-- MODO 2: MENSAJE INDIVIDUAL POR CADA CONTRATO -->
+    @if (tipoObservacion === 'individual') {
+      <div class="seccion-individual">
+        <div class="individual-top-bar">
+          <div class="individual-status">
+            <mat-icon>assignment</mat-icon>
+            <span>Detalla el motivo para cada uno de los {{ totalContratos }} contratos:</span>
+          </div>
+          @if (motivoGeneral.trim().length > 0) {
+            <button
+              type="button"
+              mat-stroked-button
+              class="btn-copiar-global"
+              (click)="copiarGeneralAIndividuales()"
+              title="Copiar el motivo general ingresado previamente a todos los contratos"
+            >
+              <mat-icon>content_copy</mat-icon>
+              Copiar motivo general a todos
+            </button>
+          }
+        </div>
+
+        <div class="contratos-cards-scroll">
+          @for (contrato of contratos; track contrato.id || $index) {
+            <div class="contrato-motivo-card">
+              <div class="contrato-card-header">
+                <div class="badge-contrato">
+                  <mat-icon>description</mat-icon>
+                  <span>{{ getNumeroContrato(contrato) }}</span>
+                </div>
+                <div class="contrato-meta">
+                  <span class="meta-item"><strong>Vigencia:</strong> {{ contrato.vigencia || '—' }}</span>
+                  <span class="meta-separator">•</span>
+                  <span class="meta-item"><strong>Contratista:</strong> {{ getNombreContratista(contrato) }}</span>
+                </div>
+              </div>
+
+              <mat-form-field appearance="outline" class="w-100 mt-2">
+                <mat-label>Motivo de rechazo para {{ getNumeroContrato(contrato) }} *</mat-label>
+                <textarea
+                  matInput
+                  rows="2"
+                  required
+                  [ngModel]="getMotivoContrato(contrato)"
+                  (ngModelChange)="setMotivoContrato(contrato, $event)"
+                  placeholder="Describe la inconsistencia o subsanación específica de este contrato..."
+                  maxlength="600"
+                ></textarea>
+                <mat-hint align="end">{{ (getMotivoContrato(contrato) || '').length }}/600</mat-hint>
+              </mat-form-field>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="modal-actions">
+    <button mat-stroked-button type="button" (click)="cancelar()" class="btn-cancelar">
+      Cancelar
+    </button>
+    <button
+      mat-flat-button
+      color="warn"
+      type="button"
+      (click)="confirmar()"
+      class="btn-rechazar"
+      [disabled]="!esValido"
+    >
+      <mat-icon>thumb_down</mat-icon>
+      Confirmar Rechazo y Devolver ({{ totalContratos }})
+    </button>
+  </mat-dialog-actions>
+</div>

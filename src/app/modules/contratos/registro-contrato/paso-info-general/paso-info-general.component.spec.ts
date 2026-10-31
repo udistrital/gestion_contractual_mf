@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { PasoInfoGeneralComponent } from './paso-info-general.component';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { AlertService } from 'src/app/services/alert.service';
+import { of } from 'rxjs';
 
 describe('PasoInfoGeneralComponent', () => {
   let component: PasoInfoGeneralComponent;
@@ -10,7 +12,23 @@ describe('PasoInfoGeneralComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [PasoInfoGeneralComponent],
-      providers: [ParametrosService],
+      providers: [
+        {
+          provide: ParametrosService,
+          useValue: {
+            get: jest.fn().mockReturnValue(of({ Status: '200', Data: { Id: 1, Data: [] } })),
+            getParametrosPorTipo: jest.fn().mockResolvedValue({}),
+            getParametroPorPadreIdyTipoId: jest.fn().mockReturnValue([]),
+          },
+        },
+        {
+          provide: AlertService,
+          useValue: {
+            showErrorAlert: jest.fn(),
+            showSuccessAlert: jest.fn(),
+          },
+        },
+      ],
       schemas: [NO_ERRORS_SCHEMA],
     });
     fixture = TestBed.createComponent(PasoInfoGeneralComponent);

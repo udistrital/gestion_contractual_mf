@@ -1,6 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { CdpsService } from 'src/app/services/cdps.service';
+import { ClausulasParagrafosService } from 'src/app/services/clausulas-paragrafos.service';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { AlertService } from 'src/app/services/alert.service';
+import { MinutasMidService } from 'src/app/services/minuta-mid.service';
+import { MatDialog } from '@angular/material/dialog';
 import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatStepper } from '@angular/material/stepper';
@@ -10,6 +15,9 @@ describe('PasoClausulasParagrafosComponent', () => {
   let component: PasoClausulasParagrafosComponent;
   let fixture: ComponentFixture<PasoClausulasParagrafosComponent>;
   let mockCdpsService: any;
+  let mockAlertService: any;
+  let mockMinutasMidService: any;
+  let mockDialog: any;
 
   beforeEach(() => {
     mockCdpsService = {
@@ -17,9 +25,36 @@ describe('PasoClausulasParagrafosComponent', () => {
       cdp$: of([]),
     };
 
+    mockAlertService = {
+      showAlert: jest.fn(),
+      showSuccessAlert: jest.fn().mockResolvedValue({ isConfirmed: true }),
+      showErrorAlert: jest.fn().mockResolvedValue({ isConfirmed: true }),
+      showConfirmAlert: jest.fn().mockResolvedValue({ isConfirmed: true }),
+    };
+
+    mockMinutasMidService = {
+      getMinuta: jest.fn().mockReturnValue(of({ Data: 'ZHVtbXkgcGRmIGNvbnRlbnQ=' })),
+    };
+
+    mockDialog = {
+      open: jest.fn(),
+    };
+
     TestBed.configureTestingModule({
       declarations: [PasoClausulasParagrafosComponent],
       providers: [
+        {
+          provide: AlertService,
+          useValue: mockAlertService,
+        },
+        {
+          provide: MinutasMidService,
+          useValue: mockMinutasMidService,
+        },
+        {
+          provide: MatDialog,
+          useValue: mockDialog,
+        },
         {
           provide: ParametrosService,
           useValue: {
@@ -34,6 +69,22 @@ describe('PasoClausulasParagrafosComponent', () => {
         {
           provide: MatStepper,
           useValue: { _getStepLabelId: () => '', steps: { toArray: () => [] } },
+        },
+        {
+          provide: ClausulasParagrafosService,
+          useValue: {
+            get: jest.fn().mockReturnValue(of({ Success: true, Data: [] })),
+            post: jest.fn().mockReturnValue(of({ Success: true, Data: {} })),
+            put: jest.fn().mockReturnValue(of({ Success: true, Data: {} })),
+            delete: jest.fn().mockReturnValue(of({ Success: true, Data: {} })),
+          },
+        },
+        {
+          provide: ContratoGeneralCrudService,
+          useValue: {
+            getEstadoActual: jest.fn().mockReturnValue(of({ id: 1, estado_interno_parametro_id: 1 })),
+            getEspecificacionesTecnicas: jest.fn().mockReturnValue(of({ Success: true, Data: [] })),
+          },
         },
       ],
       schemas: [NO_ERRORS_SCHEMA],
@@ -331,4 +382,162 @@ describe('PasoClausulasParagrafosComponent', () => {
       expect(str).toContain('100.000.000');
     });
   });
+
+  describe('Precarga de Cláusulas Guardadas en Editar Contrato', () => {
+    it('debe solicitar contratos/:id y poblar clausulas cuando contratoGeneral se proporciona con ID', () => {
+      const clausulasMock = [
+        {
+          _id: 'c-1',
+          nombre: 'OBJETO CONTRACTUAL',
+          descripcion: 'El contratista se obliga...',
+          predeterminado: true,
+          es_editable: false,
+          paragrafos: [
+            {
+              _id: 'p-1',
+              nombre: 'PARÁGRAFO 1',
+              descripcion: 'Detalle del objeto',
+              predeterminado: false,
+              es_editable: true,
+            },
+          ],
+        },
+        {
+          _id: 'c-2',
+          nombre: 'VALOR DEL CONTRATO',
+          descripcion: 'El valor asciende a...',
+          predeterminado: true,
+          es_editable: true,
+          paragrafos: [],
+        },
+      ];
+
+      const clausulasService = TestBed.inject(ClausulasParagrafosService);
+      (clausulasService.get as jest.Mock).mockImplementation((url: string) => {
+        if (url === 'contratos/2') {
+          return of({ Success: true, Data: clausulasMock });
+        }
+        return of({ Success: true, Data: [] });
+      });
+
+      fixture.componentRef.setInput('contratoGeneral', {
+        id: 2,
+        tipo_contrato_id: 1,
+        unidad_ejecutora_id: 6818,
+      });
+      fixture.detectChanges();
+
+      expect(component.contratoId).toBe(2);
+      expect(component.clausulas.length).toBe(2);
+      expect(component.clausulas.at(0).get('nombre')?.value).toBe('OBJETO CONTRACTUAL');
+      expect(component.clausulas.at(1).get('nombre')?.value).toBe('VALOR DEL CONTRATO');
+      expect(component.clausulaSeleccionadaIndex).toBe(0);
+    });
+
+    it('debe manejar respuestas directas de tipo arreglo sin propiedad Success en contratos/:id', () => {
+      const clausulasMock = [
+        {
+          _id: 'c-100',
+          nombre: 'CLÁUSULA ESPECIAL AUDITORÍA',
+          descripcion: 'Condiciones de auditoría',
+          predeterminado: false,
+          es_editable: true,
+          paragrafos: [],
+        },
+      ];
+
+      const clausulasService = TestBed.inject(ClausulasParagrafosService);
+      (clausulasService.get as jest.Mock).mockImplementation((url: string) => {
+        if (url === 'contratos/15') {
+          return of(clausulasMock); // Retorno directo como array
+        }
+        return of([]);
+      });
+
+      fixture.componentRef.setInput('contratoGeneral', {
+        id: 15,
+        tipo_contrato_id: 2,
+        unidad_ejecutora_id: 6818,
+      });
+      fixture.detectChanges();
+
+      expect(component.contratoId).toBe(15);
+      expect(component.clausulas.length).toBe(1);
+      expect(component.clausulas.at(0).get('nombre')?.value).toBe('CLÁUSULA ESPECIAL AUDITORÍA');
+    });
+
+    it('debe cargar cláusulas predeterminadas oficiales cuando el contrato no tiene cláusulas ni plantilla en backend', () => {
+      const clausulasService = TestBed.inject(ClausulasParagrafosService);
+      (clausulasService.get as jest.Mock).mockReturnValue(of({ Success: true, Data: [] }));
+
+      fixture.componentRef.setInput('contratoGeneral', {
+        id: 99,
+        tipo_contrato_id: 1,
+        unidad_ejecutora_id: 6818,
+      });
+      fixture.detectChanges();
+
+      expect(component.contratoId).toBe(99);
+      expect(component.clausulas.length).toBe(11);
+      expect(component.clausulas.at(0).get('nombre')?.value).toBe('OBJETO CONTRACTUAL');
+      expect(component.clausulas.at(3).get('nombre')?.value).toContain('VALOR DEL CONTRATO');
+      expect(component.clausulaSeleccionadaIndex).toBe(0);
+
+      // Verificar que se guardaron en caché local para persistencia
+      const cached = localStorage.getItem('clausulas_contrato_99');
+      expect(cached).toBeTruthy();
+      const parsed = JSON.parse(cached!);
+      expect(parsed.length).toBe(11);
+    });
+
+    it('debe permitir guardar una cláusula y persistir los cambios', () => {
+      component.contratoId = 50;
+      component.clausulas.push(
+        (component as any).crearClausulaFormGroup(
+          {
+            _id: 'c-test-50',
+            nombre: 'CLÁUSULA DE PRUEBA',
+            descripcion: 'Descripción inicial',
+            predeterminado: false,
+            es_editable: true,
+            paragrafos: [],
+          },
+          '1'
+        )
+      );
+
+      const clausula0 = component.clausulas.at(0) as any;
+      clausula0.get('descripcion')?.setValue('Descripción modificada por el usuario');
+      clausula0.get('descripcion')?.markAsDirty();
+
+      component.ejecutarGuardarClausula(0);
+
+      expect(clausula0.get('descripcion')?.dirty).toBe(false);
+      const cached = localStorage.getItem('clausulas_contrato_50');
+      expect(cached).toBeTruthy();
+      expect(cached).toContain('Descripción modificada por el usuario');
+    });
+
+    it('debe alertar si se intenta abrir el visor PDF sin contratoGeneral id válido', async () => {
+      component.contratoId = 0;
+      fixture.componentRef.setInput('contratoGeneral', undefined);
+      await component.openPdfViewer();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
+        expect.stringContaining('No se ha guardado el contrato general')
+      );
+    });
+
+    it('debe solicitar la minuta con el id del contrato y abrir el diálogo modal', async () => {
+      fixture.componentRef.setInput('contratoGeneral', { id: 2 } as any);
+      const minutasMidService = TestBed.inject(MinutasMidService);
+      (minutasMidService.getMinuta as jest.Mock).mockReturnValue(of({ Data: 'ZHVtbXkgcGRmIGNvbnRlbnQ=' }));
+      const dialog = TestBed.inject(MatDialog);
+
+      await component.openPdfViewer();
+
+      expect(minutasMidService.getMinuta).toHaveBeenCalledWith(2);
+      expect(dialog.open).toHaveBeenCalled();
+    });
+  });
 });
+

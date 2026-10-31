@@ -16,17 +16,19 @@ import {ErrorResponse, HttpErrorManager} from './errorManager'
 })
 export class RequestManager {
   private path!: any;
-  public httpOptions: any;
-  constructor(private http: HttpClient, private errManager: HttpErrorManager) {
-    const acces_token = window.localStorage.getItem('access_token');
-    if (acces_token !== null) {
-      this.httpOptions = {
-         headers: new HttpHeaders({
-           'Content-Type': 'application/json',
-           'Authorization': `Bearer ${acces_token}`,
-         }),
-      }
+  constructor(private http: HttpClient, private errManager: HttpErrorManager) {}
+
+  public get httpOptions(): any {
+    const access_token = window.localStorage.getItem('access_token');
+    const headersConfig: { [key: string]: string } = {
+      'Content-Type': 'application/json',
+    };
+    if (access_token) {
+      headersConfig['Authorization'] = `Bearer ${access_token}`;
     }
+    return {
+      headers: new HttpHeaders(headersConfig),
+    };
   }
 
 

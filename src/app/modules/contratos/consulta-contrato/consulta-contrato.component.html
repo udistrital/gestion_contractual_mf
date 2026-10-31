@@ -1,5 +1,5 @@
 <plantilla-tarjeta-contenedora
-  [title]="'Gestión y Consulta de Contratos'"
+  [title]="'Gestionar Contratos'"
   [contenido]="contenidoDePlantilla"
 ></plantilla-tarjeta-contenedora>
 
@@ -279,8 +279,83 @@
 
       <!-- Contenedor Card de la Tabla Canónica (100% ancho disponible) -->
       <div class="table-card-wrapper">
+
+        <!-- Barra Flotante de Acciones Masivas (VoBo / Rechazo) -->
+        <div class="batch-action-bar-container" *ngIf="seleccionContratos.hasValue()">
+          <div class="batch-bar-left">
+            <div class="batch-counter-badge">
+              <mat-icon>checklist</mat-icon>
+              <span><strong>{{ seleccionContratos.selected.length }}</strong> contrato(s) seleccionado(s)</span>
+            </div>
+            <span class="batch-total-hint">
+              Monto total del lote: <strong>{{ valorTotalSeleccionadoFormateado }}</strong>
+            </span>
+          </div>
+          <div class="batch-bar-right">
+            <button
+              mat-button
+              type="button"
+              class="btn-batch-limpiar"
+              (click)="seleccionContratos.clear()"
+            >
+              <mat-icon>close</mat-icon>
+              Cancelar selección
+            </button>
+            <button
+              mat-flat-button
+              type="button"
+              class="btn-batch-rechazar"
+              (click)="abrirModalRechazoMasivo()"
+            >
+              <mat-icon>thumb_down</mat-icon>
+              Rechazar ({{ seleccionContratos.selected.length }})
+            </button>
+            <button
+              mat-flat-button
+              type="button"
+              class="btn-batch-aprobar"
+              (click)="abrirModalAprobacionMasiva()"
+            >
+              <mat-icon>verified</mat-icon>
+              Aprobar con VoBo ({{ seleccionContratos.selected.length }})
+            </button>
+          </div>
+        </div>
+
         <div class="table-scroll-container">
           <table mat-table [dataSource]="dataSource" class="canonical-argo-table">
+
+              <!-- Columna de Selección Múltiple (Solo Jefe de Contratación) -->
+              <ng-container matColumnDef="select">
+                <th mat-header-cell *matHeaderCellDef class="celda-select">
+                  <mat-checkbox
+                    (change)="$event ? toggleTodosLosContratos() : null"
+                    [checked]="seleccionContratos.hasValue() && estanTodosSeleccionados()"
+                    [indeterminate]="seleccionContratos.hasValue() && !estanTodosSeleccionados()"
+                    [disabled]="contratosPorAprobarVisibles.length === 0"
+                    matTooltip="Seleccionar todos los contratos por aprobar"
+                    aria-label="Seleccionar todos los contratos pendientes de aprobación"
+                  >
+                  </mat-checkbox>
+                </th>
+                <td mat-cell *matCellDef="let row" class="celda-select">
+                  <mat-checkbox
+                    *ngIf="esContratoPorAprobar(row)"
+                    (click)="$event.stopPropagation()"
+                    (change)="$event ? seleccionContratos.toggle(row) : null"
+                    [checked]="seleccionContratos.isSelected(row)"
+                    [aria-label]="'Seleccionar contrato ' + (row.numero_contrato || row.id)"
+                  >
+                  </mat-checkbox>
+                  <mat-icon
+                    *ngIf="!esContratoPorAprobar(row) && tieneVoBoJefatura(row)"
+                    class="vobo-row-icon"
+                    matTooltip="Contrato con VoBo de Jefatura registrado"
+                  >
+                    verified
+                  </mat-icon>
+                </td>
+              </ng-container>
 
               <!-- No. Contrato (Identificador sobrio) -->
               <ng-container matColumnDef="numero_contrato">
@@ -353,6 +428,7 @@
                   <span class="status-pill" [ngClass]="getEstadoBadgeClass(row)">
                     <span class="status-dot"></span>
                     <span class="status-text">{{ getEstadoNombre(row) }}</span>
+                    <mat-icon *ngIf="tieneVoBoJefatura(row)" class="vobo-inline-icon" matTooltip="VoBo Oficial de Jefatura">verified</mat-icon>
                   </span>
                 </td>
               </ng-container>
@@ -400,8 +476,12 @@
                 </td>
               </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+              <tr mat-header-row *matHeaderRowDef="columnasVisibles"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: columnasVisibles"
+                [class.row-selected]="seleccionContratos.isSelected(row)"
+              ></tr>
             </table>
 
             <!-- Indicador de Carga -->

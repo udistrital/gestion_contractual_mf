@@ -112,4 +112,24 @@ describe('RegistroContratoComponent', () => {
       expect(component.pasosGuardados.has('estructura')).toBe(false);
     });
   });
+
+  describe('tituloVista', () => {
+    it('debe retornar "Registrar Contrato" cuando no está en editMode', () => {
+      fixture.componentRef.setInput('editMode', false);
+      expect(component.tituloVista).toBe('Registrar Contrato');
+    });
+
+    it('debe retornar "Edición del contrato {numero}" cuando está en editMode y tiene numero_contrato', () => {
+      fixture.componentRef.setInput('editMode', true);
+      component.contratoGeneral = { numero_contrato: 'CT-2026-089' } as any;
+      expect(component.tituloVista).toBe('Edición del contrato CT-2026-089');
+    });
+
+    it('debe retornar "Edición del contrato {id}" si tiene contratoGeneralId pero no numero_contrato', () => {
+      fixture.componentRef.setInput('editMode', true);
+      fixture.componentRef.setInput('contratoGeneralId', 42);
+      component.contratoGeneral = undefined;
+      expect(component.tituloVista).toBe('Edición del contrato 42');
+    });
+  });
 });

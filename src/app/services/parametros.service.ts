@@ -61,7 +61,7 @@ export class ParametrosService {
 
     getParametroPorPadreIdyTipoId(padreId: number, tipoId: number): ParametroResponse[] {
         const params = this.parametrosCache[tipoId];
-        return params.filter(p => p.ParametroPadreId?.Id === padreId);
+        return params ? params.filter(p => p.ParametroPadreId?.Id === padreId) : [];
     }
 
 }

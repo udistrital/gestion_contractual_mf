@@ -165,7 +165,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       if (this.loadedData() && this.contratoGeneral()) {
         this.setFormData();
       }
-    })
+    });
   }
 
   async ngOnInit() {
@@ -265,7 +265,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   private async loadInitialData(): Promise<void> {
-    this.parametrosService.getParametrosPorTipo(this.tiposParametrosRequeridos).then(
+    return this.parametrosService.getParametrosPorTipo(this.tiposParametrosRequeridos).then(
       (data: Record<number, ParametroResponse[]>) => {
         this.tiposCompromisos = data[environment.TIPO_COMPROMISO_ID];
         this.modalidadesSeleccion = data[environment.MODALIDAD_SELECCION_ID];
@@ -274,10 +274,8 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.unidadesEjecucion = data[environment.UNIDAD_EJECUCION_ID];
         this.loadedData.set(true);
         this.cdRef.detectChanges();
-      }).catch((error: any) => {
-        this.handleError(error)
-      }
-    );
+      })
+      .catch((err) => this.handleError(err));
   }
 
   private processRoles(): void {
@@ -420,7 +418,9 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   setFormData() {
-    const data = this.contratoGeneral()!;
+    const data = this.contratoGeneral();
+    if (!data) return;
+
     const formData = {
       unidadEjecutoraId: data.unidad_ejecutora_id,
       tipoCompromisoId: data.tipo_compromiso_id ?? 0,
@@ -429,9 +429,6 @@ export class PasoInfoGeneralComponent implements OnInit {
       fechaSuscripcionEstudios:
         data.fecha_suscripcion_estudios?.toLocaleString() ?? '',
       aplicaPoliza: data?.aplica_poliza ? '1' : '0',
-      //vigenciaConvenio: data?.vigencia_convenio || '',
-      //convenio: data?.convenio || '',
-      //nombreConvenio: data?.nombre_convenio || '',
       modalidadSeleccionId: data.modalidad_seleccion_id ?? 0,
       tipologiaEspecificaId: data.tipologia_especifica_id ?? 0,
       regimenContratacionId: data.regimen_contratacion_id ?? 0,
@@ -440,6 +437,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       unidadEjecucionId: data.unidad_ejecucion_id ?? 0,
     };
     this.formInfoGeneral.patchValue(formData);
+    this.cdRef.detectChanges();
     this.aplicarModoVisualizacion();
   }
 

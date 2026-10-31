@@ -1,4 +1,4 @@
-import { Component, effect, EventEmitter, inject, input, output, Output } from '@angular/core';
+import { Component, effect, EventEmitter, inject, input, OnChanges, output, Output } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalEspecificacionComponent } from './modal-especificacion/modal-especificacion.component';
@@ -30,6 +30,7 @@ export class PasoEspecificacionesComponent {
   ];
   editando: boolean = false;
   especificaciones: EspecificacionTecnica[] = [];
+  private contratoCargadoId: number | null = null;
 
   public readonly dialog = inject(MatDialog);
   private readonly alertService = inject(AlertService);
@@ -40,7 +41,7 @@ export class PasoEspecificacionesComponent {
       if (this.contratoGeneral()) {
         this.getEspecificaciones();
       }
-    })
+    });
   }
 
   /** En modo visualización se omite la columna de acciones. */
@@ -79,8 +80,11 @@ export class PasoEspecificacionesComponent {
   }
 
   getEspecificaciones() {
+    const contratoId = this.contratoGeneral()?.id;
+    if (!contratoId || this.contratoCargadoId === contratoId) return;
+    this.contratoCargadoId = contratoId;
     this.contratoGeneralCrudService
-      .getEspecificacionesTecnicas(this.contratoGeneral()?.id as number)
+      .getEspecificacionesTecnicas(contratoId)
       .subscribe({
         next: (response: ApiResponse<EspecificacionTecnica[]>) => {
           if (response.Success && response.Data.length > 0) {
