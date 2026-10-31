@@ -206,8 +206,8 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              gerOrdenadorGuardado: jest.fn().mockReturnValue(of({ Data: { ordenador_argo_id: 3 } })),
-              getCdpContrato: jest.fn().mockReturnValue(of({ Data: [] })),
+              getOrdenadores: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: [{ id: 5, ordenador_argo_id: 3 }] })),
+              getCdps: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: [] })),
             },
           },
           {
@@ -300,10 +300,11 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              getSolicitante: jest.fn().mockReturnValue(
-                of({ Data: { id: 1, sede_solicitante_id: 10, dependencia_solicitante_id: 20 } })
+              // El solicitante vive en contrato_general (modelo v2).
+              get: jest.fn().mockReturnValue(
+                of({ Success: true, Status: 200, Data: { id: 1, sede_solicitante_id: 10, dependencia_solicitante_id: 20 } })
               ),
-              getSupervisores: jest.fn().mockReturnValue(of({ Data: [supervisor(1), supervisor(2)] })),
+              getSupervisores: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: [supervisor(1), supervisor(2)] })),
             },
           },
           {
@@ -383,9 +384,10 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              getContratista: jest
+              // El contratista vive en contrato_general (modelo v2).
+              get: jest
                 .fn()
-                .mockReturnValue(of({ Success: true, Data: { id: '7', numero_documento: '1014285890' } })),
+                .mockReturnValue(of({ Success: true, Status: 200, Data: { id: 7, proveedor_numero_documento: '1014285890', tipo_persona_id: 1 } })),
             },
           },
         ],
@@ -668,7 +670,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              getEstadoActual: jest.fn().mockReturnValue(of({})),
+              getEstados: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: [] })),
               getEspecificacionesTecnicas: jest.fn().mockReturnValue(of({ Success: true, Data: [] })),
             },
           },
