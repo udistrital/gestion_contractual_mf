@@ -82,7 +82,9 @@ describe('PasoClausulasParagrafosComponent', () => {
         {
           provide: ContratoGeneralCrudService,
           useValue: {
-            getEstadoActual: jest.fn().mockReturnValue(of({ id: 1, estado_interno_parametro_id: 1 })),
+            getEstados: jest.fn().mockReturnValue(
+              of({ Success: true, Status: 200, Data: [{ id: 1, estado_interno_parametro_id: 1 }] })
+            ),
             getEspecificacionesTecnicas: jest.fn().mockReturnValue(of({ Success: true, Data: [] })),
           },
         },

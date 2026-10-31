@@ -6,6 +6,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
+import { environment } from 'src/environments/environment';
 import { MinutasMidService } from 'src/app/services/minuta-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
@@ -21,8 +23,12 @@ describe('RevisionContratoComponent', () => {
       .mockReturnValue(
         of({ Success: true, Status: 200, Data: { unidad_ejecutora_id: 1 } })
       ),
-    getEstados: jest.fn().mockReturnValue(of([])),
-    getDocumentoActual: jest.fn().mockReturnValue(of([])),
+    getEstados: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: [] })),
+    postEstadoContrato: jest.fn().mockReturnValue(of({ Success: true, Status: 201, Data: { id: 3 } })),
+  };
+
+  const mockGestionCrudService = {
+    getDocumentos: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: [] })),
   };
 
   const mockMinutasMidService = {
@@ -57,6 +63,7 @@ describe('RevisionContratoComponent', () => {
         { provide: MatDialog, useValue: { open: jest.fn() } },
         { provide: AlertService, useValue: mockAlertService },
         { provide: ContratoGeneralCrudService, useValue: mockCrudService },
+        { provide: GestionContractualCrudService, useValue: mockGestionCrudService },
         { provide: ContratoGeneralMidService, useValue: {} },
         { provide: GestorDocumentalService, useValue: mockGestorDocumentalService },
         { provide: MinutasMidService, useValue: mockMinutasMidService },
@@ -71,5 +78,45 @@ describe('RevisionContratoComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  describe('CRUD Beego v2 (#390)', () => {
+    beforeEach(() => {
+      component.contrato_general_id = 42;
+      jest.clearAllMocks();
+    });
+
+    it('consulta los estados del contrato del más reciente al más antiguo', () => {
+      component.cargarDatosIniciales();
+      expect(mockCrudService.getEstados).toHaveBeenCalledWith({
+        query: 'contrato_general_id.id:42,activo:true',
+        sortby: 'fecha_creacion,id',
+        order: 'desc',
+        limit: 0,
+      });
+    });
+
+    it('toma la minuta vigente por entidad_tipo, entidad_id y tipo, la más reciente', () => {
+      mockGestionCrudService.getDocumentos.mockReturnValueOnce(
+        of({ Success: true, Status: 200, Data: [{ id: 9, documento_enlace: 'uid-9' }] })
+      );
+      component.getMinuta();
+      expect(mockGestionCrudService.getDocumentos).toHaveBeenCalledWith({
+        query:
+          'entidad_tipo:contrato_general,entidad_id:42,' +
+          `tipo_documento_id:${environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA},activo:true`,
+        sortby: 'fecha_creacion,id',
+        order: 'desc',
+        limit: 1,
+      });
+      expect(mockGestorDocumentalService.getDocumento).toHaveBeenCalledWith('uid-9');
+    });
+
+    it('el estado registrado se reconoce por Data.id de la respuesta del CRUD', () => {
+      const crear = jest.spyOn(component, 'crearEstadoContrato').mockImplementation();
+      const estado: any = { contrato_general_id: 42, estado_parametro_id: 6773, estado_interno_parametro_id: 6800 };
+      component.crearEstadoAutomaticoContrato(estado, 6801);
+      expect(crear).toHaveBeenCalled();
+    });
   });
 });

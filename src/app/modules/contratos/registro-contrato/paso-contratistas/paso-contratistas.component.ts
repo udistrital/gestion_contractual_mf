@@ -21,7 +21,7 @@ import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-cr
 import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { ApiResponse, ContratistaCRUD, ContratistaResponse, ContratoGeneral, DatosContratista, ProveedorObject } from 'src/app/types/types';
+import { ApiResponse, ContratistaResponse, ContratoGeneral, DatosContratista, ProveedorObject } from 'src/app/types/types';
 import { AlertService } from 'src/app/services/alert.service';
 
 
@@ -35,7 +35,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   nextStep = output<void>();
   stepCompleted = output<boolean>();
 
-  private contratistaId: string | null = null;
+  private contratistaId: number | null = null;
   contratoGeneral = input<ContratoGeneral>();
   contratistaPrevalidado = input<any>();
   bloquearContratista = input<boolean>(false);
@@ -309,8 +309,9 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       (this.contratoGeneral() as any)?.contratista?.identificacion ||
       (this.contratoGeneral() as any)?.numero_documento;
 
+    // El contratista vive en contrato_general (modelo v2).
     this.contratoGeneralCrudService
-      .getContratista(contratoId)
+      .get(contratoId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -319,11 +320,11 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response: any) => {
-          const contratista =
-            response?.Data || (response?.numero_documento ? response : null);
-          const doc = contratista?.numero_documento || docFallback;
-          if (contratista?.id) {
-            this.contratistaId = contratista.id;
+          const documentoGuardado = response?.Data?.proveedor_numero_documento;
+          const contratista = documentoGuardado ? response.Data : null;
+          const doc = documentoGuardado || docFallback;
+          if (contratista) {
+            this.contratistaId = contratoId;
           }
           if (doc) {
             this.form.patchValue({
@@ -367,19 +368,14 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       (this.datosContratista as any).tipo_persona_id ||
       1;
 
-    const datosContratista: ContratistaCRUD = {
-      numero_documento: doc,
-      tipo_persona_id: tipoPersonaId,
-      contrato_general_id: this.contratoGeneral()?.id!,
-    };
-
-    if (this.contratistaId) {
-      datosContratista.id = this.contratistaId;
-    }
-
-    const request$ = this.contratistaId
-      ? this.contratoGeneralCrudService.putContratista(datosContratista)
-      : this.contratoGeneralCrudService.postContratista(datosContratista);
+    // El contratista se guarda en contrato_general (PUT parcial).
+    const request$ = this.contratoGeneralCrudService.put(
+      this.contratoGeneral()?.id!,
+      {
+        proveedor_numero_documento: String(doc),
+        tipo_persona_id: Number(tipoPersonaId),
+      }
+    );
 
     request$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (response: any) => {

@@ -121,7 +121,12 @@ export class PasoGarantiasComponent implements OnInit {
   private async loadSavedData(): Promise<void> {
     if (this.contratoGeneral()) {
       const response = await firstValueFrom(
-        this.polizasService.getAmparos(this.contratoGeneral()?.id as number)
+        this.polizasService.getAmparos({
+          query: `contrato_general_id.id:${this.contratoGeneral()?.id},activo:true`,
+          sortby: 'id',
+          order: 'asc',
+          limit: 0,
+        })
       );
 
       if (response.Success && response.Data.length > 0) {

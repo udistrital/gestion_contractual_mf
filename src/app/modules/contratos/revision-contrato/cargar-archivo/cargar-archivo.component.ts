@@ -4,7 +4,7 @@ import { GestorDocumentalService } from 'src/app/services/gestor-documental.serv
 import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 import { DocumentoContrato } from 'src/app/types/types';
-import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 
 @Component({
     selector: 'app-subir-archivo',
@@ -24,7 +24,7 @@ export class SubirArchivoComponent {
     public dialogRef: MatDialogRef<SubirArchivoComponent>,
     private gestorDocumentalService: GestorDocumentalService,
     private alertService: AlertService,
-    private contratoGeneralCrudService: ContratoGeneralCrudService
+    private gestionContractualCrudService: GestionContractualCrudService
   ) {
     this.textos = data.textos;
   }
@@ -103,18 +103,19 @@ export class SubirArchivoComponent {
 
     const documentoContrato: DocumentoContrato = {
       tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
-      contrato_general_id,
+      entidad_tipo: 'contrato_general',
+      entidad_id: contrato_general_id,
       usuario_id,
       usuario_rol,
       documento_id,
       documento_enlace,
     };
 
-    this.contratoGeneralCrudService
-      .postDocumentoContrato(documentoContrato)
+    this.gestionContractualCrudService
+      .postDocumento(documentoContrato)
       .subscribe({
         next: (response: any) => {
-          if (response.id) {
+          if (response?.Data?.id) {
             this.alertService.showSuccessAlert(
               'El documento del contrato se ha guardado exitosamente'
             );

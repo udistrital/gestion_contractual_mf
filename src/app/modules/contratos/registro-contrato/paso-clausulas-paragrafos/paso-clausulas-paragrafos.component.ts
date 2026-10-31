@@ -167,16 +167,24 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     if (!cId || cId <= 0 || this.estadoActualCargadoId === cId) return;
     this.estadoActualCargadoId = cId;
 
-    this.contratoGeneralCrudService.getEstadoActual(cId).subscribe({
-      next: (response: any) => {
-        if (response && (response.id || response.Id)) {
-          this.estadoInternoActual = response.estado_interno_parametro_id || response.EstadoInternoParametroId || 0;
-        }
-      },
-      error: (error) => {
-        console.warn('Estado actual no encontrado o pendiente de registrar:', error);
-      },
-    });
+    this.contratoGeneralCrudService
+      .getEstados({
+        query: `contrato_general_id.id:${cId},actual:true,activo:true`,
+        sortby: 'fecha_creacion,id',
+        order: 'desc',
+        limit: 1,
+      })
+      .subscribe({
+        next: (response: any) => {
+          const estado = response?.Data?.[0];
+          if (estado?.id) {
+            this.estadoInternoActual = estado.estado_interno_parametro_id || 0;
+          }
+        },
+        error: (error) => {
+          console.warn('Estado actual no encontrado o pendiente de registrar:', error);
+        },
+      });
   }
 
   get clausulas(): FormArray {
@@ -1657,7 +1665,10 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     // 2. Especificaciones Técnicas
     if (this.especificacionesList.length === 0 && this.contratoGeneral()?.id) {
       this.contratoGeneralCrudService
-        ?.getEspecificacionesTecnicas?.(this.contratoGeneral()?.id as number)
+        ?.getEspecificacionesTecnicas?.({
+          query: `contrato_general_id.id:${this.contratoGeneral()?.id},activo:true`,
+          limit: 0,
+        })
         ?.subscribe?.({
           next: (res: any) => {
             if (res?.Success && Array.isArray(res?.Data) && res.Data.length > 0) {

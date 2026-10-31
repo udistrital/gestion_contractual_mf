@@ -27,9 +27,11 @@ describe('PasoContratistasComponent', () => {
   };
 
   const mockContratoGeneralCrudService = {
-    getContratista: jest.fn().mockReturnValue(of({ Success: false })),
-    postContratista: jest.fn().mockReturnValue(of({ Success: true, Data: { id: '1' } })),
-    putContratista: jest.fn().mockReturnValue(of({ Success: true, Data: { id: '1' } })),
+    // El contratista vive en contrato_general (modelo v2).
+    get: jest.fn().mockReturnValue(
+      of({ Success: true, Status: 200, Data: { id: 105, proveedor_numero_documento: null } })
+    ),
+    put: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: { id: 105 } })),
   };
 
   beforeEach(async () => {
@@ -119,12 +121,10 @@ describe('PasoContratistasComponent', () => {
 
     component.guardarYContinuar();
 
-    expect(mockContratoGeneralCrudService.postContratista).toHaveBeenCalledWith(
-      expect.objectContaining({
-        numero_documento: '1014285890',
-        contrato_general_id: 105,
-      })
-    );
+    expect(mockContratoGeneralCrudService.put).toHaveBeenCalledWith(105, {
+      proveedor_numero_documento: '1014285890',
+      tipo_persona_id: 1,
+    });
     expect(mockAlertService.showSuccessAlert).toHaveBeenCalled();
   });
 });
