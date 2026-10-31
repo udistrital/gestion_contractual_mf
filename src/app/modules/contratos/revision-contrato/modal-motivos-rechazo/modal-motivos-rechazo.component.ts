@@ -58,7 +58,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
     this.contratoGeneralCrudService
       .postEstadoContrato(estado)
       .subscribe((res: any) => {
-        if (res.id) {
+        if (res?.Data?.id) {
           this.dialogRef.close({ rechazado: true });
         } else {
           this.dialogRef.close({ rechazado: false });

@@ -45,6 +45,14 @@ export interface ContratoGeneral {
   dependencia_solicitante_id?: number | null;
 }
 
+/** Consulta de listas del CRUD Beego v2 (query=campo:valor,..., limit, sortby, order). */
+export interface ConsultaCrud {
+  query: string;
+  limit: number;
+  sortby?: string;
+  order?: string;
+}
+
 export interface CDPContratoCRUD {
   id?: number;
   numero_cdp_id: number;
@@ -74,13 +82,6 @@ export interface EstadoContrato {
   motivo?: string;
 }
 
-export interface ContratistaCRUD {
-  id?: string;
-  numero_documento: string;
-  tipo_persona_id: number;
-  contrato_general_id: number;
-}
-
 export interface SedeContratoMidResponse {
   Id: number;
   Nombre: string;
@@ -107,8 +108,10 @@ export interface EspecificacionTecnica {
   contrato_general_id?: number;
 }
 
+/** documento_contrato es polimórfico: entidad_tipo + entidad_id (contrato_general, poliza o acta_inicio). */
 export interface DocumentoContrato {
-  contrato_general_id: number;
+  entidad_tipo: 'contrato_general' | 'poliza' | 'acta_inicio';
+  entidad_id: number;
   tipo_documento_id: number;
   usuario_id?: number;
   usuario_rol?: string;
@@ -226,13 +229,6 @@ export interface CDPItem {
   Nombre: string;
 }
 
-export interface Solicitante {
-  id?: number;
-  dependencia_solicitante_id: number;
-  sede_solicitante_id: number;
-  contrato_general_id: number;
-}
-
 export interface SupervisorResponse {
   Success: boolean;
   Status: number;
@@ -255,15 +251,15 @@ export interface SupervisorData {
 
 export interface SupervisorToSave {
   id?: number;
-  supervisor_id: string;
+  supervisor_id: number | null;
   sede_legado: string;
   dependencia_legado: string;
   cargo_legado: string;
-  cargo_id: string;
-  documento: string;
-  digito_verificacion: string;
-  sede_id: string;
-  dependencia_id: string;
+  cargo_id: number | null;
+  documento: number | null;
+  digito_verificacion: number | null;
+  sede_id: number | null;
+  dependencia_id: number | null;
   contrato_general_id: number;
 }
 

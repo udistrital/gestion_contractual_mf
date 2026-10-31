@@ -213,10 +213,10 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
         };
 
         this.contratoGeneralCrudService
-          .gerOrdenadorGuardado(contratoGeneral.id as number)
+          .getOrdenadores(this.consultaOrdenador(contratoGeneral.id as number))
           .subscribe({
             next: (response: any) => {
-              const data = response?.Data ?? response;
+              const data = response?.Data?.[0];
               if (data && data.ordenador_argo_id) {
                 this.ordenadorGastoId = data.ordenador_argo_id;
                 this.setOrdenadorGuardado();
@@ -285,11 +285,22 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
         contrato_general_id: contratoId,
       };
 
-      // Realizar el POST al endpoint de OrdenadorContrato
-      await firstValueFrom(
-        this.contratoGeneralCrudService.postOrdenadorContrato(
-          ordenadorContratoData
+      // Un solo ordenador activo por contrato: se actualiza si ya existe.
+      const ordenadores = await firstValueFrom(
+        this.contratoGeneralCrudService.getOrdenadores(
+          this.consultaOrdenador(contratoId)
         )
+      );
+      const ordenadorGuardado = ordenadores?.Data?.[0];
+      await firstValueFrom(
+        ordenadorGuardado?.id
+          ? this.contratoGeneralCrudService.putOrdenadorContrato(
+              ordenadorGuardado.id,
+              ordenadorContratoData
+            )
+          : this.contratoGeneralCrudService.postOrdenadorContrato(
+              ordenadorContratoData
+            )
       );
 
       // Actualizar en el backend la información presupuestal
@@ -316,9 +327,22 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Ordenador activo del contrato, el más reciente primero. */
+  private consultaOrdenador(contratoId: number) {
+    return {
+      query: `contrato_general_id.id:${contratoId},activo:true`,
+      sortby: 'fecha_creacion,id',
+      order: 'desc',
+      limit: 1,
+    };
+  }
+
   private cargarCDPsContrato(contratoId: number) {
     this.contratoGeneralCrudService
-      .getCdpContrato(contratoId)
+      .getCdps({
+        query: `contrato_general_id.id:${contratoId},activo:true`,
+        limit: 0,
+      })
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
