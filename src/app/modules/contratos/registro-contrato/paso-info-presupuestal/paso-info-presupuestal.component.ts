@@ -202,7 +202,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
       this.cargandoPresupuestal = true;
         const formValues = {
           tipoGasto: contratoGeneral.tipo_gasto_id,
-          origenPresupuesto: contratoGeneral.origen_presupuestos_id,
+          origenPresupuesto: contratoGeneral.origen_presupuesto_id,
           temaGasto: contratoGeneral.tema_gasto_inversion_id,
           medioPago: contratoGeneral.medio_pago_id,
           tipoMoneda: contratoGeneral.tipo_moneda_id,
@@ -260,7 +260,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
       // Datos para la información presupuestal
       const formData = {
         tipo_gasto_id: this.form.get('tipoGasto')?.value,
-        origen_presupuestos_id: this.form.get('origenPresupuesto')?.value,
+        origen_presupuesto_id: this.form.get('origenPresupuesto')?.value,
         tema_gasto_inversion_id: this.form.get('temaGasto')?.value,
         medio_pago_id: this.form.get('medioPago')?.value,
         tipo_moneda_id: this.form.get('tipoMoneda')?.value,
@@ -363,7 +363,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
                 try {
                   const responseCDP = await firstValueFrom(
                     this.cdpsService.get(
-                      `cdps?vigencia=${cdpContrato.vigencia_cdp}&unidadEjecutora=${this.unidadEjecutora}&numeroDisponibilidad=${cdpContrato.numero_cdp_id}`
+                      `cdps?vigencia=${cdpContrato.vigencia_cdp_id}&unidadEjecutora=${this.unidadEjecutora}&numeroDisponibilidad=${cdpContrato.numero_cdp_id}`
                     )
                   );
 
@@ -543,7 +543,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
         (cdp) => ({
           numero_cdp_id: parseInt(cdp.numero_disponibilidad),
           fecha_registro: new Date(),
-          vigencia_cdp: parseInt(cdp.vigencia),
+          vigencia_cdp_id: parseInt(cdp.vigencia),
           contrato_general_id: contratoId,
           valor_a_tomar: this.parseNumero(cdp.valor_a_tomar ?? cdp.valor_contratacion),
         })

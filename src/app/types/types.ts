@@ -3,7 +3,7 @@ export interface ContratoGeneral {
   tipo_compromiso_id?: number;
   tipo_contrato_id?: number;
   perfil_contratista_id?: number;
-  fecha_suscripcion_estudios?: Date;
+  fecha_suscripcion_estudio?: Date;
   aplica_poliza?: boolean;
   modalidad_seleccion_id?: number;
   tipo_control_id?: number;
@@ -16,7 +16,7 @@ export interface ContratoGeneral {
   valor_pesos?: number;
   tipo_gasto_id?: number;
   origen_recursos_id?: number;
-  origen_presupuestos_id?: number;
+  origen_presupuesto_id?: number;
   tema_gasto_inversion_id?: number;
   valor_contrato_me?: number;
   valor_tasa_cambio?: number;
@@ -57,7 +57,7 @@ export interface CDPContratoCRUD {
   id?: number;
   numero_cdp_id: number;
   fecha_registro: Date;
-  vigencia_cdp: number;
+  vigencia_cdp_id: number;
   contrato_general_id: number | null;
   valor_a_tomar?: number;
 }

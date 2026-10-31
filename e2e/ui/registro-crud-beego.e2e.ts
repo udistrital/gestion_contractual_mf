@@ -29,8 +29,8 @@ const EVIDENCIAS = process.env.EVIDENCIAS_390_BEEGO ?? join(homedir(), 'argo_rep
  * EN PAUSA hasta que el CRUD Beego v2 se ajuste al MF (criterio del equipo: el CRUD se
  * adapta al MF; el MF ya no tiene adaptador). Con el CRUD de la rama de la #385 tal
  * como está, esta prueba falla. Ajustes que necesita el CRUD:
- *  - etiquetas json en snake_case con los nombres que usa el MF (p. ej.
- *    fecha_suscripcion_estudios, origen_presupuestos_id, vigencia_cdp, valor_a_tomar);
+ *  - etiquetas json en snake_case con los nombres de columna del modelo v2 (el MF ya
+ *    los usa); valor_a_tomar del CDP sigue abierto;
  *  - filtros por FK en snake_case (contrato_general_id.id:<id>) y FK en snake_case en
  *    cuerpos y respuestas (formato por confirmar);
  *  - lista vacía como [] (hoy [{}]) y Status numérico (hoy "200");

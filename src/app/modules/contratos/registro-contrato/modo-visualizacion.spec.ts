@@ -159,7 +159,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     it('calcula la estimación de término con los datos cargados', async () => {
       const conFecha = {
         ...contrato,
-        fecha_suscripcion_estudios: '2026-02-01T12:00:00',
+        fecha_suscripcion_estudio: '2026-02-01T12:00:00',
         plazo_ejecucion: 12,
       } as unknown as ContratoGeneral;
       await montar(true, conFecha, { [environment.UNIDAD_EJECUCION_ID]: [{ Id: 6, Nombre: 'MESES' }] });

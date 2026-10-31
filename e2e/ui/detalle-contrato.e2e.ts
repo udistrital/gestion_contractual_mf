@@ -54,7 +54,7 @@ const contrato = {
   tipo_compromiso_id: ORDEN_ID,
   tipo_contrato_id: 6541,
   perfil_contratista_id: null,
-  fecha_suscripcion_estudios: null,
+  fecha_suscripcion_estudio: null,
   aplica_poliza: true,
   modalidad_seleccion_id: 6571,
   tipo_control_id: TIPO_CONTROL_TECNICO,
@@ -69,7 +69,7 @@ const contrato = {
   valor_tasa_cambio: null,
   tipo_gasto_id: 6642,
   origen_recursos_id: 6651,
-  origen_presupuestos_id: 6661,
+  origen_presupuesto_id: 6661,
   tema_gasto_inversion_id: 6671,
   medio_pago_id: 6681,
   clausula_registro_presupuestal: true,
@@ -97,7 +97,7 @@ const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
     { id: 71, contrato_general_id: CONTRATO_ID, tercero_id: null, cargo_id: 12, documento_identidad: '19456789', resolucion: null, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
   ],
   disponibilidad_presupuestal: [
-    { id: 501, contrato_general_id: CONTRATO_ID, numero_cdp_id: 1234, vigencia_cdp: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
+    { id: 501, contrato_general_id: CONTRATO_ID, numero_cdp_id: 1234, vigencia_cdp_id: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
   ],
   supervisor_contrato: [
     { id: 61, contrato_general_id: CONTRATO_ID, supervisor_id: 7788, documento: 79865432, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },

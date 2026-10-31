@@ -95,7 +95,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
     const cdp = {
       numero_cdp_id: 1234,
       fecha_registro: new Date('2026-10-31T00:00:00Z'),
-      vigencia_cdp: 2026,
+      vigencia_cdp_id: 2026,
       contrato_general_id: 42,
       valor_a_tomar: 45000000,
     };
