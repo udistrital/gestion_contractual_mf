@@ -18,7 +18,7 @@ const API = 'https://autenticacion.portaloas.udistrital.edu.co/apioas';
 const EVIDENCIAS = process.env.EVIDENCIAS_390 ?? join(homedir(), 'argo_repos', 'evidencias-390');
 
 const menuPermitido = Buffer.from(
-  JSON.stringify([{ Url: `/contratos/detalle/${CONTRATO_ID}` }])
+  JSON.stringify([{ Url: `/contratos/detalle/${CONTRATO_ID}` }, { Url: '/contratos/gestionar' }])
 ).toString('base64');
 const usuario = Buffer.from(
   JSON.stringify({ user: { role: ['ABOGADO_CONTRATACION_RECTOR'] }, userService: { role: [] } })
@@ -115,6 +115,14 @@ const contrato = {
   fecha_creacion: '2026-10-20T15:04:11.000Z',
   fecha_modificacion: '2026-10-27T10:12:45.000Z',
   contratista: { id: 77, numero_documento: '1014285890', tipo_persona_id: 1 },
+};
+
+const contratoEnConsulta = {
+  ...contrato,
+  numero_contrato: 'OC-0042-2026',
+  vigencia: '2026',
+  estados: { estado_parametro_id: 6773, estado_interno_parametro_id: 6800, nombre_estado: 'Por suscribir', actual: true },
+  contratista: { nombre: 'INGRID PAOLA MORALES MORALES', numero_documento: '1014285890' },
 };
 
 const cdpCrud = {
@@ -248,6 +256,9 @@ function responder(route: Route): Promise<void> {
     return json({ id: 3, estado_parametro_id: 6773, estado_interno_parametro_id: 6799, actual: true, contrato_general_id: CONTRATO_ID });
 
   // gestion_contractual_mid
+  // Consulta de contratos: el contrato está en revisión del jefe (el abogado puede verlo, no editarlo).
+  if (ruta === 'gestion_contractual_mid/contratos-generales')
+    return json({ ...ok([contratoEnConsulta]), Metadata: { total: 1 } });
   if (ruta === 'gestion_contractual_mid/parametros') {
     const ids = (query.get('ids') ?? '').split(',').map(Number);
     return json(ok(Object.fromEntries(ids.map((id) => [id, PARAMETROS[id] ?? []]))));
@@ -562,4 +573,28 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
     expect(escrituras, 'peticiones de escritura').toEqual([]);
     expect(noSimuladas, 'peticiones sin simular').toEqual([]);
   });
+});
+
+test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulado)', async ({ browser }) => {
+  const ctx = await browser.newContext({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
+  await prepararContexto(ctx);
+  const consulta = await ctx.newPage();
+  try {
+    await consulta.goto('/contratos/gestionar');
+    const fila = consulta.locator('tr.mat-mdc-row', { hasText: 'INGRID PAOLA MORALES MORALES' });
+    await expect(fila).toBeVisible({ timeout: 30_000 });
+
+    await fila.getByRole('button', { name: 'Menú de acciones del contrato' }).click();
+    const menu = consulta.locator('.mat-mdc-menu-panel');
+    await expect(menu.getByRole('menuitem')).toHaveText([/Ver Contrato/, /Ver Detalle/, /Ver Historial/]);
+    await expect(menu.getByRole('menuitem', { name: /Ver Detalle/ }).locator('mat-icon')).toHaveText('article');
+    await consulta.screenshot({ path: join(EVIDENCIAS, '10-consulta-accion-ver-detalle.png') });
+
+    await menu.getByRole('menuitem', { name: /Ver Detalle/ }).click();
+    await expect(consulta).toHaveURL(new RegExp(`/contratos/detalle/${CONTRATO_ID}$`));
+    await expect(consulta.getByText('Detalle del Contrato').first()).toBeVisible();
+    await expect(consulta.locator('app-paso-info-general')).toContainText('Orden de Compra');
+  } finally {
+    await ctx.close();
+  }
 });
