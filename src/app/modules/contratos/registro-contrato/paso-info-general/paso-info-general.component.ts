@@ -426,8 +426,10 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipoCompromisoId: data.tipo_compromiso_id ?? 0,
       tipoContratoId: data.tipo_contrato_id ?? 0,
       perfilContratistaId: data.perfil_contratista_id ?? 0,
-      fechaSuscripcionEstudios:
-        data.fecha_suscripcion_estudio?.toLocaleString() ?? '',
+      // El CRUD Beego devuelve la fecha vacía como 0001-01-01.
+      fechaSuscripcionEstudios: String(data.fecha_suscripcion_estudio ?? '').startsWith('0001-01-01')
+        ? ''
+        : data.fecha_suscripcion_estudio?.toLocaleString() ?? '',
       aplicaPoliza: data?.aplica_poliza ? '1' : '0',
       modalidadSeleccionId: data.modalidad_seleccion_id ?? 0,
       tipologiaEspecificaId: data.tipologia_especifica_id ?? 0,
@@ -504,8 +506,11 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipo_compromiso_id: formData.tipoCompromisoId,
       tipo_contrato_id: formData.tipoContratoId,
       perfil_contratista_id: formData.perfilContratistaId,
-      fecha_suscripcion_estudio: formData.fechaSuscripcionEstudios,
-      aplica_poliza: formData.aplicaPoliza,
+      // Tipos del modelo v2: fecha ISO o null, bool y entero.
+      fecha_suscripcion_estudio: formData.fechaSuscripcionEstudios
+        ? new Date(formData.fechaSuscripcionEstudios).toISOString()
+        : null,
+      aplica_poliza: formData.aplicaPoliza === '1',
       vigencia_convenio: formData.vigenciaConvenio,
       convenio: formData.convenio,
       nombre_convenio: formData.nombreConvenio,
@@ -513,7 +518,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipologia_especifica_id: formData.tipologiaEspecificaId,
       regimen_contratacion_id: formData.regimenContratacionId,
       procedimiento_id: formData.procedimientoId,
-      plazo_ejecucion: formData.plazoEjecucion,
+      plazo_ejecucion: Number(formData.plazoEjecucion),
       unidad_ejecucion_id: formData.unidadEjecucionId,
       unidad_ejecutora_id: formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id,
     };
@@ -556,7 +561,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       this.roles.find((item) => item.includes('ABOGADO')) || 'ABOGADO';
     const usuarioId = await this.userService.getPersonaId().catch(() => 1);
     const estado: EstadoContrato = {
-      contrato_general_id: contratoId,
+      contrato_general_id: { id: contratoId },
       usuario_id: usuarioId,
       usuario_rol: rol,
       estado_parametro_id: this.estado_id,

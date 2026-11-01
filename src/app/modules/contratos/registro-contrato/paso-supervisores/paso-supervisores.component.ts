@@ -191,7 +191,7 @@ export class PasoSupervisoresComponent implements OnInit {
                 dependencia: depId,
                 codigoVerificacion: supervisor.digito_verificacion,
                 // Se guarda una sola vez en el contrato (ContratoGeneral.TipoControlId).
-                tipoControl: this.contratoGeneral()?.tipo_control_id ?? null,
+                tipoControl: this.contratoGeneral()?.tipo_control_id || null,
               });
             });
 
@@ -289,7 +289,7 @@ export class PasoSupervisoresComponent implements OnInit {
           documento: entero(this.supervisorLegacy[i].documento),
           sede_id: entero(supervisorGroup.get('sede')?.value),
           dependencia_id: entero(supervisorGroup.get('dependencia')?.value),
-          contrato_general_id: this.contratoGeneral()?.id as number
+          contrato_general_id: { id: this.contratoGeneral()?.id as number },
         };
 
         // Si ya existe un ID para este supervisor, actualizamos

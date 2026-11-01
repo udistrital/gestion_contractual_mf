@@ -45,6 +45,11 @@ export interface ContratoGeneral {
   dependencia_solicitante_id?: number | null;
 }
 
+/** FK del CRUD Beego v2: se envía y llega como objeto con el id (p. ej. contrato_general_id: { id: 42 }). */
+export interface ReferenciaCrud {
+  id: number;
+}
+
 /** Consulta de listas del CRUD Beego v2 (query=campo:valor,..., limit, sortby, order). */
 export interface ConsultaCrud {
   query: string;
@@ -58,7 +63,7 @@ export interface CDPContratoCRUD {
   numero_cdp_id: number;
   fecha_registro: Date;
   vigencia_cdp_id: number;
-  contrato_general_id: number | null;
+  contrato_general_id: ReferenciaCrud | null;
   valor_a_tomar?: number;
 }
 
@@ -74,7 +79,7 @@ export interface CDP {
 }
 
 export interface EstadoContrato {
-  contrato_general_id: number;
+  contrato_general_id: ReferenciaCrud;
   usuario_id: number;
   usuario_rol: string;
   estado_parametro_id: number;
@@ -105,7 +110,7 @@ export interface EspecificacionTecnica {
   cantidad: number;
   valor_unitario: number;
   valor_total: number;
-  contrato_general_id?: number;
+  contrato_general_id?: ReferenciaCrud;
 }
 
 /** documento_contrato es polimórfico: entidad_tipo + entidad_id (contrato_general, poliza o acta_inicio). */
@@ -221,7 +226,7 @@ export interface OrdenadorContratoData {
   resolucion?: string;
   documento_identidad: string;
   cargo_id: number;
-  contrato_general_id?: number;
+  contrato_general_id?: ReferenciaCrud;
 }
 
 export interface CDPItem {
@@ -260,7 +265,7 @@ export interface SupervisorToSave {
   digito_verificacion: number | null;
   sede_id: number | null;
   dependencia_id: number | null;
-  contrato_general_id: number;
+  contrato_general_id: ReferenciaCrud;
 }
 
 export interface Proveedor {

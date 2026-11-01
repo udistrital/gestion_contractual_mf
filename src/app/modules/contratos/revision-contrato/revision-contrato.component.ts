@@ -358,7 +358,7 @@ export class RevisionContratoComponent {
     }
 
     let estadoContrato: EstadoContrato = {
-      contrato_general_id: this.contrato_general_id,
+      contrato_general_id: { id: this.contrato_general_id },
       usuario_id: this.usuario_id,
       usuario_rol: rol,
       estado_parametro_id,
@@ -453,7 +453,8 @@ export class RevisionContratoComponent {
       .put(this.contrato_general_id, { numero_contrato: numeroContrato })
       .subscribe({
         next: (response: ApiResponse<any>) => {
-          if (response.Success && response.Status === 200) {
+          // El CRUD Beego responde Status como texto ("200"): basta con Success.
+          if (response.Success) {
             this.alertService.showSuccessAlert(
               `Número de contrato generado: ${numeroContrato}`
             );

@@ -206,7 +206,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           temaGasto: contratoGeneral.tema_gasto_inversion_id,
           medioPago: contratoGeneral.medio_pago_id,
           tipoMoneda: contratoGeneral.tipo_moneda_id,
-          valorContrato: contratoGeneral.valor_pesos?.toString(),
+          valorContrato: contratoGeneral.valor_pesos ? String(contratoGeneral.valor_pesos) : '',
           origenRecurso: contratoGeneral.origen_recursos_id,
           clausulaRegistroPresupuestal: contratoGeneral.clausula_registro_presupuestal,
           formaPago: contratoGeneral.modo_pago,
@@ -264,7 +264,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
         tema_gasto_inversion_id: this.form.get('temaGasto')?.value,
         medio_pago_id: this.form.get('medioPago')?.value,
         tipo_moneda_id: this.form.get('tipoMoneda')?.value,
-        valor_pesos: this.form.get('valorContrato')?.value,
+        valor_pesos: Number(this.form.get('valorContrato')?.value),
         origen_recursos_id: this.form.get('origenRecurso')?.value,
         clausula_registro_presupuestal: this.form.get('clausulaRegistroPresupuestal')?.value,
         modo_pago: this.form.get('formaPago')?.value,
@@ -282,7 +282,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           : 0,
         documento_identidad: this.documentoIdentidadOrdenador || '',
         cargo_id: this.cargoIdOrdenador || 0,
-        contrato_general_id: contratoId,
+        contrato_general_id: { id: contratoId },
       };
 
       // Un solo ordenador activo por contrato: se actualiza si ya existe.
@@ -544,7 +544,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           numero_cdp_id: parseInt(cdp.numero_disponibilidad),
           fecha_registro: new Date(),
           vigencia_cdp_id: parseInt(cdp.vigencia),
-          contrato_general_id: contratoId,
+          contrato_general_id: { id: contratoId },
           valor_a_tomar: this.parseNumero(cdp.valor_a_tomar ?? cdp.valor_contratacion),
         })
       );

@@ -65,7 +65,7 @@ export class ContratoGeneralCrudService {
   }
 
   postCdp(cdpData: CDPContratoCRUD): Observable<any> {
-    if (!cdpData.contrato_general_id) {
+    if (!cdpData.contrato_general_id?.id) {
       throw new Error(
         'No se ha especificado el contrato general asociado al CDP'
       );
