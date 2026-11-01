@@ -202,21 +202,21 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
       this.cargandoPresupuestal = true;
         const formValues = {
           tipoGasto: contratoGeneral.tipo_gasto_id,
-          origenPresupuesto: contratoGeneral.origen_presupuestos_id,
+          origenPresupuesto: contratoGeneral.origen_presupuesto_id,
           temaGasto: contratoGeneral.tema_gasto_inversion_id,
           medioPago: contratoGeneral.medio_pago_id,
           tipoMoneda: contratoGeneral.tipo_moneda_id,
-          valorContrato: contratoGeneral.valor_pesos?.toString(),
+          valorContrato: contratoGeneral.valor_pesos ? String(contratoGeneral.valor_pesos) : '',
           origenRecurso: contratoGeneral.origen_recursos_id,
           clausulaRegistroPresupuestal: contratoGeneral.clausula_registro_presupuestal,
           formaPago: contratoGeneral.modo_pago,
         };
 
         this.contratoGeneralCrudService
-          .gerOrdenadorGuardado(contratoGeneral.id as number)
+          .getOrdenadores(this.consultaOrdenador(contratoGeneral.id as number))
           .subscribe({
             next: (response: any) => {
-              const data = response?.Data ?? response;
+              const data = response?.Data?.[0];
               if (data && data.ordenador_argo_id) {
                 this.ordenadorGastoId = data.ordenador_argo_id;
                 this.setOrdenadorGuardado();
@@ -260,11 +260,11 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
       // Datos para la información presupuestal
       const formData = {
         tipo_gasto_id: this.form.get('tipoGasto')?.value,
-        origen_presupuestos_id: this.form.get('origenPresupuesto')?.value,
+        origen_presupuesto_id: this.form.get('origenPresupuesto')?.value,
         tema_gasto_inversion_id: this.form.get('temaGasto')?.value,
         medio_pago_id: this.form.get('medioPago')?.value,
         tipo_moneda_id: this.form.get('tipoMoneda')?.value,
-        valor_pesos: this.form.get('valorContrato')?.value,
+        valor_pesos: Number(this.form.get('valorContrato')?.value),
         origen_recursos_id: this.form.get('origenRecurso')?.value,
         clausula_registro_presupuestal: this.form.get('clausulaRegistroPresupuestal')?.value,
         modo_pago: this.form.get('formaPago')?.value,
@@ -282,14 +282,25 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           : 0,
         documento_identidad: this.documentoIdentidadOrdenador || '',
         cargo_id: this.cargoIdOrdenador || 0,
-        contrato_general_id: contratoId,
+        contrato_general_id: { id: contratoId },
       };
 
-      // Realizar el POST al endpoint de OrdenadorContrato
-      await firstValueFrom(
-        this.contratoGeneralCrudService.postOrdenadorContrato(
-          ordenadorContratoData
+      // Un solo ordenador activo por contrato: se actualiza si ya existe.
+      const ordenadores = await firstValueFrom(
+        this.contratoGeneralCrudService.getOrdenadores(
+          this.consultaOrdenador(contratoId)
         )
+      );
+      const ordenadorGuardado = ordenadores?.Data?.[0];
+      await firstValueFrom(
+        ordenadorGuardado?.id
+          ? this.contratoGeneralCrudService.putOrdenadorContrato(
+              ordenadorGuardado.id,
+              ordenadorContratoData
+            )
+          : this.contratoGeneralCrudService.postOrdenadorContrato(
+              ordenadorContratoData
+            )
       );
 
       // Actualizar en el backend la información presupuestal
@@ -316,9 +327,22 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Ordenador activo del contrato, el más reciente primero. */
+  private consultaOrdenador(contratoId: number) {
+    return {
+      query: `contrato_general_id.id:${contratoId},activo:true`,
+      sortby: 'fecha_creacion,id',
+      order: 'desc',
+      limit: 1,
+    };
+  }
+
   private cargarCDPsContrato(contratoId: number) {
     this.contratoGeneralCrudService
-      .getCdpContrato(contratoId)
+      .getCdps({
+        query: `contrato_general_id.id:${contratoId},activo:true`,
+        limit: 0,
+      })
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -339,7 +363,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
                 try {
                   const responseCDP = await firstValueFrom(
                     this.cdpsService.get(
-                      `cdps?vigencia=${cdpContrato.vigencia_cdp}&unidadEjecutora=${this.unidadEjecutora}&numeroDisponibilidad=${cdpContrato.numero_cdp_id}`
+                      `cdps?vigencia=${cdpContrato.vigencia_cdp_id}&unidadEjecutora=${this.unidadEjecutora}&numeroDisponibilidad=${cdpContrato.numero_cdp_id}`
                     )
                   );
 
@@ -519,8 +543,8 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
         (cdp) => ({
           numero_cdp_id: parseInt(cdp.numero_disponibilidad),
           fecha_registro: new Date(),
-          vigencia_cdp: parseInt(cdp.vigencia),
-          contrato_general_id: contratoId,
+          vigencia_cdp_id: parseInt(cdp.vigencia),
+          contrato_general_id: { id: contratoId },
           valor_a_tomar: this.parseNumero(cdp.valor_a_tomar ?? cdp.valor_contratacion),
         })
       );

@@ -3,7 +3,7 @@ export interface ContratoGeneral {
   tipo_compromiso_id?: number;
   tipo_contrato_id?: number;
   perfil_contratista_id?: number;
-  fecha_suscripcion_estudios?: Date;
+  fecha_suscripcion_estudio?: Date;
   aplica_poliza?: boolean;
   modalidad_seleccion_id?: number;
   tipo_control_id?: number;
@@ -16,7 +16,7 @@ export interface ContratoGeneral {
   valor_pesos?: number;
   tipo_gasto_id?: number;
   origen_recursos_id?: number;
-  origen_presupuestos_id?: number;
+  origen_presupuesto_id?: number;
   tema_gasto_inversion_id?: number;
   valor_contrato_me?: number;
   valor_tasa_cambio?: number;
@@ -37,14 +37,33 @@ export interface ContratoGeneral {
   unidad_ejecutora_id: number;
   estados?: any;
   contratista?: any;
+  // Modelo v2 (CRUD Beego): contratista y solicitante viven en contrato_general.
+  proveedor_numero_documento?: string;
+  tipo_persona_id?: number | null;
+  clase_proveedor_id?: number | null;
+  sede_solicitante_id?: number | null;
+  dependencia_solicitante_id?: number | null;
+}
+
+/** FK del CRUD Beego v2: se envía y llega como objeto con el id (p. ej. contrato_general_id: { id: 42 }). */
+export interface ReferenciaCrud {
+  id: number;
+}
+
+/** Consulta de listas del CRUD Beego v2 (query=campo:valor,..., limit, sortby, order). */
+export interface ConsultaCrud {
+  query: string;
+  limit: number;
+  sortby?: string;
+  order?: string;
 }
 
 export interface CDPContratoCRUD {
   id?: number;
   numero_cdp_id: number;
   fecha_registro: Date;
-  vigencia_cdp: number;
-  contrato_general_id: number | null;
+  vigencia_cdp_id: number;
+  contrato_general_id: ReferenciaCrud | null;
   valor_a_tomar?: number;
 }
 
@@ -60,19 +79,12 @@ export interface CDP {
 }
 
 export interface EstadoContrato {
-  contrato_general_id: number;
+  contrato_general_id: ReferenciaCrud;
   usuario_id: number;
   usuario_rol: string;
   estado_parametro_id: number;
   estado_interno_parametro_id: number;
   motivo?: string;
-}
-
-export interface ContratistaCRUD {
-  id?: string;
-  numero_documento: string;
-  tipo_persona_id: number;
-  contrato_general_id: number;
 }
 
 export interface SedeContratoMidResponse {
@@ -98,11 +110,13 @@ export interface EspecificacionTecnica {
   cantidad: number;
   valor_unitario: number;
   valor_total: number;
-  contrato_general_id?: number;
+  contrato_general_id?: ReferenciaCrud;
 }
 
+/** documento_contrato es polimórfico: entidad_tipo + entidad_id (contrato_general, poliza o acta_inicio). */
 export interface DocumentoContrato {
-  contrato_general_id: number;
+  entidad_tipo: 'contrato_general' | 'poliza' | 'acta_inicio';
+  entidad_id: number;
   tipo_documento_id: number;
   usuario_id?: number;
   usuario_rol?: string;
@@ -212,19 +226,12 @@ export interface OrdenadorContratoData {
   resolucion?: string;
   documento_identidad: string;
   cargo_id: number;
-  contrato_general_id?: number;
+  contrato_general_id?: ReferenciaCrud;
 }
 
 export interface CDPItem {
   Id: string;
   Nombre: string;
-}
-
-export interface Solicitante {
-  id?: number;
-  dependencia_solicitante_id: number;
-  sede_solicitante_id: number;
-  contrato_general_id: number;
 }
 
 export interface SupervisorResponse {
@@ -249,16 +256,16 @@ export interface SupervisorData {
 
 export interface SupervisorToSave {
   id?: number;
-  supervisor_id: string;
+  supervisor_id: number | null;
   sede_legado: string;
   dependencia_legado: string;
   cargo_legado: string;
-  cargo_id: string;
-  documento: string;
-  digito_verificacion: string;
-  sede_id: string;
-  dependencia_id: string;
-  contrato_general_id: number;
+  cargo_id: number | null;
+  documento: number | null;
+  digito_verificacion: number | null;
+  sede_id: number | null;
+  dependencia_id: number | null;
+  contrato_general_id: ReferenciaCrud;
 }
 
 export interface Proveedor {

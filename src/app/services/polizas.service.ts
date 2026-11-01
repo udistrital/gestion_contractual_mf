@@ -3,7 +3,8 @@ import { RequestManager } from '../managers/requestManager';
 import { Observable } from 'rxjs';
 import { GestorDocumentalService } from './gestor-documental.service';
 import { environment } from '../../environments/environment';
-import { ApiResponse, AmparoPolizaDto } from '../types/types';
+import { ApiResponse, AmparoPolizaDto, ConsultaCrud } from '../types/types';
+import { rutaConsulta } from './contrato-general-crud.service';
 
 /**
  * Consume pólizas y amparos a través de gestion_contractual_mid (endpoints
@@ -58,9 +59,10 @@ export class PolizasService {
     return this.requestManager.get(`polizas?query=${query}&limit=1`);
   }
   
-  getAmparos(contratoId: number): Observable<ApiResponse<AmparoPolizaDto[]>> {
+  /** amparo_poliza del CRUD Beego v2; el filtro lo arma quien consume. */
+  getAmparos(consulta: ConsultaCrud): Observable<ApiResponse<AmparoPolizaDto[]>> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get('amparos-polizas/contrato/' + contratoId);
+    return this.requestManager.get(rutaConsulta('amparo_poliza', consulta));
   }
 
   postPoliza(poliza: any): Observable<any> {

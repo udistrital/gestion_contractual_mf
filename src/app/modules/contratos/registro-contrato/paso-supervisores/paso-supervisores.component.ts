@@ -15,8 +15,11 @@ import {
   ApiResponse,
   ContratoGeneral,
   DependenciaContratoMidResponse,
-  SedeContratoMidResponse, Solicitante, SupervisorResponse, SupervisorToSave,
+  ParametroResponse,
+  SedeContratoMidResponse, SupervisorResponse, SupervisorToSave,
 } from 'src/app/types/types';
+import { environment } from 'src/environments/environment';
+import { ParametrosService } from 'src/app/services/parametros.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { AlertService } from 'src/app/services/alert.service';
@@ -60,6 +63,10 @@ export class PasoSupervisoresComponent implements OnInit {
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly ordenadoresSupervisoresMidService = inject(OrdenadoresSupervisoresContratacionMidService);
   private readonly cdRef = inject(ChangeDetectorRef);
+  private readonly parametrosService = inject(ParametrosService);
+
+  /** Opciones de "Tipo y Alcance del Control" (Parámetros, tipo 119). */
+  tiposControl: ParametroResponse[] = [];
 
   constructor() {
     this.form = this._formBuilder.group({
@@ -78,8 +85,19 @@ export class PasoSupervisoresComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarSedes();
+    this.cargarTiposControl();
     this.setupFormListeners();
     this.aplicarModoVisualizacion();
+  }
+
+  private cargarTiposControl(): void {
+    this.parametrosService
+      .getParametrosPorTipo([environment.TIPO_CONTROL_ID])
+      .then((parametros) => {
+        this.tiposControl = parametros[environment.TIPO_CONTROL_ID] ?? [];
+        this.cdRef.detectChanges();
+      })
+      .catch(() => console.log('No se pudieron cargar los tipos de control.'));
   }
 
   /** En modo visualización el formulario queda en solo lectura. */
@@ -96,16 +114,16 @@ export class PasoSupervisoresComponent implements OnInit {
     this.contratoCargadoId = contratoId;
     this.cargandoDatosGuardados = true;
 
-    // Cargar datos del solicitante
+    // Cargar datos del solicitante (viven en contrato_general, modelo v2)
     this.contratoGeneralCrudService
-      .getSolicitante(contratoId)
+      .get(contratoId)
       .subscribe({
         next: (response: any) => {
-          const data = response?.Data ?? response;
-          if (data && (data.sede_solicitante_id || data.dependencia_solicitante_id || data.id)) {
+          const data = response?.Data;
+          if (data && (data.sede_solicitante_id || data.dependencia_solicitante_id)) {
             const sedeId = data.sede_solicitante_id;
             const depId = data.dependencia_solicitante_id;
-            this.solicitanteId = data?.id as number;
+            this.solicitanteId = contratoId;
             this.solicitanteSaved = true;
 
             if (sedeId) {
@@ -126,7 +144,12 @@ export class PasoSupervisoresComponent implements OnInit {
 
     // Cargar supervisores
     this.contratoGeneralCrudService
-      .getSupervisores(contratoId)
+      .getSupervisores({
+        query: `contrato_general_id.id:${contratoId},activo:true`,
+        sortby: 'id',
+        order: 'asc',
+        limit: 0,
+      })
       .subscribe({
         next: (response: ApiResponse<SupervisorToSave[]>) => {
           const supervisores =
@@ -147,7 +170,7 @@ export class PasoSupervisoresComponent implements OnInit {
               if (!supervisorForm) return;
 
               this.supervisorLegacy[index] = {
-                documento: supervisor.documento,
+                documento: String(supervisor.documento),
                 sede_legado: supervisor.sede_legado,
                 dependencia_legado: supervisor.dependencia_legado,
                 cargo_legado: supervisor.cargo_legado,
@@ -167,6 +190,8 @@ export class PasoSupervisoresComponent implements OnInit {
                 sede: sedeId,
                 dependencia: depId,
                 codigoVerificacion: supervisor.digito_verificacion,
+                // Se guarda una sola vez en el contrato (ContratoGeneral.TipoControlId).
+                tipoControl: this.contratoGeneral()?.tipo_control_id || null,
               });
             });
 
@@ -197,42 +222,32 @@ export class PasoSupervisoresComponent implements OnInit {
       return;
     }
 
-    const solicitanteData: Solicitante = {
-      sede_solicitante_id: this.form.get('solicitante.sede')?.value,
-      dependencia_solicitante_id: this.form.get('solicitante.dependencia')
-        ?.value,
-      contrato_general_id: this.contratoGeneral()?.id as number,
-    };
-
-    if (this.solicitanteId) {
-      this.contratoGeneralCrudService
-        .patchSolicitante(this.solicitanteId, solicitanteData)
-        .subscribe({
-          next: (response: any) => {
-            this.solicitanteId = response.id;
+    // El solicitante se guarda en contrato_general (PUT parcial).
+    const contratoId = this.contratoGeneral()?.id as number;
+    this.contratoGeneralCrudService
+      .put(contratoId, {
+        sede_solicitante_id: Number(this.form.get('solicitante.sede')?.value),
+        dependencia_solicitante_id: Number(
+          this.form.get('solicitante.dependencia')?.value
+        ),
+      })
+      .subscribe({
+        next: () => {
+          const actualizado = !!this.solicitanteId;
+          this.solicitanteId = contratoId;
+          this.solicitanteSaved = true;
+          if (actualizado) {
             this.alertService.showSuccessAlert(
               'La información del solicitante se ha guardado correctamente'
             );
-          }, error: () => {
-            this.alertService.showErrorAlert(
-              'Ocurrió un error al guardar la información del solicitante'
-            );
           }
-        });
-    } else {
-      this.contratoGeneralCrudService
-        .postSolicitante(solicitanteData)
-        .subscribe({
-          next: (response: any) => {
-            this.solicitanteId = response.id;
-            this.solicitanteSaved = true;
-          }, error: () => {
-            this.alertService.showErrorAlert(
-              'Ocurrió un error al guardar la información del solicitante'
-            );
-          }
-        });
-    }
+        },
+        error: () => {
+          this.alertService.showErrorAlert(
+            'Ocurrió un error al guardar la información del solicitante'
+          );
+        },
+      });
 
     this.checkStepCompleted();
     this.cdRef.detectChanges();
@@ -261,17 +276,20 @@ export class PasoSupervisoresComponent implements OnInit {
       for (let i = 0; i < supervisoresArray.length; i++) {
         const supervisorGroup = supervisoresArray.at(i);
 
+        // Las columnas numéricas del CRUD se envían como enteros (null si no hay valor).
+        const entero = (valor: unknown): number | null =>
+          valor === null || valor === undefined || valor === '' ? null : Number(valor);
         const supervisorData: SupervisorToSave = {
-          supervisor_id: this.supervisorLegacy[i].documento, // TODO: Validar Supervisor ID
+          supervisor_id: entero(this.supervisorLegacy[i].documento), // TODO: Validar Supervisor ID
           sede_legado: this.supervisorLegacy[i].sede_legado,
           dependencia_legado: this.supervisorLegacy[i].dependencia_legado,
           cargo_legado: this.supervisorLegacy[i].cargo_legado,
-          cargo_id: supervisorGroup.get('cargoId')?.value, // TODO: Validar Cargo ID
-          digito_verificacion: supervisorGroup.get('codigoVerificacion')?.value,
-          documento: this.supervisorLegacy[i].documento,
-          sede_id: supervisorGroup.get('sede')?.value,
-          dependencia_id: supervisorGroup.get('dependencia')?.value,
-          contrato_general_id: this.contratoGeneral()?.id as number
+          cargo_id: entero(supervisorGroup.get('cargoId')?.value), // TODO: Validar Cargo ID
+          digito_verificacion: entero(supervisorGroup.get('codigoVerificacion')?.value),
+          documento: entero(this.supervisorLegacy[i].documento),
+          sede_id: entero(supervisorGroup.get('sede')?.value),
+          dependencia_id: entero(supervisorGroup.get('dependencia')?.value),
+          contrato_general_id: { id: this.contratoGeneral()?.id as number },
         };
 
         // Si ya existe un ID para este supervisor, actualizamos
@@ -280,7 +298,7 @@ export class PasoSupervisoresComponent implements OnInit {
 
         if (supervisorId) {
           promise = firstValueFrom(
-            this.contratoGeneralCrudService.patchSupervisor(
+            this.contratoGeneralCrudService.putSupervisor(
               supervisorId,
               supervisorData
             )
@@ -297,7 +315,18 @@ export class PasoSupervisoresComponent implements OnInit {
       const results = await Promise.all(supervisoresPromises);
 
       // Actualizar los IDs de los supervisores guardados
-      this.supervisoresIds = results.map(result => result.id);
+      this.supervisoresIds = results.map((result) => result?.Data?.id);
+
+      // "Tipo y Alcance del Control" se guarda en el contrato (uno para el contrato).
+      const tipoControl = supervisoresArray.at(0)?.get('tipoControl')?.value;
+      if (tipoControl) {
+        await firstValueFrom(
+          this.contratoGeneralCrudService.put(
+            this.contratoGeneral()?.id as number,
+            { tipo_control_id: Number(tipoControl) }
+          )
+        );
+      }
 
       this.checkStepCompleted();
 

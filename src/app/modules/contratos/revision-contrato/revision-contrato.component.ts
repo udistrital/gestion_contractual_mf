@@ -4,6 +4,7 @@ import { ModalMotivosRechazoComponent } from './modal-motivos-rechazo/modal-moti
 import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 import {
   EstadoContrato,
   DocumentoContrato,
@@ -50,6 +51,7 @@ export class RevisionContratoComponent {
     private route: ActivatedRoute,
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private gestionContractualCrudService: GestionContractualCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private gestorDocumentalService: GestorDocumentalService,
     private minutasMidService: MinutasMidService,
@@ -101,21 +103,23 @@ export class RevisionContratoComponent {
     if (!this.contrato_general_id) return;
     forkJoin({
       contrato: this.contratoGeneralCrudService.get(this.contrato_general_id),
-      estadosContrato: this.contratoGeneralCrudService.getEstados(
-        this.contrato_general_id
-      ),
+      // Estados del contrato, del más reciente al más antiguo.
+      estadosContrato: this.contratoGeneralCrudService.getEstados({
+        query: `contrato_general_id.id:${this.contrato_general_id},activo:true`,
+        sortby: 'fecha_creacion,id',
+        order: 'desc',
+        limit: 0,
+      }),
     }).subscribe({
       next: ({ contrato, estadosContrato }: any) => {
-        const contratoData = contrato?.Data || contrato;
+        const contratoData = contrato?.Data;
         if (contratoData) {
           this.unidad_ejecutora_id = contratoData.unidad_ejecutora_id || 1;
           this.vigencia = contratoData.vigencia || '';
           this.numero_contrato = contratoData.numero_contrato || '';
         }
 
-        const estados = Array.isArray(estadosContrato)
-          ? estadosContrato
-          : (estadosContrato?.Data || []);
+        const estados = estadosContrato?.Data || [];
 
         if (estados.length > 0) {
           this.estadoInternoActual =
@@ -149,13 +153,11 @@ export class RevisionContratoComponent {
     errorMessage: string
   ) {
     this.isLoading = true;
-    this.contratoGeneralCrudService
-      .getDocumentoActual(this.contrato_general_id, tipoDocumento)
+    this.gestionContractualCrudService
+      .getDocumentos(this.consultaDocumentoVigente(tipoDocumento))
       .subscribe({
         next: (documentos: any) => {
-          const docsList = Array.isArray(documentos)
-            ? documentos
-            : (documentos?.Data || []);
+          const docsList = documentos?.Data || [];
           const documentoActual = docsList[0];
           if (documentoActual?.documento_enlace) {
             this.gestorDocumentalService
@@ -183,18 +185,27 @@ export class RevisionContratoComponent {
       });
   }
 
+  /** Documento vigente del contrato para un tipo: el más reciente activo. */
+  private consultaDocumentoVigente(tipoDocumentoId: number) {
+    return {
+      query:
+        `entidad_tipo:contrato_general,entidad_id:${this.contrato_general_id},` +
+        `tipo_documento_id:${tipoDocumentoId},activo:true`,
+      sortby: 'fecha_creacion,id',
+      order: 'desc',
+      limit: 1,
+    };
+  }
+
   getMinuta() {
     this.isLoading = true;
-    this.contratoGeneralCrudService
-      .getDocumentoActual(
-        this.contrato_general_id,
-        environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA
+    this.gestionContractualCrudService
+      .getDocumentos(
+        this.consultaDocumentoVigente(environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA)
       )
       .subscribe({
         next: (documentos: any) => {
-          const docsList = Array.isArray(documentos)
-            ? documentos
-            : (documentos?.Data || []);
+          const docsList = documentos?.Data || [];
           const documentoActual = docsList[0];
           if (documentoActual?.documento_enlace) {
             this.gestorDocumentalService
@@ -241,16 +252,15 @@ export class RevisionContratoComponent {
   }
 
   getDocumentosPrecontractuales() {
-    this.contratoGeneralCrudService
-      .getDocumentoActual(
-        this.contrato_general_id,
-        environment.TIPO_DOCUMENTO_ID_PARAMETROS.DOCUMENTOS_PRECONTRACTUALES
+    this.gestionContractualCrudService
+      .getDocumentos(
+        this.consultaDocumentoVigente(
+          environment.TIPO_DOCUMENTO_ID_PARAMETROS.DOCUMENTOS_PRECONTRACTUALES
+        )
       )
       .subscribe({
         next: (documentos: any) => {
-          const docsList = Array.isArray(documentos)
-            ? documentos
-            : (documentos?.Data || []);
+          const docsList = documentos?.Data || [];
           const documentoActual = docsList[0];
           if (documentoActual?.documento_enlace) {
             this.gestorDocumentalService
@@ -348,7 +358,7 @@ export class RevisionContratoComponent {
     }
 
     let estadoContrato: EstadoContrato = {
-      contrato_general_id: this.contrato_general_id,
+      contrato_general_id: { id: this.contrato_general_id },
       usuario_id: this.usuario_id,
       usuario_rol: rol,
       estado_parametro_id,
@@ -371,7 +381,7 @@ export class RevisionContratoComponent {
       .postEstadoContrato(estadoContrato)
       .subscribe({
         next: (response: any) => {
-          if (response.id) {
+          if (response?.Data?.id) {
             estadoContrato.estado_parametro_id =
               environment.ESTADOS_GENERALES.SUSCRITO;
             estadoContrato.estado_interno_parametro_id = estado;
@@ -388,7 +398,7 @@ export class RevisionContratoComponent {
       .postEstadoContrato(estadoContrato)
       .subscribe({
         next: (response: any) => {
-          if (response.id) {
+          if (response?.Data?.id) {
             this.alertService.showSuccessAlert(
               this.textos.enviado,
               'CONTRATO ENVIADO'
@@ -443,7 +453,8 @@ export class RevisionContratoComponent {
       .put(this.contrato_general_id, { numero_contrato: numeroContrato })
       .subscribe({
         next: (response: ApiResponse<any>) => {
-          if (response.Success && response.Status === 200) {
+          // El CRUD Beego responde Status como texto ("200"): basta con Success.
+          if (response.Success) {
             this.alertService.showSuccessAlert(
               `Número de contrato generado: ${numeroContrato}`
             );

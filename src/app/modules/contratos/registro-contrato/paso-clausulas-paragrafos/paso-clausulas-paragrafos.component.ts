@@ -167,16 +167,24 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     if (!cId || cId <= 0 || this.estadoActualCargadoId === cId) return;
     this.estadoActualCargadoId = cId;
 
-    this.contratoGeneralCrudService.getEstadoActual(cId).subscribe({
-      next: (response: any) => {
-        if (response && (response.id || response.Id)) {
-          this.estadoInternoActual = response.estado_interno_parametro_id || response.EstadoInternoParametroId || 0;
-        }
-      },
-      error: (error) => {
-        console.warn('Estado actual no encontrado o pendiente de registrar:', error);
-      },
-    });
+    this.contratoGeneralCrudService
+      .getEstados({
+        query: `contrato_general_id.id:${cId},actual:true,activo:true`,
+        sortby: 'fecha_creacion,id',
+        order: 'desc',
+        limit: 1,
+      })
+      .subscribe({
+        next: (response: any) => {
+          const estado = response?.Data?.[0];
+          if (estado?.id) {
+            this.estadoInternoActual = estado.estado_interno_parametro_id || 0;
+          }
+        },
+        error: (error) => {
+          console.warn('Estado actual no encontrado o pendiente de registrar:', error);
+        },
+      });
   }
 
   get clausulas(): FormArray {
@@ -1657,7 +1665,10 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     // 2. Especificaciones Técnicas
     if (this.especificacionesList.length === 0 && this.contratoGeneral()?.id) {
       this.contratoGeneralCrudService
-        ?.getEspecificacionesTecnicas?.(this.contratoGeneral()?.id as number)
+        ?.getEspecificacionesTecnicas?.({
+          query: `contrato_general_id.id:${this.contratoGeneral()?.id},activo:true`,
+          limit: 0,
+        })
         ?.subscribe?.({
           next: (res: any) => {
             if (res?.Success && Array.isArray(res?.Data) && res.Data.length > 0) {
@@ -1833,7 +1844,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       const filasCdps = cdps
         .map((cdp) => {
           const noCdp = cdp.numero_disponibilidad || cdp.numero_cdp_id || 'N/A';
-          const vig = cdp.vigencia || cdp.vigencia_cdp || 'N/A';
+          const vig = cdp.vigencia || cdp.vigencia_cdp_id || 'N/A';
           const rubro = cdp.descripcion || cdp.rubro || cdp.nombre_dependencia || 'N/A';
           const val = cdp.valor_a_tomar !== undefined && cdp.valor_a_tomar !== null && cdp.valor_a_tomar !== ''
             ? Number(cdp.valor_a_tomar)
@@ -1887,7 +1898,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
         );
         render = render.replace(
           /\{\{\s*vigencia_cdp\s*\}\}/gi,
-          [...new Set(cdps.map((c) => c.vigencia || c.vigencia_cdp))].join(', ')
+          [...new Set(cdps.map((c) => c.vigencia || c.vigencia_cdp_id))].join(', ')
         );
         render = render.replace(
           /\{\{\s*rubro_cdp\s*\}\}/gi,
@@ -1898,7 +1909,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       // CASO UN SOLO CDP:
       const cdp = cdps[0];
       const noCdp = (cdp.numero_disponibilidad || cdp.numero_cdp_id || '').toString();
-      const vig = (cdp.vigencia || cdp.vigencia_cdp || '').toString();
+      const vig = (cdp.vigencia || cdp.vigencia_cdp_id || '').toString();
       const rubro = cdp.descripcion || cdp.rubro || cdp.nombre_dependencia || '';
 
       render = render.replace(/\{\{\s*numero_cdp_id\s*\}\}/gi, noCdp || '<span class="minuta-var-placeholder">[No. CDP]</span>');
