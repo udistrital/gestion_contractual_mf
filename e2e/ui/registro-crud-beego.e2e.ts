@@ -26,19 +26,10 @@ const CONTENEDOR_BD = process.env.CRUD_BEEGO_DB_CONTAINER ?? 'gestion_contractua
 const EVIDENCIAS = process.env.EVIDENCIAS_390_BEEGO ?? join(homedir(), 'argo_repos', 'evidencias-390-beego');
 
 /*
- * EN PAUSA hasta que el CRUD Beego v2 se ajuste al MF (criterio del equipo: el CRUD se
- * adapta al MF; el MF ya no tiene adaptador). Con el CRUD de la rama de la #385 tal
- * como está, esta prueba falla. Ajustes que necesita el CRUD:
- *  - etiquetas json en snake_case con los nombres de columna del modelo v2 (el MF ya
- *    los usa); valor_a_tomar del CDP sigue abierto;
- *  - filtros por FK en snake_case (contrato_general_id.id:<id>) y FK en snake_case en
- *    cuerpos y respuestas (formato por confirmar);
- *  - lista vacía como [] (hoy [{}]) y Status numérico (hoy "200");
- *  - null en columnas nulas (hoy 0, "" o 0001-01-01);
- *  - aceptar los tipos que envía el MF (números como texto en algunos campos, fechas).
- * Para volver a activarla: quitar esta línea y correr con CRUD_BEEGO_URL.
+ * Probada contra la rama feature/385-json-snake-case del CRUD (snake_case, [] en
+ * listas vacías y POST/PUT con el registro y su id). El MF maneja Status como
+ * texto, los valores cero y las FK como objeto { id }.
  */
-test.skip(true, 'En pausa: requiere que el CRUD Beego v2 exponga snake_case, [] , Status numérico y null (ver comentario)');
 test.skip(!CRUD_BEEGO_URL, 'Requiere CRUD_BEEGO_URL con el CRUD Beego v2 corriendo en local');
 
 const usuario = Buffer.from(
@@ -58,7 +49,7 @@ async function responder(route: Route): Promise<void> {
     peticionesAlCrud.push(`${route.request().method()} ${destino}`);
     const respuesta = await route.fetch({ url: destino });
     if (route.request().method() === 'POST' && ruta === 'gestion_contractual_crud/v1/contrato_general/') {
-      contratoId = (await respuesta.json()).Data.Id;
+      contratoId = (await respuesta.json()).Data.id;
     }
     return route.fulfill({ response: respuesta });
   }
@@ -95,6 +86,9 @@ const buscable = (seccion: Locator, label: string) =>
   seccion.locator('app-searchable-select', { hasText: label }).locator('mat-select');
 
 async function capturar(page: Page, archivo: string) {
+  // Deja terminar la animación del paso y el cierre de los modales antes de la captura.
+  await expect(page.locator('mat-dialog-container')).toHaveCount(0);
+  await page.waitForTimeout(1500);
   await page.screenshot({ path: join(EVIDENCIAS, `${archivo}.png`), fullPage: true });
 }
 

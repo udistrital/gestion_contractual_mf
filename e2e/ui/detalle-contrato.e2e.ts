@@ -15,8 +15,8 @@ import {
 /**
  * E2E de #390: detalle del contrato en solo lectura (/contratos/detalle/:id) con
  * backend SIMULADO. Ninguna petición sale a los servicios. gestion_contractual_crud
- * se responde en el formato que el CRUD Go/Beego v2 de la #385 debe devolver para el MF
- * (rutas /v1/<recurso>/, snake_case, Status numérico, [] en listas vacías, null en nulos); el MID y los demás
+ * se responde en el formato de la rama feature/385-json-snake-case del CRUD Go/Beego v2
+ * (rutas /v1/<recurso>/, snake_case, Status texto, [] vacías, ceros, FK { id }); el MID y los demás
  * servicios, con las simulaciones de e2e/support. Se verifica, paso por paso, que
  * los datos se ven, que los controles están deshabilitados, que no hay acciones de
  * edición y que el detalle no hace ningún POST, PUT, PATCH ni DELETE.
@@ -34,12 +34,14 @@ const usuario = Buffer.from(
 ).toString('base64');
 
 // ---------------------------------------------------------------------------
-// Datos simulados del contrato de prueba, en el formato que el CRUD Beego v2
-// debe devolver para el MF: snake_case, Status numérico, [] en listas vacías y
-// null en nulos. Las FK se simulan como id plano (formato por confirmar con el CRUD).
+// Datos simulados del contrato de prueba, en el formato de la rama
+// feature/385-json-snake-case del CRUD Beego v2: snake_case, Status como texto,
+// [] en listas vacías, ceros en vez de nulos y FK como objeto { id }.
 // ---------------------------------------------------------------------------
 
-const ok = (Data: unknown) => ({ Success: true, Status: 200, Message: 'Request successful', Data });
+const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
+const FECHA_CERO = '0001-01-01T00:00:00Z';
+const DEL_CONTRATO = { id: CONTRATO_ID };
 
 const ACTIVIDADES =
   '1. Entregar los equipos de laboratorio descritos en la ficha técnica. Entregable(s): Acta de entrega; Factura. Plazo/Periodicidad: 30 días.\n\n' +
@@ -48,13 +50,13 @@ const ACTIVIDADES =
 const contrato = {
   id: CONTRATO_ID,
   numero_contrato: null,
-  vigencia_id: null,
+  vigencia_id: 0,
   consecutivo_elaboracion: '27',
   unidad_ejecutora_id: 6818,
   tipo_compromiso_id: ORDEN_ID,
   tipo_contrato_id: 6541,
-  perfil_contratista_id: null,
-  fecha_suscripcion_estudio: null,
+  perfil_contratista_id: 0,
+  fecha_suscripcion_estudio: FECHA_CERO,
   aplica_poliza: true,
   modalidad_seleccion_id: 6571,
   tipo_control_id: TIPO_CONTROL_TECNICO,
@@ -65,8 +67,8 @@ const contrato = {
   unidad_ejecucion_id: 211,
   tipo_moneda_id: PESO_COLOMBIANO_ID,
   valor_pesos: 45000000,
-  valor_contrato_me: null,
-  valor_tasa_cambio: null,
+  valor_contrato_me: 0,
+  valor_tasa_cambio: 0,
   tipo_gasto_id: 6642,
   origen_recursos_id: 6651,
   origen_presupuesto_id: 6661,
@@ -77,14 +79,14 @@ const contrato = {
   objeto: '<p>Suministro e instalación de equipos para el laboratorio de electrónica de la Facultad de Ingeniería.</p>',
   justificacion: '<p>La Facultad requiere renovar los equipos del laboratorio para garantizar las prácticas académicas.</p>',
   actividades: ACTIVIDADES,
-  condiciones: null,
-  observaciones: null,
-  fecha_inicial: null,
-  fecha_final: null,
-  fecha_suscripcion: null,
+  condiciones: '',
+  observaciones: '',
+  fecha_inicial: FECHA_CERO,
+  fecha_final: FECHA_CERO,
+  fecha_suscripcion: FECHA_CERO,
   proveedor_numero_documento: '1014285890',
   tipo_persona_id: 1,
-  clase_proveedor_id: null,
+  clase_proveedor_id: 0,
   dependencia_solicitante_id: 20,
   sede_solicitante_id: 10,
   activo: true,
@@ -94,24 +96,24 @@ const contrato = {
 
 const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
   ordenador_contrato: [
-    { id: 71, contrato_general_id: CONTRATO_ID, tercero_id: null, cargo_id: 12, documento_identidad: '19456789', resolucion: null, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
+    { id: 71, contrato_general_id: DEL_CONTRATO, tercero_id: 0, cargo_id: 12, documento_identidad: '19456789', resolucion: '', ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
   ],
   disponibilidad_presupuestal: [
-    { id: 501, contrato_general_id: CONTRATO_ID, numero_cdp_id: 1234, vigencia_cdp_id: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
+    { id: 501, contrato_general_id: DEL_CONTRATO, numero_cdp_id: 1234, vigencia_cdp_id: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
   ],
   supervisor_contrato: [
-    { id: 61, contrato_general_id: CONTRATO_ID, supervisor_id: 7788, documento: 79865432, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
+    { id: 61, contrato_general_id: DEL_CONTRATO, supervisor_id: 7788, documento: 79865432, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
   ],
   especificacion_tecnica: [
-    { id: 801, contrato_general_id: CONTRATO_ID, descripcion: 'Osciloscopio digital de 4 canales 200 MHz', cantidad: 3, valor_unitario: 9500000, valor_total: 28500000, activo: true },
-    { id: 802, contrato_general_id: CONTRATO_ID, descripcion: 'Fuente de alimentación DC programable', cantidad: 5, valor_unitario: 3300000, valor_total: 16500000, activo: true },
+    { id: 801, contrato_general_id: DEL_CONTRATO, descripcion: 'Osciloscopio digital de 4 canales 200 MHz', cantidad: 3, valor_unitario: 9500000, valor_total: 28500000, activo: true },
+    { id: 802, contrato_general_id: DEL_CONTRATO, descripcion: 'Fuente de alimentación DC programable', cantidad: 5, valor_unitario: 3300000, valor_total: 16500000, activo: true },
   ],
   amparo_poliza: [
-    { id: 901, contrato_general_id: CONTRATO_ID, poliza_id: null, amparo_id: AMPARO_CUMPLIMIENTO, tipo_valor_amparo_id: 2, suficiencia: 20, valor: null, descripcion: 'Cumplimiento del contrato por el 20 % del valor', fecha_inicio: null, fecha_fin: null, activo: true },
-    { id: 902, contrato_general_id: CONTRATO_ID, poliza_id: null, amparo_id: AMPARO_CALIDAD, tipo_valor_amparo_id: 2, suficiencia: 10, valor: null, descripcion: 'Calidad de los bienes por el 10 % del valor', fecha_inicio: null, fecha_fin: null, activo: true },
+    { id: 901, contrato_general_id: DEL_CONTRATO, poliza_id: null, amparo_id: AMPARO_CUMPLIMIENTO, tipo_valor_amparo_id: 2, suficiencia: 20, valor: 0, descripcion: 'Cumplimiento del contrato por el 20 % del valor', fecha_inicio: FECHA_CERO, fecha_fin: FECHA_CERO, activo: true },
+    { id: 902, contrato_general_id: DEL_CONTRATO, poliza_id: null, amparo_id: AMPARO_CALIDAD, tipo_valor_amparo_id: 2, suficiencia: 10, valor: 0, descripcion: 'Calidad de los bienes por el 10 % del valor', fecha_inicio: FECHA_CERO, fecha_fin: FECHA_CERO, activo: true },
   ],
   estado_contrato: [
-    { id: 3, contrato_general_id: CONTRATO_ID, estado_parametro_id: 6773, estado_interno_parametro_id: 6799, actual: true, motivo: null, fecha_evento: null, usuario_id: 1, usuario_rol: 'ABOGADO_CONTRATACION_RECTOR', activo: true },
+    { id: 3, contrato_general_id: DEL_CONTRATO, estado_parametro_id: 6773, estado_interno_parametro_id: 6799, actual: true, motivo: '', fecha_evento: FECHA_CERO, usuario_id: 1, usuario_rol: 'ABOGADO_CONTRATACION_RECTOR', activo: true },
   ],
 };
 
@@ -128,7 +130,7 @@ function responderCrudBeego(route: Route, ruta: string, query: URLSearchParams):
   const json = (data: unknown) => route.fulfill({ status: 200, json: data });
   if (ruta === `gestion_contractual_crud/v1/contrato_general/${CONTRATO_ID}`) return json(ok(contrato));
   const lista = ruta.match(/^gestion_contractual_crud\/v1\/(\w+)\/$/);
-  // Filtro por FK en snake_case (sintaxis por confirmar con el CRUD).
+  // Filtro por FK en snake_case, verificado contra la rama del CRUD.
   if (lista && (query.get('query') ?? '').includes(`contrato_general_id.id:${CONTRATO_ID}`)) {
     consultasCrud.push(`${lista[1]}?${query.toString()}`);
     return json(ok(RECURSOS_DEL_CONTRATO[lista[1]] ?? []));
