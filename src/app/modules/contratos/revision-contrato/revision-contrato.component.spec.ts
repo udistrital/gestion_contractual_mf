@@ -21,14 +21,14 @@ describe('RevisionContratoComponent', () => {
     get: jest
       .fn()
       .mockReturnValue(
-        of({ Success: true, Status: 200, Data: { unidad_ejecutora_id: 1 } })
+        of({ Success: true, Status: '200', Data: { unidad_ejecutora_id: 1 } })
       ),
-    getEstados: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: [] })),
-    postEstadoContrato: jest.fn().mockReturnValue(of({ Success: true, Status: 201, Data: { id: 3 } })),
+    getEstados: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: [] })),
+    postEstadoContrato: jest.fn().mockReturnValue(of({ Success: true, Status: '201', Data: { id: 3 } })),
   };
 
   const mockGestionCrudService = {
-    getDocumentos: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: [] })),
+    getDocumentos: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: [] })),
   };
 
   const mockMinutasMidService = {
@@ -98,7 +98,7 @@ describe('RevisionContratoComponent', () => {
 
     it('toma la minuta vigente por entidad_tipo, entidad_id y tipo, la más reciente', () => {
       mockGestionCrudService.getDocumentos.mockReturnValueOnce(
-        of({ Success: true, Status: 200, Data: [{ id: 9, documento_enlace: 'uid-9' }] })
+        of({ Success: true, Status: '200', Data: [{ id: 9, documento_enlace: 'uid-9' }] })
       );
       component.getMinuta();
       expect(mockGestionCrudService.getDocumentos).toHaveBeenCalledWith({

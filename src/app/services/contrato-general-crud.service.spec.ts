@@ -14,12 +14,13 @@ jest.mock('sweetalert2', () => ({
 
 /**
  * Rutas /v1 del CRUD Beego v2 y filtros que arman los pasos. Las respuestas
- * simulan el formato que el CRUD debe devolver para el MF: snake_case, Status
- * numérico, [] en listas vacías y null en nulos. El MF no las transforma.
+ * tienen el formato de la rama feature/385-json-snake-case del CRUD: snake_case,
+ * Status como texto, [] en listas vacías, ceros en vez de nulos y FK como objeto
+ * { id }. El MF no las transforma.
  */
 const CRUD = `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}v1`;
-const ok = (Data: unknown) => ({ Success: true, Status: 200, Message: 'Request successful', Data });
-// Por confirmar con el CRUD: sintaxis del filtro por FK en snake_case.
+const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
+// Filtro por FK verificado contra la rama feature/385-json-snake-case.
 const DEL_CONTRATO = 'contrato_general_id.id:42,activo:true';
 
 describe('rutaConsulta', () => {
@@ -56,7 +57,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   afterEach(() => http.verify());
 
   it('1. GET /v1/contrato_general/{id} y entrega la respuesta tal cual', () => {
-    const contrato = { id: 42, objeto: 'Compra', tipo_control_id: null, sede_solicitante_id: 10 };
+    const contrato = { id: 42, objeto: 'Compra', tipo_control_id: 0, fecha_suscripcion: '0001-01-01T00:00:00Z', sede_solicitante_id: 10 };
     let respuesta: any;
     crud.get(42).subscribe((r) => (respuesta = r));
     const req = http.expectOne(`${CRUD}/contrato_general/42`);
@@ -96,7 +97,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       numero_cdp_id: 1234,
       fecha_registro: new Date('2026-10-31T00:00:00Z'),
       vigencia_cdp_id: 2026,
-      contrato_general_id: 42,
+      contrato_general_id: { id: 42 },
       valor_a_tomar: 45000000,
     };
     crud.postCdp(cdp).subscribe();
@@ -127,7 +128,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
 
   it('11. POST de estado (el CRUD lo marca como actual)', () => {
     const estado = {
-      contrato_general_id: 42,
+      contrato_general_id: { id: 42 },
       usuario_id: 1,
       usuario_rol: 'ABOGADO_CONTRATACION_RECTOR',
       estado_parametro_id: 6773,
@@ -144,7 +145,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
     crud.getEspecificacionesTecnicas({ query: DEL_CONTRATO, limit: 0 }).subscribe();
     http.expectOne(`${CRUD}/especificacion_tecnica/?query=${DEL_CONTRATO}&limit=0`).flush(ok([]));
 
-    crud.postEspecificacionTecnica({ descripcion: 'Osciloscopio', contrato_general_id: 42 }).subscribe();
+    crud.postEspecificacionTecnica({ descripcion: 'Osciloscopio', contrato_general_id: { id: 42 } }).subscribe();
     const post = http.expectOne(`${CRUD}/especificacion_tecnica/`);
     expect(post.request.method).toBe('POST');
     post.flush(ok({ id: 1 }));
@@ -181,7 +182,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       ordenador_sicapital_id: 1001,
       documento_identidad: '19456789',
       cargo_id: 12,
-      contrato_general_id: 42,
+      contrato_general_id: { id: 42 },
     };
     crud.getOrdenadores({ query: DEL_CONTRATO, sortby: 'fecha_creacion,id', order: 'desc', limit: 1 }).subscribe();
     http.expectOne(`${CRUD}/ordenador_contrato/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
@@ -209,7 +210,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       digito_verificacion: 1,
       sede_id: 10,
       dependencia_id: 20,
-      contrato_general_id: 42,
+      contrato_general_id: { id: 42 },
     };
     crud.getSupervisores({ query: DEL_CONTRATO, sortby: 'id', order: 'asc', limit: 0 }).subscribe();
     http.expectOne(`${CRUD}/supervisor_contrato/?query=${DEL_CONTRATO}&sortby=id&order=asc&limit=0`).flush(ok([]));

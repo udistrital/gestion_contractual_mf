@@ -8,16 +8,19 @@ import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-cr
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import { RolService } from 'src/app/services/rol.service';
+import { UserService } from 'src/app/services/user.service';
+import { PasoInfoGeneralComponent } from './paso-info-general/paso-info-general.component';
 import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-info-presupuestal.component';
 import { PasoSupervisoresComponent } from './paso-supervisores/paso-supervisores.component';
 
 /**
  * Guardado de los pasos contra el CRUD Beego v2 (#390): los filtros se arman
- * en el paso y las respuestas vienen en el formato que el CRUD debe devolver
- * (snake_case, Status numérico, [] en listas vacías).
+ * en el paso y las respuestas tienen el formato de la rama feature/385-json-snake-case
+ * (snake_case, Status como texto, [] en listas vacías, ceros en vez de nulos, FK { id }).
  */
 
-const ok = (Data: unknown) => ({ Success: true, Status: 200, Message: 'Request successful', Data });
+const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
 const DEL_CONTRATO = 'contrato_general_id.id:42,activo:true';
 
 const alertServiceMock = () => ({
@@ -28,7 +31,66 @@ const alertServiceMock = () => ({
 
 const contrato: any = { id: 42, unidad_ejecutora_id: 1, valor_pesos: 1000000, tipo_control_id: 6611 };
 
+const FECHA_CERO = '0001-01-01T00:00:00Z';
+
 describe('Guardado de los pasos con el CRUD Beego v2', () => {
+  describe('PasoInfoGeneralComponent: valores cero y tipos del modelo v2', () => {
+    let component: PasoInfoGeneralComponent;
+    let crud: Record<string, jest.Mock>;
+
+    async function montar(datos: any) {
+      crud = {
+        post: jest.fn().mockReturnValue(of({ Success: true, Status: '201', Data: { id: 42 } })),
+        postEstadoContrato: jest.fn().mockReturnValue(of({ Success: true, Status: '201', Data: { id: 3 } })),
+      };
+      TestBed.configureTestingModule({
+        declarations: [PasoInfoGeneralComponent],
+        providers: [
+          { provide: AlertService, useValue: alertServiceMock() },
+          { provide: RolService, useValue: { getRol: () => ['ABOGADO_CONTRATACION_RECTOR'] } },
+          {
+            provide: ParametrosService,
+            useValue: {
+              getParametrosPorTipo: jest.fn().mockResolvedValue({}),
+              getParametroPorPadreIdyTipoId: jest.fn().mockReturnValue([]),
+            },
+          },
+          { provide: ContratoGeneralCrudService, useValue: crud },
+          { provide: ContratoGeneralMidService, useValue: {} },
+          { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
+        ],
+        schemas: [NO_ERRORS_SCHEMA],
+      });
+      const fixture = TestBed.createComponent(PasoInfoGeneralComponent);
+      component = fixture.componentInstance;
+      fixture.componentRef.setInput('contratoGeneral', datos);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    it('la fecha cero del CRUD (0001-01-01) se muestra vacía', async () => {
+      await montar({ ...contrato, fecha_suscripcion_estudio: FECHA_CERO, aplica_poliza: false });
+      expect(component.formInfoGeneral.get('fechaSuscripcionEstudios')?.value).toBe('');
+      expect(component.formInfoGeneral.get('aplicaPoliza')?.value).toBe('0');
+    });
+
+    it('envía aplica_poliza como bool, plazo como entero y la fecha vacía como null', async () => {
+      await montar({ ...contrato, fecha_suscripcion_estudio: FECHA_CERO });
+      component.formInfoGeneral.patchValue({ aplicaPoliza: '1', plazoEjecucion: '6' as any });
+      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
+      component.guardarContrato('27', 1);
+      expect(crud['post']).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aplica_poliza: true,
+          plazo_ejecucion: 6,
+          fecha_suscripcion_estudio: null,
+          consecutivo_elaboracion: '27',
+        })
+      );
+    });
+  });
+
   describe('PasoInfoPresupuestalComponent: un solo ordenador activo', () => {
     let fixture: ComponentFixture<PasoInfoPresupuestalComponent>;
     let component: PasoInfoPresupuestalComponent;
@@ -96,17 +158,23 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       await component.guardarYContinuar();
       expect(crud['putOrdenadorContrato']).toHaveBeenCalledWith(
         7,
-        expect.objectContaining({ ordenador_argo_id: 3, contrato_general_id: 42 })
+        expect.objectContaining({ ordenador_argo_id: 3, contrato_general_id: { id: 42 } })
       );
       expect(crud['postOrdenadorContrato']).not.toHaveBeenCalled();
       expect(crud['put']).toHaveBeenCalledWith(42, expect.any(Object));
+    });
+
+    it('envía valor_pesos como número y el ordenador con contrato_general_id { id }', async () => {
+      await montar([]);
+      await component.guardarYContinuar();
+      expect(crud['put']).toHaveBeenCalledWith(42, expect.objectContaining({ valor_pesos: 1000000 }));
     });
 
     it('si no hay ordenador activo lo crea con POST', async () => {
       await montar([]);
       await component.guardarYContinuar();
       expect(crud['postOrdenadorContrato']).toHaveBeenCalledWith(
-        expect.objectContaining({ ordenador_argo_id: 3, contrato_general_id: 42 })
+        expect.objectContaining({ ordenador_argo_id: 3, contrato_general_id: { id: 42 } })
       );
       expect(crud['putOrdenadorContrato']).not.toHaveBeenCalled();
     });
@@ -217,7 +285,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
           digito_verificacion: 3,
           sede_id: 10,
           dependencia_id: 20,
-          contrato_general_id: 42,
+          contrato_general_id: { id: 42 },
         })
       );
       expect(crud['postSupervisor']).not.toHaveBeenCalled();
@@ -235,7 +303,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       jest.spyOn(component.form.get('supervisores')!, 'invalid', 'get').mockReturnValue(false);
       await component.guardarSupervisores();
       expect(crud['postSupervisor']).toHaveBeenCalledWith(
-        expect.objectContaining({ supervisor_id: 79123456, contrato_general_id: 42 })
+        expect.objectContaining({ supervisor_id: 79123456, contrato_general_id: { id: 42 } })
       );
       expect(component.supervisoresIds).toEqual([9]);
     });
