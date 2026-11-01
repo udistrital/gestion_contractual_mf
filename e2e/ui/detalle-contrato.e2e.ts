@@ -27,7 +27,7 @@ const CONTRATO_ID = 9001;
 const EVIDENCIAS = process.env.EVIDENCIAS_390 ?? join(homedir(), 'argo_repos', 'evidencias-390');
 
 const menuPermitido = Buffer.from(
-  JSON.stringify([{ Url: `/contratos/detalle/${CONTRATO_ID}` }])
+  JSON.stringify([{ Url: `/contratos/detalle/${CONTRATO_ID}` }, { Url: '/contratos/gestionar' }])
 ).toString('base64');
 const usuario = Buffer.from(
   JSON.stringify({ user: { role: ['ABOGADO_CONTRATACION_RECTOR'] }, userService: { role: [] } })
@@ -94,6 +94,15 @@ const contrato = {
   fecha_modificacion: '2026-10-27T10:12:45Z',
 };
 
+/** Contrato en la consulta (gestion_contractual_mid): en revisión del jefe, el abogado puede verlo, no editarlo. */
+const contratoEnConsulta = {
+  ...contrato,
+  numero_contrato: 'OC-0042-2026',
+  vigencia: '2026',
+  estados: { estado_parametro_id: 6773, estado_interno_parametro_id: 6800, nombre_estado: 'Por suscribir', actual: true },
+  contratista: { nombre: 'INGRID PAOLA MORALES MORALES', numero_documento: '1014285890' },
+};
+
 const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
   ordenador_contrato: [
     { id: 71, contrato_general_id: DEL_CONTRATO, tercero_id: 0, cargo_id: 12, documento_identidad: '19456789', resolucion: '', ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
@@ -142,6 +151,9 @@ function responderCrudBeego(route: Route, ruta: string, query: URLSearchParams):
 function responder(route: Route): Promise<void> {
   const url = new URL(route.request().url());
   const ruta = url.pathname.replace('/apioas/', '');
+  // Consulta de contratos (gestion_contractual_mid).
+  if (ruta === 'gestion_contractual_mid/contratos-generales')
+    return route.fulfill({ status: 200, json: { Success: true, Status: 200, Message: 'Consulta exitosa', Data: [contratoEnConsulta], Metadata: { total: 1 } } });
   const respuesta = responderCrudBeego(route, ruta, url.searchParams) ?? responderServicioExterno(route, ruta, url.searchParams);
   if (respuesta) return respuesta;
   noSimuladas.push(`${route.request().method()} ${url.pathname}${url.search}`);
@@ -428,4 +440,28 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
     expect(consultasCrud.length, 'consultas al CRUD').toBeGreaterThan(0);
     expect(consultasCrud.filter((c) => !/activo%3Atrue|activo:true/.test(c) || !/limit=\d/.test(c)), 'consultas sin activo o limit').toEqual([]);
   });
+});
+
+test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulado)', async ({ browser }) => {
+  const ctx = await browser.newContext({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
+  await prepararContexto(ctx);
+  const consulta = await ctx.newPage();
+  try {
+    await consulta.goto('/contratos/gestionar');
+    const fila = consulta.locator('tr.mat-mdc-row', { hasText: 'INGRID PAOLA MORALES MORALES' });
+    await expect(fila).toBeVisible({ timeout: 30_000 });
+
+    await fila.getByRole('button', { name: 'Menú de acciones del contrato' }).click();
+    const menu = consulta.locator('.mat-mdc-menu-panel');
+    await expect(menu.getByRole('menuitem')).toHaveText([/Ver Contrato/, /Ver Detalle/, /Ver Historial/]);
+    await expect(menu.getByRole('menuitem', { name: /Ver Detalle/ }).locator('mat-icon')).toHaveText('article');
+    await consulta.screenshot({ path: join(EVIDENCIAS, '10-consulta-accion-ver-detalle.png') });
+
+    await menu.getByRole('menuitem', { name: /Ver Detalle/ }).click();
+    await expect(consulta).toHaveURL(new RegExp(`/contratos/detalle/${CONTRATO_ID}$`));
+    await expect(consulta.getByText('Detalle del Contrato').first()).toBeVisible();
+    await expect(consulta.locator('app-paso-info-general')).toContainText('Orden de Compra');
+  } finally {
+    await ctx.close();
+  }
 });
