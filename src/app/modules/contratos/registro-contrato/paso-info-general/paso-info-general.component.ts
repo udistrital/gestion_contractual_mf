@@ -511,7 +511,8 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipo_contrato_id: formData.tipoContratoId,
       perfil_contratista_id: formData.perfilContratistaId ?? null,
       fecha_suscripcion_estudios: formData.fechaSuscripcionEstudios,
-      aplica_poliza: formData.aplicaPoliza,
+      // El CRUD convierte cualquier texto no vacío en true, incluido '0'.
+      aplica_poliza: formData.aplicaPoliza ? formData.aplicaPoliza === '1' : null,
       vigencia_convenio: formData.vigenciaConvenio,
       convenio: formData.convenio,
       nombre_convenio: formData.nombreConvenio,
