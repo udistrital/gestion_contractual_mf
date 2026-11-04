@@ -385,6 +385,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   onContratoGuardado(contratoId: number) {
     this.contratoGeneralId.set(contratoId);
     this.marcarPasoGuardado('general');
+    this.contratoCargadoId = 0;
     this.cargarContratoGeneral();
   }
 
