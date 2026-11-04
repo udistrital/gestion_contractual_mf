@@ -26,7 +26,7 @@ const CONTENEDOR_BD = process.env.CRUD_BEEGO_DB_CONTAINER ?? 'gestion_contractua
 const EVIDENCIAS = process.env.EVIDENCIAS_390_BEEGO ?? join(homedir(), 'argo_repos', 'evidencias-390-beego');
 
 /*
- * Probada contra la rama feature/385-json-snake-case del CRUD (snake_case, [] en
+ * Probada contra la rama feature/385-crud-beego-v2 del crud#51 (snake_case, [] en
  * listas vacías y POST/PUT con el registro y su id). El MF maneja Status como
  * texto, los valores cero y las FK como objeto { id }.
  */
@@ -257,6 +257,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
       supervisores_activos: sql(`select count(*) from contratacion.supervisor_contrato where contrato_general_id = ${contratoId} and activo`),
       especificaciones_activas: sql(`select count(*) from contratacion.especificacion_tecnica where contrato_general_id = ${contratoId} and activo`),
       estado_actual: sql(`select estado_interno_parametro_id from contratacion.estado_contrato where contrato_general_id = ${contratoId} and actual`),
+      fecha_registro_cdp: sql(`select fecha_registro from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
     };
     writeFileSync(
       join(EVIDENCIAS, '08-base-de-datos.txt'),
@@ -269,6 +270,10 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     expect.soft(conteos.cdps_activos).toBe('1');
     expect.soft(conteos.supervisores_activos).toBe('1');
     expect.soft(conteos.especificaciones_activas).toBe('1');
+    // La columna date debe quedar con el día local, no con el día UTC.
+    const hoy = new Date();
+    const hoyLocal = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+    expect.soft(conteos.fecha_registro_cdp).toBe(hoyLocal);
     expect.soft(noSimuladas, 'peticiones sin simular').toEqual([]);
   });
 });

@@ -15,7 +15,7 @@ import {
 /**
  * E2E de #390: detalle del contrato en solo lectura (/contratos/detalle/:id) con
  * backend SIMULADO. Ninguna petición sale a los servicios. gestion_contractual_crud
- * se responde en el formato de la rama feature/385-json-snake-case del CRUD Go/Beego v2
+ * se responde en el formato de la rama del crud#51 (feature/385-crud-beego-v2) del CRUD Go/Beego v2
  * (rutas /v1/<recurso>/, snake_case, Status texto, [] vacías, ceros, FK { id }); el MID y los demás
  * servicios, con las simulaciones de e2e/support. Se verifica, paso por paso, que
  * los datos se ven, que los controles están deshabilitados, que no hay acciones de
@@ -35,7 +35,7 @@ const usuario = Buffer.from(
 
 // ---------------------------------------------------------------------------
 // Datos simulados del contrato de prueba, en el formato de la rama
-// feature/385-json-snake-case del CRUD Beego v2: snake_case, Status como texto,
+// feature/385-crud-beego-v2 (crud#51) del CRUD Beego v2: snake_case, Status como texto,
 // [] en listas vacías, ceros en vez de nulos y FK como objeto { id }.
 // ---------------------------------------------------------------------------
 

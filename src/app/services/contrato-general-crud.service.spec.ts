@@ -14,13 +14,13 @@ jest.mock('sweetalert2', () => ({
 
 /**
  * Rutas /v1 del CRUD Beego v2 y filtros que arman los pasos. Las respuestas
- * tienen el formato de la rama feature/385-json-snake-case del CRUD: snake_case,
+ * tienen el formato de la rama feature/385-crud-beego-v2 (crud#51): snake_case,
  * Status como texto, [] en listas vacías, ceros en vez de nulos y FK como objeto
  * { id }. El MF no las transforma.
  */
 const CRUD = `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}v1`;
 const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
-// Filtro por FK verificado contra la rama feature/385-json-snake-case.
+// Filtro por FK verificado contra la rama del crud#51.
 const DEL_CONTRATO = 'contrato_general_id.id:42,activo:true';
 
 describe('rutaConsulta', () => {
@@ -95,7 +95,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   it('7. POST de CDP con los nombres del MF (incluido valor_a_tomar)', () => {
     const cdp = {
       numero_cdp_id: 1234,
-      fecha_registro: new Date('2026-10-31T00:00:00Z'),
+      fecha_registro: '2026-10-31T00:00:00Z',
       vigencia_cdp_id: 2026,
       contrato_general_id: { id: 42 },
       valor_a_tomar: 45000000,

@@ -16,7 +16,7 @@ import { PasoSupervisoresComponent } from './paso-supervisores/paso-supervisores
 
 /**
  * Guardado de los pasos contra el CRUD Beego v2 (#390): los filtros se arman
- * en el paso y las respuestas tienen el formato de la rama feature/385-json-snake-case
+ * en el paso y las respuestas tienen el formato de la rama del crud#51 (feature/385-crud-beego-v2)
  * (snake_case, Status como texto, [] en listas vacías, ceros en vez de nulos, FK { id }).
  */
 
@@ -73,6 +73,16 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       await montar({ ...contrato, fecha_suscripcion_estudio: FECHA_CERO, aplica_poliza: false });
       expect(component.formInfoGeneral.get('fechaSuscripcionEstudios')?.value).toBe('');
       expect(component.formInfoGeneral.get('aplicaPoliza')?.value).toBe('0');
+    });
+
+    it('muestra el día guardado y lo envía igual, sin correrlo por la zona horaria', async () => {
+      await montar({ ...contrato, fecha_suscripcion_estudio: '2026-10-31T00:00:00Z' });
+      expect(new Date(component.formInfoGeneral.get('fechaSuscripcionEstudios')?.value as string).getDate()).toBe(31);
+      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
+      component.guardarContrato('27', 1);
+      expect(crud['post']).toHaveBeenCalledWith(
+        expect.objectContaining({ fecha_suscripcion_estudio: '2026-10-31T00:00:00Z' })
+      );
     });
 
     it('envía aplica_poliza como bool, plazo como entero y la fecha vacía como null', async () => {
