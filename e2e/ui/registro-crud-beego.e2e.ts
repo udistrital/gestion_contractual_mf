@@ -1,4 +1,4 @@
-import { test, expect, BrowserContext, Locator, Page, Route } from '@playwright/test';
+import { test, expect, BrowserContext, Locator, Page, Request, Route } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -18,7 +18,8 @@ import { CORE_MF_STUB, PROVEEDOR, responderServicioExterno } from '../support/se
  * control incluidos), CDP, ordenador, supervisores y especificaciones, abre el
  * detalle y verifica en la base de datos que queda un solo ordenador activo, que
  * contratista y solicitante quedaron en contrato_general y que lo que no tiene valor
- * queda en NULL. Al editar comprueba que no se borra lo que el formulario no maneja.
+ * queda en NULL. Al editar comprueba que no se borra lo que el formulario no maneja
+ * y que el paso 1 actualiza el mismo contrato en vez de crear otro.
  * El navegador corre a las 20:30 de Colombia (en UTC ya es el día siguiente) para
  * comprobar el día de las columnas date; la base se prueba en America/Bogota.
  *
@@ -112,6 +113,17 @@ async function abrirEdicion(page: Page, id: number) {
     menu(['/contratos/registrar', `/contratos/detalle/${id}`, `/contratos/editar/${id}`])
   );
   await page.goto(`/contratos/editar/${id}`);
+}
+
+/** Guarda el paso 1 de un contrato existente y exige el PUT sobre ese mismo contrato. */
+async function guardarPaso1(page: Page, id: number) {
+  const seccion = page.locator('app-paso-info-general');
+  const guardado = page.waitForResponse(
+    (r) => r.request().method() === 'PUT' && r.url().endsWith(`/v1/contrato_general/${id}`)
+  );
+  await seccion.getByRole('button', { name: /Guardar Datos Básicos/ }).click();
+  expect((await guardado).status()).toBe(200);
+  await aceptarAlerta(page);
 }
 
 let context: BrowserContext;
@@ -351,6 +363,45 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
   });
 });
 
+test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () => {
+  test.setTimeout(120_000);
+  const id = contratoId;
+  expect(id, 'contrato creado en la prueba anterior').toBeGreaterThan(0);
+  const consultar = () => ({
+    contratos: sql('select count(*) from contratacion.contrato_general'),
+    estados: sql(`select count(*) from contratacion.estado_contrato where contrato_general_id = ${id}`),
+    fila: columnas('contrato_general', `id = ${id}`, ['consecutivo_elaboracion', 'plazo_ejecucion', 'proveedor_numero_documento', 'sede_solicitante_id']),
+  });
+  const antes = consultar();
+  const peticiones: string[] = [];
+  const registrar = (r: Request) => {
+    if (/\/contrato_general\/|\/consecutivo/.test(r.url())) peticiones.push(`${r.method()} ${new URL(r.url()).pathname}`);
+  };
+
+  await abrirEdicion(page, id);
+  const seccion = page.locator('app-paso-info-general');
+  const plazo = seccion.locator('input[formcontrolname="plazoEjecucion"]');
+  await expect(plazo).toHaveValue('6');
+  page.on('request', registrar);
+  await plazo.fill('9');
+  await seccion.getByRole('button', { name: /Guardar Datos Básicos/ }).click();
+  await aceptarAlerta(page);
+  page.off('request', registrar);
+  const despues = consultar();
+
+  appendFileSync(
+    join(EVIDENCIAS, '08-base-de-datos.txt'),
+    `\nContrato ${id} editado en el paso 1 (plazo de 6 a 9)\n` +
+      `peticiones al guardar: ${peticiones.join(', ')}\n` +
+      `antes:   ${JSON.stringify(antes)}\ndespués: ${JSON.stringify(despues)}\n`
+  );
+  expect.soft(despues.contratos, 'no debe aparecer un segundo contrato').toBe(antes.contratos);
+  expect.soft(despues.estados, 'editar no cambia el estado').toBe(antes.estados);
+  expect.soft(despues.fila).toBe(antes.fila.replace(/^([^|]*)\|6\|/, '$1|9|'));
+  expect.soft(peticiones.filter((p) => p.endsWith('/consecutivo')), 'editar no pide consecutivo').toEqual([]);
+  expect.soft(peticiones).toContain(`PUT /apioas/gestion_contractual_crud/v1/contrato_general/${id}`);
+});
+
 test('fecha de estudios: conserva el día al guardar y al editar', async () => {
   test.setTimeout(180_000);
   contratoId = 0;
@@ -376,11 +427,19 @@ test('fecha de estudios: conserva el día al guardar y al editar', async () => {
 
   const fechaGuardada = () => columnas('contrato_general', `id = ${contratoId}`, ['fecha_suscripcion_estudio']);
   const fechas = [fechaGuardada()];
+  const contratos = sql('select count(*) from contratacion.contrato_general');
+
+  // Guardar otra vez sin salir del registro actualiza el contrato recién creado.
+  await guardarPaso1(page, contratoId);
+  fechas.push(fechaGuardada());
+
   // Se abre y se guarda dos veces: el PUT parcial reescribe la fecha leída del CRUD y no se
-  // debe correr. Se usa el solicitante porque el paso 1 no hace PUT (formId nunca se asigna).
+  // debe correr, ni al guardar el paso 1 ni al guardar el solicitante.
   for (let vez = 0; vez < 2; vez++) {
     await abrirEdicion(page, contratoId);
     await expect(seccion.locator('input[formcontrolname="fechaSuscripcionEstudios"]')).not.toHaveValue('');
+    await guardarPaso1(page, contratoId);
+    fechas.push(fechaGuardada());
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
     await seleccionar(page, buscable(supervisores, 'Sede Universitaria Solicitante'), 'Sede Calle 40');
@@ -400,10 +459,11 @@ test('fecha de estudios: conserva el día al guardar y al editar', async () => {
   appendFileSync(
     join(EVIDENCIAS, '08-base-de-datos.txt'),
     `\nContrato ${contratoId} (fecha de estudios, guardado a las 20:30 de Colombia)\n` +
-      `fecha_suscripcion_estudio al crear y tras cada edición: ${fechas.join(', ')}\n` +
+      `fecha_suscripcion_estudio al crear, al guardar de nuevo y tras cada edición: ${fechas.join(', ')}\n` +
       `aplica_poliza (el control no aplica): ${aplicaPoliza}\n`
   );
-  expect.soft(fechas).toEqual([hoyColombia, hoyColombia, hoyColombia]);
+  expect.soft(fechas).toEqual(fechas.map(() => hoyColombia));
+  expect.soft(sql('select count(*) from contratacion.contrato_general'), 'no debe aparecer otro contrato').toBe(contratos);
   expect.soft(aplicaPoliza).toBe('NULL');
   expect.soft(noSimuladas, 'peticiones sin simular').toEqual([]);
 });

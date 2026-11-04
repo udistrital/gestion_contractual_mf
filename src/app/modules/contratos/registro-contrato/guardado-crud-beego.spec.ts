@@ -35,10 +35,13 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
   describe('PasoInfoGeneralComponent: valores nulos y tipos del modelo v2', () => {
     let component: PasoInfoGeneralComponent;
     let crud: Record<string, jest.Mock>;
+    let mid: Record<string, jest.Mock>;
 
-    async function montar(datos: any) {
+    async function montar(datos: any, contratoGeneralId = 0) {
+      mid = { postConsecutivo: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: '27' })) };
       crud = {
         post: jest.fn().mockReturnValue(of({ Success: true, Status: '201', Data: { id: 42 } })),
+        put: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: { id: 42 } })),
         postEstadoContrato: jest.fn().mockReturnValue(of({ Success: true, Status: '201', Data: { id: 3 } })),
       };
       TestBed.configureTestingModule({
@@ -54,7 +57,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
             },
           },
           { provide: ContratoGeneralCrudService, useValue: crud },
-          { provide: ContratoGeneralMidService, useValue: {} },
+          { provide: ContratoGeneralMidService, useValue: mid },
           { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
         ],
         schemas: [NO_ERRORS_SCHEMA],
@@ -62,6 +65,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       const fixture = TestBed.createComponent(PasoInfoGeneralComponent);
       component = fixture.componentInstance;
       fixture.componentRef.setInput('contratoGeneral', datos);
+      fixture.componentRef.setInput('contratoGeneralId', contratoGeneralId);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
@@ -129,6 +133,41 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
           consecutivo_elaboracion: '27',
         })
       );
+    });
+
+    it('en un contrato nuevo pide consecutivo, hace POST y registra el estado inicial', async () => {
+      await montar(contrato);
+      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
+      component.guardarYContinuar();
+      await new Promise((resuelto) => setTimeout(resuelto));
+      expect(mid['postConsecutivo']).toHaveBeenCalledTimes(1);
+      expect(crud['post']).toHaveBeenCalledTimes(1);
+      expect(crud['put']).not.toHaveBeenCalled();
+      expect(crud['postEstadoContrato']).toHaveBeenCalledTimes(1);
+    });
+
+    it('en un contrato existente hace PUT al mismo id, sin consecutivo, sin POST y sin otro estado', async () => {
+      await montar(contrato, 42);
+      const guardado = jest.fn();
+      component.contratoGuardado.subscribe(guardado);
+      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
+      component.guardarYContinuar();
+      await new Promise((resuelto) => setTimeout(resuelto));
+      expect(crud['put']).toHaveBeenCalledTimes(1);
+      expect(crud['put'].mock.calls[0][0]).toBe(42);
+      expect(crud['put'].mock.calls[0][1]).not.toHaveProperty('consecutivo_elaboracion');
+      expect(crud['post']).not.toHaveBeenCalled();
+      expect(mid['postConsecutivo']).not.toHaveBeenCalled();
+      expect(crud['postEstadoContrato']).not.toHaveBeenCalled();
+      expect(guardado).toHaveBeenCalledWith(42);
+    });
+
+    it('en edición un campo que ya no aplica se limpia con null', async () => {
+      await montar({ ...contrato, perfil_contratista_id: 7 }, 42);
+      component.formInfoGeneral.get('perfilContratistaId')?.disable();
+      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
+      component.guardarYContinuar();
+      expect(crud['put'].mock.calls[0][1]).toEqual(expect.objectContaining({ perfil_contratista_id: null }));
     });
   });
 
