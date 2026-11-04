@@ -221,11 +221,11 @@ export interface CDPData {
 
 export interface OrdenadorContratoData {
   tercero_id?: number;
-  ordenador_argo_id: number;
-  ordenador_sicapital_id: number;
+  ordenador_argo_id: number | null;
+  ordenador_sicapital_id?: number;
   resolucion?: string;
-  documento_identidad: string;
-  cargo_id: number;
+  documento_identidad?: string;
+  cargo_id?: number;
   contrato_general_id?: ReferenciaCrud;
 }
 
@@ -256,12 +256,12 @@ export interface SupervisorData {
 
 export interface SupervisorToSave {
   id?: number;
-  supervisor_id: number | null;
+  supervisor_id?: number;
   sede_legado: string;
   dependencia_legado: string;
   cargo_legado: string;
-  cargo_id: number | null;
-  documento: number | null;
+  cargo_id?: number;
+  documento?: number;
   digito_verificacion: number | null;
   sede_id: number | null;
   dependencia_id: number | null;

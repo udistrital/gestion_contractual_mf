@@ -41,17 +41,17 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     vigencia: [''],
     cdp: [''],
     valorAcumulado: [{ value: 0, disabled: true }],
-    tipoMoneda: [0, Validators.required],
+    tipoMoneda: [null as number | null, Validators.required],
     valorContrato: ['', Validators.required],
-    ordenadorGasto: [0, Validators.required],
+    ordenadorGasto: [null as number | null, Validators.required],
     nombreOrdenador: [{ value: '', disabled: true }, [Validators.required]],
-    tipoGasto: [0, Validators.required],
-    origenRecurso: [0, Validators.required],
-    origenPresupuesto: [0, Validators.required],
-    temaGasto: [0, Validators.required],
+    tipoGasto: [null as number | null, Validators.required],
+    origenRecurso: [null as number | null, Validators.required],
+    origenPresupuesto: [null as number | null, Validators.required],
+    temaGasto: [null as number | null, Validators.required],
     monedaExtranjera: [0, Validators.required],
     tasaCambio: [0],
-    medioPago: [0, Validators.required],
+    medioPago: [null as number | null, Validators.required],
     clausulaRegistroPresupuestal: [false, Validators.required],
     reversarSaldos: [false],
     formaPago: ['', Validators.required],
@@ -207,7 +207,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           temaGasto: contratoGeneral.tema_gasto_inversion_id,
           medioPago: contratoGeneral.medio_pago_id,
           tipoMoneda: contratoGeneral.tipo_moneda_id,
-          valorContrato: contratoGeneral.valor_pesos ? String(contratoGeneral.valor_pesos) : '',
+          valorContrato: String(contratoGeneral.valor_pesos ?? ''),
           origenRecurso: contratoGeneral.origen_recursos_id,
           clausulaRegistroPresupuestal: contratoGeneral.clausula_registro_presupuestal,
           formaPago: contratoGeneral.modo_pago,
@@ -277,12 +277,11 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
 
       // Preparar datos para el POST de OrdenadorContrato
       const ordenadorContratoData: OrdenadorContratoData = {
-        ordenador_argo_id: this.ordenadorGastoId ? Number(this.ordenadorGastoId) : 0,
-        ordenador_sicapital_id: this.idSicapitalOrdenador
-          ? Number(this.idSicapitalOrdenador)
-          : 0,
-        documento_identidad: this.documentoIdentidadOrdenador || '',
-        cargo_id: this.cargoIdOrdenador || 0,
+        ordenador_argo_id: this.ordenadorGastoId ? Number(this.ordenadorGastoId) : null,
+        // No vienen del formulario: sin valor no se envían, un null en el PUT borra lo guardado.
+        ...(this.idSicapitalOrdenador ? { ordenador_sicapital_id: Number(this.idSicapitalOrdenador) } : {}),
+        ...(this.documentoIdentidadOrdenador ? { documento_identidad: this.documentoIdentidadOrdenador } : {}),
+        ...(this.cargoIdOrdenador ? { cargo_id: this.cargoIdOrdenador } : {}),
         contrato_general_id: { id: contratoId },
       };
 

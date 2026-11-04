@@ -106,20 +106,20 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   formInfoGeneral = this.fb.group({
     unidadEjecutoraId: [0, Validators.required],
-    tipoCompromisoId: [0, Validators.required],
-    tipoContratoId: [0, Validators.required],
-    perfilContratistaId: [0],
+    tipoCompromisoId: [null as number | null, Validators.required],
+    tipoContratoId: [null as number | null, Validators.required],
+    perfilContratistaId: [null as number | null],
     fechaSuscripcionEstudios: [''],
     aplicaPoliza: [''],
     vigenciaConvenio: [''],
     convenio: [''],
     nombreConvenio: [''],
-    modalidadSeleccionId: [0, Validators.required],
-    tipologiaEspecificaId: [0, Validators.required],
-    regimenContratacionId: [0, Validators.required],
-    procedimientoId: [0, Validators.required],
-    plazoEjecucion: [0, [Validators.required, Validators.pattern('^[0-9]*$')]],
-    unidadEjecucionId: [0, Validators.required],
+    modalidadSeleccionId: [null as number | null, Validators.required],
+    tipologiaEspecificaId: [null as number | null, Validators.required],
+    regimenContratacionId: [null as number | null, Validators.required],
+    procedimientoId: [null as number | null, Validators.required],
+    plazoEjecucion: [null as number | null, [Validators.required, Validators.pattern('^[0-9]*$')]],
+    unidadEjecucionId: [null as number | null, Validators.required],
   });
 
   //Parametros (Opciones)
@@ -424,17 +424,17 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     const formData = {
       unidadEjecutoraId: data.unidad_ejecutora_id,
-      tipoCompromisoId: data.tipo_compromiso_id ?? 0,
-      tipoContratoId: data.tipo_contrato_id ?? 0,
-      perfilContratistaId: data.perfil_contratista_id ?? 0,
+      tipoCompromisoId: data.tipo_compromiso_id,
+      tipoContratoId: data.tipo_contrato_id,
+      perfilContratistaId: data.perfil_contratista_id,
       fechaSuscripcionEstudios: desdeFechaCrud(data.fecha_suscripcion_estudio),
-      aplicaPoliza: data?.aplica_poliza ? '1' : '0',
-      modalidadSeleccionId: data.modalidad_seleccion_id ?? 0,
-      tipologiaEspecificaId: data.tipologia_especifica_id ?? 0,
-      regimenContratacionId: data.regimen_contratacion_id ?? 0,
-      procedimientoId: data.procedimiento_id ?? 0,
-      plazoEjecucion: data.plazo_ejecucion ?? 0,
-      unidadEjecucionId: data.unidad_ejecucion_id ?? 0,
+      aplicaPoliza: data.aplica_poliza === true ? '1' : data.aplica_poliza === false ? '0' : '',
+      modalidadSeleccionId: data.modalidad_seleccion_id,
+      tipologiaEspecificaId: data.tipologia_especifica_id,
+      regimenContratacionId: data.regimen_contratacion_id,
+      procedimientoId: data.procedimiento_id,
+      plazoEjecucion: data.plazo_ejecucion,
+      unidadEjecucionId: data.unidad_ejecucion_id,
     };
     this.formInfoGeneral.patchValue(formData);
     this.cdRef.detectChanges();
@@ -504,11 +504,11 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipo_compromiso_id: formData.tipoCompromisoId,
       tipo_contrato_id: formData.tipoContratoId,
       perfil_contratista_id: formData.perfilContratistaId,
-      // Tipos del modelo v2: fecha o null, bool y entero.
+      // Tipos del modelo v2: fecha, bool y entero; lo que no aplica va como null.
       fecha_suscripcion_estudio: formData.fechaSuscripcionEstudios
         ? aFechaCrud(formData.fechaSuscripcionEstudios)
         : null,
-      aplica_poliza: formData.aplicaPoliza === '1',
+      aplica_poliza: formData.aplicaPoliza ? formData.aplicaPoliza === '1' : null,
       vigencia_convenio: formData.vigenciaConvenio,
       convenio: formData.convenio,
       nombre_convenio: formData.nombreConvenio,

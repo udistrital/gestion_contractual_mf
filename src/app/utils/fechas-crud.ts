@@ -11,9 +11,9 @@ export function aFechaCrud(fecha: Date | string): string {
   return `${local.getFullYear()}-${mes}-${dia}T00:00:00Z`;
 }
 
-/** Fecha del CRUD como día local para los formularios; '' si está vacía (0001-01-01). */
+/** Fecha del CRUD como día local para los formularios; '' si está vacía. */
 export function desdeFechaCrud(valor: unknown): string {
   const dia = String(valor ?? '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || dia === '0001-01-01') return '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return '';
   return `${dia}T12:00:00`;
 }

@@ -170,7 +170,7 @@ export class PasoSupervisoresComponent implements OnInit {
               if (!supervisorForm) return;
 
               this.supervisorLegacy[index] = {
-                documento: String(supervisor.documento),
+                documento: String(supervisor.documento ?? ''),
                 sede_legado: supervisor.sede_legado,
                 dependencia_legado: supervisor.dependencia_legado,
                 cargo_legado: supervisor.cargo_legado,
@@ -191,7 +191,7 @@ export class PasoSupervisoresComponent implements OnInit {
                 dependencia: depId,
                 codigoVerificacion: supervisor.digito_verificacion,
                 // Se guarda una sola vez en el contrato (ContratoGeneral.TipoControlId).
-                tipoControl: this.contratoGeneral()?.tipo_control_id || null,
+                tipoControl: this.contratoGeneral()?.tipo_control_id ?? null,
               });
             });
 
@@ -279,14 +279,15 @@ export class PasoSupervisoresComponent implements OnInit {
         // Las columnas numéricas del CRUD se envían como enteros (null si no hay valor).
         const entero = (valor: unknown): number | null =>
           valor === null || valor === undefined || valor === '' ? null : Number(valor);
+        const documento = entero(this.supervisorLegacy[i].documento);
+        // cargo_id y el documento no vienen del formulario: sin valor no se envían,
+        // porque un null en el PUT borra lo guardado.
         const supervisorData: SupervisorToSave = {
-          supervisor_id: entero(this.supervisorLegacy[i].documento), // TODO: Validar Supervisor ID
+          ...(documento === null ? {} : { supervisor_id: documento, documento }), // TODO: Validar Supervisor ID
           sede_legado: this.supervisorLegacy[i].sede_legado,
           dependencia_legado: this.supervisorLegacy[i].dependencia_legado,
           cargo_legado: this.supervisorLegacy[i].cargo_legado,
-          cargo_id: entero(supervisorGroup.get('cargoId')?.value), // TODO: Validar Cargo ID
           digito_verificacion: entero(supervisorGroup.get('codigoVerificacion')?.value),
-          documento: entero(this.supervisorLegacy[i].documento),
           sede_id: entero(supervisorGroup.get('sede')?.value),
           dependencia_id: entero(supervisorGroup.get('dependencia')?.value),
           contrato_general_id: { id: this.contratoGeneral()?.id as number },
