@@ -35,10 +35,14 @@ describe('tablero.utils', () => {
 
   it('decide la vista del tablero según los roles', () => {
     expect(rolTablero(['JEFE_CONTRATACION_RECTOR'])).toBe('JEFE');
-    expect(rolTablero(['ADMIN_ARGO'])).toBe('JEFE');
+    expect(rolTablero(['JEFE_CONTRATACION_IDEXUD'])).toBe('JEFE');
     expect(rolTablero(['ABOGADO_CONTRATACION_IDEXUD'])).toBe('ABOGADO');
     expect(rolTablero(['ABOGADO_CONTRATACION_RECTOR', 'JEFE_CONTRATACION_RECTOR'])).toBe('JEFE');
+    // Solo jefe de contratación y abogado tienen tablero
     expect(rolTablero(['PROVEEDOR'])).toBeNull();
+    expect(rolTablero(['ADMIN_ARGO'])).toBeNull();
+    expect(rolTablero(['ORDENADOR_DEL_GASTO'])).toBeNull();
+    expect(rolTablero([])).toBeNull();
   });
 
   it('cuenta contratos por estado e ignora los que no tienen estado', () => {
