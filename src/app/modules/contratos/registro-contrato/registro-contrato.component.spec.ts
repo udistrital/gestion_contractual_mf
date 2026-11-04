@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { of } from 'rxjs';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { RegistroContratoComponent } from './registro-contrato.component';
 
 describe('RegistroContratoComponent', () => {
@@ -111,6 +113,19 @@ describe('RegistroContratoComponent', () => {
       component.desmarcarPasoGuardado('estructura');
       expect(component.pasosGuardados.has('estructura')).toBe(false);
     });
+  });
+
+  it('recarga el contrato después de guardar el paso 1 de un contrato ya cargado', () => {
+    const get = jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(of({ Data: { id: 42, plazo_ejecucion: 6 } }));
+    fixture.componentRef.setInput('contratoGeneralId', 42);
+    fixture.detectChanges();
+    expect(component.contratoGeneral?.plazo_ejecucion).toBe(6);
+
+    get.mockReturnValue(of({ Data: { id: 42, plazo_ejecucion: 9 } }));
+    component.onContratoGuardado(42);
+    expect(component.contratoGeneral?.plazo_ejecucion).toBe(9);
   });
 
   describe('tituloVista', () => {
