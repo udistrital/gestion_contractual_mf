@@ -31,13 +31,11 @@ export function diasAlerta(estado: EstadoClave): number {
   );
 }
 
-// Misma regla que usa consulta-contrato para decidir la vista por rol
+// El tablero de inicio es solo para el jefe de contratación (todos los contratos)
+// y el abogado (los propios). Cualquier otro rol no ve el tablero.
 export function rolTablero(roles: string[]): RolTablero | null {
-  const esJefe = roles.some(
-    (r) => r.includes('JEFE') || r === 'ADMIN_ARGO' || r.includes('ORDENADOR')
-  );
-  if (esJefe) return 'JEFE';
-  if (roles.some((r) => r.includes('ABOGADO'))) return 'ABOGADO';
+  if (roles.some((r) => r.startsWith('JEFE_CONTRATACION'))) return 'JEFE';
+  if (roles.some((r) => r.startsWith('ABOGADO_CONTRATACION'))) return 'ABOGADO';
   return null;
 }
 
