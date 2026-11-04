@@ -3,48 +3,26 @@ import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { ParametrosService } from 'src/app/services/parametros.service';
 import { TercerosCrudService } from 'src/app/services/tercero-crud.service';
+import { environment } from 'src/environments/environment';
 import { ContratoTablero, USUARIO_ID_GENERICO } from '../types/tablero.models';
 import { diasEntre, estadoPorId } from '../utils/tablero.utils';
 
-interface EstadoCrud {
-  estado_parametro_id: number;
-  actual: boolean;
-  usuario_id: number;
-  usuario_rol: string;
-  fecha_creacion: string;
-}
-
-interface ContratoCrud {
-  id: number;
+// Fila de GET v1/tableros/contratos del CRUD Beego v2: solo Ids. El CRUD ya
+// calcula el estado actual, la fecha desde la que está en ese estado y el abogado.
+interface ContratoTableroCrud {
+  contrato_general_id: number;
   numero_contrato: string | null;
   consecutivo_elaboracion: string | null;
-  vigencia: string;
+  vigencia_id: number | null;
   fecha_final: string | null;
-  estados?: EstadoCrud | EstadoCrud[];
-  solicitante?: {
-    dependencia_solicitante_id: number;
-    sede_solicitante_id: number;
-  } | null;
+  dependencia_solicitante_id: number | null;
+  sede_solicitante_id: number | null;
+  estado_parametro_id: number | null;
+  fecha_estado: string | null;
+  abogado_id: number | null;
 }
-
-// Solo los campos que usa el tablero, para no traer textos largos del contrato
-const CAMPOS = [
-  'id',
-  'numero_contrato',
-  'consecutivo_elaboracion',
-  'vigencia',
-  'fecha_final',
-  'estados.id',
-  'estados.estado_parametro_id',
-  'estados.actual',
-  'estados.usuario_id',
-  'estados.usuario_rol',
-  'estados.fecha_creacion',
-  'solicitante.id',
-  'solicitante.dependencia_solicitante_id',
-  'solicitante.sede_solicitante_id',
-].join(',');
 
 const SIN_DEPENDENCIA = 'Sin dependencia registrada';
 const SIN_ABOGADO = 'Sin identificar';
@@ -54,77 +32,92 @@ export class TableroDatosService {
   private readonly requestManager = inject(RequestManager);
   private readonly contratoMidService = inject(ContratoGeneralMidService);
   private readonly tercerosService = inject(TercerosCrudService);
+  private readonly parametrosService = inject(ParametrosService);
 
-  // Contratos activos de la vigencia (vacía = todas) con su estado actual,
+  // Id del parámetro de vigencia (Parámetros CRUD) de cada año ya consultado
+  private readonly vigenciasId = new Map<string, number | null>();
+
+  // Contratos activos de la vigencia (año; vacía = todas) con su estado actual,
   // dependencia solicitante y abogado que los registró.
   cargarContratos(
     vigencia: string,
     hoy: Date = new Date()
   ): Observable<ContratoTablero[]> {
-    const query = JSON.stringify(vigencia ? { activo: true, vigencia } : { activo: true });
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager
-      .get<any>(
-        `contratos-generales?include=estados,solicitante&fields=${CAMPOS}` +
-          `&query=${encodeURIComponent(query)}&limit=0`
-      )
-      .pipe(
-        map((res) => (Array.isArray(res?.Data) ? (res.Data as ContratoCrud[]) : [])),
-        map((data) => data.map((c) => this.mapear(c, hoy))),
-        switchMap((contratos) =>
-          forkJoin({
-            dependencias: this.nombresDependencias(contratos),
-            abogados: this.nombresAbogados(contratos),
-          }).pipe(
-            map(({ dependencias, abogados }) =>
-              contratos.map((c) => ({
-                ...c,
-                dependencia:
-                  c.dependenciaId != null
-                    ? dependencias.get(c.dependenciaId) ?? `Dependencia ${c.dependenciaId}`
-                    : SIN_DEPENDENCIA,
-                abogado:
-                  c.abogadoId != null
-                    ? abogados.get(c.abogadoId) ?? `Abogado ${c.abogadoId}`
-                    : SIN_ABOGADO,
-              }))
-            )
+    return this.vigenciaId(vigencia).pipe(
+      switchMap((vigenciaId) => {
+        // Año sin parámetro de vigencia: ningún contrato puede tenerlo
+        if (vigenciaId === null) return of([] as ContratoTableroCrud[]);
+        const filtro = vigenciaId ? `?vigencia-id=${vigenciaId}` : '';
+        this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+        return this.requestManager
+          .get<any>(`v1/tableros/contratos${filtro}`)
+          .pipe(map((res) => (Array.isArray(res?.Data) ? (res.Data as ContratoTableroCrud[]) : [])));
+      }),
+      map((data) => data.map((c) => this.mapear(c, vigencia, hoy))),
+      switchMap((contratos) =>
+        forkJoin({
+          dependencias: this.nombresDependencias(contratos),
+          abogados: this.nombresAbogados(contratos),
+        }).pipe(
+          map(({ dependencias, abogados }) =>
+            contratos.map((c) => ({
+              ...c,
+              dependencia:
+                c.dependenciaId != null
+                  ? dependencias.get(c.dependenciaId) ?? `Dependencia ${c.dependenciaId}`
+                  : SIN_DEPENDENCIA,
+              abogado:
+                c.abogadoId != null
+                  ? abogados.get(c.abogadoId) ?? `Abogado ${c.abogadoId}`
+                  : SIN_ABOGADO,
+            }))
           )
         )
+      )
+    );
+  }
+
+  // contrato_general.vigencia_id guarda el Id del parámetro del tipo Vigencia
+  // (environment.VIGENCIA_ID) de Parámetros CRUD, cuyo Nombre es el año.
+  // '' = todas (0, sin filtro); null = el año no tiene parámetro.
+  private vigenciaId(anio: string): Observable<number | null> {
+    if (!anio) return of(0);
+    if (!/^\d{4}$/.test(anio)) return of(null);
+    if (this.vigenciasId.has(anio)) return of(this.vigenciasId.get(anio)!);
+    return this.parametrosService
+      .get<any>(
+        `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Nombre:${anio}&fields=Id&limit=1`
+      )
+      .pipe(
+        map((res) => {
+          const id = Number(res?.Data?.[0]?.Id);
+          const vigenciaId = Number.isInteger(id) && id > 0 ? id : null;
+          this.vigenciasId.set(anio, vigenciaId);
+          return vigenciaId;
+        })
       );
   }
 
-  private mapear(c: ContratoCrud, hoy: Date): ContratoTablero & { sedeId: number | null } {
-    // El CRUD devuelve un objeto cuando la relación tiene un solo elemento
-    const estados = (Array.isArray(c.estados) ? c.estados : c.estados ? [c.estados] : [])
-      .slice()
-      .sort((a, b) => +new Date(a.fecha_creacion) - +new Date(b.fecha_creacion));
-
-    let i = estados.findIndex((e) => e.actual);
-    if (i < 0) i = estados.length - 1;
-    const actual = estados[i];
-
-    // Fecha en que el contrato entró al estado general actual
-    let desde = actual;
-    while (actual && i > 0 && estados[i - 1].estado_parametro_id === actual.estado_parametro_id) {
-      desde = estados[--i];
-    }
-
-    const registro = estados.find((e) =>
-      (e.usuario_rol || '').toUpperCase().startsWith('ABOGADO')
-    );
+  private mapear(
+    c: ContratoTableroCrud,
+    vigencia: string,
+    hoy: Date
+  ): ContratoTablero & { sedeId: number | null } {
     const abogadoId =
-      registro && registro.usuario_id !== USUARIO_ID_GENERICO ? registro.usuario_id : null;
+      c.abogado_id != null && c.abogado_id !== USUARIO_ID_GENERICO ? c.abogado_id : null;
 
     return {
-      id: c.id,
-      numero: c.numero_contrato || c.consecutivo_elaboracion || `#${c.id}`,
-      vigencia: c.vigencia,
-      estado: actual ? estadoPorId(actual.estado_parametro_id) : null,
-      diasEnEstado: desde ? Math.max(0, diasEntre(new Date(desde.fecha_creacion), hoy)) : 0,
+      id: c.contrato_general_id,
+      numero: c.numero_contrato || c.consecutivo_elaboracion || `#${c.contrato_general_id}`,
+      vigencia,
+      estado: estadoPorId(c.estado_parametro_id),
+      // El CRUD guarda la hora de Bogotá sin zona: se lee como hora local
+      diasEnEstado: c.fecha_estado
+        ? Math.max(0, diasEntre(new Date(c.fecha_estado.substring(0, 19)), hoy))
+        : 0,
       fechaFinal: c.fecha_final ? new Date(`${c.fecha_final.substring(0, 10)}T00:00:00`) : null,
-      dependenciaId: c.solicitante?.dependencia_solicitante_id ?? null,
-      sedeId: c.solicitante?.sede_solicitante_id ?? null,
+      dependenciaId: c.dependencia_solicitante_id ?? null,
+      sedeId: c.sede_solicitante_id ?? null,
       dependencia: '',
       abogadoId,
       abogado: '',
