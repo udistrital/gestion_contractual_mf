@@ -16,8 +16,7 @@ describe('fechas del CRUD Beego', () => {
     expect(aFechaCrud(desdeFechaCrud('2026-10-31T00:00:00Z'))).toBe('2026-10-31T00:00:00Z');
   });
 
-  it('la fecha cero o vacía queda vacía', () => {
-    expect(desdeFechaCrud('0001-01-01T00:00:00Z')).toBe('');
+  it('la fecha nula queda vacía', () => {
     expect(desdeFechaCrud(null)).toBe('');
     expect(desdeFechaCrud(undefined)).toBe('');
   });

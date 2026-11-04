@@ -17,7 +17,7 @@ import { PasoSupervisoresComponent } from './paso-supervisores/paso-supervisores
 /**
  * Guardado de los pasos contra el CRUD Beego v2 (#390): los filtros se arman
  * en el paso y las respuestas tienen el formato de la rama del crud#51 (feature/385-crud-beego-v2)
- * (snake_case, Status como texto, [] en listas vacías, ceros en vez de nulos, FK { id }).
+ * (snake_case, Status como texto, [] en listas vacías, null en lo que no tiene valor, FK { id }).
  */
 
 const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
@@ -31,10 +31,8 @@ const alertServiceMock = () => ({
 
 const contrato: any = { id: 42, unidad_ejecutora_id: 1, valor_pesos: 1000000, tipo_control_id: 6611 };
 
-const FECHA_CERO = '0001-01-01T00:00:00Z';
-
 describe('Guardado de los pasos con el CRUD Beego v2', () => {
-  describe('PasoInfoGeneralComponent: valores cero y tipos del modelo v2', () => {
+  describe('PasoInfoGeneralComponent: valores nulos y tipos del modelo v2', () => {
     let component: PasoInfoGeneralComponent;
     let crud: Record<string, jest.Mock>;
 
@@ -69,10 +67,43 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       fixture.detectChanges();
     }
 
-    it('la fecha cero del CRUD (0001-01-01) se muestra vacía', async () => {
-      await montar({ ...contrato, fecha_suscripcion_estudio: FECHA_CERO, aplica_poliza: false });
+    it('los valores nulos del CRUD se muestran vacíos', async () => {
+      await montar({
+        ...contrato,
+        fecha_suscripcion_estudio: null,
+        aplica_poliza: null,
+        tipo_compromiso_id: null,
+        plazo_ejecucion: null,
+      });
       expect(component.formInfoGeneral.get('fechaSuscripcionEstudios')?.value).toBe('');
+      expect(component.formInfoGeneral.get('aplicaPoliza')?.value).toBe('');
+      expect(component.formInfoGeneral.get('tipoCompromisoId')?.value).toBeNull();
+      expect(component.formInfoGeneral.get('plazoEjecucion')?.value).toBeNull();
+    });
+
+    it('aplica_poliza en false se muestra como No', async () => {
+      await montar({ ...contrato, aplica_poliza: false });
       expect(component.formInfoGeneral.get('aplicaPoliza')?.value).toBe('0');
+    });
+
+    it('lo que no tiene valor se envía como null, no como 0', async () => {
+      await montar({
+        ...contrato,
+        fecha_suscripcion_estudio: null,
+        aplica_poliza: null,
+        perfil_contratista_id: null,
+        modalidad_seleccion_id: null,
+      });
+      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
+      component.guardarContrato('27', 1);
+      expect(crud['post']).toHaveBeenCalledWith(
+        expect.objectContaining({
+          perfil_contratista_id: null,
+          modalidad_seleccion_id: null,
+          fecha_suscripcion_estudio: null,
+          aplica_poliza: null,
+        })
+      );
     });
 
     it('muestra el día guardado y lo envía igual, sin correrlo por la zona horaria', async () => {
@@ -86,7 +117,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
     });
 
     it('envía aplica_poliza como bool, plazo como entero y la fecha vacía como null', async () => {
-      await montar({ ...contrato, fecha_suscripcion_estudio: FECHA_CERO });
+      await montar({ ...contrato, fecha_suscripcion_estudio: null });
       component.formInfoGeneral.patchValue({ aplicaPoliza: '1', plazoEjecucion: '6' as any });
       jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
       component.guardarContrato('27', 1);
@@ -172,6 +203,15 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       );
       expect(crud['postOrdenadorContrato']).not.toHaveBeenCalled();
       expect(crud['put']).toHaveBeenCalledWith(42, expect.any(Object));
+    });
+
+    it('no envía en el PUT los datos del ordenador que no vienen del formulario', async () => {
+      await montar([{ id: 7, ordenador_argo_id: 1, cargo_id: 12, ordenador_sicapital_id: 1001 }]);
+      await component.guardarYContinuar();
+      const cuerpo = crud['putOrdenadorContrato'].mock.calls[0][1];
+      expect(cuerpo).not.toHaveProperty('cargo_id');
+      expect(cuerpo).not.toHaveProperty('ordenador_sicapital_id');
+      expect(cuerpo).not.toHaveProperty('documento_identidad');
     });
 
     it('envía valor_pesos como número y el ordenador con contrato_general_id { id }', async () => {
@@ -290,8 +330,6 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
         expect.objectContaining({
           supervisor_id: 79123456,
           documento: 79123456,
-          // cargoId no es un control del formulario (TODO de develop): va como null, no NaN.
-          cargo_id: null,
           digito_verificacion: 3,
           sede_id: 10,
           dependencia_id: 20,
@@ -300,6 +338,17 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       );
       expect(crud['postSupervisor']).not.toHaveBeenCalled();
       expect(crud['put']).toHaveBeenCalledWith(42, { tipo_control_id: 6611 });
+    });
+
+    it('no envía en el PUT cargo_id ni el documento sin valor, para no borrar lo guardado', async () => {
+      await montar([supervisorGuardado]);
+      component.supervisorLegacy[0] = { documento: '', sede_legado: 'SEDE', dependencia_legado: 'DEP', cargo_legado: 'Decano' };
+      jest.spyOn(component.form.get('supervisores')!, 'invalid', 'get').mockReturnValue(false);
+      await component.guardarSupervisores();
+      const cuerpo = crud['putSupervisor'].mock.calls[0][1];
+      expect(cuerpo).not.toHaveProperty('cargo_id');
+      expect(cuerpo).not.toHaveProperty('supervisor_id');
+      expect(cuerpo).not.toHaveProperty('documento');
     });
 
     it('crea el supervisor nuevo con POST y toma su id de Data', async () => {

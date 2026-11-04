@@ -1,6 +1,6 @@
 import { test, expect, BrowserContext, Locator, Page, Route } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { CORE_MF_STUB, PROVEEDOR, responderServicioExterno } from '../support/servicios-simulados';
@@ -16,8 +16,11 @@ import { CORE_MF_STUB, PROVEEDOR, responderServicioExterno } from '../support/se
  *
  * Crea un contrato, guarda los pasos 1 y 2 (contratista, solicitante y tipo de
  * control incluidos), CDP, ordenador, supervisores y especificaciones, abre el
- * detalle y verifica en la base de datos que queda un solo ordenador activo y que
- * contratista y solicitante quedaron en contrato_general.
+ * detalle y verifica en la base de datos que queda un solo ordenador activo, que
+ * contratista y solicitante quedaron en contrato_general y que lo que no tiene valor
+ * queda en NULL. Al editar comprueba que no se borra lo que el formulario no maneja.
+ * El navegador corre a las 20:30 de Colombia (en UTC ya es el día siguiente) para
+ * comprobar el día de las columnas date; la base se prueba en America/Bogota.
  *
  * Ejecutar: CRUD_BEEGO_URL=http://localhost:8080/ pnpm run test:e2e -- registro-crud-beego
  */
@@ -27,8 +30,8 @@ const EVIDENCIAS = process.env.EVIDENCIAS_390_BEEGO ?? join(homedir(), 'argo_rep
 
 /*
  * Probada contra la rama feature/385-crud-beego-v2 del crud#51 (snake_case, [] en
- * listas vacías y POST/PUT con el registro y su id). El MF maneja Status como
- * texto, los valores cero y las FK como objeto { id }.
+ * listas vacías, POST/PUT con el registro y su id, y null en lo que no tiene valor).
+ * El MF maneja Status como texto, las FK como objeto { id } y las fechas con aFechaCrud.
  */
 test.skip(!CRUD_BEEGO_URL, 'Requiere CRUD_BEEGO_URL con el CRUD Beego v2 corriendo en local');
 
@@ -36,6 +39,9 @@ const usuario = Buffer.from(
   JSON.stringify({ user: { role: ['ABOGADO_CONTRATACION_RECTOR'] }, userService: { role: [] } })
 ).toString('base64');
 const menu = (urls: string[]) => Buffer.from(JSON.stringify(urls.map((Url) => ({ Url })))).toString('base64');
+
+const hoyColombia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
+const AHORA = new Date(`${hoyColombia}T20:30:00-05:00`);
 
 const peticionesAlCrud: string[] = [];
 const noSimuladas: string[] = [];
@@ -66,6 +72,14 @@ function sql(consulta: string): string {
   }).trim();
 }
 
+/** Fila de la tabla con cada columna separada por | y NULL donde no hay valor. */
+function columnas(tabla: string, condicion: string, nombres: string[]): string {
+  const valores = nombres.map((c) => `coalesce(${c}::text, 'NULL')`).join(', ');
+  return sql(`select concat_ws('|', ${valores}) from contratacion.${tabla} where ${condicion}`);
+}
+
+const nulos = (nombres: string[]) => nombres.map(() => 'NULL').join('|');
+
 async function aceptarAlerta(page: Page) {
   const confirmar = page.locator('.swal2-confirm');
   await confirmar.waitFor({ state: 'visible', timeout: 15_000 });
@@ -92,12 +106,25 @@ async function capturar(page: Page, archivo: string) {
   await page.screenshot({ path: join(EVIDENCIAS, `${archivo}.png`), fullPage: true });
 }
 
+async function abrirEdicion(page: Page, id: number) {
+  await page.evaluate(
+    (menuEdicion) => localStorage.setItem('menu', menuEdicion),
+    menu(['/contratos/registrar', `/contratos/detalle/${id}`, `/contratos/editar/${id}`])
+  );
+  await page.goto(`/contratos/editar/${id}`);
+}
+
 let context: BrowserContext;
 let page: Page;
 
 test.beforeAll(async ({ browser }) => {
   mkdirSync(EVIDENCIAS, { recursive: true });
-  context = await browser.newContext({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
+  context = await browser.newContext({
+    bypassCSP: true,
+    viewport: { width: 1440, height: 900 },
+    timezoneId: 'America/Bogota',
+  });
+  await context.clock.setFixedTime(AHORA);
   await context.route(/pruebascoreclientes.portaloas.udistrital.edu.co/, (route) =>
     route.fulfill({ contentType: 'application/javascript', body: CORE_MF_STUB })
   );
@@ -246,11 +273,48 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await capturar(page, '07-detalle-especificaciones');
   });
 
+  const camposSinValorContrato = [
+    'vigencia_id', 'perfil_contratista_id', 'fecha_suscripcion_estudio', 'valor_contrato_me', 'valor_tasa_cambio',
+    'clase_proveedor_id', 'condiciones', 'observaciones', 'fecha_inicial', 'fecha_final', 'fecha_suscripcion',
+  ];
+  const camposSinValorOrdenador = ['tercero_id', 'cargo_id', 'ordenador_sicapital_id', 'documento_identidad', 'resolucion'];
+  const delContrato = `contrato_general_id = ${contratoId}`;
+  let sinValorOrdenador = '';
+  let cargoSupervisorInicial = '';
+
+  await test.step('edición: guardar de nuevo no borra lo que el formulario no maneja', async () => {
+    sinValorOrdenador = columnas('ordenador_contrato', delContrato, camposSinValorOrdenador);
+    cargoSupervisorInicial = columnas('supervisor_contrato', delContrato, ['cargo_id']);
+    // El formulario no maneja estos campos: se simulan guardados por otra vía.
+    sql(`update contratacion.supervisor_contrato set cargo_id = 45 where ${delContrato}`);
+    sql(`update contratacion.ordenador_contrato set cargo_id = 12, ordenador_sicapital_id = 1001, documento_identidad = '19456789' where ${delContrato}`);
+
+    await abrirEdicion(page, contratoId);
+    const presupuestal = page.locator('app-paso-info-presupuestal');
+    await expect(presupuestal.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
+    await expect(presupuestal.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/GIOVANNI/);
+    const ordenador = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/ordenador_contrato/'));
+    await presupuestal.getByRole('button', { name: /Guardar y Continuar/ }).click();
+    expect.soft(Object.keys((await ordenador).postDataJSON())).toEqual(['ordenador_argo_id', 'contrato_general_id']);
+    await aceptarAlerta(page);
+
+    await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
+    const supervisores = page.locator('app-paso-supervisores');
+    await expect(supervisores).toContainText('CARLOS ANDRÉS RUIZ MORENO');
+    const supervisor = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/supervisor_contrato/'));
+    await supervisores.getByRole('button', { name: /(Guardar|Actualizar) Supervisores/ }).click();
+    expect.soft((await supervisor).postDataJSON()).not.toHaveProperty('cargo_id');
+    await aceptarAlerta(page);
+  });
+
   await test.step('base de datos: un solo ordenador activo, contratista y solicitante en contrato_general', async () => {
     const contrato = sql(
       `select proveedor_numero_documento, tipo_persona_id, sede_solicitante_id, dependencia_solicitante_id, tipo_control_id ` +
         `from contratacion.contrato_general where id = ${contratoId}`
     );
+    const sinValor = columnas('contrato_general', `id = ${contratoId}`, camposSinValorContrato);
+    const cargoSupervisor = columnas('supervisor_contrato', delContrato, ['cargo_id']);
+    const ordenadorEditado = columnas('ordenador_contrato', delContrato, ['cargo_id', 'ordenador_sicapital_id', 'documento_identidad']);
     const conteos = {
       ordenadores_activos: sql(`select count(*) from contratacion.ordenador_contrato where contrato_general_id = ${contratoId} and activo`),
       cdps_activos: sql(`select count(*) from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
@@ -261,19 +325,85 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     };
     writeFileSync(
       join(EVIDENCIAS, '08-base-de-datos.txt'),
-      `Contrato ${contratoId}\ncontrato_general (proveedor_numero_documento|tipo_persona_id|sede_solicitante_id|dependencia_solicitante_id|tipo_control_id):\n${contrato}\n\n` +
+      `Zona horaria de la base: ${sql('show timezone')}\nHora del navegador: ${AHORA.toISOString()} (20:30 en Colombia)\n\n` +
+        `Contrato ${contratoId}\ncontrato_general (proveedor_numero_documento|tipo_persona_id|sede_solicitante_id|dependencia_solicitante_id|tipo_control_id):\n${contrato}\n\n` +
+        `contrato_general sin valor (${camposSinValorContrato.join('|')}):\n${sinValor}\n\n` +
+        `ordenador_contrato sin valor al crearlo (${camposSinValorOrdenador.join('|')}):\n${sinValorOrdenador}\n\n` +
+        `supervisor_contrato.cargo_id al crearlo: ${cargoSupervisorInicial}\n` +
+        `supervisor_contrato.cargo_id tras editar (se fijó en 45 por SQL): ${cargoSupervisor}\n` +
+        `ordenador_contrato tras editar (cargo_id|ordenador_sicapital_id|documento_identidad, fijados por SQL): ${ordenadorEditado}\n\n` +
         Object.entries(conteos).map(([k, v]) => `${k}: ${v}`).join('\n') +
         `\n\nPeticiones al CRUD Beego (${peticionesAlCrud.length}):\n${peticionesAlCrud.join('\n')}\n`
     );
     expect.soft(contrato).toBe('1014285890|1|10|20|6611');
+    expect.soft(sinValor).toBe(nulos(camposSinValorContrato));
+    expect.soft(sinValorOrdenador).toBe(nulos(camposSinValorOrdenador));
+    expect.soft(cargoSupervisorInicial).toBe('NULL');
+    expect.soft(cargoSupervisor).toBe('45');
+    expect.soft(ordenadorEditado).toBe('12|1001|19456789');
     expect.soft(conteos.ordenadores_activos).toBe('1');
     expect.soft(conteos.cdps_activos).toBe('1');
     expect.soft(conteos.supervisores_activos).toBe('1');
     expect.soft(conteos.especificaciones_activas).toBe('1');
     // La columna date debe quedar con el día local, no con el día UTC.
-    const hoy = new Date();
-    const hoyLocal = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-    expect.soft(conteos.fecha_registro_cdp).toBe(hoyLocal);
+    expect.soft(conteos.fecha_registro_cdp).toBe(hoyColombia);
     expect.soft(noSimuladas, 'peticiones sin simular').toEqual([]);
   });
+});
+
+test('fecha de estudios: conserva el día al guardar y al editar', async () => {
+  test.setTimeout(180_000);
+  contratoId = 0;
+
+  await page.goto('/contratos/registrar');
+  const seccion = page.locator('app-paso-info-general');
+  await expect(seccion).toBeVisible();
+  await seleccionar(page, buscable(seccion, 'Tipo de Compromiso'), /^Contrato$/);
+  await seleccionar(page, buscable(seccion, 'Tipo de Contrato'), 'Contrato de Prestación de Servicios');
+  await seleccionar(page, seccion.locator('mat-select[formcontrolname="perfilContratistaId"]'), 'Profesional');
+  await seleccionar(page, buscable(seccion, 'Modalidad de Selección'), 'Contratación Directa');
+  await seleccionar(page, buscable(seccion, 'Régimen de Contratación'), 'Régimen Especial - Acuerdo 03 de 2015');
+  await seleccionar(page, buscable(seccion, 'Tipología Específica'), 'Prestación de servicios profesionales');
+  await seleccionar(page, buscable(seccion, 'Procedimiento'), 'PRO-CD-02 Contratación directa');
+  await seccion.locator('mat-datepicker-toggle button').click();
+  await page.locator('.mat-calendar-body-today').click();
+  await expect(page.locator('.cdk-overlay-backdrop-showing')).toHaveCount(0);
+  await seccion.locator('input[formcontrolname="plazoEjecucion"]').fill('6');
+  await seleccionar(page, seccion.locator('mat-select[formcontrolname="unidadEjecucionId"]'), 'MESES');
+  await seccion.getByRole('button', { name: /Guardar Datos Básicos/ }).click();
+  await aceptarAlerta(page);
+  await expect.poll(() => contratoId, { message: 'id del contrato creado en el CRUD' }).toBeGreaterThan(0);
+
+  const fechaGuardada = () => columnas('contrato_general', `id = ${contratoId}`, ['fecha_suscripcion_estudio']);
+  const fechas = [fechaGuardada()];
+  // Se abre y se guarda dos veces: el PUT parcial reescribe la fecha leída del CRUD y no se
+  // debe correr. Se usa el solicitante porque el paso 1 no hace PUT (formId nunca se asigna).
+  for (let vez = 0; vez < 2; vez++) {
+    await abrirEdicion(page, contratoId);
+    await expect(seccion.locator('input[formcontrolname="fechaSuscripcionEstudios"]')).not.toHaveValue('');
+    await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
+    const supervisores = page.locator('app-paso-supervisores');
+    await seleccionar(page, buscable(supervisores, 'Sede Universitaria Solicitante'), 'Sede Calle 40');
+    await seleccionar(page, buscable(supervisores, 'Dependencia Solicitante'), 'Facultad de Ingeniería');
+    const guardado = page.waitForResponse(
+      (r) => r.request().method() === 'PUT' && r.url().includes(`/v1/contrato_general/${contratoId}`)
+    );
+    await supervisores.getByRole('button', { name: /(Guardar|Actualizar) Solicitante/ }).click();
+    expect((await guardado).status()).toBe(200);
+    fechas.push(fechaGuardada());
+  }
+  await abrirEdicion(page, contratoId);
+  await expect(seccion.locator('input[formcontrolname="fechaSuscripcionEstudios"]')).not.toHaveValue('');
+  await capturar(page, '09-edicion-fecha-estudios');
+
+  const aplicaPoliza = columnas('contrato_general', `id = ${contratoId}`, ['aplica_poliza']);
+  appendFileSync(
+    join(EVIDENCIAS, '08-base-de-datos.txt'),
+    `\nContrato ${contratoId} (fecha de estudios, guardado a las 20:30 de Colombia)\n` +
+      `fecha_suscripcion_estudio al crear y tras cada edición: ${fechas.join(', ')}\n` +
+      `aplica_poliza (el control no aplica): ${aplicaPoliza}\n`
+  );
+  expect.soft(fechas).toEqual([hoyColombia, hoyColombia, hoyColombia]);
+  expect.soft(aplicaPoliza).toBe('NULL');
+  expect.soft(noSimuladas, 'peticiones sin simular').toEqual([]);
 });

@@ -15,7 +15,7 @@ jest.mock('sweetalert2', () => ({
 /**
  * Rutas /v1 del CRUD Beego v2 y filtros que arman los pasos. Las respuestas
  * tienen el formato de la rama feature/385-crud-beego-v2 (crud#51): snake_case,
- * Status como texto, [] en listas vacías, ceros en vez de nulos y FK como objeto
+ * Status como texto, [] en listas vacías, null en lo que no tiene valor y FK como objeto
  * { id }. El MF no las transforma.
  */
 const CRUD = `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}v1`;
@@ -57,7 +57,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   afterEach(() => http.verify());
 
   it('1. GET /v1/contrato_general/{id} y entrega la respuesta tal cual', () => {
-    const contrato = { id: 42, objeto: 'Compra', tipo_control_id: 0, fecha_suscripcion: '0001-01-01T00:00:00Z', sede_solicitante_id: 10 };
+    const contrato = { id: 42, objeto: 'Compra', tipo_control_id: null, fecha_suscripcion: null, sede_solicitante_id: 10 };
     let respuesta: any;
     crud.get(42).subscribe((r) => (respuesta = r));
     const req = http.expectOne(`${CRUD}/contrato_general/42`);
