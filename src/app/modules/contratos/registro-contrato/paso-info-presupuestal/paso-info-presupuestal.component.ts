@@ -14,6 +14,7 @@ import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import { CdpsService } from 'src/app/services/cdps.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
+import { aFechaCrud } from 'src/app/utils/fechas-crud';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ApiResponse, CDP, CDPContratoCRUD, CDPData, CDPItem, ContratoGeneral, OrdenadorContratoData, ParametroResponse } from 'src/app/types/types';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
@@ -542,7 +543,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
       const cdpsGuardarCrud: CDPContratoCRUD[] = this.selectedCDP.map(
         (cdp) => ({
           numero_cdp_id: parseInt(cdp.numero_disponibilidad),
-          fecha_registro: new Date(),
+          fecha_registro: aFechaCrud(new Date()),
           vigencia_cdp_id: parseInt(cdp.vigencia),
           contrato_general_id: { id: contratoId },
           valor_a_tomar: this.parseNumero(cdp.valor_a_tomar ?? cdp.valor_contratacion),

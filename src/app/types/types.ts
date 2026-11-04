@@ -61,7 +61,7 @@ export interface ConsultaCrud {
 export interface CDPContratoCRUD {
   id?: number;
   numero_cdp_id: number;
-  fecha_registro: Date;
+  fecha_registro: string;
   vigencia_cdp_id: number;
   contrato_general_id: ReferenciaCrud | null;
   valor_a_tomar?: number;

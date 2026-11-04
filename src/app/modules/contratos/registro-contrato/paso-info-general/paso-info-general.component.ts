@@ -11,6 +11,7 @@ import {
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
+import { aFechaCrud, desdeFechaCrud } from 'src/app/utils/fechas-crud';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { RolService } from 'src/app/services/rol.service';
@@ -426,10 +427,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipoCompromisoId: data.tipo_compromiso_id ?? 0,
       tipoContratoId: data.tipo_contrato_id ?? 0,
       perfilContratistaId: data.perfil_contratista_id ?? 0,
-      // El CRUD Beego devuelve la fecha vacía como 0001-01-01.
-      fechaSuscripcionEstudios: String(data.fecha_suscripcion_estudio ?? '').startsWith('0001-01-01')
-        ? ''
-        : data.fecha_suscripcion_estudio?.toLocaleString() ?? '',
+      fechaSuscripcionEstudios: desdeFechaCrud(data.fecha_suscripcion_estudio),
       aplicaPoliza: data?.aplica_poliza ? '1' : '0',
       modalidadSeleccionId: data.modalidad_seleccion_id ?? 0,
       tipologiaEspecificaId: data.tipologia_especifica_id ?? 0,
@@ -506,9 +504,9 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipo_compromiso_id: formData.tipoCompromisoId,
       tipo_contrato_id: formData.tipoContratoId,
       perfil_contratista_id: formData.perfilContratistaId,
-      // Tipos del modelo v2: fecha ISO o null, bool y entero.
+      // Tipos del modelo v2: fecha o null, bool y entero.
       fecha_suscripcion_estudio: formData.fechaSuscripcionEstudios
-        ? new Date(formData.fechaSuscripcionEstudios).toISOString()
+        ? aFechaCrud(formData.fechaSuscripcionEstudios)
         : null,
       aplica_poliza: formData.aplicaPoliza === '1',
       vigencia_convenio: formData.vigenciaConvenio,
