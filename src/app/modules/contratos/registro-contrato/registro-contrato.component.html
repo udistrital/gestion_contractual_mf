@@ -76,6 +76,7 @@
               (stepCompleted)="onPasoInfoPresupuestalCompleted($event)"
               (contratoGuardado)="onPresupuestalGuardado()"
               (nextStep)="goToNextStep()"
+              (prevStep)="goToPreviousStep()"
             />
           </mat-step>
 
@@ -94,6 +95,7 @@
               [bloquearContratista]="bloquearContratista"
               (stepCompleted)="onPasoContratistasCompleted($event)"
               (nextStep)="goToNextStep()"
+              (prevStep)="goToPreviousStep()"
               [viewMode]="viewMode()"
             />
           </mat-step>
@@ -105,6 +107,7 @@
               [contratoGeneral]="contratoGeneral"
               (stepCompleted)="onPasoEstructuraCompleted($event)"
               (nextStep)="goToNextStep()"
+              (prevStep)="goToPreviousStep()"
               [viewMode]="viewMode()"
             />
           </mat-step>
@@ -117,6 +120,7 @@
                 [viewMode]="viewMode()"
                 (stepCompleted)="onPasoEspecificacionesCompleted($event)"
                 (nextStep)="goToNextStep()"
+                (prevStep)="goToPreviousStep()"
               />
             </mat-step>
           }
@@ -129,6 +133,7 @@
                 [viewMode]="viewMode()"
                 (stepCompleted)="onPasoGarantiasCompleted($event)"
                 (nextStep)="goToNextStep()"
+                (prevStep)="goToPreviousStep()"
               />
             </mat-step>
           }
@@ -139,6 +144,7 @@
               [contratoGeneral]="contratoGeneral"
               [viewMode]="viewMode()"
               (stepCompleted)="onPasoClausulasCompleted($event)"
+              (prevStep)="goToPreviousStep()"
             />
           </mat-step>
         </mat-stepper>
