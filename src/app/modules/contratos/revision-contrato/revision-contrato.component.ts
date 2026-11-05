@@ -108,7 +108,7 @@ export class RevisionContratoComponent {
       next: ({ contrato, estadosContrato }: any) => {
         const contratoData = contrato?.Data || contrato;
         if (contratoData) {
-          this.unidad_ejecutora_id = contratoData.unidad_ejecutora_id || 1;
+          this.unidad_ejecutora_id = contratoData.unidad_ejecutora_id || 0;
           this.vigencia = contratoData.vigencia || '';
           this.numero_contrato = contratoData.numero_contrato || '';
         }
@@ -290,8 +290,6 @@ export class RevisionContratoComponent {
           nombre: `MINUTA ${this.contrato_general_id}`,
           descripcion: `Cargue de minuta, contrato general id ${this.contrato_general_id}`,
           contrato_general_id: this.contrato_general_id,
-          usuario_id: this.usuario_id,
-          usuario_rol: this.getRolPorEstado(),
         },
       },
     });
@@ -355,7 +353,7 @@ export class RevisionContratoComponent {
       estado_interno_parametro_id: estadoActual,
     };
 
-    if (this.numero_contrato == null) {
+    if (!this.numero_contrato) {
       this.generarNumeroContrato(estadoContrato, estadoAnterior);
     } else {
       this.crearEstadoAutomaticoContrato(estadoContrato, estadoAnterior);
@@ -390,17 +388,11 @@ export class RevisionContratoComponent {
         next: (response: any) => {
           if (response.id) {
             this.alertService.showSuccessAlert(
-              this.textos.enviado,
+              numeroContrato
+                ? `${this.textos.enviado}. Número de contrato: ${numeroContrato}`
+                : this.textos.enviado,
               'CONTRATO ENVIADO'
             );
-            if (
-              estadoContrato.estado_parametro_id ===
-                environment.ESTADOS_GENERALES.SUSCRITO &&
-              !this.numero_contrato &&
-              numeroContrato
-            ) {
-              this.guardarNumeroContrato(numeroContrato);
-            }
           }
         },
         error: (error) =>
@@ -410,19 +402,23 @@ export class RevisionContratoComponent {
 
   // Generar número de contrato si aplica
   generarNumeroContrato(estadoContrato: EstadoContrato, estado: number) {
+    // Provisional: el año actual cuando el contrato no tiene vigencia (#397, pregunta 1).
+    const vigencia = this.vigencia || String(new Date().getFullYear());
+
     this.contratoGeneralMidService
       .postNumeroContrato({
         unidad_ejecutora_id: this.unidad_ejecutora_id,
-        vigencia: this.vigencia,
+        vigencia,
         estado: environment.ESTADOS_GENERALES.SUSCRITO,
       })
       .subscribe({
         next: (response: ApiResponse<any>) => {
           if (response.Success && response.Status === 200) {
-            this.crearEstadoAutomaticoContrato(
+            this.guardarNumeroContrato(
+              response.Data,
+              vigencia,
               estadoContrato,
-              estado,
-              response.Data
+              estado
             );
           } else {
             this.alertService.showErrorAlert(
@@ -437,15 +433,28 @@ export class RevisionContratoComponent {
       });
   }
 
-  // Actualizar el contrato para guardar el número de contrato
-  guardarNumeroContrato(numeroContrato: string) {
+  // Guarda el número y la vigencia antes de los estados: si falla, el contrato no queda SUSCRITO sin número.
+  // La vigencia también se guarda porque el conteo del número filtra por ella.
+  guardarNumeroContrato(
+    numeroContrato: string,
+    vigencia: string,
+    estadoContrato: EstadoContrato,
+    estado: number
+  ) {
     this.contratoGeneralCrudService
-      .put(this.contrato_general_id, { numero_contrato: numeroContrato })
+      .put(this.contrato_general_id, {
+        numero_contrato: numeroContrato,
+        vigencia,
+      })
       .subscribe({
         next: (response: ApiResponse<any>) => {
           if (response.Success && response.Status === 200) {
-            this.alertService.showSuccessAlert(
-              `Número de contrato generado: ${numeroContrato}`
+            this.numero_contrato = numeroContrato;
+            this.vigencia = vigencia;
+            this.crearEstadoAutomaticoContrato(
+              estadoContrato,
+              estado,
+              numeroContrato
             );
           } else {
             this.alertService.showErrorAlert(
