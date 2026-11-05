@@ -133,8 +133,10 @@ export class PasoInfoGeneralComponent implements OnInit {
   perfilesContratista: ParametroResponse[] = [];
 
   unidadesEjecutoras: SimpleItem[] = [];
+  unidadesEjecutorasParametros: ParametroResponse[] = [];
 
   tiposParametrosRequeridos = [
+    environment.UNIDAD_EJECUTORA_ID,
     environment.TIPO_COMPROMISO_ID,
     environment.TIPO_CONTRATO_ID,
     environment.MODALIDAD_SELECCION_ID,
@@ -268,6 +270,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   private async loadInitialData(): Promise<void> {
     return this.parametrosService.getParametrosPorTipo(this.tiposParametrosRequeridos).then(
       (data: Record<number, ParametroResponse[]>) => {
+        this.unidadesEjecutorasParametros = data[environment.UNIDAD_EJECUTORA_ID] || [];
         this.tiposCompromisos = data[environment.TIPO_COMPROMISO_ID];
         this.modalidadesSeleccion = data[environment.MODALIDAD_SELECCION_ID];
         this.regimenesContratacion = data[environment.REGIMEN_CONTRATACION_ID];
@@ -279,15 +282,29 @@ export class PasoInfoGeneralComponent implements OnInit {
       .catch((err) => this.handleError(err));
   }
 
+  private obtenerNombreUnidadEjecutora(id: number, fallback: string): string {
+    const param = this.unidadesEjecutorasParametros?.find((p) => Number(p.Id) === id);
+    return param?.Nombre || fallback;
+  }
+
   private processRoles(): void {
+    const nombreRectoria = this.obtenerNombreUnidadEjecutora(
+      environment.UNIDADES_EJECUTORAS.RECTORIA,
+      'Rectoría'
+    );
+    const nombreIdexud = this.obtenerNombreUnidadEjecutora(
+      environment.UNIDADES_EJECUTORAS.IDEXUD,
+      'IDEXUD'
+    );
+
     const defaultOptions = [
       {
         Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-        Nombre: 'Rectoría',
+        Nombre: nombreRectoria,
       },
       {
         Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-        Nombre: 'IDEXUD',
+        Nombre: nombreIdexud,
       },
     ];
 
@@ -295,10 +312,15 @@ export class PasoInfoGeneralComponent implements OnInit {
       (role) => role.includes('RECTOR') || role.includes('IDEXUD')
     );
 
+    const ueIdNavegacion = Number(history.state?.unidadEjecutoraId);
+
     if (filteredRoles.length === 0) {
       this.unidadesEjecutoras = defaultOptions;
+      const ueSeleccionada =
+        defaultOptions.find((u) => u.Id === ueIdNavegacion)?.Id ??
+        defaultOptions[0].Id;
       this.formInfoGeneral.patchValue({
-        unidadEjecutoraId: defaultOptions[0].Id
+        unidadEjecutoraId: ueSeleccionada
       });
       return;
     }
@@ -308,13 +330,13 @@ export class PasoInfoGeneralComponent implements OnInit {
         if (role.includes('RECTOR')) {
           return {
             Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-            Nombre: 'Rectoría',
+            Nombre: nombreRectoria,
           };
         }
         if (role.includes('IDEXUD')) {
           return {
             Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-            Nombre: 'IDEXUD',
+            Nombre: nombreIdexud,
           };
         }
         return null;
@@ -327,6 +349,13 @@ export class PasoInfoGeneralComponent implements OnInit {
     if (this.unidadesEjecutoras.length === 1) {
       this.formInfoGeneral.patchValue({
         unidadEjecutoraId: this.unidadesEjecutoras[0].Id
+      });
+    } else if (
+      ueIdNavegacion &&
+      this.unidadesEjecutoras.some((u) => u.Id === ueIdNavegacion)
+    ) {
+      this.formInfoGeneral.patchValue({
+        unidadEjecutoraId: ueIdNavegacion
       });
     }
   }
