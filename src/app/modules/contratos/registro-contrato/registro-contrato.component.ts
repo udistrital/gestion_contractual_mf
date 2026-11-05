@@ -314,9 +314,10 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  cargarContratoGeneral() {
+  /** Por defecto no repite un contrato ya cargado; con `forzar` lo vuelve a pedir tras guardar. */
+  cargarContratoGeneral({ forzar = false }: { forzar?: boolean } = {}) {
     const id = this.contratoGeneralId();
-    if (!id || this.contratoCargadoId === id || this.cargandoContrato) return;
+    if (!id || this.cargandoContrato || (!forzar && this.contratoCargadoId === id)) return;
 
     this.contratoCargadoId = id;
     this.cargandoContrato = true;
@@ -385,8 +386,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   onContratoGuardado(contratoId: number) {
     this.contratoGeneralId.set(contratoId);
     this.marcarPasoGuardado('general');
-    this.contratoCargadoId = 0;
-    this.cargarContratoGeneral();
+    this.cargarContratoGeneral({ forzar: true });
   }
 
   onPasoInfoGeneralCompleted(isCompleted: boolean) {
