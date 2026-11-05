@@ -297,16 +297,22 @@ export class PasoInfoGeneralComponent implements OnInit {
       'IDEXUD'
     );
 
-    const defaultOptions = [
-      {
-        Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-        Nombre: nombreRectoria,
-      },
-      {
-        Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-        Nombre: nombreIdexud,
-      },
-    ];
+    const catalogoUnidades: SimpleItem[] =
+      this.unidadesEjecutorasParametros?.length > 0
+        ? this.unidadesEjecutorasParametros.map((p) => ({
+            Id: Number(p.Id),
+            Nombre: p.Nombre,
+          }))
+        : [
+            {
+              Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+              Nombre: nombreRectoria,
+            },
+            {
+              Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+              Nombre: nombreIdexud,
+            },
+          ];
 
     const filteredRoles = this.roles.filter(
       (role) => role.includes('RECTOR') || role.includes('IDEXUD')
@@ -315,10 +321,10 @@ export class PasoInfoGeneralComponent implements OnInit {
     const ueIdNavegacion = Number(history.state?.unidadEjecutoraId);
 
     if (filteredRoles.length === 0) {
-      this.unidadesEjecutoras = defaultOptions;
+      this.unidadesEjecutoras = catalogoUnidades;
       const ueSeleccionada =
-        defaultOptions.find((u) => u.Id === ueIdNavegacion)?.Id ??
-        defaultOptions[0].Id;
+        catalogoUnidades.find((u) => u.Id === ueIdNavegacion)?.Id ??
+        catalogoUnidades[0]?.Id;
       this.formInfoGeneral.patchValue({
         unidadEjecutoraId: ueSeleccionada
       });
@@ -343,19 +349,26 @@ export class PasoInfoGeneralComponent implements OnInit {
       })
       .filter((item): item is SimpleItem => item !== null);
 
+    if (ueIdNavegacion) {
+      const ueDesdeCatalogo = catalogoUnidades.find((u) => u.Id === ueIdNavegacion);
+      if (ueDesdeCatalogo) {
+        mappedItems.push(ueDesdeCatalogo);
+      }
+    }
+
     const uniqueMap = new Map(mappedItems.map((item) => [item.Id, item]));
     this.unidadesEjecutoras = Array.from(uniqueMap.values());
 
-    if (this.unidadesEjecutoras.length === 1) {
-      this.formInfoGeneral.patchValue({
-        unidadEjecutoraId: this.unidadesEjecutoras[0].Id
-      });
-    } else if (
+    if (
       ueIdNavegacion &&
       this.unidadesEjecutoras.some((u) => u.Id === ueIdNavegacion)
     ) {
       this.formInfoGeneral.patchValue({
         unidadEjecutoraId: ueIdNavegacion
+      });
+    } else if (this.unidadesEjecutoras.length === 1) {
+      this.formInfoGeneral.patchValue({
+        unidadEjecutoraId: this.unidadesEjecutoras[0].Id
       });
     }
   }

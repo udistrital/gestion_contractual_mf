@@ -18,6 +18,17 @@ export interface UnidadEjecutoraOption {
   standalone: false
 })
 export class ModalSeleccionarUeComponent implements OnInit {
+  private readonly descripcionesPorDefecto: Record<number, { codigo: string; descripcion: string }> = {
+    [environment.UNIDADES_EJECUTORAS.RECTORIA]: {
+      codigo: '01',
+      descripcion: 'Trámites generales, convenios y contratos transversales institucionales.',
+    },
+    [environment.UNIDADES_EJECUTORAS.IDEXUD]: {
+      codigo: '02',
+      descripcion: 'Contratos de extensión, proyectos especiales y consultorías externas.',
+    },
+  };
+
   unidades: UnidadEjecutoraOption[] = [
     {
       id: environment.UNIDADES_EJECUTORAS.RECTORIA,
@@ -53,18 +64,32 @@ export class ModalSeleccionarUeComponent implements OnInit {
         data?.[environment.UNIDAD_EJECUTORA_ID] || [];
 
       if (Array.isArray(parametrosUe) && parametrosUe.length > 0) {
-        this.unidades = this.unidades.map((ue) => {
-          const encontrado = parametrosUe.find((p) => Number(p.Id) === ue.id);
-          return encontrado?.Nombre
-            ? { ...ue, nombre: encontrado.Nombre }
-            : ue;
+        this.unidades = parametrosUe.map((param, idx) => {
+          const id = Number(param.Id);
+          const base = this.descripcionesPorDefecto[id];
+          const codigo =
+            param.CodigoAbreviacion ||
+            base?.codigo ||
+            String(idx + 1).padStart(2, '0');
+          const descripcion =
+            param.Descripcion && param.Descripcion !== param.Nombre
+              ? param.Descripcion
+              : base?.descripcion ||
+                'Unidad ejecutora habilitada para trámites contractuales.';
+
+          return {
+            id,
+            codigo,
+            nombre: param.Nombre || `Unidad Ejecutora ${codigo}`,
+            descripcion,
+          };
         });
         this.selectedUe =
-          this.unidades.find((u) => u.id === this.selectedUe.id) ||
+          this.unidades.find((u) => u.id === this.selectedUe?.id) ||
           this.unidades[0];
       }
     } catch {
-      // Mantiene los nombres base por defecto si falla la consulta de parámetros
+      // Mantiene las unidades base por defecto si falla la consulta de parámetros
     }
   }
 
