@@ -237,13 +237,19 @@
             </div>
 
             <div class="col-12 col-md-4">
-              <div class="estimacion-termino-wrapper">
-                <span class="estimacion-label">ESTIMACIÓN DE TÉRMINO</span>
-                <div class="estimacion-box" title="Calculado a partir de la fecha de suscripción y el plazo">
-                  <mat-icon class="estimacion-icon">event_available</mat-icon>
-                  <span class="estimacion-texto font-mono">{{ estimacionTermino }}</span>
-                </div>
-              </div>
+              <mat-form-field
+                class="w-100 estimacion-field"
+                appearance="outline"
+                title="Calculado a partir de la fecha de suscripción y el plazo"
+              >
+                <mat-label>ESTIMACIÓN DE TÉRMINO</mat-label>
+                <mat-icon matIconPrefix>event_available</mat-icon>
+                <input
+                  matInput
+                  [value]="estimacionTermino"
+                  readonly
+                />
+              </mat-form-field>
             </div>
           </div>
 

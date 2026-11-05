@@ -17,6 +17,7 @@ import { PasoObligacionesComponent } from './paso-obligaciones/paso-obligaciones
 import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-info-presupuestal.component';
 import { MatStep, MatStepper } from '@angular/material/stepper';
 import { STEPPER_GLOBAL_OPTIONS, StepperSelectionEvent } from '@angular/cdk/stepper';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -86,6 +87,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly alertService = inject(AlertService);
   private readonly cdRef = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
 
   contratoGeneralId = model<number>(0);
@@ -310,6 +312,14 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
       if (nextIndex < this.pasosDinamicos.length) {
         this.irAlPaso(nextIndex);
       }
+    }
+  }
+
+  goToPreviousStep() {
+    if (this.selectedIndex > 0) {
+      this.irAlPaso(this.selectedIndex - 1);
+    } else {
+      this.router.navigate(['/gestion-contractual/contratos/consultar']);
     }
   }
 

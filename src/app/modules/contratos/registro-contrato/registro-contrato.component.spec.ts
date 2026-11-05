@@ -70,6 +70,27 @@ describe('RegistroContratoComponent', () => {
     expect(component.stepper.selectedIndex).toBe(0);
   });
 
+  it('debe retroceder al paso anterior con goToPreviousStep() o navegar a consultar contratos desde el Paso 1', () => {
+    component.stepper = { selectedIndex: 2 } as any;
+    component.selectedIndex = 2;
+    const navigateSpy = jest
+      .spyOn((component as any).router, 'navigate')
+      .mockResolvedValue(true);
+
+    component.goToPreviousStep();
+    expect(component.selectedIndex).toBe(1);
+    expect(component.stepper.selectedIndex).toBe(1);
+
+    component.goToPreviousStep();
+    expect(component.selectedIndex).toBe(0);
+    expect(component.stepper.selectedIndex).toBe(0);
+
+    component.goToPreviousStep();
+    expect(navigateSpy).toHaveBeenCalledWith([
+      '/gestion-contractual/contratos/consultar',
+    ]);
+  });
+
   describe('Lógica de los 4 estados del Stepper', () => {
     it('debe marcar como "actual" el paso seleccionado activamente', () => {
       component.selectedIndex = 0;
