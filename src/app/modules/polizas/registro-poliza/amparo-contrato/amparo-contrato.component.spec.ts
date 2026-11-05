@@ -96,6 +96,24 @@ describe('AmparoContratoComponent', () => {
       expect(component.amparosFormArray.at(0).get('id')?.value).toBe(1);
     });
 
+    it('precarga las fechas de un amparo con el mismo día guardado en el CRUD', () => {
+      (polizasService.getAmparosContratoMid as jest.Mock).mockReturnValue(
+        of({
+          Data: [
+            { ...amparoBase, id: 1, poliza_id: 99, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
+          ],
+        })
+      );
+
+      component.polizaId = 99;
+      component.contratoId = '5';
+
+      const amparo = component.amparosFormArray.at(0);
+      expect(amparo.get('fecha_inicio')?.value.getDate()).toBe(1);
+      expect(amparo.get('fecha_inicio')?.value.getFullYear()).toBe(2026);
+      expect(amparo.get('fecha_fin')?.value.getDate()).toBe(31);
+    });
+
     it('sin polizaId todos los amparos quedan disponibles y la tabla vacía', () => {
       (polizasService.getAmparosContratoMid as jest.Mock).mockReturnValue(
         of({
