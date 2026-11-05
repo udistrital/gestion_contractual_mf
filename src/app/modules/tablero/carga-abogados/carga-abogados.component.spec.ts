@@ -8,11 +8,11 @@ describe('CargaAbogadosComponent', () => {
   let component: CargaAbogadosComponent;
 
   const contratos = [
-    contratoPrueba({ id: 1, abogadoId: 500, abogado: 'Diana Rojas', diasEnEstado: 9 }),
-    contratoPrueba({ id: 2, abogadoId: 500, abogado: 'Diana Rojas', estado: 'enEjecucion' }),
-    contratoPrueba({ id: 3, abogadoId: 600, abogado: 'Andrés Pinzón', estado: 'suscrito' }),
-    contratoPrueba({ id: 4, abogadoId: 600, abogado: 'Andrés Pinzón', estado: 'suscrito' }),
-    contratoPrueba({ id: 5, abogadoId: 600, abogado: 'Andrés Pinzón', estado: 'declinado' }),
+    contratoPrueba({ id: 1, abogadoId: 500, abogado: 'Abogado B de Prueba', diasEnEstado: 9 }),
+    contratoPrueba({ id: 2, abogadoId: 500, abogado: 'Abogado B de Prueba', estado: 'enEjecucion' }),
+    contratoPrueba({ id: 3, abogadoId: 600, abogado: 'Abogado A de Prueba', estado: 'suscrito' }),
+    contratoPrueba({ id: 4, abogadoId: 600, abogado: 'Abogado A de Prueba', estado: 'suscrito' }),
+    contratoPrueba({ id: 5, abogadoId: 600, abogado: 'Abogado A de Prueba', estado: 'declinado' }),
     contratoPrueba({ id: 6, abogadoId: null, abogado: 'Sin identificar' }),
   ];
 
@@ -28,11 +28,11 @@ describe('CargaAbogadosComponent', () => {
 
   it('jefe: una fila por abogado con pendientes y alertas', () => {
     const filas = component.filas();
-    expect(filas.map((f) => f.nombre)).toEqual(['Andrés Pinzón', 'Diana Rojas', 'Sin identificar']);
+    expect(filas.map((f) => f.nombre)).toEqual(['Abogado A de Prueba', 'Abogado B de Prueba', 'Sin identificar']);
     expect(filas[0].pendientes).toBe(2);
     expect(filas[1].alertas).toBe(1);
     expect(component.maximo()).toBe(3);
-    expect(fixture.nativeElement.querySelectorAll('.avatar')[0].textContent).toBe('AP');
+    expect(fixture.nativeElement.querySelectorAll('.avatar')[0].textContent).toBe('AA');
   });
 
   it('abogado: compara sus contratos con el promedio de la oficina', () => {
