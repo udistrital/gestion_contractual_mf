@@ -242,8 +242,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   onPresupuestalGuardado() {
     this.marcarPasoGuardado('general');
-    this.contratoCargadoId = 0;
-    this.cargarContratoGeneral();
+    this.cargarContratoGeneral({ forzar: true });
   }
 
   onPasoEstructuraCompleted(isCompleted: boolean) {
