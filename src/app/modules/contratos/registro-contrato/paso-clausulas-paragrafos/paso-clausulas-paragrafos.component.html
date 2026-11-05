@@ -129,7 +129,7 @@
                       <span class="arbol-dot-modified" title="Cambios sin guardar"></span>
                     }
                     @if (!isClausulaEditable(item.index)) {
-                      <mat-icon class="arbol-lock-icon" title="Inalterable / Predeterminada">lock</mat-icon>
+                      <mat-icon class="arbol-lock-icon" title="No modificable / Predeterminada">lock</mat-icon>
                     }
                     @if (getParagrafos(item.control).length > 0) {
                       <span class="arbol-paragrafo-pill" title="Parágrafos en esta cláusula">
@@ -221,7 +221,7 @@
                       @if (!isClausulaEditable(i)) {
                         <span class="clausula-badge inalterable">
                           <mat-icon class="badge-icon">lock</mat-icon>
-                          <span>Inalterable / Predeterminada</span>
+                          <span>No modificable / Predeterminada</span>
                         </span>
                       } @else {
                         <span class="clausula-badge editable">
@@ -392,7 +392,7 @@
           type="button"
           mat-stroked-button
           color="primary"
-          matStepperPrevious
+          (click)="prevStep.emit()"
           class="dock-btn-back"
         >
           <mat-icon>arrow_back</mat-icon>
