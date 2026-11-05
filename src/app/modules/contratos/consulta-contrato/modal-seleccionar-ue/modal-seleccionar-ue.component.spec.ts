@@ -1,22 +1,35 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
+import { ParametrosService } from 'src/app/services/parametros.service';
+import { environment } from 'src/environments/environment';
 import { ModalSeleccionarUeComponent } from './modal-seleccionar-ue.component';
 
 describe('ModalSeleccionarUeComponent', () => {
   let component: ModalSeleccionarUeComponent;
   let fixture: ComponentFixture<ModalSeleccionarUeComponent>;
   let mockDialogRef: jest.Mocked<MatDialogRef<ModalSeleccionarUeComponent>>;
+  let mockParametrosService: { getParametrosPorTipo: jest.Mock };
 
   beforeEach(() => {
     mockDialogRef = {
       close: jest.fn(),
     } as any;
 
+    mockParametrosService = {
+      getParametrosPorTipo: jest.fn().mockResolvedValue({
+        [environment.UNIDAD_EJECUTORA_ID]: [
+          { Id: environment.UNIDADES_EJECUTORAS.RECTORIA, Nombre: 'Rectoría' },
+          { Id: environment.UNIDADES_EJECUTORAS.IDEXUD, Nombre: 'IDEXUD' },
+        ],
+      }),
+    };
+
     TestBed.configureTestingModule({
       declarations: [ModalSeleccionarUeComponent],
       providers: [
-        { provide: MatDialogRef, useValue: mockDialogRef }
+        { provide: MatDialogRef, useValue: mockDialogRef },
+        { provide: ParametrosService, useValue: mockParametrosService },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
@@ -26,15 +39,20 @@ describe('ModalSeleccionarUeComponent', () => {
     fixture.detectChanges();
   });
 
-  it('debe crearse correctamente', () => {
+  it('debe crearse correctamente con los IDs y nombres de parámetros CRUD (6818, 6819)', async () => {
+    await fixture.whenStable();
     expect(component).toBeTruthy();
-    expect(component.selectedUe.id).toBe(1);
+    expect(component.selectedUe.id).toBe(environment.UNIDADES_EJECUTORAS.RECTORIA);
+    expect(component.unidades[0].id).toBe(6818);
+    expect(component.unidades[0].nombre).toBe('Rectoría');
+    expect(component.unidades[1].id).toBe(6819);
+    expect(component.unidades[1].nombre).toBe('IDEXUD');
   });
 
   it('debe permitir seleccionar otra unidad ejecutora', () => {
     const ue2 = component.unidades[1];
     component.seleccionar(ue2);
-    expect(component.selectedUe.id).toBe(2);
+    expect(component.selectedUe.id).toBe(environment.UNIDADES_EJECUTORAS.IDEXUD);
   });
 
   it('debe cerrar el diálogo retornando la unidad ejecutora al confirmar', () => {
