@@ -19,7 +19,7 @@ describe('ModalAprobacionMasivaComponent', () => {
       numero_contrato: 'CT-2026-001',
       vigencia: '2026',
       valor_pesos: 20000000,
-      contratista: { nombre_completo: 'Carlos Rodríguez' },
+      contratista: { nombre_completo: 'Representante de Prueba' },
     },
     {
       id: 2,
@@ -27,7 +27,7 @@ describe('ModalAprobacionMasivaComponent', () => {
       consecutivo_elaboracion: 'ELAB-2026-002',
       vigencia: '2026',
       valor_pesos: 35000000,
-      contratista: { razon_social: 'Soluciones TIC SAS' },
+      contratista: { razon_social: 'Empresa Dos de Prueba SAS' },
     },
   ];
 
@@ -66,8 +66,8 @@ describe('ModalAprobacionMasivaComponent', () => {
   });
 
   it('debe obtener nombre o razón social del contratista', () => {
-    expect(component.getNombreContratista(mockContratos[0])).toBe('Carlos Rodríguez');
-    expect(component.getNombreContratista(mockContratos[1])).toBe('Soluciones TIC SAS');
+    expect(component.getNombreContratista(mockContratos[0])).toBe('Representante de Prueba');
+    expect(component.getNombreContratista(mockContratos[1])).toBe('Empresa Dos de Prueba SAS');
   });
 
   it('debe cerrar con confirmado=false al cancelar', () => {

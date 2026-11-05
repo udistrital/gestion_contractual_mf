@@ -15,6 +15,7 @@ import { environment } from '../../../../../environments/environment';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AlertService } from '../../../../services/alert.service';
 import { abrirVentanaPdf, mostrarPdfEnVentana } from '../../../../utils/visor-pdf';
+import { fechaLocal } from '../../../../utils/fechas';
 
 interface Amparo {
   id: number;
@@ -223,14 +224,8 @@ export class AmparoContratoComponent implements OnInit, OnChanges, OnDestroy {
       ],
       suficiencia: [amparo.suficiencia],
       valor: [amparo.valor || '', Validators.required],
-      fecha_inicio: [
-        amparo.fecha_inicio ? new Date(amparo.fecha_inicio) : null,
-        Validators.required,
-      ],
-      fecha_fin: [
-        amparo.fecha_fin ? new Date(amparo.fecha_fin) : null,
-        Validators.required,
-      ],
+      fecha_inicio: [fechaLocal(amparo.fecha_inicio), Validators.required],
+      fecha_fin: [fechaLocal(amparo.fecha_fin), Validators.required],
       amparo: [amparo.amparo || '', Validators.required],
     });
 

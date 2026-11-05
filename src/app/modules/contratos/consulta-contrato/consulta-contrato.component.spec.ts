@@ -71,7 +71,7 @@ describe('ConsultaContratoComponent', () => {
               vigencia: '2026',
               tipoContratoId: 'Prestación de Servicios',
               estados: { estado_parametro_id: 'Suscrito', nombre_estado: 'Suscrito' },
-              contratista: { nombre: 'CAROLINA MORALES', numero_documento: '1014285934' },
+              contratista: { nombre: 'CONTRATISTA DOS DE PRUEBA', numero_documento: '1000000002' },
             },
             {
               id: 102,
@@ -79,7 +79,7 @@ describe('ConsultaContratoComponent', () => {
               vigencia: '2026',
               tipoContratoId: 'Prestación de Servicios',
               estados: { estado_parametro_id: 'Por suscribir', nombre_estado: 'Por suscribir' },
-              contratista: { nombre: 'CARLOS RAMIREZ', numero_documento: '80194223' },
+              contratista: { nombre: 'CONTRATISTA TRES DE PRUEBA', numero_documento: '1000000006' },
             },
           ],
           Metadata: { total: 2 },
@@ -177,9 +177,9 @@ describe('ConsultaContratoComponent', () => {
     expect(component.hayFiltrosActivos()).toBe(true);
     expect(component.getResumenFiltrosActivos()).toContain(`Vigencia: ${anioActual}`);
 
-    component.form.patchValue({ contratista: 'CAROLINA' });
+    component.form.patchValue({ contratista: 'CONTRATISTA DOS' });
     expect(component.hayFiltrosActivos()).toBe(true);
-    expect(component.getResumenFiltrosActivos()).toContain('Contratista: CAROLINA');
+    expect(component.getResumenFiltrosActivos()).toContain('Contratista: CONTRATISTA DOS');
 
     component.form.patchValue({ vigencia: '', contratista: '' });
     component.vigenciaSeleccionada = '';
@@ -214,7 +214,7 @@ describe('ConsultaContratoComponent', () => {
       afterClosed: jest.fn().mockReturnValue(
         of({
           accion: 'crearContrato',
-          contratista: { proveedor: { nombre: 'INGRID MORALES' } },
+          contratista: { proveedor: { nombre: 'CONTRATISTA DE PRUEBA' } },
         })
       ),
     };
@@ -235,7 +235,7 @@ describe('ConsultaContratoComponent', () => {
         unidadEjecutora: '01',
         unidadEjecutoraId: 1,
         unidadEjecutoraNombre: '01 - Rectoría',
-        contratistaPrevalidado: { proveedor: { nombre: 'INGRID MORALES' } },
+        contratistaPrevalidado: { proveedor: { nombre: 'CONTRATISTA DE PRUEBA' } },
         bloquearContratista: true,
       },
     });
@@ -246,7 +246,7 @@ describe('ConsultaContratoComponent', () => {
       afterClosed: jest.fn().mockReturnValue(
         of({
           accion: 'crearContrato',
-          contratista: { proveedor: { nombre: 'INGRID MORALES' } },
+          contratista: { proveedor: { nombre: 'CONTRATISTA DE PRUEBA' } },
         })
       ),
     };
@@ -268,7 +268,7 @@ describe('ConsultaContratoComponent', () => {
         unidadEjecutora: '02',
         unidadEjecutoraId: 2,
         unidadEjecutoraNombre: '02 - IDEXUD',
-        contratistaPrevalidado: { proveedor: { nombre: 'INGRID MORALES' } },
+        contratistaPrevalidado: { proveedor: { nombre: 'CONTRATISTA DE PRUEBA' } },
         bloquearContratista: true,
       },
     });
@@ -323,7 +323,7 @@ describe('ConsultaContratoComponent', () => {
     expect(component.getTipoPersona({ contratista: { tipo_persona_id: 1 } })).toBe('Natural');
     expect(component.getTipoPersona(null)).toBe('N/A');
 
-    expect(component.getNombreContratista({ contratista: { nombre: 'JUAN PABLO' } })).toBe('JUAN PABLO');
+    expect(component.getNombreContratista({ contratista: { nombre: 'CONTRATISTA CUATRO DE PRUEBA' } })).toBe('CONTRATISTA CUATRO DE PRUEBA');
     expect(component.getNombreContratista(null)).toBe('N/A');
     expect(component.getDocumentoContratista({ contratista: { numero_documento: '123' } })).toBe('123');
     expect(component.getDocumentoContratista(null)).toBeNull();

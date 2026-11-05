@@ -99,13 +99,11 @@ export class SubirArchivoComponent {
   // Registrar el id y uid de la respuesta del gestor_documental_mid en gestion_contractual_crud
   registrarDocumento(documento: any) {
     const { Id: documento_id, Enlace: documento_enlace } = documento;
-    const { contrato_general_id, usuario_id, usuario_rol } = this.data.datos;
+    const { contrato_general_id } = this.data.datos;
 
     const documentoContrato: DocumentoContrato = {
       tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
       contrato_general_id,
-      usuario_id,
-      usuario_rol,
       documento_id,
       documento_enlace,
     };

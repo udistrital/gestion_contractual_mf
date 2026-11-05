@@ -16,6 +16,7 @@ import { environment } from 'src/environments/environment';
 })
 export class PasoEspecificacionesComponent {
   nextStep = output<void>();
+  prevStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
   viewMode = input<boolean>(false);

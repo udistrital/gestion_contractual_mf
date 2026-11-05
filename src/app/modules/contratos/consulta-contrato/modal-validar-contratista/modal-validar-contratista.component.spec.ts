@@ -60,9 +60,9 @@ describe('ModalValidarContratistaComponent', () => {
       Status: 200,
       Data: {
         proveedor: {
-          nombre: 'CAROLINA MORALES',
-          num_documento: '1014285934',
-          correo: 'carolina@udistrital.edu.co',
+          nombre: 'CONTRATISTA DOS DE PRUEBA',
+          num_documento: '1000000002',
+          correo: 'contratista.dos@prueba.local',
           calificacion: 4.8,
         },
         contratos: [
@@ -74,7 +74,7 @@ describe('ModalValidarContratistaComponent', () => {
     };
     mockProveedoresService.get.mockReturnValue(of(mockResponse));
 
-    component.documentoBusqueda = '1014285934';
+    component.documentoBusqueda = '1000000002';
     component.consultarContratista();
 
     expect(component.isLoading).toBe(false);
@@ -96,14 +96,14 @@ describe('ModalValidarContratistaComponent', () => {
       Data: {
         proveedor: {
           nombre: 'PROVEEDOR SIN CALIFICACION',
-          num_documento: '900123456'
+          num_documento: '900000001'
         },
         contratos: []
       }
     };
     mockProveedoresService.get.mockReturnValue(of(mockResponse));
 
-    component.documentoBusqueda = '900123456';
+    component.documentoBusqueda = '900000001';
     component.consultarContratista();
 
     expect(component.tieneCalificacion).toBe(false);

@@ -336,7 +336,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
             Data: {
               proveedor: {
                 tipo_persona: 'NATURAL',
-                numero_documento: '1014285890',
+                numero_documento: '1000000001',
                 nombre_completo_proveedor: 'Contratista de prueba',
                 tipo_persona_id: 1,
               },
@@ -355,7 +355,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
             useValue: {
               getContratista: jest
                 .fn()
-                .mockReturnValue(of({ Success: true, Data: { id: '7', numero_documento: '1014285890' } })),
+                .mockReturnValue(of({ Success: true, Data: { id: '7', numero_documento: '1000000001' } })),
             },
           },
         ],
@@ -377,7 +377,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     });
 
     it('carga el contratista guardado y deja el formulario deshabilitado', () => {
-      expect(proveedoresService.get).toHaveBeenCalledWith('contratistas?id=1014285890');
+      expect(proveedoresService.get).toHaveBeenCalledWith('contratistas?id=1000000001');
       expect(component.datosContratista).toBeTruthy();
       expect(component.form.disabled).toBe(true);
     });

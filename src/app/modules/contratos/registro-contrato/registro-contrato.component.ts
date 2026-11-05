@@ -17,6 +17,7 @@ import { PasoObligacionesComponent } from './paso-obligaciones/paso-obligaciones
 import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-info-presupuestal.component';
 import { MatStep, MatStepper } from '@angular/material/stepper';
 import { STEPPER_GLOBAL_OPTIONS, StepperSelectionEvent } from '@angular/cdk/stepper';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -86,6 +87,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly alertService = inject(AlertService);
   private readonly cdRef = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
 
   contratoGeneralId = model<number>(0);
@@ -242,8 +244,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
 
   onPresupuestalGuardado() {
     this.marcarPasoGuardado('general');
-    this.contratoCargadoId = 0;
-    this.cargarContratoGeneral();
+    this.cargarContratoGeneral({ forzar: true });
   }
 
   onPasoEstructuraCompleted(isCompleted: boolean) {
@@ -314,9 +315,18 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  cargarContratoGeneral() {
+  goToPreviousStep() {
+    if (this.selectedIndex > 0) {
+      this.irAlPaso(this.selectedIndex - 1);
+    } else {
+      this.router.navigate(['/gestion-contractual/contratos/consultar']);
+    }
+  }
+
+  /** Por defecto no repite un contrato ya cargado; con `forzar` lo vuelve a pedir tras guardar. */
+  cargarContratoGeneral({ forzar = false }: { forzar?: boolean } = {}) {
     const id = this.contratoGeneralId();
-    if (!id || this.contratoCargadoId === id || this.cargandoContrato) return;
+    if (!id || this.cargandoContrato || (!forzar && this.contratoCargadoId === id)) return;
 
     this.contratoCargadoId = id;
     this.cargandoContrato = true;
@@ -385,7 +395,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   onContratoGuardado(contratoId: number) {
     this.contratoGeneralId.set(contratoId);
     this.marcarPasoGuardado('general');
-    this.cargarContratoGeneral();
+    this.cargarContratoGeneral({ forzar: true });
   }
 
   onPasoInfoGeneralCompleted(isCompleted: boolean) {

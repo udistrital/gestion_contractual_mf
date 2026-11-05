@@ -48,10 +48,10 @@ describe('SemaforoGestionComponent', () => {
 
   it('lista todas las alertas y oculta el abogado cuando se pide', () => {
     expect(fixture.nativeElement.querySelectorAll('li.item')).toHaveLength(3);
-    expect(fixture.nativeElement.querySelector('.contexto').textContent).toContain('Diana Rojas');
+    expect(fixture.nativeElement.querySelector('.contexto').textContent).toContain('Abogado B de Prueba');
     fixture.componentRef.setInput('mostrarAbogado', false);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.contexto').textContent).not.toContain('Diana Rojas');
+    expect(fixture.nativeElement.querySelector('.contexto').textContent).not.toContain('Abogado B de Prueba');
   });
 
   it('muestra un mensaje cuando no hay alertas', () => {

@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { of } from 'rxjs';
+import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { RegistroContratoComponent } from './registro-contrato.component';
 
 describe('RegistroContratoComponent', () => {
@@ -68,6 +70,27 @@ describe('RegistroContratoComponent', () => {
     expect(component.stepper.selectedIndex).toBe(0);
   });
 
+  it('debe retroceder al paso anterior con goToPreviousStep() o navegar a consultar contratos desde el Paso 1', () => {
+    component.stepper = { selectedIndex: 2 } as any;
+    component.selectedIndex = 2;
+    const navigateSpy = jest
+      .spyOn((component as any).router, 'navigate')
+      .mockResolvedValue(true);
+
+    component.goToPreviousStep();
+    expect(component.selectedIndex).toBe(1);
+    expect(component.stepper.selectedIndex).toBe(1);
+
+    component.goToPreviousStep();
+    expect(component.selectedIndex).toBe(0);
+    expect(component.stepper.selectedIndex).toBe(0);
+
+    component.goToPreviousStep();
+    expect(navigateSpy).toHaveBeenCalledWith([
+      '/gestion-contractual/contratos/consultar',
+    ]);
+  });
+
   describe('Lógica de los 4 estados del Stepper', () => {
     it('debe marcar como "actual" el paso seleccionado activamente', () => {
       component.selectedIndex = 0;
@@ -111,6 +134,47 @@ describe('RegistroContratoComponent', () => {
       component.desmarcarPasoGuardado('estructura');
       expect(component.pasosGuardados.has('estructura')).toBe(false);
     });
+  });
+
+  it('recarga el contrato después de guardar el paso 1 de un contrato ya cargado', () => {
+    const get = jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(of({ Data: { id: 42, plazo_ejecucion: 6 } }));
+    fixture.componentRef.setInput('contratoGeneralId', 42);
+    fixture.detectChanges();
+    expect(component.contratoGeneral?.plazo_ejecucion).toBe(6);
+
+    get.mockReturnValue(of({ Data: { id: 42, plazo_ejecucion: 9 } }));
+    component.onContratoGuardado(42);
+    expect(component.contratoGeneral?.plazo_ejecucion).toBe(9);
+  });
+
+  it('recarga el contrato después de guardar el paso presupuestal', () => {
+    const get = jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(of({ Data: { id: 42, valor_pesos: 1000 } }));
+    fixture.componentRef.setInput('contratoGeneralId', 42);
+    fixture.detectChanges();
+    expect(component.contratoGeneral?.valor_pesos).toBe(1000);
+
+    get.mockReturnValue(of({ Data: { id: 42, valor_pesos: 2000 } }));
+    component.onPresupuestalGuardado();
+    expect(component.contratoGeneral?.valor_pesos).toBe(2000);
+  });
+
+  it('solo repite la carga de un contrato ya cargado cuando se fuerza', () => {
+    const get = jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(of({ Data: { id: 42 } }));
+    fixture.componentRef.setInput('contratoGeneralId', 42);
+    fixture.detectChanges();
+    expect(get).toHaveBeenCalledTimes(1);
+
+    component.cargarContratoGeneral();
+    expect(get).toHaveBeenCalledTimes(1);
+
+    component.cargarContratoGeneral({ forzar: true });
+    expect(get).toHaveBeenCalledTimes(2);
   });
 
   describe('tituloVista', () => {

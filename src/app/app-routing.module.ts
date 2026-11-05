@@ -6,7 +6,7 @@ import { InicioTableroComponent } from './modules/tablero/inicio-tablero/inicio-
 
 const routes: Routes = [
   {
-    path: '',
+    path: 'gestion-contractual',
     pathMatch: 'full',
     component: InicioTableroComponent
   },
@@ -16,22 +16,12 @@ const routes: Routes = [
     loadChildren: () => import('./modules/contratos/contratos.module').then(m => m.ContratosModule)
   },
   {
-    path: 'gestion-contractual',
-    redirectTo: 'gestion-contractual/contratos/consultar',
-    pathMatch: 'full'
-  },
-  {
-    path: 'contratos',
-    canActivate: [authGuard],
-    loadChildren: () => import('./modules/contratos/contratos.module').then(m => m.ContratosModule)
-  },
-  {
-    path: 'polizas',
+    path: 'gestion-contractual/polizas',
     canActivate: [authGuard],
     loadChildren: () => import('./modules/polizas/polizas.module').then(m => m.PolizasModule)
   },
   {
-    path: 'actas',
+    path: 'gestion-contractual/actas',
     canActivate: [authGuard],
     loadChildren: () => import('./modules/registro-actas/registro-actas.module').then(m => m.RegistroActasModule)
   }
@@ -41,7 +31,7 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
   providers: [
-    { provide: APP_BASE_HREF, useValue: '/' },
+    { provide: APP_BASE_HREF, useValue: '' },
   ],
 })
 export class AppRoutingModule {}

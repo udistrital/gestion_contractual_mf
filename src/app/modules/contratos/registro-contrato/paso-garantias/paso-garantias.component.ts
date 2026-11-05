@@ -25,6 +25,7 @@ import { AlertService } from 'src/app/services/alert.service';
 })
 export class PasoGarantiasComponent implements OnInit {
   nextStep = output<void>();
+  prevStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
   viewMode = input<boolean>(false);

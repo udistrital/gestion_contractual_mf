@@ -34,7 +34,9 @@ mat-table {
   margin: 2%;
 }
 
-.full-width {
+.full-width,
+.w-100,
+mat-form-field {
   width: 100%;
 }
 
@@ -182,12 +184,22 @@ mat-table {
   margin-bottom: 8px;
 }
 
+.subpanel-vincular ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
 .btn-asociar-cdp {
   background-color: #801313 !important;
   color: #ffffff !important;
-  height: 52px;
+  height: 40px;
   font-weight: 600;
   border-radius: 4px;
+}
+
+@media (min-width: 1200px) {
+  .btn-asociar-cdp {
+    height: 44px;
+  }
 }
 
 /* Estado Aprobado Chip */
@@ -421,16 +433,19 @@ mat-table {
   font-size: 14px;
 }
 
-.campo-control-wrapper .badge-cop {
-  position: absolute;
-  right: 8px;
+.badge-cop-suffix {
   background-color: #e5e8ea;
   color: #58413f;
   font-size: 11px;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
-  pointer-events: none;
+  margin-right: 8px;
+}
+
+.font-mono-val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
 }
 
 /* Checkboxes Institucionales */
