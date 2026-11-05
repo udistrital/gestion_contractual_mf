@@ -110,9 +110,9 @@ async function capturar(page: Page, archivo: string) {
 async function abrirEdicion(page: Page, id: number) {
   await page.evaluate(
     (menuEdicion) => localStorage.setItem('menu', menuEdicion),
-    menu(['/contratos/registrar', `/contratos/detalle/${id}`, `/contratos/editar/${id}`])
+    menu(['/gestion-contractual/contratos/registrar', `/gestion-contractual/contratos/detalle/${id}`, `/gestion-contractual/contratos/editar/${id}`])
   );
-  await page.goto(`/contratos/editar/${id}`);
+  await page.goto(`/gestion-contractual/contratos/editar/${id}`);
 }
 
 /** Guarda el paso 1 de un contrato existente y exige el PUT sobre ese mismo contrato. */
@@ -148,11 +148,11 @@ test.beforeAll(async ({ browser }) => {
       localStorage.setItem('user', user);
       // Entrada real al registro: desde la consulta, con el contratista ya validado
       // (así lo deja la modal "Validar contratista" en el estado de navegación).
-      if (location.pathname === '/contratos/registrar') {
+      if (location.pathname === '/gestion-contractual/contratos/registrar') {
         history.replaceState({ ...(history.state ?? {}), contratistaPrevalidado: proveedor, bloquearContratista: false }, '');
       }
     },
-    [menu(['/contratos/registrar']), usuario, PROVEEDOR] as const
+    [menu(['/gestion-contractual/contratos/registrar']), usuario, PROVEEDOR] as const
   );
   page = await context.newPage();
 });
@@ -165,7 +165,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
   test.setTimeout(300_000);
 
   await test.step('paso 1: datos básicos (crea el contrato en contrato_general)', async () => {
-    await page.goto('/contratos/registrar');
+    await page.goto('/gestion-contractual/contratos/registrar');
     const seccion = page.locator('app-paso-info-general');
     await expect(seccion).toBeVisible();
     await seleccionar(page, buscable(seccion, 'Tipo de Compromiso'), 'Orden');
@@ -258,9 +258,9 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
   await test.step('detalle del contrato con los datos guardados en el CRUD Beego', async () => {
     await page.evaluate(
       (menuDetalle) => localStorage.setItem('menu', menuDetalle),
-      menu(['/contratos/registrar', `/contratos/detalle/${contratoId}`])
+      menu(['/gestion-contractual/contratos/registrar', `/gestion-contractual/contratos/detalle/${contratoId}`])
     );
-    await page.goto(`/contratos/detalle/${contratoId}`);
+    await page.goto(`/gestion-contractual/contratos/detalle/${contratoId}`);
     await expect(page.getByText('Detalle del Contrato').first()).toBeVisible();
 
     const general = page.locator('app-paso-info-general');
@@ -373,6 +373,9 @@ test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () 
     fila: columnas('contrato_general', `id = ${id}`, ['consecutivo_elaboracion', 'plazo_ejecucion', 'proveedor_numero_documento', 'sede_solicitante_id']),
   });
   const antes = consultar();
+  const aplicaPoliza = () => columnas('contrato_general', `id = ${id}`, ['aplica_poliza']);
+  // "No" en el paso 1 debe quedar como false: antes '0' llegaba como texto y se guardaba true.
+  expect.soft(aplicaPoliza()).toBe('false');
   const peticiones: string[] = [];
   const registrar = (r: Request) => {
     if (/\/contrato_general\/|\/consecutivo/.test(r.url())) peticiones.push(`${r.method()} ${new URL(r.url()).pathname}`);
@@ -395,6 +398,7 @@ test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () 
       `peticiones al guardar: ${peticiones.join(', ')}\n` +
       `antes:   ${JSON.stringify(antes)}\ndespués: ${JSON.stringify(despues)}\n`
   );
+  expect.soft(aplicaPoliza(), 'editar conserva el No').toBe('false');
   expect.soft(despues.contratos, 'no debe aparecer un segundo contrato').toBe(antes.contratos);
   expect.soft(despues.estados, 'editar no cambia el estado').toBe(antes.estados);
   expect.soft(despues.fila).toBe(antes.fila.replace(/^([^|]*)\|6\|/, '$1|9|'));
@@ -406,7 +410,7 @@ test('fecha de estudios: conserva el día al guardar y al editar', async () => {
   test.setTimeout(180_000);
   contratoId = 0;
 
-  await page.goto('/contratos/registrar');
+  await page.goto('/gestion-contractual/contratos/registrar');
   const seccion = page.locator('app-paso-info-general');
   await expect(seccion).toBeVisible();
   await seleccionar(page, buscable(seccion, 'Tipo de Compromiso'), /^Contrato$/);

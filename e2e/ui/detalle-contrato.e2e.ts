@@ -27,7 +27,7 @@ const CONTRATO_ID = 9001;
 const EVIDENCIAS = process.env.EVIDENCIAS_390 ?? join(homedir(), 'argo_repos', 'evidencias-390');
 
 const menuPermitido = Buffer.from(
-  JSON.stringify([{ Url: `/contratos/detalle/${CONTRATO_ID}` }, { Url: '/contratos/gestionar' }])
+  JSON.stringify([{ Url: `/gestion-contractual/contratos/detalle/${CONTRATO_ID}` }, { Url: '/gestion-contractual/contratos/gestionar' }])
 ).toString('base64');
 const usuario = Buffer.from(
   JSON.stringify({ user: { role: ['ABOGADO_CONTRATACION_RECTOR'] }, userService: { role: [] } })
@@ -272,7 +272,7 @@ test.beforeAll(async ({ browser }) => {
   context = await browser.newContext({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
   await prepararContexto(context);
   page = await context.newPage();
-  await page.goto(`/contratos/detalle/${CONTRATO_ID}`);
+  await page.goto(`/gestion-contractual/contratos/detalle/${CONTRATO_ID}`);
   await expect(page.locator('app-registro-contrato')).toBeVisible();
   await expect(page.getByText('Detalle del Contrato').first()).toBeVisible();
   // Espera a que lleguen las cargas asíncronas de todos los pasos.
@@ -446,7 +446,7 @@ test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulad
   await prepararContexto(ctx);
   const consulta = await ctx.newPage();
   try {
-    await consulta.goto('/contratos/gestionar');
+    await consulta.goto('/gestion-contractual/contratos/gestionar');
     const fila = consulta.locator('tr.mat-mdc-row', { hasText: 'INGRID PAOLA MORALES MORALES' });
     await expect(fila).toBeVisible({ timeout: 30_000 });
 
@@ -457,7 +457,7 @@ test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulad
     await consulta.screenshot({ path: join(EVIDENCIAS, '10-consulta-accion-ver-detalle.png') });
 
     await menu.getByRole('menuitem', { name: /Ver Detalle/ }).click();
-    await expect(consulta).toHaveURL(new RegExp(`/contratos/detalle/${CONTRATO_ID}$`));
+    await expect(consulta).toHaveURL(new RegExp(`/gestion-contractual/contratos/detalle/${CONTRATO_ID}$`));
     await expect(consulta.getByText('Detalle del Contrato').first()).toBeVisible();
     await expect(consulta.locator('app-paso-info-general')).toContainText('Orden de Compra');
   } finally {
