@@ -39,6 +39,7 @@ export interface ActividadEspecifica {
 })
 export class PasoObligacionesComponent implements OnInit, OnDestroy {
   nextStep = output<void>();
+  prevStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGuardado = output<void>();
   contratoGeneral = input<ContratoGeneral>()
