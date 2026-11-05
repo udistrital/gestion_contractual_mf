@@ -30,7 +30,7 @@
 .dialog-title {
   margin: 0;
   font-family: 'Raleway', sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.2px;
@@ -86,7 +86,7 @@
   gap: 10px;
   padding: 12px 16px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 15px;
   margin-top: 14px;
 }
 
@@ -117,14 +117,14 @@
 
 .contractor-name {
   font-family: 'Raleway', sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 4px 0;
 }
 
 .contractor-id-type {
-  font-size: 12.5px;
+  font-size: 14.5px;
   color: #64748b;
 }
 
@@ -135,7 +135,7 @@
   gap: 5px;
   padding: 4px 12px;
   border-radius: 14px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -177,7 +177,7 @@
 }
 
 .detail-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   color: #64748b;
@@ -185,7 +185,7 @@
 }
 
 .detail-value {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: #1e293b;
 }
@@ -203,22 +203,22 @@
 }
 
 .history-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
   color: #731514;
 }
 
 .history-title {
   font-family: 'Raleway', sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: #334155;
   margin: 0;
 }
 
 .history-count {
-  font-size: 12px;
+  font-size: 14px;
   color: #64748b;
 }
 
@@ -233,7 +233,7 @@
 .history-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .history-table th {
@@ -264,7 +264,7 @@
   border: 1px solid #b8e0bf;
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -287,7 +287,7 @@
 
 .empty-history-box p {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 14.5px;
 }
 
 .modal-footer-actions {
