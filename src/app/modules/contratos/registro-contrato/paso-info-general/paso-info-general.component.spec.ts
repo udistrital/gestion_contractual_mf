@@ -7,7 +7,7 @@ import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-cr
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 describe('PasoInfoGeneralComponent', () => {
   let component: PasoInfoGeneralComponent;
@@ -46,13 +46,16 @@ describe('PasoInfoGeneralComponent', () => {
 });
 
 describe('PasoInfoGeneralComponent: guardado', () => {
+  let fixture: ComponentFixture<PasoInfoGeneralComponent>;
   let component: PasoInfoGeneralComponent;
   let crud: Record<string, jest.Mock>;
   let mid: Record<string, jest.Mock>;
 
   const respuesta = (Status: number) => of({ Success: true, Status, Data: { id: 42 } });
 
-  async function montar(contratoGeneralId = 0, datos: any = { id: 42, unidad_ejecutora_id: 1 }) {
+  const existente = { id: 42, unidad_ejecutora_id: 1 };
+
+  async function montar(datos?: any) {
     mid = { postConsecutivo: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: '27' })) };
     crud = {
       post: jest.fn().mockReturnValue(respuesta(201)),
@@ -77,10 +80,9 @@ describe('PasoInfoGeneralComponent: guardado', () => {
       ],
       schemas: [NO_ERRORS_SCHEMA],
     });
-    const fixture = TestBed.createComponent(PasoInfoGeneralComponent);
+    fixture = TestBed.createComponent(PasoInfoGeneralComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('contratoGeneral', datos);
-    fixture.componentRef.setInput('contratoGeneralId', contratoGeneralId);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -102,7 +104,7 @@ describe('PasoInfoGeneralComponent: guardado', () => {
   });
 
   it('en un contrato existente hace PUT al mismo id, sin consecutivo, sin POST y sin otro estado', async () => {
-    await montar(42);
+    await montar(existente);
     const guardado = jest.fn();
     component.contratoGuardado.subscribe(guardado);
     await guardar();
@@ -116,7 +118,7 @@ describe('PasoInfoGeneralComponent: guardado', () => {
   });
 
   it('un perfil de contratista que deja de aplicar se envía como null', async () => {
-    await montar(42, { id: 42, unidad_ejecutora_id: 1, perfil_contratista_id: 7 });
+    await montar({ ...existente, perfil_contratista_id: 7 });
     component.formInfoGeneral.get('perfilContratistaId')?.disable();
     await guardar();
     expect(crud['put'].mock.calls[0][1]).toEqual(expect.objectContaining({ perfil_contratista_id: null }));
@@ -130,6 +132,39 @@ describe('PasoInfoGeneralComponent: guardado', () => {
     component.formInfoGeneral.patchValue({ aplicaPoliza: valor });
     await guardar();
     expect(crud['post'].mock.calls[0][0].aplica_poliza).toBe(esperado);
+  });
+
+  it('no guarda de nuevo hasta que llega el contrato recargado', async () => {
+    await montar();
+    await guardar();
+    expect(component.guardando()).toBe(true);
+
+    await guardar();
+    expect(mid['postConsecutivo']).toHaveBeenCalledTimes(1);
+    expect(crud['post']).toHaveBeenCalledTimes(1);
+
+    fixture.componentRef.setInput('contratoGeneral', existente);
+    fixture.detectChanges();
+    expect(component.guardando()).toBe(false);
+
+    await guardar();
+    expect(crud['post']).toHaveBeenCalledTimes(1);
+    expect(crud['put']).toHaveBeenCalledTimes(1);
+  });
+
+  it('permite reintentar si falla el guardado', async () => {
+    await montar();
+    crud['post'].mockReturnValue(throwError(() => new Error('falló')));
+    await guardar();
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('permite reintentar si falla el consecutivo', async () => {
+    await montar();
+    mid['postConsecutivo'].mockReturnValue(throwError(() => new Error('falló')));
+    await guardar();
+    expect(component.guardando()).toBe(false);
+    expect(crud['post']).not.toHaveBeenCalled();
   });
 
   it('aplica póliza sin valor se envía como null', async () => {
