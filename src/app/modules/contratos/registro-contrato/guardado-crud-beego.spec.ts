@@ -64,8 +64,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       });
       const fixture = TestBed.createComponent(PasoInfoGeneralComponent);
       component = fixture.componentInstance;
-      fixture.componentRef.setInput('contratoGeneral', datos);
-      fixture.componentRef.setInput('contratoGeneralId', contratoGeneralId);
+      fixture.componentRef.setInput('contratoGeneral', { ...datos, id: contratoGeneralId });
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();

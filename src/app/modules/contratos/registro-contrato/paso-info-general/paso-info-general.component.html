@@ -253,7 +253,7 @@
                 mat-raised-button
                 (click)="guardarYContinuar()"
                 color="primary"
-                [disabled]="!formInfoGeneral.valid"
+                [disabled]="!formInfoGeneral.valid || guardando()"
               >
                 <mat-icon>save</mat-icon>
                 Guardar Datos Básicos

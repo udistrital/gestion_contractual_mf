@@ -128,6 +128,34 @@ describe('RegistroContratoComponent', () => {
     expect(component.contratoGeneral?.plazo_ejecucion).toBe(9);
   });
 
+  it('recarga el contrato después de guardar el paso presupuestal', () => {
+    const get = jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(of({ Data: { id: 42, valor_pesos: 1000 } }));
+    fixture.componentRef.setInput('contratoGeneralId', 42);
+    fixture.detectChanges();
+    expect(component.contratoGeneral?.valor_pesos).toBe(1000);
+
+    get.mockReturnValue(of({ Data: { id: 42, valor_pesos: 2000 } }));
+    component.onPresupuestalGuardado();
+    expect(component.contratoGeneral?.valor_pesos).toBe(2000);
+  });
+
+  it('solo repite la carga de un contrato ya cargado cuando se fuerza', () => {
+    const get = jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(of({ Data: { id: 42 } }));
+    fixture.componentRef.setInput('contratoGeneralId', 42);
+    fixture.detectChanges();
+    expect(get).toHaveBeenCalledTimes(1);
+
+    component.cargarContratoGeneral();
+    expect(get).toHaveBeenCalledTimes(1);
+
+    component.cargarContratoGeneral({ forzar: true });
+    expect(get).toHaveBeenCalledTimes(2);
+  });
+
   describe('tituloVista', () => {
     it('debe retornar "Registrar Contrato" cuando no está en editMode', () => {
       fixture.componentRef.setInput('editMode', false);
