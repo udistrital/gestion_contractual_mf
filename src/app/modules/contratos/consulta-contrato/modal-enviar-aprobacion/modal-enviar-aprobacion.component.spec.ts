@@ -18,7 +18,7 @@ describe('ModalEnviarAprobacionComponent', () => {
       vigencia: '2026',
       valor_pesos: 55000000,
       contratista: {
-        nombre_completo: 'Juan Pérez Silva',
+        nombre_completo: 'Contratista Cinco de Prueba',
       },
     },
   };
@@ -51,7 +51,7 @@ describe('ModalEnviarAprobacionComponent', () => {
   });
 
   it('debe extraer el nombre del contratista', () => {
-    expect(component.nombreContratista).toBe('Juan Pérez Silva');
+    expect(component.nombreContratista).toBe('Contratista Cinco de Prueba');
   });
 
   it('debe formatear el valor del contrato en pesos', () => {

@@ -84,9 +84,9 @@ export const DEPENDENCIAS = [
 ];
 
 export const SUPERVISOR_MID = {
-  nombre: 'CARLOS ANDRÉS RUIZ MORENO',
+  nombre: 'SUPERVISOR DE PRUEBA',
   cargo: 'Decano',
-  documento: '79865432',
+  documento: '1000000005',
   digito_verificacion: '3',
   cargo_id: '45',
   sede_supervisor: 'Sede Calle 40',
@@ -97,11 +97,11 @@ export const PROVEEDOR = {
   proveedor: {
     tipo_persona: 'NATURAL',
     tipo_persona_id: 1,
-    numero_documento: '1014285890',
-    nombre_completo_proveedor: 'INGRID PAOLA MORALES MORALES',
+    numero_documento: '1000000001',
+    nombre_completo_proveedor: 'CONTRATISTA DE PRUEBA',
     ciudad_contacto: 'Bogotá D.C.',
     direccion: 'Calle 100 # 15-20',
-    correo: 'ingrid.morales@correo.com',
+    correo: 'contratista@prueba.local',
     ciudad_expedicion_documento: 'Bogotá D.C.',
   },
   contratos: [],
@@ -153,7 +153,7 @@ export function responderServicioExterno(route: Route, ruta: string, query: URLS
   if (ruta === 'ordenador_supervisor_mid/v1/rol-ordenador')
     return json(ok([{ id: 1, rol: 'RECTOR' }, { id: 2, rol: 'VICERRECTOR ADMINISTRATIVO Y FINANCIERO' }]));
   if (ruta === 'ordenador_supervisor_mid/v1/rol-ordenador/actual')
-    return json(ok([{ nombre_ordenador: 'GIOVANNI RODRIGO BERMÚDEZ BOHÓRQUEZ', documento: '19456789' }]));
+    return json(ok([{ nombre_ordenador: 'ORDENADOR DE PRUEBA', documento: '1000000003' }]));
   if (ruta === 'ordenador_supervisor_mid/v1/supervisores/dependencia') return json(ok([SUPERVISOR_MID]));
 
   // presupuesto_contractual_mid, proveedores_mid
