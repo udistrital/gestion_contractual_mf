@@ -114,7 +114,7 @@ const contrato = {
   activo: true,
   fecha_creacion: '2026-10-20T15:04:11.000Z',
   fecha_modificacion: '2026-10-27T10:12:45.000Z',
-  contratista: { id: 77, numero_documento: '1014285890', tipo_persona_id: 1 },
+  contratista: { id: 77, numero_documento: '1000000001', tipo_persona_id: 1 },
 };
 
 const contratoEnConsulta = {
@@ -122,7 +122,7 @@ const contratoEnConsulta = {
   numero_contrato: 'OC-0042-2026',
   vigencia: '2026',
   estados: { estado_parametro_id: 6773, estado_interno_parametro_id: 6800, nombre_estado: 'Por suscribir', actual: true },
-  contratista: { nombre: 'INGRID PAOLA MORALES MORALES', numero_documento: '1014285890' },
+  contratista: { nombre: 'CONTRATISTA DE PRUEBA', numero_documento: '1000000001' },
 };
 
 const cdpCrud = {
@@ -159,7 +159,7 @@ const DEPENDENCIAS = [
 const supervisorCrud = {
   id: 61,
   supervisor_id: '7788',
-  documento: '79865432',
+  documento: '1000000005',
   digito_verificacion: '3',
   sede_id: '10',
   dependencia_id: '20',
@@ -171,9 +171,9 @@ const supervisorCrud = {
 };
 
 const supervisorMid = {
-  nombre: 'CARLOS ANDRÉS RUIZ MORENO',
+  nombre: 'SUPERVISOR DE PRUEBA',
   cargo: 'Decano',
-  documento: '79865432',
+  documento: '1000000005',
   digito_verificacion: '3',
   cargo_id: '45',
   sede_supervisor: 'Sede Calle 40',
@@ -184,11 +184,11 @@ const proveedor = {
   proveedor: {
     tipo_persona: 'NATURAL',
     tipo_persona_id: 1,
-    numero_documento: '1014285890',
-    nombre_completo_proveedor: 'INGRID PAOLA MORALES MORALES',
+    numero_documento: '1000000001',
+    nombre_completo_proveedor: 'CONTRATISTA DE PRUEBA',
     ciudad_contacto: 'Bogotá D.C.',
     direccion: 'Calle 100 # 15-20',
-    correo: 'ingrid.morales@correo.com',
+    correo: 'contratista@prueba.local',
     ciudad_expedicion_documento: 'Bogotá D.C.',
   },
   contratos: [],
@@ -242,13 +242,13 @@ function responder(route: Route): Promise<void> {
   // gestion_contractual_crud
   if (ruta === `gestion_contractual_crud/contratos-generales/${CONTRATO_ID}`) return json(ok(contrato));
   if (ruta === `gestion_contractual_crud/ordenador-contrato/contrato/${CONTRATO_ID}`)
-    return json(ok({ id: 71, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, documento_identidad: '19456789', cargo_id: 12, contrato_general_id: CONTRATO_ID }, 'Supervisores encontrados'));
+    return json(ok({ id: 71, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, documento_identidad: '1000000003', cargo_id: 12, contrato_general_id: CONTRATO_ID }, 'Supervisores encontrados'));
   if (ruta === `gestion_contractual_crud/disponibilidad_presupuestal/contrato/${CONTRATO_ID}`) return json(ok([cdpCrud]));
   if (ruta === `gestion_contractual_crud/solicitantes/contrato/${CONTRATO_ID}`)
     return json(ok({ id: 31, sede_solicitante_id: 10, dependencia_solicitante_id: 20, contrato_general_id: CONTRATO_ID }));
   if (ruta === `gestion_contractual_crud/supervisores/contrato/${CONTRATO_ID}`) return json(ok([supervisorCrud], 'Supervisores encontrados'));
   if (ruta === `gestion_contractual_crud/contratistas/contrato/${CONTRATO_ID}`)
-    return json(ok({ id: '77', numero_documento: '1014285890', tipo_persona_id: 1, activo: true, fecha_creacion: '2026-10-21T00:00:00.000Z', fecha_modificacion: null, contrato_general_id: CONTRATO_ID }, 'Contratista encontrado'));
+    return json(ok({ id: '77', numero_documento: '1000000001', tipo_persona_id: 1, activo: true, fecha_creacion: '2026-10-21T00:00:00.000Z', fecha_modificacion: null, contrato_general_id: CONTRATO_ID }, 'Contratista encontrado'));
   if (ruta === 'gestion_contractual_crud/especificaciones-tecnicas') return json(ok(especificaciones));
   // El MF pide esta ruta, aunque el CRUD de develop no la expone (ver hallazgos de la #390).
   if (ruta === `gestion_contractual_crud/amparos-polizas/contrato/${CONTRATO_ID}`) return json(ok(amparos));
@@ -270,7 +270,7 @@ function responder(route: Route): Promise<void> {
   if (ruta === 'ordenador_supervisor_mid/v1/rol-ordenador')
     return json(ok([{ id: 1, rol: 'RECTOR' }, { id: 2, rol: 'VICERRECTOR ADMINISTRATIVO Y FINANCIERO' }]));
   if (ruta === 'ordenador_supervisor_mid/v1/rol-ordenador/actual')
-    return json(ok([{ nombre_ordenador: 'GIOVANNI RODRIGO BERMÚDEZ BOHÓRQUEZ', documento: '19456789' }]));
+    return json(ok([{ nombre_ordenador: 'ORDENADOR DE PRUEBA', documento: '1000000003' }]));
   if (ruta === 'ordenador_supervisor_mid/v1/supervisores/dependencia') return json(ok([supervisorMid]));
 
   // presupuesto_contractual_mid, proveedores_mid
@@ -452,7 +452,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
     await expect.soft(campo('Tipo de Moneda')).toHaveText(/Peso colombiano/);
     await expect.soft(seccion.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
     await expect.soft(campo('Cargo Ordenador del Gasto')).toHaveText(/RECTOR/);
-    await expect.soft(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/GIOVANNI RODRIGO/);
+    await expect.soft(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
     await expect.soft(campo('Origen de Recursos')).toHaveText(/Recursos propios/);
     await expect.soft(campo('Origen Presupuesto')).toHaveText(/Presupuesto de la vigencia/);
     await expect.soft(campo('Tipo de Gasto')).toHaveText(/Inversión/);
@@ -482,7 +482,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
       description: `Dependencia solicitante: "${await solicitante('Dependencia Solicitante').textContent()}", ` +
         `dependencia supervisor: "${await valorSelect(formField('dependencia').first()).textContent()}"`,
     });
-    await expect.soft(seccion).toContainText('CARLOS ANDRÉS RUIZ MORENO');
+    await expect.soft(seccion).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(seccion).toContainText('Decano');
     // "Tipo y Alcance del Control" sale vacío porque en develop no se guarda ni se carga:
     // no está en el payload del supervisor ni en el CRUD (contrato_general.tipo_control_id
@@ -495,11 +495,11 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
 
   await test.step('04 contratista: datos visibles y en solo lectura', async () => {
     const seccion = page.locator('app-paso-contratistas');
-    await expect.soft(seccion.locator('input[formcontrolname="documentoContratista"]')).toHaveValue('1014285890');
+    await expect.soft(seccion.locator('input[formcontrolname="documentoContratista"]')).toHaveValue('1000000001');
     await expect.soft(seccion.locator('input[formcontrolname="documentoContratista"]')).toBeDisabled();
     await expect.soft(seccion.locator('.search-input-wrapper')).toHaveClass(/wrapper-locked/);
-    await expect.soft(seccion).toContainText('INGRID PAOLA MORALES MORALES');
-    await expect.soft(seccion).toContainText('ingrid.morales@correo.com');
+    await expect.soft(seccion).toContainText('CONTRATISTA DE PRUEBA');
+    await expect.soft(seccion).toContainText('contratista@prueba.local');
 
     await verificarSoloLectura(seccion);
     await capturar(page, seccion, '04-contratista');
@@ -581,7 +581,7 @@ test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulad
   const consulta = await ctx.newPage();
   try {
     await consulta.goto('/contratos/gestionar');
-    const fila = consulta.locator('tr.mat-mdc-row', { hasText: 'INGRID PAOLA MORALES MORALES' });
+    const fila = consulta.locator('tr.mat-mdc-row', { hasText: 'CONTRATISTA DE PRUEBA' });
     await expect(fila).toBeVisible({ timeout: 30_000 });
 
     await fila.getByRole('button', { name: 'Menú de acciones del contrato' }).click();

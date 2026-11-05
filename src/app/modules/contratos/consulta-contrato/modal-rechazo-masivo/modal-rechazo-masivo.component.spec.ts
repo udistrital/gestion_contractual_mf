@@ -18,14 +18,14 @@ describe('ModalRechazoMasivoComponent', () => {
       unidad_ejecutora_id: 1,
       numero_contrato: 'CT-2026-011',
       vigencia: '2026',
-      contratista: { nombre_completo: 'Mariana Duarte' },
+      contratista: { nombre_completo: 'Contratista Seis de Prueba' },
     },
     {
       id: 12,
       unidad_ejecutora_id: 1,
       consecutivo_elaboracion: 'ELAB-2026-012',
       vigencia: '2026',
-      contratista: { razon_social: 'Ingeniería Global SAS' },
+      contratista: { razon_social: 'Empresa Uno de Prueba SAS' },
     },
   ];
 
@@ -120,7 +120,7 @@ describe('ModalRechazoMasivoComponent', () => {
 
   it('debe obtener número y contratista correctamente', () => {
     expect(component.getNumeroContrato(mockContratos[0])).toBe('CT-2026-011');
-    expect(component.getNombreContratista(mockContratos[0])).toBe('Mariana Duarte');
+    expect(component.getNombreContratista(mockContratos[0])).toBe('Contratista Seis de Prueba');
   });
 
   it('debe manejar fallback cuando no hay datos en data', () => {
