@@ -1,3 +1,4 @@
+import { USAR_DATOS_SIMULADOS } from '../mocks/config';
 import {
   AlertaContrato,
   ContratoTablero,

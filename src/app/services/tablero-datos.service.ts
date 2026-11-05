@@ -1,9 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, of } from 'rxjs';
+import { Observable, forkJoin, from, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { RequestManager } from 'src/app/managers/requestManager';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { TercerosCrudService } from 'src/app/services/tercero-crud.service';
+import { UserService } from 'src/app/services/user.service';
+import { USAR_DATOS_SIMULADOS } from '../mocks/config';
+import { contratosSimulados } from '../mocks/datos-simulados';
 import { ContratoTablero, USUARIO_ID_GENERICO } from '../types/tablero.models';
 import { diasEntre, estadoPorId } from '../utils/tablero.utils';
 
@@ -54,6 +57,7 @@ export class TableroDatosService {
   private readonly requestManager = inject(RequestManager);
   private readonly contratoMidService = inject(ContratoGeneralMidService);
   private readonly tercerosService = inject(TercerosCrudService);
+  private readonly userService = inject(UserService);
 
   // Contratos activos de la vigencia (vacía = todas) con su estado actual,
   // dependencia solicitante y abogado que los registró.
@@ -61,6 +65,13 @@ export class TableroDatosService {
     vigencia: string,
     hoy: Date = new Date()
   ): Observable<ContratoTablero[]> {
+    // TEMPORAL (demo): contratos simulados en vez del CRUD. Ver src/app/mocks.
+    if (USAR_DATOS_SIMULADOS) {
+      return from(this.userService.getPersonaId()).pipe(
+        catchError(() => of(null)),
+        map((miId) => contratosSimulados(vigencia, miId, hoy))
+      );
+    }
     const query = JSON.stringify(vigencia ? { activo: true, vigencia } : { activo: true });
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager
