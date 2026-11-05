@@ -43,8 +43,8 @@ export class PasoInfoGeneralComponent implements OnInit {
   showContratoFields = false;
   showConvenioFields = false;
   loadedData = signal<boolean>(false);
+  guardando = signal<boolean>(false);
   maxDate: Date = new Date();
-  formId: number | null = null;
 
   private initialFormValue: any;
   formSaved: boolean = false;
@@ -164,6 +164,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     effect(() => {
       if (this.loadedData() && this.contratoGeneral()) {
         this.setFormData();
+        this.guardando.set(false);
       }
     });
   }
@@ -463,8 +464,18 @@ export class PasoInfoGeneralComponent implements OnInit {
   }
 
   guardarYContinuar() {
+    // Hasta que llegue el contrato recargado no se sabe si el siguiente guardado es POST o PUT.
+    if (this.guardando()) return;
+    this.guardando.set(true);
+
     const formData = this.formInfoGeneral.value;
     const unidad_ejecutora_id = String(formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id);
+
+    // Un contrato existente ya tiene consecutivo: no se pide otro.
+    if (this.contratoGeneral()?.id) {
+      this.guardarContrato(null, parseInt(unidad_ejecutora_id, 10));
+      return;
+    }
 
     // Obtener el consecutivo del contrato
     this.contratoGeneralMidService
@@ -474,6 +485,7 @@ export class PasoInfoGeneralComponent implements OnInit {
           if (response.Success && response.Status === 200) {
             this.guardarContrato(response.Data, parseInt(unidad_ejecutora_id, 10));
           } else {
+            this.guardando.set(false);
             this.alertService.showErrorAlert(
               'Error al generar consecutivo de contrato',
               'Por favor, intente de nuevo'
@@ -482,6 +494,7 @@ export class PasoInfoGeneralComponent implements OnInit {
         },
         error: (error) => {
           console.log(error);
+          this.guardando.set(false);
           this.alertService.showErrorAlert(
             'Error al generar consecutivo de contrato',
             'Por favor, intente de nuevo'
@@ -490,10 +503,9 @@ export class PasoInfoGeneralComponent implements OnInit {
       });
   }
 
-  guardarContrato(consecutivo: string, unidad_ejecutora_id: number) {
-    if (this.viewMode()) return;
-
-    if (this.formInfoGeneral.invalid) {
+  guardarContrato(consecutivo: string | null, unidad_ejecutora_id: number) {
+    if (this.viewMode() || this.formInfoGeneral.invalid) {
+      this.guardando.set(false);
       this.formInfoGeneral.markAllAsTouched();
       return;
     }
@@ -503,9 +515,10 @@ export class PasoInfoGeneralComponent implements OnInit {
     const formParsed = {
       tipo_compromiso_id: formData.tipoCompromisoId,
       tipo_contrato_id: formData.tipoContratoId,
-      perfil_contratista_id: formData.perfilContratistaId,
+      perfil_contratista_id: formData.perfilContratistaId ?? null,
       fecha_suscripcion_estudios: formData.fechaSuscripcionEstudios,
-      aplica_poliza: formData.aplicaPoliza,
+      // El CRUD convierte cualquier texto no vacío en true, incluido '0'.
+      aplica_poliza: formData.aplicaPoliza ? formData.aplicaPoliza === '1' : null,
       vigencia_convenio: formData.vigenciaConvenio,
       convenio: formData.convenio,
       nombre_convenio: formData.nombreConvenio,
@@ -518,8 +531,9 @@ export class PasoInfoGeneralComponent implements OnInit {
       unidad_ejecutora_id: formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id,
     };
 
-    const saveOperation = this.formId
-      ? this.contratoGeneralCrudService.put(this.formId, formParsed)
+    const contratoId = this.contratoGeneral()?.id;
+    const saveOperation = contratoId
+      ? this.contratoGeneralCrudService.put(contratoId, formParsed)
       : this.contratoGeneralCrudService.post({
           ...formParsed,
           consecutivo_elaboracion: consecutivo,
@@ -527,8 +541,10 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     saveOperation.subscribe({
       next: async (response: ApiResponse<any>) => {
-
-        await this.guardarEstado(response.Data.id);
+        // El estado inicial solo se registra al crear: editar no cambia el estado del contrato.
+        if (!contratoId) {
+          await this.guardarEstado(response.Data.id);
+        }
 
         this.alertService.showSuccessAlert(
           'Los datos se guardaron correctamente. IDs: ' + response.Data.id,
@@ -541,6 +557,7 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.nextStep.emit();
       },
       error: async (error) => {
+        this.guardando.set(false);
         this.alertService.showErrorAlert(
           'Ocurrió un error al guardar los datos',
           'Error al guardar los datos'
