@@ -49,6 +49,26 @@ describe('ModalSeleccionarUeComponent', () => {
     expect(component.unidades[1].nombre).toBe('IDEXUD');
   });
 
+  it('debe cargar dinámicamente cualquier nueva unidad ejecutora registrada en parámetros CRUD', async () => {
+    mockParametrosService.getParametrosPorTipo.mockResolvedValueOnce({
+      [environment.UNIDAD_EJECUTORA_ID]: [
+        { Id: 6818, Nombre: 'Rectoría' },
+        { Id: 6819, Nombre: 'IDEXUD' },
+        { Id: 7001, Nombre: 'Nueva Unidad Ejecutora', Descripcion: 'Descripción personalizada' },
+      ],
+    });
+
+    await component.ngOnInit();
+
+    expect(component.unidades).toHaveLength(3);
+    expect(component.unidades[2]).toEqual({
+      id: 7001,
+      codigo: '03',
+      nombre: 'Nueva Unidad Ejecutora',
+      descripcion: 'Descripción personalizada',
+    });
+  });
+
   it('debe permitir seleccionar otra unidad ejecutora', () => {
     const ue2 = component.unidades[1];
     component.seleccionar(ue2);
