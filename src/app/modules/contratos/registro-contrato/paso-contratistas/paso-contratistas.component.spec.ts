@@ -65,11 +65,11 @@ describe('PasoContratistasComponent', () => {
     const mockPrevalidado = {
       proveedor: {
         tipo_persona: 'NATURAL',
-        numero_documento: '1014285890',
-        nombre_completo_proveedor: 'INGRID PAOLA MORALES MORALES',
+        numero_documento: '1000000001',
+        nombre_completo_proveedor: 'CONTRATISTA DE PRUEBA',
         direccion: 'Calle 100 # 15-20',
         ciudad_contacto: 'Bogotá',
-        correo: 'ingrid@correo.udistrital.edu.co',
+        correo: 'contratista@prueba.local',
         ciudad_expedicion_documento: 'Bogotá',
         tipo_persona_id: 1,
       },
@@ -85,21 +85,21 @@ describe('PasoContratistasComponent', () => {
     fixture.detectChanges();
 
     expect(component.datosContratista).toEqual(mockPrevalidado);
-    expect(component.form.get('documentoContratista')?.value).toBe('1014285890');
+    expect(component.form.get('documentoContratista')?.value).toBe('1000000001');
     expect(component.form.get('documentoContratista')?.disabled).toBe(true);
     expect(component.form.get('claseContratista')?.disabled).toBe(true);
-    expect(component.contratistaObject.nombre).toBe('INGRID PAOLA MORALES MORALES');
+    expect(component.contratistaObject.nombre).toBe('CONTRATISTA DE PRUEBA');
   });
 
   it('debe permitir guardar y continuar cuando el contratista está prevalidado y bloqueado', async () => {
     const mockPrevalidado = {
       proveedor: {
         tipo_persona: 'NATURAL',
-        numero_documento: '1014285890',
-        nombre_completo_proveedor: 'INGRID PAOLA MORALES MORALES',
+        numero_documento: '1000000001',
+        nombre_completo_proveedor: 'CONTRATISTA DE PRUEBA',
         direccion: 'Calle 100 # 15-20',
         ciudad_contacto: 'Bogotá',
-        correo: 'ingrid@correo.udistrital.edu.co',
+        correo: 'contratista@prueba.local',
         ciudad_expedicion_documento: 'Bogotá',
         tipo_persona_id: 1,
       },
@@ -121,7 +121,7 @@ describe('PasoContratistasComponent', () => {
 
     expect(mockContratoGeneralCrudService.postContratista).toHaveBeenCalledWith(
       expect.objectContaining({
-        numero_documento: '1014285890',
+        numero_documento: '1000000001',
         contrato_general_id: 105,
       })
     );

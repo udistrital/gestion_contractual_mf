@@ -70,10 +70,10 @@ describe('AlertasGestionComponent', () => {
   });
 
   it('oculta el abogado cuando se pide', () => {
-    expect(fixture.nativeElement.querySelector('.contexto').textContent).toContain('Diana Rojas');
+    expect(fixture.nativeElement.querySelector('.contexto').textContent).toContain('Abogado B de Prueba');
     fixture.componentRef.setInput('mostrarAbogado', false);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.contexto').textContent).not.toContain('Diana Rojas');
+    expect(fixture.nativeElement.querySelector('.contexto').textContent).not.toContain('Abogado B de Prueba');
   });
 
   it('emite el estado del tipo elegido solo si es seleccionable', () => {

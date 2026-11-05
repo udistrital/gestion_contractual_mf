@@ -35,7 +35,7 @@ describe('TableroDatosService', () => {
       getDependenciasBySede: jest.fn().mockReturnValue(of([{ id: 31, nombre: 'Facultad de Ingeniería' }])),
     };
     tercerosService = {
-      getTerceroPorId: jest.fn().mockReturnValue(of({ Id: 500, NombreCompleto: 'Diana Rojas ' })),
+      getTerceroPorId: jest.fn().mockReturnValue(of({ Id: 500, NombreCompleto: 'Abogado B de Prueba ' })),
     };
     TestBed.configureTestingModule({
       providers: [
@@ -73,7 +73,7 @@ describe('TableroDatosService', () => {
     expect(c.fechaFinal).toEqual(new Date(2026, 11, 31));
     expect(c.dependencia).toBe('Facultad de Ingeniería');
     expect(c.abogadoId).toBe(500);
-    expect(c.abogado).toBe('Diana Rojas');
+    expect(c.abogado).toBe('Abogado B de Prueba');
     expect(midService.getDependenciasBySede).toHaveBeenCalledWith(2);
     expect(tercerosService.getTerceroPorId).toHaveBeenCalledWith(500);
   });
@@ -134,12 +134,12 @@ describe('TableroDatosService', () => {
       })
     );
     tercerosService.getTerceroPorId.mockImplementation((id: number) =>
-      of(id === 600 ? { Data: { NombreCompleto: 'Andrés Pinzón' } } : {})
+      of(id === 600 ? { Data: { NombreCompleto: 'Abogado A de Prueba' } } : {})
     );
     const [sinRol, conData, sinNombre] = await firstValueFrom(service.cargarContratos('2026'));
     expect(sinRol.numero).toBe('#9');
     expect(sinRol.abogadoId).toBeNull();
-    expect(conData.abogado).toBe('Andrés Pinzón');
+    expect(conData.abogado).toBe('Abogado A de Prueba');
     expect(sinNombre.abogado).toBe('Abogado 700');
   });
 });
