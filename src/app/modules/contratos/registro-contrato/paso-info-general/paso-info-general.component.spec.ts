@@ -5,6 +5,7 @@ import { ParametrosService } from 'src/app/services/parametros.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { VigenciaService } from 'src/app/services/vigencia.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { of, throwError } from 'rxjs';
@@ -50,6 +51,7 @@ describe('PasoInfoGeneralComponent: guardado', () => {
   let component: PasoInfoGeneralComponent;
   let crud: Record<string, jest.Mock>;
   let mid: Record<string, jest.Mock>;
+  let vigencias: Record<string, jest.Mock>;
 
   const respuesta = (Status: number) => of({ Success: true, Status, Data: { id: 42 } });
 
@@ -57,6 +59,7 @@ describe('PasoInfoGeneralComponent: guardado', () => {
 
   async function montar(datos?: any) {
     mid = { postConsecutivo: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: '27' })) };
+    vigencias = { vigenciaActualId: jest.fn().mockReturnValue(of(9001)) };
     crud = {
       post: jest.fn().mockReturnValue(respuesta(201)),
       put: jest.fn().mockReturnValue(respuesta(200)),
@@ -77,6 +80,7 @@ describe('PasoInfoGeneralComponent: guardado', () => {
         { provide: ContratoGeneralCrudService, useValue: crud },
         { provide: ContratoGeneralMidService, useValue: mid },
         { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
+        { provide: VigenciaService, useValue: vigencias },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     });
@@ -157,6 +161,37 @@ describe('PasoInfoGeneralComponent: guardado', () => {
     crud['post'].mockReturnValue(throwError(() => new Error('falló')));
     await guardar();
     expect(component.guardando()).toBe(false);
+  });
+
+  it('guarda vigencia_id y la envía al consecutivo como entero', async () => {
+    await montar();
+    const unidad = component.formInfoGeneral.value.unidadEjecutoraId || component.unidadesEjecutoras[0]?.Id;
+    await guardar();
+    expect(mid['postConsecutivo']).toHaveBeenCalledWith({ unidad_ejecutora_id: Number(unidad), vigencia_id: 9001 });
+    expect(crud['post']).toHaveBeenCalledWith(expect.objectContaining({ vigencia_id: 9001 }));
+  });
+
+  it.each([
+    ['no trae la vigencia', () => of(null)],
+    ['falla', () => throwError(() => new Error('falló'))],
+  ])('si Parámetros %s no guarda el contrato y avisa', async (_caso, respuestaVigencia) => {
+    await montar();
+    vigencias['vigenciaActualId'].mockReturnValue(respuestaVigencia());
+    await guardar();
+    expect(TestBed.inject(AlertService).showErrorAlert).toHaveBeenCalledWith(
+      'No se encontró la vigencia del año actual en Parámetros. El contrato no se guardó.',
+      'Error al consultar la vigencia'
+    );
+    expect(mid['postConsecutivo']).not.toHaveBeenCalled();
+    expect(crud['post']).not.toHaveBeenCalled();
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('editar no consulta la vigencia', async () => {
+    await montar(existente);
+    await guardar();
+    expect(vigencias['vigenciaActualId']).not.toHaveBeenCalled();
+    expect(crud['put'].mock.calls[0][1]).not.toHaveProperty('vigencia_id');
   });
 
   it('permite reintentar si falla el consecutivo', async () => {

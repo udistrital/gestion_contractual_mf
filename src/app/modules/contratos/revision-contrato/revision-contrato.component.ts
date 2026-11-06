@@ -20,9 +20,10 @@ import {
   rolPorEstado,
 } from 'src/app/utils/rolesEstados';
 import { SubirArchivoComponent } from './cargar-archivo/cargar-archivo.component';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { MinutasMidService } from 'src/app/services/minuta-mid.service';
+import { VigenciaService } from 'src/app/services/vigencia.service';
 
 @Component({
     selector: 'app-revision-contrato',
@@ -37,7 +38,7 @@ export class RevisionContratoComponent {
   documentos = { minuta: '', documentos_precontractuales: '' };
   contrato_general_id = 0;
   unidad_ejecutora_id = 0;
-  vigencia: string = '';
+  vigencia_id: number = 0;
   numero_contrato: string = '';
   usuario_id: number = 0;
   roles: string[] = [];
@@ -56,7 +57,8 @@ export class RevisionContratoComponent {
     private gestorDocumentalService: GestorDocumentalService,
     private minutasMidService: MinutasMidService,
     private rolService: RolService,
-    private userService: UserService
+    private userService: UserService,
+    private vigenciaService: VigenciaService
   ) {}
 
   ngOnInit(): void {
@@ -115,7 +117,7 @@ export class RevisionContratoComponent {
         const contratoData = contrato?.Data;
         if (contratoData) {
           this.unidad_ejecutora_id = contratoData.unidad_ejecutora_id || 0;
-          this.vigencia = contratoData.vigencia || '';
+          this.vigencia_id = contratoData.vigencia_id || 0;
           this.numero_contrato = contratoData.numero_contrato || '';
         }
 
@@ -414,13 +416,37 @@ export class RevisionContratoComponent {
 
   // Generar número de contrato si aplica
   generarNumeroContrato(estadoContrato: EstadoContrato, estado: number) {
-    // Provisional: el año actual cuando el contrato no tiene vigencia (#397, pregunta 1).
-    const vigencia = this.vigencia || String(new Date().getFullYear());
+    // Provisional: el año actual cuando el contrato no tiene vigencia (#397, pregunta 2).
+    const vigencia = this.vigencia_id
+      ? of(this.vigencia_id)
+      : this.vigenciaService.vigenciaActualId();
 
+    vigencia.subscribe({
+      next: (vigenciaId) => {
+        if (vigenciaId) {
+          this.pedirNumeroContrato(vigenciaId, estadoContrato, estado);
+        } else {
+          this.alertService.showErrorAlert(
+            'No se encontró la vigencia del año actual en Parámetros',
+            'Error al consultar la vigencia'
+          );
+        }
+      },
+      error: (error) => {
+        this.handleError('No se encontró la vigencia del año actual en Parámetros', error);
+      },
+    });
+  }
+
+  private pedirNumeroContrato(
+    vigenciaId: number,
+    estadoContrato: EstadoContrato,
+    estado: number
+  ) {
     this.contratoGeneralMidService
       .postNumeroContrato({
-        unidad_ejecutora_id: this.unidad_ejecutora_id,
-        vigencia,
+        unidad_ejecutora_id: Number(this.unidad_ejecutora_id),
+        vigencia_id: vigenciaId,
         estado: environment.ESTADOS_GENERALES.SUSCRITO,
       })
       .subscribe({
@@ -428,7 +454,7 @@ export class RevisionContratoComponent {
           if (response.Success && response.Status === 200) {
             this.guardarNumeroContrato(
               response.Data,
-              vigencia,
+              vigenciaId,
               estadoContrato,
               estado
             );
@@ -449,21 +475,21 @@ export class RevisionContratoComponent {
   // La vigencia también se guarda porque el conteo del número filtra por ella.
   guardarNumeroContrato(
     numeroContrato: string,
-    vigencia: string,
+    vigenciaId: number,
     estadoContrato: EstadoContrato,
     estado: number
   ) {
     this.contratoGeneralCrudService
       .put(this.contrato_general_id, {
         numero_contrato: numeroContrato,
-        vigencia,
+        vigencia_id: vigenciaId,
       })
       .subscribe({
         next: (response: ApiResponse<any>) => {
           // El CRUD Beego responde Status como texto ("200"): basta con Success.
           if (response.Success) {
             this.numero_contrato = numeroContrato;
-            this.vigencia = vigencia;
+            this.vigencia_id = vigenciaId;
             this.crearEstadoAutomaticoContrato(
               estadoContrato,
               estado,

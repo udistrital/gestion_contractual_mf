@@ -14,6 +14,7 @@ import { environment } from 'src/environments/environment';
 import { aFechaCrud, desdeFechaCrud } from 'src/app/utils/fechas-crud';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { VigenciaService } from 'src/app/services/vigencia.service';
 import { RolService } from 'src/app/services/rol.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { UserService } from 'src/app/services/user.service';
@@ -101,6 +102,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   private readonly parametrosService = inject(ParametrosService);
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly contratoGeneralMidService = inject(ContratoGeneralMidService);
+  private readonly vigenciaService = inject(VigenciaService);
   private readonly cdRef = inject(ChangeDetectorRef);
   private readonly userService = inject(UserService);
 
@@ -519,13 +521,35 @@ export class PasoInfoGeneralComponent implements OnInit {
       return;
     }
 
+    // El contrato no se guarda sin vigencia.
+    this.vigenciaService.vigenciaActualId().subscribe({
+      next: (vigenciaId) => {
+        if (vigenciaId) {
+          this.pedirConsecutivo(parseInt(unidad_ejecutora_id, 10), vigenciaId);
+        } else {
+          this.avisarSinVigencia();
+        }
+      },
+      error: () => this.avisarSinVigencia(),
+    });
+  }
+
+  private avisarSinVigencia() {
+    this.guardando.set(false);
+    this.alertService.showErrorAlert(
+      'No se encontró la vigencia del año actual en Parámetros. El contrato no se guardó.',
+      'Error al consultar la vigencia'
+    );
+  }
+
+  private pedirConsecutivo(unidad_ejecutora_id: number, vigenciaId: number) {
     // Obtener el consecutivo del contrato
     this.contratoGeneralMidService
-      .postConsecutivo({ unidad_ejecutora_id })
+      .postConsecutivo({ unidad_ejecutora_id, vigencia_id: vigenciaId })
       .subscribe({
         next: (response: ApiResponse<any>) => {
           if (response.Success && response.Status === 200) {
-            this.guardarContrato(response.Data, parseInt(unidad_ejecutora_id, 10));
+            this.guardarContrato(response.Data, unidad_ejecutora_id, vigenciaId);
           } else {
             this.guardando.set(false);
             this.alertService.showErrorAlert(
@@ -545,7 +569,11 @@ export class PasoInfoGeneralComponent implements OnInit {
       });
   }
 
-  guardarContrato(consecutivo: string | null, unidad_ejecutora_id: number) {
+  guardarContrato(
+    consecutivo: string | null,
+    unidad_ejecutora_id: number,
+    vigenciaId: number | null = null
+  ) {
     if (this.viewMode() || this.formInfoGeneral.invalid) {
       this.guardando.set(false);
       this.formInfoGeneral.markAllAsTouched();
@@ -581,6 +609,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       : this.contratoGeneralCrudService.post({
           ...formParsed,
           consecutivo_elaboracion: consecutivo,
+          vigencia_id: vigenciaId,
         });
 
     saveOperation.subscribe({
