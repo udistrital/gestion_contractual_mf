@@ -27,7 +27,7 @@ const CONTRATO_ID = 9001;
 const EVIDENCIAS = process.env.EVIDENCIAS_390 ?? join(homedir(), 'argo_repos', 'evidencias-390');
 
 const menuPermitido = Buffer.from(
-  JSON.stringify([{ Url: `/contratos/detalle/${CONTRATO_ID}` }, { Url: '/contratos/gestionar' }])
+  JSON.stringify([{ Url: `/gestion-contractual/contratos/detalle/${CONTRATO_ID}` }, { Url: '/gestion-contractual/contratos/gestionar' }])
 ).toString('base64');
 const usuario = Buffer.from(
   JSON.stringify({ user: { role: ['ABOGADO_CONTRATACION_RECTOR'] }, userService: { role: [] } })
@@ -83,7 +83,7 @@ const contrato = {
   fecha_inicial: null,
   fecha_final: null,
   fecha_suscripcion: null,
-  proveedor_numero_documento: '1014285890',
+  proveedor_numero_documento: '1000000001',
   tipo_persona_id: 1,
   clase_proveedor_id: null,
   dependencia_solicitante_id: 20,
@@ -99,18 +99,18 @@ const contratoEnConsulta = {
   numero_contrato: 'OC-0042-2026',
   vigencia: '2026',
   estados: { estado_parametro_id: 6773, estado_interno_parametro_id: 6800, nombre_estado: 'Por suscribir', actual: true },
-  contratista: { nombre: 'INGRID PAOLA MORALES MORALES', numero_documento: '1014285890' },
+  contratista: { nombre: 'CONTRATISTA DE PRUEBA', numero_documento: '1000000001' },
 };
 
 const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
   ordenador_contrato: [
-    { id: 71, contrato_general_id: DEL_CONTRATO, tercero_id: null, cargo_id: 12, documento_identidad: '19456789', resolucion: null, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
+    { id: 71, contrato_general_id: DEL_CONTRATO, tercero_id: null, cargo_id: 12, documento_identidad: '1000000003', resolucion: null, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
   ],
   disponibilidad_presupuestal: [
     { id: 501, contrato_general_id: DEL_CONTRATO, numero_cdp_id: 1234, vigencia_cdp_id: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
   ],
   supervisor_contrato: [
-    { id: 61, contrato_general_id: DEL_CONTRATO, supervisor_id: 7788, documento: 79865432, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
+    { id: 61, contrato_general_id: DEL_CONTRATO, supervisor_id: 7788, documento: 1000000005, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
   ],
   especificacion_tecnica: [
     { id: 801, contrato_general_id: DEL_CONTRATO, descripcion: 'Osciloscopio digital de 4 canales 200 MHz', cantidad: 3, valor_unitario: 9500000, valor_total: 28500000, activo: true },
@@ -272,7 +272,7 @@ test.beforeAll(async ({ browser }) => {
   context = await browser.newContext({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
   await prepararContexto(context);
   page = await context.newPage();
-  await page.goto(`/contratos/detalle/${CONTRATO_ID}`);
+  await page.goto(`/gestion-contractual/contratos/detalle/${CONTRATO_ID}`);
   await expect(page.locator('app-registro-contrato')).toBeVisible();
   await expect(page.getByText('Detalle del Contrato').first()).toBeVisible();
   // Espera a que lleguen las cargas asíncronas de todos los pasos.
@@ -317,7 +317,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
     await expect.soft(opcion('tipoMoneda')).toHaveText('Peso colombiano');
     await expect.soft(seccion.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
     await expect.soft(opcion('ordenadorGasto')).toHaveText('RECTOR');
-    await expect.soft(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/GIOVANNI RODRIGO/);
+    await expect.soft(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
     await expect.soft(opcion('origenRecurso')).toHaveText('Recursos propios');
     await expect.soft(opcion('origenPresupuesto')).toHaveText('Presupuesto de la vigencia');
     await expect.soft(opcion('tipoGasto')).toHaveText('Inversión');
@@ -347,7 +347,7 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
       description: `Dependencia solicitante: "${await solicitante('Dependencia Solicitante').textContent()}", ` +
         `dependencia supervisor: "${await valorSelect(formField('dependencia').first()).textContent()}"`,
     });
-    await expect.soft(seccion).toContainText('CARLOS ANDRÉS RUIZ MORENO');
+    await expect.soft(seccion).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(seccion).toContainText('Decano');
     // "Tipo y Alcance del Control" se carga de ContratoGeneral.TipoControlId.
     await expect.soft(valorSelect(formField('tipoControl').first())).toHaveText(/Técnico, administrativo y financiero/);
@@ -358,11 +358,11 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
 
   await test.step('04 contratista: datos visibles y en solo lectura', async () => {
     const seccion = page.locator('app-paso-contratistas');
-    await expect.soft(seccion.locator('input[formcontrolname="documentoContratista"]')).toHaveValue('1014285890');
+    await expect.soft(seccion.locator('input[formcontrolname="documentoContratista"]')).toHaveValue('1000000001');
     await expect.soft(seccion.locator('input[formcontrolname="documentoContratista"]')).toBeDisabled();
     await expect.soft(seccion.locator('.search-input-wrapper')).toHaveClass(/wrapper-locked/);
-    await expect.soft(seccion).toContainText('INGRID PAOLA MORALES MORALES');
-    await expect.soft(seccion).toContainText('ingrid.morales@correo.com');
+    await expect.soft(seccion).toContainText('CONTRATISTA DE PRUEBA');
+    await expect.soft(seccion).toContainText('contratista@prueba.local');
 
     await verificarSoloLectura(seccion);
     await capturar(page, seccion, '04-contratista');
@@ -446,8 +446,8 @@ test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulad
   await prepararContexto(ctx);
   const consulta = await ctx.newPage();
   try {
-    await consulta.goto('/contratos/gestionar');
-    const fila = consulta.locator('tr.mat-mdc-row', { hasText: 'INGRID PAOLA MORALES MORALES' });
+    await consulta.goto('/gestion-contractual/contratos/gestionar');
+    const fila = consulta.locator('tr.mat-mdc-row', { hasText: 'CONTRATISTA DE PRUEBA' });
     await expect(fila).toBeVisible({ timeout: 30_000 });
 
     await fila.getByRole('button', { name: 'Menú de acciones del contrato' }).click();
@@ -457,7 +457,7 @@ test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulad
     await consulta.screenshot({ path: join(EVIDENCIAS, '10-consulta-accion-ver-detalle.png') });
 
     await menu.getByRole('menuitem', { name: /Ver Detalle/ }).click();
-    await expect(consulta).toHaveURL(new RegExp(`/contratos/detalle/${CONTRATO_ID}$`));
+    await expect(consulta).toHaveURL(new RegExp(`/gestion-contractual/contratos/detalle/${CONTRATO_ID}$`));
     await expect(consulta.getByText('Detalle del Contrato').first()).toBeVisible();
     await expect(consulta.locator('app-paso-info-general')).toContainText('Orden de Compra');
   } finally {

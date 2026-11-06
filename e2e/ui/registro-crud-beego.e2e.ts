@@ -110,9 +110,9 @@ async function capturar(page: Page, archivo: string) {
 async function abrirEdicion(page: Page, id: number) {
   await page.evaluate(
     (menuEdicion) => localStorage.setItem('menu', menuEdicion),
-    menu(['/contratos/registrar', `/contratos/detalle/${id}`, `/contratos/editar/${id}`])
+    menu(['/gestion-contractual/contratos/registrar', `/gestion-contractual/contratos/detalle/${id}`, `/gestion-contractual/contratos/editar/${id}`])
   );
-  await page.goto(`/contratos/editar/${id}`);
+  await page.goto(`/gestion-contractual/contratos/editar/${id}`);
 }
 
 /** Guarda el paso 1 de un contrato existente y exige el PUT sobre ese mismo contrato. */
@@ -148,11 +148,11 @@ test.beforeAll(async ({ browser }) => {
       localStorage.setItem('user', user);
       // Entrada real al registro: desde la consulta, con el contratista ya validado
       // (así lo deja la modal "Validar contratista" en el estado de navegación).
-      if (location.pathname === '/contratos/registrar') {
+      if (location.pathname === '/gestion-contractual/contratos/registrar') {
         history.replaceState({ ...(history.state ?? {}), contratistaPrevalidado: proveedor, bloquearContratista: false }, '');
       }
     },
-    [menu(['/contratos/registrar']), usuario, PROVEEDOR] as const
+    [menu(['/gestion-contractual/contratos/registrar']), usuario, PROVEEDOR] as const
   );
   page = await context.newPage();
 });
@@ -165,7 +165,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
   test.setTimeout(300_000);
 
   await test.step('paso 1: datos básicos (crea el contrato en contrato_general)', async () => {
-    await page.goto('/contratos/registrar');
+    await page.goto('/gestion-contractual/contratos/registrar');
     const seccion = page.locator('app-paso-info-general');
     await expect(seccion).toBeVisible();
     await seleccionar(page, buscable(seccion, 'Tipo de Compromiso'), 'Orden');
@@ -193,7 +193,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await seccion.locator('select[formcontrolname="tipoMoneda"]').selectOption({ label: 'Peso colombiano' });
     await seccion.locator('input[formcontrolname="valorContrato"]').fill('45000000');
     await seccion.locator('select[formcontrolname="ordenadorGasto"]').selectOption({ label: 'RECTOR' });
-    await expect(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/GIOVANNI/);
+    await expect(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
     await seccion.locator('select[formcontrolname="origenRecurso"]').selectOption({ label: 'Recursos propios' });
     await seccion.locator('select[formcontrolname="origenPresupuesto"]').selectOption({ label: 'Presupuesto de la vigencia' });
     await seccion.locator('select[formcontrolname="tipoGasto"]').selectOption({ label: 'Inversión' });
@@ -225,7 +225,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
 
     await seleccionar(page, seccion.locator('mat-select[formcontrolname="sede"]').first(), 'Sede Calle 40');
     await seleccionar(page, seccion.locator('mat-select[formcontrolname="dependencia"]').first(), 'Facultad de Ingeniería');
-    await expect(seccion).toContainText('CARLOS ANDRÉS RUIZ MORENO');
+    await expect(seccion).toContainText('SUPERVISOR DE PRUEBA');
     await seleccionar(page, seccion.locator('mat-select[formcontrolname="tipoControl"]').first(), 'Técnico, administrativo y financiero');
     await seccion.getByRole('button', { name: /Guardar Supervisores/ }).click();
     await aceptarAlerta(page);
@@ -234,9 +234,9 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
 
   await test.step('paso 2: contratista (se guarda en contrato_general)', async () => {
     const seccion = page.locator('app-paso-contratistas');
-    await expect(seccion.locator('input[formcontrolname="documentoContratista"]')).toHaveValue('1014285890');
+    await expect(seccion.locator('input[formcontrolname="documentoContratista"]')).toHaveValue('1000000001');
     await seccion.getByRole('button', { name: /Consultar Registro/ }).click();
-    await expect(seccion).toContainText('INGRID PAOLA MORALES MORALES');
+    await expect(seccion).toContainText('CONTRATISTA DE PRUEBA');
     await seccion.getByRole('button', { name: /Siguiente: Estructura y Necesidad/ }).click();
     await aceptarAlerta(page);
     await capturar(page, '03-paso2-contratista');
@@ -258,9 +258,9 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
   await test.step('detalle del contrato con los datos guardados en el CRUD Beego', async () => {
     await page.evaluate(
       (menuDetalle) => localStorage.setItem('menu', menuDetalle),
-      menu(['/contratos/registrar', `/contratos/detalle/${contratoId}`])
+      menu(['/gestion-contractual/contratos/registrar', `/gestion-contractual/contratos/detalle/${contratoId}`])
     );
-    await page.goto(`/contratos/detalle/${contratoId}`);
+    await page.goto(`/gestion-contractual/contratos/detalle/${contratoId}`);
     await expect(page.getByText('Detalle del Contrato').first()).toBeVisible();
 
     const general = page.locator('app-paso-info-general');
@@ -275,9 +275,9 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
     await expect.soft(supervisores.locator('app-searchable-select', { hasText: 'Sede Universitaria Solicitante' })).toContainText('Sede Calle 40');
-    await expect.soft(supervisores).toContainText('CARLOS ANDRÉS RUIZ MORENO');
+    await expect.soft(supervisores).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(supervisores.locator('mat-select[formcontrolname="tipoControl"]').first()).toContainText('Técnico, administrativo y financiero');
-    await expect.soft(page.locator('app-paso-contratistas input[formcontrolname="documentoContratista"]')).toHaveValue('1014285890');
+    await expect.soft(page.locator('app-paso-contratistas input[formcontrolname="documentoContratista"]')).toHaveValue('1000000001');
     await capturar(page, '06-detalle-supervisores-contratista');
 
     await page.locator('.step-pill[aria-label="Especificaciones Técnicas"]').click();
@@ -299,12 +299,12 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     cargoSupervisorInicial = columnas('supervisor_contrato', delContrato, ['cargo_id']);
     // El formulario no maneja estos campos: se simulan guardados por otra vía.
     sql(`update contratacion.supervisor_contrato set cargo_id = 45 where ${delContrato}`);
-    sql(`update contratacion.ordenador_contrato set cargo_id = 12, ordenador_sicapital_id = 1001, documento_identidad = '19456789' where ${delContrato}`);
+    sql(`update contratacion.ordenador_contrato set cargo_id = 12, ordenador_sicapital_id = 1001, documento_identidad = '1000000003' where ${delContrato}`);
 
     await abrirEdicion(page, contratoId);
     const presupuestal = page.locator('app-paso-info-presupuestal');
     await expect(presupuestal.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
-    await expect(presupuestal.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/GIOVANNI/);
+    await expect(presupuestal.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
     const ordenador = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/ordenador_contrato/'));
     await presupuestal.getByRole('button', { name: /Guardar y Continuar/ }).click();
     expect.soft(Object.keys((await ordenador).postDataJSON())).toEqual(['ordenador_argo_id', 'contrato_general_id']);
@@ -312,7 +312,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
 
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
-    await expect(supervisores).toContainText('CARLOS ANDRÉS RUIZ MORENO');
+    await expect(supervisores).toContainText('SUPERVISOR DE PRUEBA');
     const supervisor = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/supervisor_contrato/'));
     await supervisores.getByRole('button', { name: /(Guardar|Actualizar) Supervisores/ }).click();
     expect.soft((await supervisor).postDataJSON()).not.toHaveProperty('cargo_id');
@@ -347,12 +347,12 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
         Object.entries(conteos).map(([k, v]) => `${k}: ${v}`).join('\n') +
         `\n\nPeticiones al CRUD Beego (${peticionesAlCrud.length}):\n${peticionesAlCrud.join('\n')}\n`
     );
-    expect.soft(contrato).toBe('1014285890|1|10|20|6611');
+    expect.soft(contrato).toBe('1000000001|1|10|20|6611');
     expect.soft(sinValor).toBe(nulos(camposSinValorContrato));
     expect.soft(sinValorOrdenador).toBe(nulos(camposSinValorOrdenador));
     expect.soft(cargoSupervisorInicial).toBe('NULL');
     expect.soft(cargoSupervisor).toBe('45');
-    expect.soft(ordenadorEditado).toBe('12|1001|19456789');
+    expect.soft(ordenadorEditado).toBe('12|1001|1000000003');
     expect.soft(conteos.ordenadores_activos).toBe('1');
     expect.soft(conteos.cdps_activos).toBe('1');
     expect.soft(conteos.supervisores_activos).toBe('1');
@@ -373,6 +373,9 @@ test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () 
     fila: columnas('contrato_general', `id = ${id}`, ['consecutivo_elaboracion', 'plazo_ejecucion', 'proveedor_numero_documento', 'sede_solicitante_id']),
   });
   const antes = consultar();
+  const aplicaPoliza = () => columnas('contrato_general', `id = ${id}`, ['aplica_poliza']);
+  // "No" en el paso 1 debe quedar como false: antes '0' llegaba como texto y se guardaba true.
+  expect.soft(aplicaPoliza()).toBe('false');
   const peticiones: string[] = [];
   const registrar = (r: Request) => {
     if (/\/contrato_general\/|\/consecutivo/.test(r.url())) peticiones.push(`${r.method()} ${new URL(r.url()).pathname}`);
@@ -395,6 +398,7 @@ test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () 
       `peticiones al guardar: ${peticiones.join(', ')}\n` +
       `antes:   ${JSON.stringify(antes)}\ndespués: ${JSON.stringify(despues)}\n`
   );
+  expect.soft(aplicaPoliza(), 'editar conserva el No').toBe('false');
   expect.soft(despues.contratos, 'no debe aparecer un segundo contrato').toBe(antes.contratos);
   expect.soft(despues.estados, 'editar no cambia el estado').toBe(antes.estados);
   expect.soft(despues.fila).toBe(antes.fila.replace(/^([^|]*)\|6\|/, '$1|9|'));
@@ -406,7 +410,7 @@ test('fecha de estudios: conserva el día al guardar y al editar', async () => {
   test.setTimeout(180_000);
   contratoId = 0;
 
-  await page.goto('/contratos/registrar');
+  await page.goto('/gestion-contractual/contratos/registrar');
   const seccion = page.locator('app-paso-info-general');
   await expect(seccion).toBeVisible();
   await seleccionar(page, buscable(seccion, 'Tipo de Compromiso'), /^Contrato$/);

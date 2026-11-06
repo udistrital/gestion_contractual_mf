@@ -11,7 +11,7 @@ export function contratoPrueba(parcial: Partial<ContratoTablero> = {}): Contrato
     dependenciaId: 10,
     dependencia: 'Vicerrectoría Administrativa',
     abogadoId: 500,
-    abogado: 'Diana Rojas',
+    abogado: 'Abogado B de Prueba',
     ...parcial,
   };
 }

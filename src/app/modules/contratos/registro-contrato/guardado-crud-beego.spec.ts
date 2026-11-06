@@ -64,8 +64,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       });
       const fixture = TestBed.createComponent(PasoInfoGeneralComponent);
       component = fixture.componentInstance;
-      fixture.componentRef.setInput('contratoGeneral', datos);
-      fixture.componentRef.setInput('contratoGeneralId', contratoGeneralId);
+      fixture.componentRef.setInput('contratoGeneral', { ...datos, id: contratoGeneralId });
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
@@ -319,7 +318,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
 
     const supervisorGuardado = {
       id: 1,
-      documento: 79123456,
+      documento: 1000000004,
       sede_legado: 'SEDE',
       dependencia_legado: 'DEP',
       cargo_legado: 'Decano',
@@ -356,7 +355,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       await montar([supervisorGuardado]);
       // Datos del supervisor que en la pantalla llegan del MID de ordenadores y supervisores.
       component.supervisorLegacy[0] = {
-        documento: '79123456',
+        documento: '1000000004',
         sede_legado: 'SEDE',
         dependencia_legado: 'DEP',
         cargo_legado: 'Decano',
@@ -367,8 +366,8 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       expect(crud['putSupervisor']).toHaveBeenCalledWith(
         1,
         expect.objectContaining({
-          supervisor_id: 79123456,
-          documento: 79123456,
+          supervisor_id: 1000000004,
+          documento: 1000000004,
           digito_verificacion: 3,
           sede_id: 10,
           dependencia_id: 20,
@@ -393,7 +392,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
     it('crea el supervisor nuevo con POST y toma su id de Data', async () => {
       await montar([]);
       component.supervisorLegacy[0] = {
-        documento: '79123456',
+        documento: '1000000004',
         sede_legado: '',
         dependencia_legado: '',
         cargo_legado: '',
@@ -401,7 +400,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       jest.spyOn(component.form.get('supervisores')!, 'invalid', 'get').mockReturnValue(false);
       await component.guardarSupervisores();
       expect(crud['postSupervisor']).toHaveBeenCalledWith(
-        expect.objectContaining({ supervisor_id: 79123456, contrato_general_id: { id: 42 } })
+        expect.objectContaining({ supervisor_id: 1000000004, contrato_general_id: { id: 42 } })
       );
       expect(component.supervisoresIds).toEqual([9]);
     });

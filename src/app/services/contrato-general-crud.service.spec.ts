@@ -163,13 +163,13 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   });
 
   it('16 a 21. contratista, solicitante y tipo de control se guardan con PUT parcial en contrato_general', () => {
-    crud.put(42, { proveedor_numero_documento: '1014285890', tipo_persona_id: 1 }).subscribe();
+    crud.put(42, { proveedor_numero_documento: '1000000001', tipo_persona_id: 1 }).subscribe();
     crud.put(42, { sede_solicitante_id: 10, dependencia_solicitante_id: 20 }).subscribe();
     crud.put(42, { tipo_control_id: 6611 }).subscribe();
     const reqs = http.match(`${CRUD}/contrato_general/42`);
     expect(reqs.map((r) => r.request.method)).toEqual(['PUT', 'PUT', 'PUT']);
     expect(reqs.map((r) => r.request.body)).toEqual([
-      { proveedor_numero_documento: '1014285890', tipo_persona_id: 1 },
+      { proveedor_numero_documento: '1000000001', tipo_persona_id: 1 },
       { sede_solicitante_id: 10, dependencia_solicitante_id: 20 },
       { tipo_control_id: 6611 },
     ]);
@@ -180,7 +180,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
     const ordenador = {
       ordenador_argo_id: 1,
       ordenador_sicapital_id: 1001,
-      documento_identidad: '19456789',
+      documento_identidad: '1000000003',
       cargo_id: 12,
       contrato_general_id: { id: 42 },
     };
