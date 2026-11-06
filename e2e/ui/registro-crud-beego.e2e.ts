@@ -190,15 +190,15 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await seccion.getByRole('button', { name: /Asociar CDP/ }).click();
     await aceptarAlerta(page);
 
-    await seccion.locator('select[formcontrolname="tipoMoneda"]').selectOption({ label: 'Peso colombiano' });
+    await seleccionar(page, buscable(seccion, 'Tipo de Moneda'), 'Peso colombiano');
     await seccion.locator('input[formcontrolname="valorContrato"]').fill('45000000');
-    await seccion.locator('select[formcontrolname="ordenadorGasto"]').selectOption({ label: 'RECTOR' });
+    await seleccionar(page, buscable(seccion, 'Cargo Ordenador del Gasto'), /^RECTOR$/);
     await expect(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
-    await seccion.locator('select[formcontrolname="origenRecurso"]').selectOption({ label: 'Recursos propios' });
-    await seccion.locator('select[formcontrolname="origenPresupuesto"]').selectOption({ label: 'Presupuesto de la vigencia' });
-    await seccion.locator('select[formcontrolname="tipoGasto"]').selectOption({ label: 'Inversión' });
-    await seccion.locator('select[formcontrolname="temaGasto"]').selectOption({ label: 'Dotación de laboratorios' });
-    await seccion.locator('select[formcontrolname="medioPago"]').selectOption({ label: 'Transferencia electrónica' });
+    await seleccionar(page, buscable(seccion, 'Origen de Recursos'), 'Recursos propios');
+    await seleccionar(page, buscable(seccion, 'Origen Presupuesto'), 'Presupuesto de la vigencia');
+    await seleccionar(page, buscable(seccion, 'Tipo de Gasto'), 'Inversión');
+    await seleccionar(page, buscable(seccion, 'Tema Gasto Inversión'), 'Dotación de laboratorios');
+    await seleccionar(page, buscable(seccion, 'Medio de Pago'), 'Transferencia electrónica');
     await seccion.locator('mat-checkbox[formcontrolname="clausulaRegistroPresupuestal"] input').check({ force: true });
     await seccion.locator('.ql-editor').fill('Un único pago contra entrega a satisfacción.');
 
@@ -268,7 +268,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await expect.soft(general.locator('input[formcontrolname="plazoEjecucion"]')).toHaveValue('6');
     const presupuestal = page.locator('app-paso-info-presupuestal');
     await expect.soft(presupuestal.locator('table')).toContainText('1234');
-    await expect.soft(presupuestal.locator('select[formcontrolname="ordenadorGasto"] option:checked')).toHaveText('RECTOR');
+    await expect.soft(buscable(presupuestal, 'Cargo Ordenador del Gasto')).toHaveText(/RECTOR/);
     await expect.soft(presupuestal.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
     await capturar(page, '05-detalle-general');
 

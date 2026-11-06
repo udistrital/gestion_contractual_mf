@@ -206,7 +206,7 @@ async function controlesHabilitados(seccion: Locator, excluir: string[] = []): P
     if (await campo.evaluate((el) => !!el.closest('.ql-tooltip'))) continue;
     const nombre = await nombreControl(campo);
     if (excluir.some((e) => nombre.includes(e))) continue;
-    if (await campo.isEnabled()) habilitados.push(nombre);
+    if (await campo.isEditable()) habilitados.push(nombre);
   }
   for (const select of await seccion.locator('mat-select').all()) {
     if ((await select.getAttribute('aria-disabled')) !== 'true') habilitados.push(await nombreControl(select));
@@ -310,19 +310,19 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
 
   await test.step('02 info presupuestal: CDP, ordenador y datos en solo lectura', async () => {
     const seccion = page.locator('app-paso-info-presupuestal');
-    const opcion = (control: string) => seccion.locator(`select[formcontrolname="${control}"] option:checked`);
+    const campo = (label: string) => valorSelect(seccion.locator('app-searchable-select', { hasText: label }));
 
     await expect.soft(seccion.locator('table')).toContainText('1234');
     await expect.soft(seccion.locator('table')).toContainText('FACULTAD DE INGENIERIA');
-    await expect.soft(opcion('tipoMoneda')).toHaveText('Peso colombiano');
+    await expect.soft(campo('Tipo de Moneda')).toHaveText(/Peso colombiano/);
     await expect.soft(seccion.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
-    await expect.soft(opcion('ordenadorGasto')).toHaveText('RECTOR');
+    await expect.soft(campo('Cargo Ordenador del Gasto')).toHaveText(/RECTOR/);
     await expect.soft(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
-    await expect.soft(opcion('origenRecurso')).toHaveText('Recursos propios');
-    await expect.soft(opcion('origenPresupuesto')).toHaveText('Presupuesto de la vigencia');
-    await expect.soft(opcion('tipoGasto')).toHaveText('Inversión');
-    await expect.soft(opcion('temaGasto')).toHaveText('Dotación de laboratorios');
-    await expect.soft(opcion('medioPago')).toHaveText('Transferencia electrónica');
+    await expect.soft(campo('Origen de Recursos')).toHaveText(/Recursos propios/);
+    await expect.soft(campo('Origen Presupuesto')).toHaveText(/Presupuesto de la vigencia/);
+    await expect.soft(campo('Tipo de Gasto')).toHaveText(/Inversión/);
+    await expect.soft(campo('Tema Gasto Inversión')).toHaveText(/Dotación de laboratorios/);
+    await expect.soft(campo('Medio de Pago')).toHaveText(/Transferencia electrónica/);
     await expect.soft(seccion.locator('app-editor-enriquecido .ql-editor')).toContainText('Un único pago');
 
     await verificarSoloLectura(seccion);

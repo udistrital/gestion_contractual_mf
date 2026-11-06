@@ -33,6 +33,7 @@ import { AlertService } from 'src/app/services/alert.service';
 })
 export class PasoContratistasComponent implements OnInit, OnDestroy {
   nextStep = output<void>();
+  prevStep = output<void>();
   stepCompleted = output<boolean>();
 
   private contratistaId: number | null = null;

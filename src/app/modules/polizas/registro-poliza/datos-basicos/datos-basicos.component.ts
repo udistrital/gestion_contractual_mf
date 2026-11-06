@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PolizasService } from '../../../../services/polizas.service';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
+import { fechaLocal } from '../../../../utils/fechas';
 
 @Component({
   selector: 'app-datos-basicos',
@@ -70,14 +71,10 @@ export class DatosBasicosComponent implements OnDestroy {
             this.polizaId = polizaId;
             this.polizaForm.patchValue({
               numero_poliza: poliza.numero_poliza,
-              fecha_inicio: poliza.fecha_inicio ? new Date(poliza.fecha_inicio) : null,
-              fecha_fin: poliza.fecha_fin ? new Date(poliza.fecha_fin) : null,
-              fecha_expedicion: poliza.fecha_expedicion
-                ? new Date(poliza.fecha_expedicion)
-                : null,
-              fecha_aprobacion: poliza.fecha_aprobacion
-                ? new Date(poliza.fecha_aprobacion)
-                : null,
+              fecha_inicio: fechaLocal(poliza.fecha_inicio),
+              fecha_fin: fechaLocal(poliza.fecha_fin),
+              fecha_expedicion: fechaLocal(poliza.fecha_expedicion),
+              fecha_aprobacion: fechaLocal(poliza.fecha_aprobacion),
               entidad_aseguradora_id: poliza.entidad_aseguradora_id,
               descripcion: poliza.descripcion,
             });

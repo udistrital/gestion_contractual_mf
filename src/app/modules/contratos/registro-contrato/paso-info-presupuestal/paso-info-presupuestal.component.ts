@@ -30,6 +30,7 @@ import { AlertService } from 'src/app/services/alert.service';
 export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
   stepCompleted = output<boolean>();
   nextStep = output<void>();
+  prevStep = output<void>();
   cdpGuardado = output<CDP[]>();
   contratoGuardado = output<void>();
 
@@ -502,6 +503,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
             if (newCDP) {
               newCDP.valor_a_tomar = this.parseNumero(newCDP.valor_contratacion);
               this.selectedCDP = [...this.selectedCDP, newCDP];
+              this.cdpsService.updateLocalCDP(this.selectedCDP);
               this.updateValorAcumulado();
               this.removeSelectedCDPsFromList();
               this.form.get('cdp')?.reset();
@@ -529,34 +531,50 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     const contratoId = this.contratoGeneral()?.id as number;
     if (!contratoId) {
       this.alertService.showErrorAlert(
-        'No se ha encontrado información general del contrato. PIP3'
+        'Primero debe guardar los Datos Básicos del Contrato (Sección 1) antes de asociar los CDPs.'
       );
       return;
     }
 
     try {
-      //Guardar en servicio
+      // Guardar en servicio local (conservando el valor_a_tomar para distribuir antes o después)
       this.cdpsService.updateLocalCDP(this.selectedCDP);
 
-      //Preparamos el guardado en el api
-      const cdpsGuardarCrud: CDPContratoCRUD[] = this.selectedCDP.map(
-        (cdp) => ({
-          numero_cdp_id: parseInt(cdp.numero_disponibilidad),
+      // Filtrar solo los CDPs que aún no han sido persistidos en el CRUD para este contrato
+      const cdpsNuevos = this.selectedCDP.filter(
+        (cdp) =>
+          !this.cdpsContrato.some(
+            (guardado) =>
+              Number(guardado.numero_cdp_id) ===
+              parseInt(cdp.numero_disponibilidad, 10)
+          )
+      );
+
+      if (cdpsNuevos.length > 0) {
+        const cdpsGuardarCrud: CDPContratoCRUD[] = cdpsNuevos.map((cdp) => ({
+          numero_cdp_id: parseInt(cdp.numero_disponibilidad, 10),
           fecha_registro: aFechaCrud(new Date()),
-          vigencia_cdp_id: parseInt(cdp.vigencia),
+          vigencia_cdp_id: parseInt(cdp.vigencia, 10),
           contrato_general_id: { id: contratoId },
-          valor_a_tomar: this.parseNumero(cdp.valor_a_tomar ?? cdp.valor_contratacion),
-        })
-      );
+        }));
 
-      const promesasGuardado = cdpsGuardarCrud.map((cdp) =>
-        firstValueFrom(this.contratoGeneralCrudService.postCdp(cdp))
-      );
+        const respuestas = await Promise.all(
+          cdpsGuardarCrud.map((cdp) =>
+            firstValueFrom(this.contratoGeneralCrudService.postCdp(cdp))
+          )
+        );
 
-      await Promise.all(promesasGuardado);
+        respuestas.forEach((res, idx) => {
+          const guardado = res?.Data ?? res ?? cdpsGuardarCrud[idx];
+          if (guardado) {
+            this.cdpsContrato.push(guardado);
+          }
+        });
+      }
 
+      this.cdpGuardado.emit(this.selectedCDP);
       this.alertService.showSuccessAlert(
-        'Los CDPs ha sido guardada correctamente (local y en el servidor)'
+        'Los CDPs han sido asociados correctamente. Puede ajustar o distribuir los valores a continuación.'
       );
     } catch (error) {
       this.alertService.showErrorAlert(
@@ -612,7 +630,11 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (response: any) => {
             if (response.Status === 200) {
-              this.ordenadores = response.Data;
+              this.ordenadores = (response.Data || []).map((o: any) => ({
+                ...o,
+                Id: o.id ?? o.Id,
+                Nombre: o.rol ?? o.Nombre,
+              }));
               this.setOrdenadorGuardado();
               resolve(true);
             } else {
