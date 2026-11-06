@@ -48,7 +48,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
 
   rechazarContrato() {
     const estado: EstadoContrato = {
-      contrato_general_id: this.dataModal.contrato_general_id,
+      contrato_general_id: { id: this.dataModal.contrato_general_id },
       usuario_id: this.dataModal.usuario_id,
       usuario_rol: this.dataModal.rol,
       estado_parametro_id: environment.ESTADOS_GENERALES.POR_SUSCRIBIR,
@@ -58,7 +58,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
     this.contratoGeneralCrudService
       .postEstadoContrato(estado)
       .subscribe((res: any) => {
-        if (res.id) {
+        if (res?.Data?.id) {
           this.dialogRef.close({ rechazado: true });
         } else {
           this.dialogRef.close({ rechazado: false });

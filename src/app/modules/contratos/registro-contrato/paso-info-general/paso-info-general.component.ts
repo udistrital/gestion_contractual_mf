@@ -11,8 +11,10 @@ import {
 import { FormBuilder, Validators } from '@angular/forms';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
+import { aFechaCrud, desdeFechaCrud } from 'src/app/utils/fechas-crud';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { VigenciaService } from 'src/app/services/vigencia.service';
 import { RolService } from 'src/app/services/rol.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { UserService } from 'src/app/services/user.service';
@@ -100,25 +102,26 @@ export class PasoInfoGeneralComponent implements OnInit {
   private readonly parametrosService = inject(ParametrosService);
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly contratoGeneralMidService = inject(ContratoGeneralMidService);
+  private readonly vigenciaService = inject(VigenciaService);
   private readonly cdRef = inject(ChangeDetectorRef);
   private readonly userService = inject(UserService);
 
   formInfoGeneral = this.fb.group({
     unidadEjecutoraId: [0, Validators.required],
-    tipoCompromisoId: [0, Validators.required],
-    tipoContratoId: [0, Validators.required],
-    perfilContratistaId: [0],
+    tipoCompromisoId: [null as number | null, Validators.required],
+    tipoContratoId: [null as number | null, Validators.required],
+    perfilContratistaId: [null as number | null],
     fechaSuscripcionEstudios: [''],
     aplicaPoliza: [''],
     vigenciaConvenio: [''],
     convenio: [''],
     nombreConvenio: [''],
-    modalidadSeleccionId: [0, Validators.required],
-    tipologiaEspecificaId: [0, Validators.required],
-    regimenContratacionId: [0, Validators.required],
-    procedimientoId: [0, Validators.required],
-    plazoEjecucion: [0, [Validators.required, Validators.pattern('^[0-9]*$')]],
-    unidadEjecucionId: [0, Validators.required],
+    modalidadSeleccionId: [null as number | null, Validators.required],
+    tipologiaEspecificaId: [null as number | null, Validators.required],
+    regimenContratacionId: [null as number | null, Validators.required],
+    procedimientoId: [null as number | null, Validators.required],
+    plazoEjecucion: [null as number | null, [Validators.required, Validators.pattern('^[0-9]*$')]],
+    unidadEjecucionId: [null as number | null, Validators.required],
   });
 
   //Parametros (Opciones)
@@ -466,18 +469,17 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     const formData = {
       unidadEjecutoraId: data.unidad_ejecutora_id,
-      tipoCompromisoId: data.tipo_compromiso_id ?? 0,
-      tipoContratoId: data.tipo_contrato_id ?? 0,
-      perfilContratistaId: data.perfil_contratista_id ?? 0,
-      fechaSuscripcionEstudios:
-        data.fecha_suscripcion_estudios?.toLocaleString() ?? '',
-      aplicaPoliza: data?.aplica_poliza ? '1' : '0',
-      modalidadSeleccionId: data.modalidad_seleccion_id ?? 0,
-      tipologiaEspecificaId: data.tipologia_especifica_id ?? 0,
-      regimenContratacionId: data.regimen_contratacion_id ?? 0,
-      procedimientoId: data.procedimiento_id ?? 0,
-      plazoEjecucion: data.plazo_ejecucion ?? 0,
-      unidadEjecucionId: data.unidad_ejecucion_id ?? 0,
+      tipoCompromisoId: data.tipo_compromiso_id,
+      tipoContratoId: data.tipo_contrato_id,
+      perfilContratistaId: data.perfil_contratista_id,
+      fechaSuscripcionEstudios: desdeFechaCrud(data.fecha_suscripcion_estudio),
+      aplicaPoliza: data.aplica_poliza === true ? '1' : data.aplica_poliza === false ? '0' : '',
+      modalidadSeleccionId: data.modalidad_seleccion_id,
+      tipologiaEspecificaId: data.tipologia_especifica_id,
+      regimenContratacionId: data.regimen_contratacion_id,
+      procedimientoId: data.procedimiento_id,
+      plazoEjecucion: data.plazo_ejecucion,
+      unidadEjecucionId: data.unidad_ejecucion_id,
     };
     this.formInfoGeneral.patchValue(formData);
     this.cdRef.detectChanges();
@@ -519,13 +521,35 @@ export class PasoInfoGeneralComponent implements OnInit {
       return;
     }
 
+    // El contrato no se guarda sin vigencia.
+    this.vigenciaService.vigenciaActualId().subscribe({
+      next: (vigenciaId) => {
+        if (vigenciaId) {
+          this.pedirConsecutivo(parseInt(unidad_ejecutora_id, 10), vigenciaId);
+        } else {
+          this.avisarSinVigencia();
+        }
+      },
+      error: () => this.avisarSinVigencia(),
+    });
+  }
+
+  private avisarSinVigencia() {
+    this.guardando.set(false);
+    this.alertService.showErrorAlert(
+      'No se encontró la vigencia del año actual en Parámetros. El contrato no se guardó.',
+      'Error al consultar la vigencia'
+    );
+  }
+
+  private pedirConsecutivo(unidad_ejecutora_id: number, vigenciaId: number) {
     // Obtener el consecutivo del contrato
     this.contratoGeneralMidService
-      .postConsecutivo({ unidad_ejecutora_id })
+      .postConsecutivo({ unidad_ejecutora_id, vigencia_id: vigenciaId })
       .subscribe({
         next: (response: ApiResponse<any>) => {
           if (response.Success && response.Status === 200) {
-            this.guardarContrato(response.Data, parseInt(unidad_ejecutora_id, 10));
+            this.guardarContrato(response.Data, unidad_ejecutora_id, vigenciaId);
           } else {
             this.guardando.set(false);
             this.alertService.showErrorAlert(
@@ -545,7 +569,11 @@ export class PasoInfoGeneralComponent implements OnInit {
       });
   }
 
-  guardarContrato(consecutivo: string | null, unidad_ejecutora_id: number) {
+  guardarContrato(
+    consecutivo: string | null,
+    unidad_ejecutora_id: number,
+    vigenciaId: number | null = null
+  ) {
     if (this.viewMode() || this.formInfoGeneral.invalid) {
       this.guardando.set(false);
       this.formInfoGeneral.markAllAsTouched();
@@ -558,8 +586,10 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipo_compromiso_id: formData.tipoCompromisoId,
       tipo_contrato_id: formData.tipoContratoId,
       perfil_contratista_id: formData.perfilContratistaId ?? null,
-      fecha_suscripcion_estudios: formData.fechaSuscripcionEstudios,
-      // El CRUD convierte cualquier texto no vacío en true, incluido '0'.
+      // Tipos del modelo v2: fecha, bool y entero; lo que no aplica va como null.
+      fecha_suscripcion_estudio: formData.fechaSuscripcionEstudios
+        ? aFechaCrud(formData.fechaSuscripcionEstudios)
+        : null,
       aplica_poliza: formData.aplicaPoliza ? formData.aplicaPoliza === '1' : null,
       vigencia_convenio: formData.vigenciaConvenio,
       convenio: formData.convenio,
@@ -568,7 +598,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipologia_especifica_id: formData.tipologiaEspecificaId,
       regimen_contratacion_id: formData.regimenContratacionId,
       procedimiento_id: formData.procedimientoId,
-      plazo_ejecucion: formData.plazoEjecucion,
+      plazo_ejecucion: Number(formData.plazoEjecucion),
       unidad_ejecucion_id: formData.unidadEjecucionId,
       unidad_ejecutora_id: formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id,
     };
@@ -579,6 +609,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       : this.contratoGeneralCrudService.post({
           ...formParsed,
           consecutivo_elaboracion: consecutivo,
+          vigencia_id: vigenciaId,
         });
 
     saveOperation.subscribe({
@@ -615,7 +646,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       this.roles.find((item) => item.includes('ABOGADO')) || 'ABOGADO';
     const usuarioId = await this.userService.getPersonaId().catch(() => 1);
     const estado: EstadoContrato = {
-      contrato_general_id: contratoId,
+      contrato_general_id: { id: contratoId },
       usuario_id: usuarioId,
       usuario_rol: rol,
       estado_parametro_id: this.estado_id,

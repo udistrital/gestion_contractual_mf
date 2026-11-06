@@ -194,9 +194,9 @@
                     <mat-label>Tipo y Alcance del Control</mat-label>
                     <mat-icon matPrefix>tune</mat-icon>
                     <mat-select formControlName="tipoControl">
-                      <mat-option value="tecnico">Técnico, Administrativo y Financiero</mat-option>
-                      <mat-option value="administrativo">Administrativo y Contable</mat-option>
-                      <mat-option value="financiero">Exclusivamente Financiero</mat-option>
+                      @for (tipo of tiposControl; track tipo.Id) {
+                        <mat-option [value]="tipo.Id">{{ tipo.Nombre }}</mat-option>
+                      }
                     </mat-select>
                     @if (supervisorGroup.get('tipoControl')?.hasError('required')) {
                       <mat-error>Este campo es requerido</mat-error>

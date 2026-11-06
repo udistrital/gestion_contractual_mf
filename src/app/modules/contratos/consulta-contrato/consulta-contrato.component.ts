@@ -749,7 +749,7 @@ export class ConsultaContratoComponent implements OnInit {
             : 'JEFE_CONTRATACION_RECTOR');
 
         const nuevoEstado: EstadoContrato = {
-          contrato_general_id: contrato.id as number,
+          contrato_general_id: { id: contrato.id as number },
           usuario_id: this.usuarioId || 1,
           usuario_rol: rolUsuario,
           estado_parametro_id:
@@ -805,7 +805,7 @@ export class ConsultaContratoComponent implements OnInit {
 
         const peticiones = seleccionados.map((c) => {
           const nuevoEstado: EstadoContrato = {
-            contrato_general_id: c.id as number,
+            contrato_general_id: { id: c.id as number },
             usuario_id: this.usuarioId || 1,
             usuario_rol: rolUsuario,
             estado_parametro_id:
@@ -877,7 +877,7 @@ export class ConsultaContratoComponent implements OnInit {
             'Rechazo de contrato por Jefatura';
 
           const nuevoEstado: EstadoContrato = {
-            contrato_general_id: c.id as number,
+            contrato_general_id: { id: c.id as number },
             usuario_id: this.usuarioId || 1,
             usuario_rol: rolUsuario,
             estado_parametro_id:

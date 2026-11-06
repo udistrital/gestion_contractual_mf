@@ -2,76 +2,45 @@ import { test, expect, BrowserContext, Locator, Page, Route } from '@playwright/
 import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import {
+  AMPARO_CALIDAD,
+  AMPARO_CUMPLIMIENTO,
+  CORE_MF_STUB,
+  ORDEN_ID,
+  PESO_COLOMBIANO_ID,
+  TIPO_CONTROL_TECNICO,
+  responderServicioExterno,
+} from '../support/servicios-simulados';
 
 /**
  * E2E de #390: detalle del contrato en solo lectura (/contratos/detalle/:id) con
- * backend SIMULADO. Ninguna petición sale a los servicios: el CRUD, el MID y los
- * demás servicios se responden con page.route en el formato real de develop
- * ({Success, Status, Message, Data}). Se verifica, paso por paso, que los datos se
- * ven, que los controles están deshabilitados, que no hay acciones de edición y
- * que el detalle no hace ningún POST, PUT, PATCH ni DELETE.
+ * backend SIMULADO. Ninguna petición sale a los servicios. gestion_contractual_crud
+ * se responde en el formato de la rama del crud#51 (feature/385-crud-beego-v2) del CRUD Go/Beego v2
+ * (rutas /v1/<recurso>/, snake_case, Status texto, [] vacías, null, FK { id }); el MID y los demás
+ * servicios, con las simulaciones de e2e/support. Se verifica, paso por paso, que
+ * los datos se ven, que los controles están deshabilitados, que no hay acciones de
+ * edición y que el detalle no hace ningún POST, PUT, PATCH ni DELETE.
  *
  * Requiere el root (:4200) con la ruta `contratos` hacia este MF y el MF (:4201).
  */
 const CONTRATO_ID = 9001;
-const API = 'https://autenticacion.portaloas.udistrital.edu.co/apioas';
 const EVIDENCIAS = process.env.EVIDENCIAS_390 ?? join(homedir(), 'argo_repos', 'evidencias-390');
 
 const menuPermitido = Buffer.from(
-  JSON.stringify([{ Url: `/contratos/detalle/${CONTRATO_ID}` }, { Url: '/contratos/gestionar' }])
+  JSON.stringify([{ Url: `/gestion-contractual/contratos/detalle/${CONTRATO_ID}` }, { Url: '/gestion-contractual/contratos/gestionar' }])
 ).toString('base64');
 const usuario = Buffer.from(
   JSON.stringify({ user: { role: ['ABOGADO_CONTRATACION_RECTOR'] }, userService: { role: [] } })
 ).toString('base64');
 
-/** Mismo stub del core-mf que usa polizas.e2e.ts: shell single-spa sin login. */
-const CORE_MF_STUB = `System.register([], function (_export) {
-  return { execute: function () {
-    _export({ bootstrap: async function () {}, mount: async function () {}, unmount: async function () {} });
-  } };
-});`;
-
 // ---------------------------------------------------------------------------
-// Datos simulados del contrato de prueba
+// Datos simulados del contrato de prueba, en el formato de la rama
+// feature/385-crud-beego-v2 (crud#51) del CRUD Beego v2: snake_case, Status como texto,
+// [] en listas vacías, null en lo que no tiene valor y FK como objeto { id }.
 // ---------------------------------------------------------------------------
 
-const ORDEN_ID = 6534;
-const PESO_COLOMBIANO_ID = 6634;
-const AMPARO_CUMPLIMIENTO = 6602;
-const AMPARO_CALIDAD = 6605;
-
-const ok = (Data: unknown, Message = 'Consulta exitosa') => ({ Success: true, Status: 200, Message, Data });
-
-const param = (Id: number, Nombre: string, padre?: number) => ({
-  Id,
-  Nombre,
-  Activo: true,
-  ...(padre ? { ParametroPadreId: { Id: padre } } : {}),
-});
-
-/** Catálogo de parámetros por tipo, como lo entrega `GET parametros?ids=` del MID. */
-const PARAMETROS: Record<number, unknown[]> = {
-  111: [param(ORDEN_ID, 'Orden'), param(6535, 'Contrato'), param(6536, 'Convenio')],
-  112: [
-    param(6541, 'Orden de Compra', ORDEN_ID),
-    param(6542, 'Orden de Servicio', ORDEN_ID),
-    param(6546, 'Contrato de Prestación de Servicios', 6535),
-  ],
-  113: [param(6551, 'Profesional', 6546)],
-  114: [param(6583, 'Compraventa de bienes muebles', 6541), param(6584, 'Suministro de bienes', 6541)],
-  115: [param(6571, 'Contratación Directa'), param(6572, 'Invitación Directa')],
-  116: [param(6591, 'Régimen Especial - Acuerdo 03 de 2015'), param(6592, 'Ley 80 de 1993')],
-  117: [param(6596, 'PRO-OC-01 Orden de compra'), param(6597, 'PRO-CD-02 Contratación directa')],
-  7: [param(211, 'MESES'), param(212, 'DÍAS')],
-  137: [param(6773, 'POR SUSCRIBIR')],
-  141: [param(6799, 'BORRADOR')],
-  122: [param(PESO_COLOMBIANO_ID, 'Peso colombiano'), param(6635, 'Dólar estadounidense')],
-  123: [param(6641, 'Funcionamiento'), param(6642, 'Inversión')],
-  124: [param(6651, 'Recursos propios'), param(6652, 'Transferencias de la Nación')],
-  125: [param(6661, 'Presupuesto de la vigencia'), param(6662, 'Reservas presupuestales')],
-  126: [param(6671, 'Dotación de laboratorios'), param(6672, 'Infraestructura tecnológica')],
-  127: [param(6681, 'Transferencia electrónica'), param(6682, 'Cheque')],
-};
+const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
+const DEL_CONTRATO = { id: CONTRATO_ID };
 
 const ACTIVIDADES =
   '1. Entregar los equipos de laboratorio descritos en la ficha técnica. Entregable(s): Acta de entrega; Factura. Plazo/Periodicidad: 30 días.\n\n' +
@@ -79,17 +48,17 @@ const ACTIVIDADES =
 
 const contrato = {
   id: CONTRATO_ID,
-  vigencia: '2026',
-  consecutivo_elaboracion: '27',
   numero_contrato: null,
+  vigencia_id: null,
+  consecutivo_elaboracion: '27',
   unidad_ejecutora_id: 6818,
   tipo_compromiso_id: ORDEN_ID,
   tipo_contrato_id: 6541,
   perfil_contratista_id: null,
-  fecha_suscripcion_estudios: null,
+  fecha_suscripcion_estudio: null,
   aplica_poliza: true,
   modalidad_seleccion_id: 6571,
-  tipo_control_id: null,
+  tipo_control_id: TIPO_CONTROL_TECNICO,
   tipologia_especifica_id: 6583,
   regimen_contratacion_id: 6591,
   procedimiento_id: 6596,
@@ -97,11 +66,11 @@ const contrato = {
   unidad_ejecucion_id: 211,
   tipo_moneda_id: PESO_COLOMBIANO_ID,
   valor_pesos: 45000000,
-  valor_contrato_me: 0,
-  valor_tasa_cambio: 0,
+  valor_contrato_me: null,
+  valor_tasa_cambio: null,
   tipo_gasto_id: 6642,
   origen_recursos_id: 6651,
-  origen_presupuestos_id: 6661,
+  origen_presupuesto_id: 6661,
   tema_gasto_inversion_id: 6671,
   medio_pago_id: 6681,
   clausula_registro_presupuestal: true,
@@ -111,12 +80,20 @@ const contrato = {
   actividades: ACTIVIDADES,
   condiciones: null,
   observaciones: null,
+  fecha_inicial: null,
+  fecha_final: null,
+  fecha_suscripcion: null,
+  proveedor_numero_documento: '1000000001',
+  tipo_persona_id: 1,
+  clase_proveedor_id: null,
+  dependencia_solicitante_id: 20,
+  sede_solicitante_id: 10,
   activo: true,
-  fecha_creacion: '2026-10-20T15:04:11.000Z',
-  fecha_modificacion: '2026-10-27T10:12:45.000Z',
-  contratista: { id: 77, numero_documento: '1000000001', tipo_persona_id: 1 },
+  fecha_creacion: '2026-10-20T15:04:11Z',
+  fecha_modificacion: '2026-10-27T10:12:45Z',
 };
 
+/** Contrato en la consulta (gestion_contractual_mid): en revisión del jefe, el abogado puede verlo, no editarlo. */
 const contratoEnConsulta = {
   ...contrato,
   numero_contrato: 'OC-0042-2026',
@@ -125,105 +102,28 @@ const contratoEnConsulta = {
   contratista: { nombre: 'CONTRATISTA DE PRUEBA', numero_documento: '1000000001' },
 };
 
-const cdpCrud = {
-  id: 501,
-  numero_cdp_id: 1234,
-  vigencia_cdp: 2026,
-  fecha_registro: '2026-10-21T00:00:00.000Z',
-  contrato_general_id: CONTRATO_ID,
-  activo: true,
+const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
+  ordenador_contrato: [
+    { id: 71, contrato_general_id: DEL_CONTRATO, tercero_id: null, cargo_id: 12, documento_identidad: '1000000003', resolucion: null, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
+  ],
+  disponibilidad_presupuestal: [
+    { id: 501, contrato_general_id: DEL_CONTRATO, numero_cdp_id: 1234, vigencia_cdp_id: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
+  ],
+  supervisor_contrato: [
+    { id: 61, contrato_general_id: DEL_CONTRATO, supervisor_id: 7788, documento: 1000000005, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
+  ],
+  especificacion_tecnica: [
+    { id: 801, contrato_general_id: DEL_CONTRATO, descripcion: 'Osciloscopio digital de 4 canales 200 MHz', cantidad: 3, valor_unitario: 9500000, valor_total: 28500000, activo: true },
+    { id: 802, contrato_general_id: DEL_CONTRATO, descripcion: 'Fuente de alimentación DC programable', cantidad: 5, valor_unitario: 3300000, valor_total: 16500000, activo: true },
+  ],
+  amparo_poliza: [
+    { id: 901, contrato_general_id: DEL_CONTRATO, poliza_id: null, amparo_id: AMPARO_CUMPLIMIENTO, tipo_valor_amparo_id: 2, suficiencia: 20, valor: null, descripcion: 'Cumplimiento del contrato por el 20 % del valor', fecha_inicio: null, fecha_fin: null, activo: true },
+    { id: 902, contrato_general_id: DEL_CONTRATO, poliza_id: null, amparo_id: AMPARO_CALIDAD, tipo_valor_amparo_id: 2, suficiencia: 10, valor: null, descripcion: 'Calidad de los bienes por el 10 % del valor', fecha_inicio: null, fecha_fin: null, activo: true },
+  ],
+  estado_contrato: [
+    { id: 3, contrato_general_id: DEL_CONTRATO, estado_parametro_id: 6773, estado_interno_parametro_id: 6799, actual: true, motivo: null, fecha_evento: null, usuario_id: 1, usuario_rol: 'ABOGADO_CONTRATACION_RECTOR', activo: true },
+  ],
 };
-
-const cdpPresupuesto = {
-  vigencia: '2026',
-  num_sol_adq: '845',
-  numero_disponibilidad: '1234',
-  valor_contratacion: 50000000,
-  nombre_dependencia: 'FACULTAD DE INGENIERIA',
-  descripcion: 'Adquisición de equipos de laboratorio',
-  estado: 'EXPEDIDO',
-  rubro: '3-01-001-02-02-01-0001',
-  justificacion: 'Justificación del CDP',
-  observaciones: 'Actividades del CDP',
-};
-
-const SEDES = [
-  { Id: 10, Nombre: 'Sede Calle 40' },
-  { Id: 11, Nombre: 'Sede Macarena' },
-];
-const DEPENDENCIAS = [
-  { id: 20, nombre: 'Facultad de Ingeniería' },
-  { id: 21, nombre: 'Oficina Asesora de Tecnologías e Información' },
-];
-
-const supervisorCrud = {
-  id: 61,
-  supervisor_id: '7788',
-  documento: '1000000005',
-  digito_verificacion: '3',
-  sede_id: '10',
-  dependencia_id: '20',
-  cargo_id: '45',
-  sede_legado: 'Sede Calle 40',
-  dependencia_legado: 'Facultad de Ingeniería',
-  cargo_legado: 'Decano',
-  contrato_general_id: CONTRATO_ID,
-};
-
-const supervisorMid = {
-  nombre: 'SUPERVISOR DE PRUEBA',
-  cargo: 'Decano',
-  documento: '1000000005',
-  digito_verificacion: '3',
-  cargo_id: '45',
-  sede_supervisor: 'Sede Calle 40',
-  dependencia_supervisor: 'Facultad de Ingeniería',
-};
-
-const proveedor = {
-  proveedor: {
-    tipo_persona: 'NATURAL',
-    tipo_persona_id: 1,
-    numero_documento: '1000000001',
-    nombre_completo_proveedor: 'CONTRATISTA DE PRUEBA',
-    ciudad_contacto: 'Bogotá D.C.',
-    direccion: 'Calle 100 # 15-20',
-    correo: 'contratista@prueba.local',
-    ciudad_expedicion_documento: 'Bogotá D.C.',
-  },
-  contratos: [],
-};
-
-const especificaciones = [
-  { id: 801, descripcion: 'Osciloscopio digital de 4 canales 200 MHz', cantidad: 3, valor_unitario: 9500000, valor_total: 28500000, contrato_general_id: CONTRATO_ID },
-  { id: 802, descripcion: 'Fuente de alimentación DC programable', cantidad: 5, valor_unitario: 3300000, valor_total: 16500000, contrato_general_id: CONTRATO_ID },
-];
-
-const amparos = [
-  { id: 901, contrato_general_id: CONTRATO_ID, amparo_id: AMPARO_CUMPLIMIENTO, tipo_valor_amparo_id: 2, suficiencia: 20, descripcion: 'Cumplimiento del contrato por el 20 % del valor', activo: true },
-  { id: 902, contrato_general_id: CONTRATO_ID, amparo_id: AMPARO_CALIDAD, tipo_valor_amparo_id: 2, suficiencia: 10, descripcion: 'Calidad de los bienes por el 10 % del valor', activo: true },
-];
-
-const clausulas = [
-  {
-    _id: 'cl-1',
-    nombre: 'Objeto',
-    descripcion: '<p>El contratista se obliga a suministrar e instalar los equipos del laboratorio de electrónica.</p>',
-    predeterminado: true,
-    es_editable: false,
-    paragrafos: [],
-  },
-  {
-    _id: 'cl-2',
-    nombre: 'Plazo de ejecución',
-    descripcion: '<p>El plazo de ejecución será de seis (6) meses contados a partir del acta de inicio.</p>',
-    predeterminado: false,
-    es_editable: true,
-    paragrafos: [
-      { _id: 'pa-1', nombre: 'Parágrafo primero', descripcion: '<p>El plazo podrá prorrogarse por mutuo acuerdo.</p>', predeterminado: false, es_editable: true },
-    ],
-  },
-];
 
 // ---------------------------------------------------------------------------
 // Simulación del backend
@@ -231,67 +131,32 @@ const clausulas = [
 
 const escrituras: string[] = [];
 const noSimuladas: string[] = [];
+const consultasCrud: string[] = [];
+
+/** Responde gestion_contractual_crud en el formato esperado del CRUD Beego v2. */
+function responderCrudBeego(route: Route, ruta: string, query: URLSearchParams): Promise<void> | null {
+  const json = (data: unknown) => route.fulfill({ status: 200, json: data });
+  if (ruta === `gestion_contractual_crud/v1/contrato_general/${CONTRATO_ID}`) return json(ok(contrato));
+  const lista = ruta.match(/^gestion_contractual_crud\/v1\/(\w+)\/$/);
+  // Filtro por FK en snake_case, verificado contra la rama del CRUD.
+  if (lista && (query.get('query') ?? '').includes(`contrato_general_id.id:${CONTRATO_ID}`)) {
+    consultasCrud.push(`${lista[1]}?${query.toString()}`);
+    return json(ok(RECURSOS_DEL_CONTRATO[lista[1]] ?? []));
+  }
+  return null;
+}
 
 /** Respuestas por servicio y ruta relativa (sin el prefijo de apioas). */
 function responder(route: Route): Promise<void> {
   const url = new URL(route.request().url());
   const ruta = url.pathname.replace('/apioas/', '');
-  const query = url.searchParams;
-  const json = (data: unknown, status = 200) => route.fulfill({ status, json: data });
-
-  // gestion_contractual_crud
-  if (ruta === `gestion_contractual_crud/contratos-generales/${CONTRATO_ID}`) return json(ok(contrato));
-  if (ruta === `gestion_contractual_crud/ordenador-contrato/contrato/${CONTRATO_ID}`)
-    return json(ok({ id: 71, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, documento_identidad: '1000000003', cargo_id: 12, contrato_general_id: CONTRATO_ID }, 'Supervisores encontrados'));
-  if (ruta === `gestion_contractual_crud/disponibilidad_presupuestal/contrato/${CONTRATO_ID}`) return json(ok([cdpCrud]));
-  if (ruta === `gestion_contractual_crud/solicitantes/contrato/${CONTRATO_ID}`)
-    return json(ok({ id: 31, sede_solicitante_id: 10, dependencia_solicitante_id: 20, contrato_general_id: CONTRATO_ID }));
-  if (ruta === `gestion_contractual_crud/supervisores/contrato/${CONTRATO_ID}`) return json(ok([supervisorCrud], 'Supervisores encontrados'));
-  if (ruta === `gestion_contractual_crud/contratistas/contrato/${CONTRATO_ID}`)
-    return json(ok({ id: '77', numero_documento: '1000000001', tipo_persona_id: 1, activo: true, fecha_creacion: '2026-10-21T00:00:00.000Z', fecha_modificacion: null, contrato_general_id: CONTRATO_ID }, 'Contratista encontrado'));
-  if (ruta === 'gestion_contractual_crud/especificaciones-tecnicas') return json(ok(especificaciones));
-  // El MF pide esta ruta, aunque el CRUD de develop no la expone (ver hallazgos de la #390).
-  if (ruta === `gestion_contractual_crud/amparos-polizas/contrato/${CONTRATO_ID}`) return json(ok(amparos));
-  if (ruta === `gestion_contractual_crud/estados-contrato/contrato/${CONTRATO_ID}/actual`)
-    return json({ id: 3, estado_parametro_id: 6773, estado_interno_parametro_id: 6799, actual: true, contrato_general_id: CONTRATO_ID });
-
-  // gestion_contractual_mid
-  // Consulta de contratos: el contrato está en revisión del jefe (el abogado puede verlo, no editarlo).
+  // Consulta de contratos (gestion_contractual_mid).
   if (ruta === 'gestion_contractual_mid/contratos-generales')
-    return json({ ...ok([contratoEnConsulta]), Metadata: { total: 1 } });
-  if (ruta === 'gestion_contractual_mid/parametros') {
-    const ids = (query.get('ids') ?? '').split(',').map(Number);
-    return json(ok(Object.fromEntries(ids.map((id) => [id, PARAMETROS[id] ?? []]))));
-  }
-  if (ruta === 'gestion_contractual_mid/espacios-fisicos/sedes') return json(ok(SEDES));
-  if (/^gestion_contractual_mid\/espacios-fisicos\/dependencias-sede\/\d+$/.test(ruta)) return json(ok(DEPENDENCIAS));
-
-  // ordenador_supervisor_mid
-  if (ruta === 'ordenador_supervisor_mid/v1/rol-ordenador')
-    return json(ok([{ id: 1, rol: 'RECTOR' }, { id: 2, rol: 'VICERRECTOR ADMINISTRATIVO Y FINANCIERO' }]));
-  if (ruta === 'ordenador_supervisor_mid/v1/rol-ordenador/actual')
-    return json(ok([{ nombre_ordenador: 'ORDENADOR DE PRUEBA', documento: '1000000003' }]));
-  if (ruta === 'ordenador_supervisor_mid/v1/supervisores/dependencia') return json(ok([supervisorMid]));
-
-  // presupuesto_contractual_mid, proveedores_mid
-  if (ruta === 'presupuesto_contractual_mid/cdps') return json(ok([cdpPresupuesto]));
-  if (ruta === 'proveedores_mid/contratistas') return json(ok(proveedor, 'Contratista encontrado'));
-
-  // parametros_crud (índices de cláusulas y tipos de amparo)
-  if (ruta === 'parametros/v1/parametro') {
-    const consulta = query.get('query') ?? '';
-    if (consulta.includes('TipoParametroId:135'))
-      return json({ Success: true, Status: '200', Message: 'Request successful', Data: [{ Id: 1, Nombre: 'PRIMERA' }, { Id: 2, Nombre: 'SEGUNDA' }] });
-    if (consulta.includes('TipoParametroId:118'))
-      return json({ Success: true, Status: '200', Message: 'Request successful', Data: [{ Id: AMPARO_CUMPLIMIENTO, Nombre: 'Cumplimiento' }, { Id: AMPARO_CALIDAD, Nombre: 'Calidad de los bienes' }] });
-    return json({ Success: true, Status: '200', Message: 'Request successful', Data: [] });
-  }
-
-  // clausulas_paragrafos_crud (el MF usa el contrato fijo 9512 en develop)
-  if (/^clausulas_paragrafos_crud\/contratos\/\d+$/.test(ruta)) return json(ok(clausulas));
-
+    return route.fulfill({ status: 200, json: { Success: true, Status: 200, Message: 'Consulta exitosa', Data: [contratoEnConsulta], Metadata: { total: 1 } } });
+  const respuesta = responderCrudBeego(route, ruta, url.searchParams) ?? responderServicioExterno(route, ruta, url.searchParams);
+  if (respuesta) return respuesta;
   noSimuladas.push(`${route.request().method()} ${url.pathname}${url.search}`);
-  return json({ Success: false, Status: 404, Message: 'Ruta no simulada en la prueba', Data: null }, 404);
+  return route.fulfill({ status: 404, json: { Success: false, Status: 404, Message: 'Ruta no simulada en la prueba', Data: null } });
 }
 
 async function prepararContexto(ctx: BrowserContext) {
@@ -341,7 +206,7 @@ async function controlesHabilitados(seccion: Locator, excluir: string[] = []): P
     if (await campo.evaluate((el) => !!el.closest('.ql-tooltip'))) continue;
     const nombre = await nombreControl(campo);
     if (excluir.some((e) => nombre.includes(e))) continue;
-    if (await campo.isEnabled()) habilitados.push(nombre);
+    if (await campo.isEditable()) habilitados.push(nombre);
   }
   for (const select of await seccion.locator('mat-select').all()) {
     if ((await select.getAttribute('aria-disabled')) !== 'true') habilitados.push(await nombreControl(select));
@@ -407,7 +272,7 @@ test.beforeAll(async ({ browser }) => {
   context = await browser.newContext({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
   await prepararContexto(context);
   page = await context.newPage();
-  await page.goto(`/contratos/detalle/${CONTRATO_ID}`);
+  await page.goto(`/gestion-contractual/contratos/detalle/${CONTRATO_ID}`);
   await expect(page.locator('app-registro-contrato')).toBeVisible();
   await expect(page.getByText('Detalle del Contrato').first()).toBeVisible();
   // Espera a que lleguen las cargas asíncronas de todos los pasos.
@@ -484,10 +349,8 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
     });
     await expect.soft(seccion).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(seccion).toContainText('Decano');
-    // "Tipo y Alcance del Control" sale vacío porque en develop no se guarda ni se carga:
-    // no está en el payload del supervisor ni en el CRUD (contrato_general.tipo_control_id
-    // existe, pero el MF no lo usa). No es de la simulación ni del modo visualización.
-    test.info().annotations.push({ type: 'conocido-develop', description: 'Tipo y Alcance del Control no se persiste' });
+    // "Tipo y Alcance del Control" se carga de ContratoGeneral.TipoControlId.
+    await expect.soft(valorSelect(formField('tipoControl').first())).toHaveText(/Técnico, administrativo y financiero/);
 
     await verificarSoloLectura(seccion);
     await capturar(page, seccion, '03-supervisores');
@@ -572,6 +435,9 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
   await test.step('el detalle no escribe nada y todas las peticiones están simuladas', async () => {
     expect(escrituras, 'peticiones de escritura').toEqual([]);
     expect(noSimuladas, 'peticiones sin simular').toEqual([]);
+    // Todas las listas del CRUD se piden con filtro de activos y limit explícito.
+    expect(consultasCrud.length, 'consultas al CRUD').toBeGreaterThan(0);
+    expect(consultasCrud.filter((c) => !/activo%3Atrue|activo:true/.test(c) || !/limit=\d/.test(c)), 'consultas sin activo o limit').toEqual([]);
   });
 });
 
@@ -580,7 +446,7 @@ test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulad
   await prepararContexto(ctx);
   const consulta = await ctx.newPage();
   try {
-    await consulta.goto('/contratos/gestionar');
+    await consulta.goto('/gestion-contractual/contratos/gestionar');
     const fila = consulta.locator('tr.mat-mdc-row', { hasText: 'CONTRATISTA DE PRUEBA' });
     await expect(fila).toBeVisible({ timeout: 30_000 });
 
@@ -591,7 +457,7 @@ test('"Ver Detalle" en la consulta abre el detalle del contrato (backend simulad
     await consulta.screenshot({ path: join(EVIDENCIAS, '10-consulta-accion-ver-detalle.png') });
 
     await menu.getByRole('menuitem', { name: /Ver Detalle/ }).click();
-    await expect(consulta).toHaveURL(new RegExp(`/contratos/detalle/${CONTRATO_ID}$`));
+    await expect(consulta).toHaveURL(new RegExp(`/gestion-contractual/contratos/detalle/${CONTRATO_ID}$`));
     await expect(consulta.getByText('Detalle del Contrato').first()).toBeVisible();
     await expect(consulta.locator('app-paso-info-general')).toContainText('Orden de Compra');
   } finally {

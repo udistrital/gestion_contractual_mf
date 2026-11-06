@@ -85,7 +85,10 @@ export class PasoEspecificacionesComponent {
     if (!contratoId || this.contratoCargadoId === contratoId) return;
     this.contratoCargadoId = contratoId;
     this.contratoGeneralCrudService
-      .getEspecificacionesTecnicas(contratoId)
+      .getEspecificacionesTecnicas({
+        query: `contrato_general_id.id:${contratoId},activo:true`,
+        limit: 0,
+      })
       .subscribe({
         next: (response: ApiResponse<EspecificacionTecnica[]>) => {
           if (response.Success && response.Data.length > 0) {
@@ -106,7 +109,7 @@ export class PasoEspecificacionesComponent {
     this.contratoGeneralCrudService
       .postEspecificacionTecnica({
         ...especificacionSinId,
-        contrato_general_id: this.contratoGeneral()?.id,
+        contrato_general_id: { id: this.contratoGeneral()?.id as number },
       })
       .subscribe({
         next: (response: ApiResponse<EspecificacionTecnica>) => {
@@ -134,7 +137,10 @@ export class PasoEspecificacionesComponent {
   actualizarEspecificacion(especificacion: EspecificacionTecnica) {
     const { id, ...especificacionSinId } = especificacion;
     this.contratoGeneralCrudService
-      .putEspecificacionTecnica(especificacion.id, especificacionSinId)
+      .putEspecificacionTecnica(especificacion.id, {
+        ...especificacionSinId,
+        contrato_general_id: { id: this.contratoGeneral()?.id as number },
+      })
       .subscribe({
         next: (response: ApiResponse<EspecificacionTecnica> ) => {
           if (response.Success && response.Data.id) {

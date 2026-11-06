@@ -4,6 +4,7 @@ import { ModalMotivosRechazoComponent } from './modal-motivos-rechazo/modal-moti
 import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 import {
   EstadoContrato,
   DocumentoContrato,
@@ -19,9 +20,10 @@ import {
   rolPorEstado,
 } from 'src/app/utils/rolesEstados';
 import { SubirArchivoComponent } from './cargar-archivo/cargar-archivo.component';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { MinutasMidService } from 'src/app/services/minuta-mid.service';
+import { VigenciaService } from 'src/app/services/vigencia.service';
 
 @Component({
     selector: 'app-revision-contrato',
@@ -36,7 +38,7 @@ export class RevisionContratoComponent {
   documentos = { minuta: '', documentos_precontractuales: '' };
   contrato_general_id = 0;
   unidad_ejecutora_id = 0;
-  vigencia: string = '';
+  vigencia_id: number = 0;
   numero_contrato: string = '';
   usuario_id: number = 0;
   roles: string[] = [];
@@ -50,11 +52,13 @@ export class RevisionContratoComponent {
     private route: ActivatedRoute,
     private alertService: AlertService,
     private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private gestionContractualCrudService: GestionContractualCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private gestorDocumentalService: GestorDocumentalService,
     private minutasMidService: MinutasMidService,
     private rolService: RolService,
-    private userService: UserService
+    private userService: UserService,
+    private vigenciaService: VigenciaService
   ) {}
 
   ngOnInit(): void {
@@ -101,21 +105,23 @@ export class RevisionContratoComponent {
     if (!this.contrato_general_id) return;
     forkJoin({
       contrato: this.contratoGeneralCrudService.get(this.contrato_general_id),
-      estadosContrato: this.contratoGeneralCrudService.getEstados(
-        this.contrato_general_id
-      ),
+      // Estados del contrato, del más reciente al más antiguo.
+      estadosContrato: this.contratoGeneralCrudService.getEstados({
+        query: `contrato_general_id.id:${this.contrato_general_id},activo:true`,
+        sortby: 'fecha_creacion,id',
+        order: 'desc',
+        limit: 0,
+      }),
     }).subscribe({
       next: ({ contrato, estadosContrato }: any) => {
-        const contratoData = contrato?.Data || contrato;
+        const contratoData = contrato?.Data;
         if (contratoData) {
           this.unidad_ejecutora_id = contratoData.unidad_ejecutora_id || 0;
-          this.vigencia = contratoData.vigencia || '';
+          this.vigencia_id = contratoData.vigencia_id || 0;
           this.numero_contrato = contratoData.numero_contrato || '';
         }
 
-        const estados = Array.isArray(estadosContrato)
-          ? estadosContrato
-          : (estadosContrato?.Data || []);
+        const estados = estadosContrato?.Data || [];
 
         if (estados.length > 0) {
           this.estadoInternoActual =
@@ -149,13 +155,11 @@ export class RevisionContratoComponent {
     errorMessage: string
   ) {
     this.isLoading = true;
-    this.contratoGeneralCrudService
-      .getDocumentoActual(this.contrato_general_id, tipoDocumento)
+    this.gestionContractualCrudService
+      .getDocumentos(this.consultaDocumentoVigente(tipoDocumento))
       .subscribe({
         next: (documentos: any) => {
-          const docsList = Array.isArray(documentos)
-            ? documentos
-            : (documentos?.Data || []);
+          const docsList = documentos?.Data || [];
           const documentoActual = docsList[0];
           if (documentoActual?.documento_enlace) {
             this.gestorDocumentalService
@@ -183,18 +187,27 @@ export class RevisionContratoComponent {
       });
   }
 
+  /** Documento vigente del contrato para un tipo: el más reciente activo. */
+  private consultaDocumentoVigente(tipoDocumentoId: number) {
+    return {
+      query:
+        `entidad_tipo:contrato_general,entidad_id:${this.contrato_general_id},` +
+        `tipo_documento_id:${tipoDocumentoId},activo:true`,
+      sortby: 'fecha_creacion,id',
+      order: 'desc',
+      limit: 1,
+    };
+  }
+
   getMinuta() {
     this.isLoading = true;
-    this.contratoGeneralCrudService
-      .getDocumentoActual(
-        this.contrato_general_id,
-        environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA
+    this.gestionContractualCrudService
+      .getDocumentos(
+        this.consultaDocumentoVigente(environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA)
       )
       .subscribe({
         next: (documentos: any) => {
-          const docsList = Array.isArray(documentos)
-            ? documentos
-            : (documentos?.Data || []);
+          const docsList = documentos?.Data || [];
           const documentoActual = docsList[0];
           if (documentoActual?.documento_enlace) {
             this.gestorDocumentalService
@@ -241,16 +254,15 @@ export class RevisionContratoComponent {
   }
 
   getDocumentosPrecontractuales() {
-    this.contratoGeneralCrudService
-      .getDocumentoActual(
-        this.contrato_general_id,
-        environment.TIPO_DOCUMENTO_ID_PARAMETROS.DOCUMENTOS_PRECONTRACTUALES
+    this.gestionContractualCrudService
+      .getDocumentos(
+        this.consultaDocumentoVigente(
+          environment.TIPO_DOCUMENTO_ID_PARAMETROS.DOCUMENTOS_PRECONTRACTUALES
+        )
       )
       .subscribe({
         next: (documentos: any) => {
-          const docsList = Array.isArray(documentos)
-            ? documentos
-            : (documentos?.Data || []);
+          const docsList = documentos?.Data || [];
           const documentoActual = docsList[0];
           if (documentoActual?.documento_enlace) {
             this.gestorDocumentalService
@@ -290,6 +302,8 @@ export class RevisionContratoComponent {
           nombre: `MINUTA ${this.contrato_general_id}`,
           descripcion: `Cargue de minuta, contrato general id ${this.contrato_general_id}`,
           contrato_general_id: this.contrato_general_id,
+          usuario_id: this.usuario_id,
+          usuario_rol: this.getRolPorEstado(),
         },
       },
     });
@@ -346,7 +360,7 @@ export class RevisionContratoComponent {
     }
 
     let estadoContrato: EstadoContrato = {
-      contrato_general_id: this.contrato_general_id,
+      contrato_general_id: { id: this.contrato_general_id },
       usuario_id: this.usuario_id,
       usuario_rol: rol,
       estado_parametro_id,
@@ -369,7 +383,7 @@ export class RevisionContratoComponent {
       .postEstadoContrato(estadoContrato)
       .subscribe({
         next: (response: any) => {
-          if (response.id) {
+          if (response?.Data?.id) {
             estadoContrato.estado_parametro_id =
               environment.ESTADOS_GENERALES.SUSCRITO;
             estadoContrato.estado_interno_parametro_id = estado;
@@ -386,7 +400,7 @@ export class RevisionContratoComponent {
       .postEstadoContrato(estadoContrato)
       .subscribe({
         next: (response: any) => {
-          if (response.id) {
+          if (response?.Data?.id) {
             this.alertService.showSuccessAlert(
               numeroContrato
                 ? `${this.textos.enviado}. Número de contrato: ${numeroContrato}`
@@ -402,13 +416,37 @@ export class RevisionContratoComponent {
 
   // Generar número de contrato si aplica
   generarNumeroContrato(estadoContrato: EstadoContrato, estado: number) {
-    // Provisional: el año actual cuando el contrato no tiene vigencia (#397, pregunta 1).
-    const vigencia = this.vigencia || String(new Date().getFullYear());
+    // Provisional: el año actual cuando el contrato no tiene vigencia (#397, pregunta 2).
+    const vigencia = this.vigencia_id
+      ? of(this.vigencia_id)
+      : this.vigenciaService.vigenciaActualId();
 
+    vigencia.subscribe({
+      next: (vigenciaId) => {
+        if (vigenciaId) {
+          this.pedirNumeroContrato(vigenciaId, estadoContrato, estado);
+        } else {
+          this.alertService.showErrorAlert(
+            'No se encontró la vigencia del año actual en Parámetros',
+            'Error al consultar la vigencia'
+          );
+        }
+      },
+      error: (error) => {
+        this.handleError('No se encontró la vigencia del año actual en Parámetros', error);
+      },
+    });
+  }
+
+  private pedirNumeroContrato(
+    vigenciaId: number,
+    estadoContrato: EstadoContrato,
+    estado: number
+  ) {
     this.contratoGeneralMidService
       .postNumeroContrato({
-        unidad_ejecutora_id: this.unidad_ejecutora_id,
-        vigencia,
+        unidad_ejecutora_id: Number(this.unidad_ejecutora_id),
+        vigencia_id: vigenciaId,
         estado: environment.ESTADOS_GENERALES.SUSCRITO,
       })
       .subscribe({
@@ -416,7 +454,7 @@ export class RevisionContratoComponent {
           if (response.Success && response.Status === 200) {
             this.guardarNumeroContrato(
               response.Data,
-              vigencia,
+              vigenciaId,
               estadoContrato,
               estado
             );
@@ -437,20 +475,21 @@ export class RevisionContratoComponent {
   // La vigencia también se guarda porque el conteo del número filtra por ella.
   guardarNumeroContrato(
     numeroContrato: string,
-    vigencia: string,
+    vigenciaId: number,
     estadoContrato: EstadoContrato,
     estado: number
   ) {
     this.contratoGeneralCrudService
       .put(this.contrato_general_id, {
         numero_contrato: numeroContrato,
-        vigencia,
+        vigencia_id: vigenciaId,
       })
       .subscribe({
         next: (response: ApiResponse<any>) => {
-          if (response.Success && response.Status === 200) {
+          // El CRUD Beego responde Status como texto ("200"): basta con Success.
+          if (response.Success) {
             this.numero_contrato = numeroContrato;
-            this.vigencia = vigencia;
+            this.vigencia_id = vigenciaId;
             this.crearEstadoAutomaticoContrato(
               estadoContrato,
               estado,
