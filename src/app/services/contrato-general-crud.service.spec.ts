@@ -18,7 +18,7 @@ jest.mock('sweetalert2', () => ({
  * Status como texto, [] en listas vacías, null en lo que no tiene valor y FK como objeto
  * { id }. El MF no las transforma.
  */
-const CRUD = `${environment.GESTION_CONTRACTUAL_CRUD_SERVICE}v1`;
+const CRUD = environment.GESTION_CONTRACTUAL_CRUD_SERVICE.replace(/\/$/, '');
 const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
 // Filtro por FK verificado contra la rama del crud#51.
 const DEL_CONTRATO = 'contrato_general_id.id:42,activo:true';
@@ -26,10 +26,10 @@ const DEL_CONTRATO = 'contrato_general_id.id:42,activo:true';
 describe('rutaConsulta', () => {
   it('arma query, sortby, order y limit explícito', () => {
     expect(rutaConsulta('estado_contrato', { query: 'a:1', sortby: 'fecha_creacion,id', order: 'desc', limit: 1 })).toBe(
-      'v1/estado_contrato/?query=a:1&sortby=fecha_creacion,id&order=desc&limit=1'
+      'estado_contrato/?query=a:1&sortby=fecha_creacion,id&order=desc&limit=1'
     );
     expect(rutaConsulta('disponibilidad_presupuestal', { query: 'a:1', limit: 0 })).toBe(
-      'v1/disponibilidad_presupuestal/?query=a:1&limit=0'
+      'disponibilidad_presupuestal/?query=a:1&limit=0'
     );
   });
 });
