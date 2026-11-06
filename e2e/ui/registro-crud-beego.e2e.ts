@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { CORE_MF_STUB, PROVEEDOR, responderServicioExterno } from '../support/servicios-simulados';
+import { CORE_MF_STUB, PROVEEDOR, VIGENCIA_ACTUAL_ID, responderServicioExterno } from '../support/servicios-simulados';
 
 /**
  * Integración local de #390 contra el CRUD Go/Beego v2 REAL de la #385.
@@ -45,6 +45,7 @@ const hoyColombia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota
 const AHORA = new Date(`${hoyColombia}T20:30:00-05:00`);
 
 const peticionesAlCrud: string[] = [];
+const cuerposConsecutivo: unknown[] = [];
 const noSimuladas: string[] = [];
 let contratoId = 0;
 
@@ -60,6 +61,7 @@ async function responder(route: Route): Promise<void> {
     }
     return route.fulfill({ response: respuesta });
   }
+  if (ruta === 'gestion_contractual_mid/contratos-generales/consecutivo') cuerposConsecutivo.push(route.request().postDataJSON());
   const externa = responderServicioExterno(route, ruta, url.searchParams);
   if (externa) return externa;
   noSimuladas.push(`${route.request().method()} ${url.pathname}${url.search}`);
@@ -297,7 +299,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
   });
 
   const camposSinValorContrato = [
-    'vigencia_id', 'perfil_contratista_id', 'fecha_suscripcion_estudio', 'valor_contrato_me', 'valor_tasa_cambio',
+    'perfil_contratista_id', 'fecha_suscripcion_estudio', 'valor_contrato_me', 'valor_tasa_cambio',
     'clase_proveedor_id', 'condiciones', 'observaciones', 'fecha_inicial', 'fecha_final', 'fecha_suscripcion',
   ];
   const camposSinValorOrdenador = ['tercero_id', 'cargo_id', 'ordenador_sicapital_id', 'documento_identidad', 'resolucion'];
@@ -343,6 +345,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
       cdps_activos: sql(`select count(*) from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
       supervisores_activos: sql(`select count(*) from contratacion.supervisor_contrato where contrato_general_id = ${contratoId} and activo`),
       especificaciones_activas: sql(`select count(*) from contratacion.especificacion_tecnica where contrato_general_id = ${contratoId} and activo`),
+      vigencia_id: sql(`select vigencia_id from contratacion.contrato_general where id = ${contratoId}`),
       estado_actual: sql(`select estado_interno_parametro_id from contratacion.estado_contrato where contrato_general_id = ${contratoId} and actual`),
       fecha_registro_cdp: sql(`select fecha_registro from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
     };
@@ -368,6 +371,9 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     expect.soft(conteos.cdps_activos).toBe('1');
     expect.soft(conteos.supervisores_activos).toBe('1');
     expect.soft(conteos.especificaciones_activas).toBe('1');
+    // Parámetros va simulado: tipo 121 del año actual.
+    expect.soft(conteos.vigencia_id).toBe(String(VIGENCIA_ACTUAL_ID));
+    expect.soft(cuerposConsecutivo[0]).toEqual({ unidad_ejecutora_id: 6818, vigencia_id: VIGENCIA_ACTUAL_ID });
     // La columna date debe quedar con el día local, no con el día UTC.
     expect.soft(conteos.fecha_registro_cdp).toBe(hoyColombia);
     expect.soft(noSimuladas, 'peticiones sin simular').toEqual([]);

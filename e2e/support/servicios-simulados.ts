@@ -19,6 +19,7 @@ export const PESO_COLOMBIANO_ID = 6634;
 export const AMPARO_CUMPLIMIENTO = 6602;
 export const AMPARO_CALIDAD = 6605;
 export const TIPO_CONTROL_TECNICO = 6611;
+export const VIGENCIA_ACTUAL_ID = 9001;
 
 export const ok = (Data: unknown, Message = 'Consulta exitosa') => ({ Success: true, Status: 200, Message, Data });
 
@@ -165,6 +166,7 @@ export function responderServicioExterno(route: Route, ruta: string, query: URLS
   if (ruta === 'parametros/v1/parametro') {
     const consulta = query.get('query') ?? '';
     const respuesta = (Data: unknown[]) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
+    if (consulta.includes('TipoParametroId:121')) return json(respuesta([{ Id: VIGENCIA_ACTUAL_ID }]));
     if (consulta.includes('TipoParametroId:135')) return json(respuesta([{ Id: 1, Nombre: 'PRIMERA' }, { Id: 2, Nombre: 'SEGUNDA' }]));
     if (consulta.includes('TipoParametroId:118'))
       return json(respuesta([{ Id: AMPARO_CUMPLIMIENTO, Nombre: 'Cumplimiento' }, { Id: AMPARO_CALIDAD, Nombre: 'Calidad de los bienes' }]));
