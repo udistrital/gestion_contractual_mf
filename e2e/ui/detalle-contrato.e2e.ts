@@ -341,7 +341,7 @@ async function controlesHabilitados(seccion: Locator, excluir: string[] = []): P
     if (await campo.evaluate((el) => !!el.closest('.ql-tooltip'))) continue;
     const nombre = await nombreControl(campo);
     if (excluir.some((e) => nombre.includes(e))) continue;
-    if (await campo.isEnabled()) habilitados.push(nombre);
+    if (await campo.isEditable()) habilitados.push(nombre);
   }
   for (const select of await seccion.locator('mat-select').all()) {
     if ((await select.getAttribute('aria-disabled')) !== 'true') habilitados.push(await nombreControl(select));
