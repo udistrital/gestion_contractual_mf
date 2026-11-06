@@ -91,11 +91,21 @@ async function aceptarAlerta(page: Page) {
 }
 
 async function seleccionar(page: Page, select: Locator, opcion: string | RegExp) {
-  // `force`: sin la fuente de iconos del core-mf las ligaduras tapan el select.
+  const elegida = page.getByRole('option', { name: opcion }).first();
+  const fondo = page.locator('.cdk-overlay-backdrop-showing');
+  await expect(select).toBeVisible();
   await expect(select).not.toHaveAttribute('aria-disabled', 'true');
+  // `force`: sin la fuente de iconos del core-mf las ligaduras tapan el select.
   await select.click({ force: true, timeout: 10_000 });
-  await page.getByRole('option', { name: opcion }).first().click({ timeout: 10_000 });
-  await expect(page.locator('.cdk-overlay-backdrop-showing')).toHaveCount(0);
+  const aparecio = await elegida.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false);
+  if (!aparecio) {
+    // El panel no abrió o llegó sin opciones: se cierra y se abre una vez más.
+    await page.keyboard.press('Escape');
+    await expect(fondo).toHaveCount(0);
+    await select.click({ force: true, timeout: 10_000 });
+  }
+  await elegida.click({ timeout: 10_000 });
+  await expect(fondo).toHaveCount(0);
 }
 
 const buscable = (seccion: Locator, label: string) =>
