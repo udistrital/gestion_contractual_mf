@@ -141,11 +141,20 @@ describe('InicioTableroComponent', () => {
     expect(component.detalleTotal()).toBe(`Vigencia ${anio} · asignados a mí`);
   });
 
-  it('roles sin tablero no consultan datos', async () => {
-    await crear(['PROVEEDOR']);
-    expect(component.rol()).toBeNull();
-    expect(datos.cargarContratos).not.toHaveBeenCalled();
-    expect(fixture.nativeElement.textContent).toBe('');
+  it.each([['PROVEEDOR'], ['ADMIN_ARGO'], ['ORDENADOR_DEL_GASTO']])(
+    'sin rol de jefe de contratación ni de abogado (%s) no consulta ni muestra nada',
+    async (rol) => {
+      await crear([rol]);
+      expect(component.rol()).toBeNull();
+      expect(datos.cargarContratos).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.querySelector('plantilla-tarjeta-contenedora')).toBeNull();
+      expect(fixture.nativeElement.textContent.trim()).toBe('');
+    }
+  );
+
+  it('con rol de tablero muestra el contenedor del tablero', async () => {
+    await crear(['ABOGADO_CONTRATACION_IDEXUD']);
+    expect(fixture.nativeElement.querySelector('plantilla-tarjeta-contenedora')).not.toBeNull();
   });
 
   it('arma la lista de vigencias con el año actual primero', async () => {
