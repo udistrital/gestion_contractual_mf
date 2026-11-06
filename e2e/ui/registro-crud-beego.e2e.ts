@@ -92,6 +92,7 @@ async function aceptarAlerta(page: Page) {
 
 async function seleccionar(page: Page, select: Locator, opcion: string | RegExp) {
   // `force`: sin la fuente de iconos del core-mf las ligaduras tapan el select.
+  await expect(select).not.toHaveAttribute('aria-disabled', 'true');
   await select.click({ force: true, timeout: 10_000 });
   await page.getByRole('option', { name: opcion }).first().click({ timeout: 10_000 });
   await expect(page.locator('.cdk-overlay-backdrop-showing')).toHaveCount(0);
