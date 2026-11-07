@@ -3,6 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService, rutaConsulta } from './contrato-general-crud.service';
+import { of } from 'rxjs';
+import { VigenciaService } from './vigencia.service';
 import { GestionContractualCrudService } from './gestion-contractual-crud.service';
 import { PolizasService } from './polizas.service';
 import { GestorDocumentalService } from './gestor-documental.service';
@@ -39,13 +41,16 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   let gestion: GestionContractualCrudService;
   let polizas: PolizasService;
   let http: HttpTestingController;
+  let vigencias: { vigenciaId: jest.Mock };
 
   beforeEach(() => {
+    vigencias = { vigenciaId: jest.fn().mockReturnValue(of(9001)) };
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: GestorDocumentalService, useValue: {} },
+        { provide: VigenciaService, useValue: vigencias },
       ],
     });
     crud = TestBed.inject(ContratoGeneralCrudService);
@@ -185,15 +190,15 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       contrato_general_id: { id: 42 },
     };
     crud.getOrdenadores({ query: DEL_CONTRATO, sortby: 'fecha_creacion,id', order: 'desc', limit: 1 }).subscribe();
-    http.expectOne(`${CRUD}/ordenadores-contrato/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
+    http.expectOne(`${CRUD}/ordenadores/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
 
     crud.postOrdenadorContrato(ordenador).subscribe();
-    const post = http.expectOne(`${CRUD}/ordenadores-contrato/`);
+    const post = http.expectOne(`${CRUD}/ordenadores/`);
     expect(post.request.method).toBe('POST');
     post.flush(ok({ id: 7 }));
 
     crud.putOrdenadorContrato(7, ordenador).subscribe();
-    const put = http.expectOne(`${CRUD}/ordenadores-contrato/7`);
+    const put = http.expectOne(`${CRUD}/ordenadores/7`);
     expect(put.request.method).toBe('PUT');
     expect(put.request.body).toEqual(ordenador);
     put.flush(ok({ id: 7 }));
@@ -251,5 +256,45 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   it('33. amparos del contrato en /v1/amparos-polizas', () => {
     polizas.getAmparos({ query: DEL_CONTRATO, sortby: 'id', order: 'asc', limit: 0 }).subscribe();
     http.expectOne(`${CRUD}/amparos-polizas/?query=${DEL_CONTRATO}&sortby=id&order=asc&limit=0`).flush(ok([]));
+  });
+
+  it('34. contratos de una vigencia: filtra por vigencia_id y entrega los ids', () => {
+    let respuesta: any;
+    crud.getContratosPorVigencia('2026').subscribe((r) => (respuesta = r));
+    http
+      .expectOne(`${CRUD}/contratos-generales/?query=vigencia_id:9001,activo:true&fields=Id&limit=0`)
+      .flush(ok([{ Id: 3 }, { Id: 4 }]));
+    expect(respuesta.Data).toEqual([3, 4]);
+  });
+
+  it('35. sin parámetro de vigencia no consulta el CRUD y no entrega contratos', () => {
+    vigencias.vigenciaId.mockReturnValue(of(null));
+    let respuesta: any;
+    crud.getContratosPorVigencia('2030').subscribe((r) => (respuesta = r));
+    expect(respuesta.Data).toEqual([]);
+  });
+
+  it('36. acta de la póliza: consulta por entidad y tipo de documento', () => {
+    const tipo = environment.TIPO_DOCUMENTO_ID_PARAMETROS.ACTA_APROBACION_POLIZA;
+    polizas.getActaGuardada(7).subscribe();
+    http
+      .expectOne(
+        `${CRUD}/documentos-contratos/?query=entidad_tipo:poliza,entidad_id:7,tipo_documento_id:${tipo},activo:true&sortby=fecha_creacion,id&order=desc&limit=1`
+      )
+      .flush(ok([]));
+  });
+
+  it('37. acta de la póliza: se registra con entidad_tipo poliza', () => {
+    polizas.registrarDocumentoActa(7, 10, 'uid-10').subscribe();
+    const req = http.expectOne(`${CRUD}/documentos-contratos/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      entidad_tipo: 'poliza',
+      entidad_id: 7,
+      tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.ACTA_APROBACION_POLIZA,
+      documento_id: 10,
+      documento_enlace: 'uid-10',
+    });
+    req.flush(ok({ id: 1 }));
   });
 });

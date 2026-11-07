@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { RequestManager } from '../managers/requestManager';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { RECURSOS_CRUD } from '../core/constants/recursos-crud';
+import { VigenciaService } from './vigencia.service';
 import {
   CDPContratoCRUD,
   ConsultaCrud,
@@ -19,6 +21,7 @@ export function rutaConsulta(recurso: string, consulta: ConsultaCrud): string {
   const parametros = [`query=${consulta.query}`];
   if (consulta.sortby) parametros.push(`sortby=${consulta.sortby}`);
   if (consulta.order) parametros.push(`order=${consulta.order}`);
+  if (consulta.fields) parametros.push(`fields=${consulta.fields}`);
   parametros.push(`limit=${consulta.limit}`);
   return `${recurso}/?${parametros.join('&')}`;
 }
@@ -27,7 +30,10 @@ export function rutaConsulta(recurso: string, consulta: ConsultaCrud): string {
   providedIn: 'root',
 })
 export class ContratoGeneralCrudService {
-  constructor(private requestManager: RequestManager) {
+  constructor(
+    private requestManager: RequestManager,
+    private vigenciaService: VigenciaService
+  ) {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
   }
 
@@ -157,12 +163,24 @@ export class ContratoGeneralCrudService {
     return this.requestManager.put(`${RECURSOS_CRUD.supervisorContrato}/${id}`, data as any);
   }
 
-  /**
-   * Pendiente: el CRUD Beego no tiene la consulta por año y sus consumidores
-   * (pólizas y actas) están fuera de la #390. Se deja la ruta anterior.
-   */
+  /** Ids de los contratos activos de la vigencia. `fields` solo acepta PascalCase. */
   getContratosPorVigencia(year: string | null): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get(`contratos-generales/vigencia/${year}`);
+    return this.vigenciaService.vigenciaId(year ?? '').pipe(
+      switchMap((vigenciaId) => {
+        if (!vigenciaId) return of({ Data: [] });
+        this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+        return this.requestManager.get<any>(
+          rutaConsulta(RECURSOS_CRUD.contratoGeneral, {
+            query: `vigencia_id:${vigenciaId},activo:true`,
+            fields: 'Id',
+            limit: 0,
+          })
+        );
+      }),
+      map((respuesta: any) => ({
+        ...respuesta,
+        Data: (respuesta?.Data ?? []).map((contrato: { Id: number }) => contrato.Id),
+      }))
+    );
   }
 }

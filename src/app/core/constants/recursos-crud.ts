@@ -6,6 +6,6 @@ export const RECURSOS_CRUD = {
   documentoContrato: 'documentos-contratos',
   especificacionTecnica: 'especificaciones-tecnicas',
   estadoContrato: 'estados-contrato',
-  ordenadorContrato: 'ordenadores-contrato',
+  ordenadorContrato: 'ordenadores',
   supervisorContrato: 'supervisores',
 } as const;

@@ -13,12 +13,6 @@ export class GestionContractualCrudService {
         this.requestManager.setPath("GESTION_CONTRACTUAL_CRUD_SERVICE");
     }
 
-    // Método para registrar un acta de inicio
-    registrarActaInicio(data: any) {
-        const endpoint = `acta_inicio`;
-        return this.post(endpoint, data);
-    }
-
     // documento_contrato (CRUD Beego v2): lo comparten contrato, póliza y acta de inicio.
     getDocumentos(consulta: ConsultaCrud) {
         return this.get(rutaConsulta(RECURSOS_CRUD.documentoContrato, consulta));

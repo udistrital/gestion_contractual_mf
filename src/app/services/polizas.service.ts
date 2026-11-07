@@ -115,19 +115,17 @@ export class PolizasService {
 
   // --- acta guardada (documentos-contratos en CRUD + gestor documental) ---
 
-  /** Acta de aprobación más reciente registrada para el contrato. */
-  getActaGuardada(contratoGeneralId: number): Observable<any> {
+  /** Acta de aprobación más reciente registrada para la póliza. */
+  getActaGuardada(polizaId: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    const query = encodeURIComponent(
-      JSON.stringify({
-        contrato_general_id: contratoGeneralId,
-        tipo_documento_id:
-          environment.TIPO_DOCUMENTO_ID_PARAMETROS.ACTA_APROBACION_POLIZA,
-        activo: true,
-      })
-    );
+    const tipoDocumento = environment.TIPO_DOCUMENTO_ID_PARAMETROS.ACTA_APROBACION_POLIZA;
     return this.requestManager.get(
-      `documentos-contratos?query=${query}&sortBy=fecha_creacion&orderBy=DESC&limit=1`
+      rutaConsulta(RECURSOS_CRUD.documentoContrato, {
+        query: `entidad_tipo:poliza,entidad_id:${polizaId},tipo_documento_id:${tipoDocumento},activo:true`,
+        sortby: 'fecha_creacion,id',
+        order: 'desc',
+        limit: 1,
+      })
     );
   }
 
@@ -151,16 +149,16 @@ export class PolizasService {
     return this.gestorDocumentalService.postAny('document/upload', data);
   }
 
-  /** Registra en el contrato el documento ya subido al gestor documental. */
+  /** Registra en la póliza el documento ya subido al gestor documental. */
   registrarDocumentoActa(
-    contratoGeneralId: number,
+    polizaId: number,
     documentoId: number,
     documentoEnlace: string
   ): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    // El CRUD (forbidNonWhitelisted) solo admite estos campos
-    return this.requestManager.post('documentos-contratos', {
-      contrato_general_id: contratoGeneralId,
+    return this.requestManager.post(`${RECURSOS_CRUD.documentoContrato}/`, {
+      entidad_tipo: 'poliza',
+      entidad_id: polizaId,
       tipo_documento_id:
         environment.TIPO_DOCUMENTO_ID_PARAMETROS.ACTA_APROBACION_POLIZA,
       documento_id: documentoId,

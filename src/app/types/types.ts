@@ -56,6 +56,7 @@ export interface ConsultaCrud {
   limit: number;
   sortby?: string;
   order?: string;
+  fields?: string;
 }
 
 export interface CDPContratoCRUD {
