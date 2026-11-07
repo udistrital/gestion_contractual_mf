@@ -166,7 +166,8 @@ export function responderServicioExterno(route: Route, ruta: string, query: URLS
   if (ruta === 'parametros/v1/parametro') {
     const consulta = query.get('query') ?? '';
     const respuesta = (Data: unknown[]) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
-    if (consulta.includes('TipoParametroId:121')) return json(respuesta([{ Id: VIGENCIA_ACTUAL_ID }]));
+    if (consulta.includes('TipoParametroId:121'))
+      return json(respuesta(consulta.includes(`Nombre:${new Date().getFullYear()}`) ? [{ Id: VIGENCIA_ACTUAL_ID }] : []));
     if (consulta.includes('TipoParametroId:135')) return json(respuesta([{ Id: 1, Nombre: 'PRIMERA' }, { Id: 2, Nombre: 'SEGUNDA' }]));
     if (consulta.includes('TipoParametroId:118'))
       return json(respuesta([{ Id: AMPARO_CUMPLIMIENTO, Nombre: 'Cumplimiento' }, { Id: AMPARO_CALIDAD, Nombre: 'Calidad de los bienes' }]));

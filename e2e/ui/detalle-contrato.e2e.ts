@@ -103,7 +103,7 @@ const contratoEnConsulta = {
 };
 
 const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
-  'ordenadores-contrato': [
+  'ordenadores': [
     { id: 71, contrato_general_id: DEL_CONTRATO, tercero_id: null, cargo_id: 12, documento_identidad: '1000000003', resolucion: null, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
   ],
   'disponibilidades-presupuestales': [

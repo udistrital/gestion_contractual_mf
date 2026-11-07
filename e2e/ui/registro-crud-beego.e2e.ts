@@ -318,7 +318,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     const presupuestal = page.locator('app-paso-info-presupuestal');
     await expect(presupuestal.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
     await expect(presupuestal.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
-    const ordenador = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/ordenadores-contrato/'));
+    const ordenador = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/ordenadores/'));
     await presupuestal.getByRole('button', { name: /Guardar y Continuar/ }).click();
     expect.soft(Object.keys((await ordenador).postDataJSON())).toEqual(['ordenador_argo_id', 'contrato_general_id']);
     await aceptarAlerta(page);
