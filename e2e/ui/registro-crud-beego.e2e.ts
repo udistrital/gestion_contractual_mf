@@ -56,7 +56,7 @@ async function responder(route: Route): Promise<void> {
     const destino = `${CRUD_BEEGO_URL!.replace(/\/$/, '')}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`;
     peticionesAlCrud.push(`${route.request().method()} ${destino}`);
     const respuesta = await route.fetch({ url: destino });
-    if (route.request().method() === 'POST' && ruta === 'gestion_contractual_crud/v1/contrato_general/') {
+    if (route.request().method() === 'POST' && ruta === 'gestion_contractual_crud/v1/contratos-generales/') {
       contratoId = (await respuesta.json()).Data.id;
     }
     return route.fulfill({ response: respuesta });
@@ -132,7 +132,7 @@ async function abrirEdicion(page: Page, id: number) {
 async function guardarPaso1(page: Page, id: number) {
   const seccion = page.locator('app-paso-info-general');
   const guardado = page.waitForResponse(
-    (r) => r.request().method() === 'PUT' && r.url().endsWith(`/v1/contrato_general/${id}`)
+    (r) => r.request().method() === 'PUT' && r.url().endsWith(`/v1/contratos-generales/${id}`)
   );
   await seccion.getByRole('button', { name: /Guardar Datos Básicos/ }).click();
   expect((await guardado).status()).toBe(200);
@@ -231,7 +231,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     // El primer guardado no muestra alerta y, por OnPush, la vista no refleja
     // "Solicitante guardado" hasta otro ciclo (así viene de develop): se espera el PUT.
     const guardado = page.waitForResponse(
-      (r) => r.request().method() === 'PUT' && r.url().includes(`/v1/contrato_general/${contratoId}`)
+      (r) => r.request().method() === 'PUT' && r.url().includes(`/v1/contratos-generales/${contratoId}`)
     );
     await seccion.getByRole('button', { name: /(Guardar|Actualizar) Solicitante/ }).click();
     expect((await guardado).status()).toBe(200);
@@ -318,7 +318,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     const presupuestal = page.locator('app-paso-info-presupuestal');
     await expect(presupuestal.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
     await expect(presupuestal.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
-    const ordenador = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/ordenador_contrato/'));
+    const ordenador = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/ordenadores-contrato/'));
     await presupuestal.getByRole('button', { name: /Guardar y Continuar/ }).click();
     expect.soft(Object.keys((await ordenador).postDataJSON())).toEqual(['ordenador_argo_id', 'contrato_general_id']);
     await aceptarAlerta(page);
@@ -326,7 +326,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
     await expect(supervisores).toContainText('SUPERVISOR DE PRUEBA');
-    const supervisor = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/supervisor_contrato/'));
+    const supervisor = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/supervisores/'));
     await supervisores.getByRole('button', { name: /(Guardar|Actualizar) Supervisores/ }).click();
     expect.soft((await supervisor).postDataJSON()).not.toHaveProperty('cargo_id');
     await aceptarAlerta(page);
@@ -395,7 +395,7 @@ test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () 
   expect.soft(aplicaPoliza()).toBe('false');
   const peticiones: string[] = [];
   const registrar = (r: Request) => {
-    if (/\/contrato_general\/|\/consecutivo/.test(r.url())) peticiones.push(`${r.method()} ${new URL(r.url()).pathname}`);
+    if (/\/contratos-generales\/|\/consecutivo/.test(r.url())) peticiones.push(`${r.method()} ${new URL(r.url()).pathname}`);
   };
 
   await abrirEdicion(page, id);
@@ -420,7 +420,7 @@ test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () 
   expect.soft(despues.estados, 'editar no cambia el estado').toBe(antes.estados);
   expect.soft(despues.fila).toBe(antes.fila.replace(/^([^|]*)\|6\|/, '$1|9|'));
   expect.soft(peticiones.filter((p) => p.endsWith('/consecutivo')), 'editar no pide consecutivo').toEqual([]);
-  expect.soft(peticiones).toContain(`PUT /apioas/gestion_contractual_crud/v1/contrato_general/${id}`);
+  expect.soft(peticiones).toContain(`PUT /apioas/gestion_contractual_crud/v1/contratos-generales/${id}`);
 });
 
 test('fecha de estudios: conserva el día al guardar y al editar', async () => {
@@ -466,7 +466,7 @@ test('fecha de estudios: conserva el día al guardar y al editar', async () => {
     await seleccionar(page, buscable(supervisores, 'Sede Universitaria Solicitante'), 'Sede Calle 40');
     await seleccionar(page, buscable(supervisores, 'Dependencia Solicitante'), 'Facultad de Ingeniería');
     const guardado = page.waitForResponse(
-      (r) => r.request().method() === 'PUT' && r.url().includes(`/v1/contrato_general/${contratoId}`)
+      (r) => r.request().method() === 'PUT' && r.url().includes(`/v1/contratos-generales/${contratoId}`)
     );
     await supervisores.getByRole('button', { name: /(Guardar|Actualizar) Solicitante/ }).click();
     expect((await guardado).status()).toBe(200);

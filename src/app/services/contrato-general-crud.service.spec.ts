@@ -25,11 +25,11 @@ const DEL_CONTRATO = 'contrato_general_id.id:42,activo:true';
 
 describe('rutaConsulta', () => {
   it('arma query, sortby, order y limit explícito', () => {
-    expect(rutaConsulta('estado_contrato', { query: 'a:1', sortby: 'fecha_creacion,id', order: 'desc', limit: 1 })).toBe(
-      'estado_contrato/?query=a:1&sortby=fecha_creacion,id&order=desc&limit=1'
+    expect(rutaConsulta('estados-contrato', { query: 'a:1', sortby: 'fecha_creacion,id', order: 'desc', limit: 1 })).toBe(
+      'estados-contrato/?query=a:1&sortby=fecha_creacion,id&order=desc&limit=1'
     );
-    expect(rutaConsulta('disponibilidad_presupuestal', { query: 'a:1', limit: 0 })).toBe(
-      'disponibilidad_presupuestal/?query=a:1&limit=0'
+    expect(rutaConsulta('disponibilidades-presupuestales', { query: 'a:1', limit: 0 })).toBe(
+      'disponibilidades-presupuestales/?query=a:1&limit=0'
     );
   });
 });
@@ -56,28 +56,28 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
 
   afterEach(() => http.verify());
 
-  it('1. GET /v1/contrato_general/{id} y entrega la respuesta tal cual', () => {
+  it('1. GET /v1/contratos-generales/{id} y entrega la respuesta tal cual', () => {
     const contrato = { id: 42, objeto: 'Compra', tipo_control_id: null, fecha_suscripcion: null, sede_solicitante_id: 10 };
     let respuesta: any;
     crud.get(42).subscribe((r) => (respuesta = r));
-    const req = http.expectOne(`${CRUD}/contrato_general/42`);
+    const req = http.expectOne(`${CRUD}/contratos-generales/42`);
     expect(req.request.method).toBe('GET');
     req.flush(ok(contrato));
     expect(respuesta).toEqual(ok(contrato));
   });
 
-  it('2. POST /v1/contrato_general/ con el cuerpo en snake_case del MF', () => {
+  it('2. POST /v1/contratos-generales/ con el cuerpo en snake_case del MF', () => {
     const cuerpo = { tipo_contrato_id: 1, consecutivo_elaboracion: '27', unidad_ejecutora_id: 1 };
     crud.post(cuerpo).subscribe();
-    const req = http.expectOne(`${CRUD}/contrato_general/`);
+    const req = http.expectOne(`${CRUD}/contratos-generales/`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(cuerpo);
     req.flush(ok({ id: 42, ...cuerpo }));
   });
 
-  it('3. PUT /v1/contrato_general/{id} parcial, sin id en el cuerpo', () => {
+  it('3. PUT /v1/contratos-generales/{id} parcial, sin id en el cuerpo', () => {
     crud.put(42, { valor_pesos: '45000000' }).subscribe();
-    const req = http.expectOne(`${CRUD}/contrato_general/42`);
+    const req = http.expectOne(`${CRUD}/contratos-generales/42`);
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual({ valor_pesos: '45000000' });
     req.flush(ok({ id: 42 }));
@@ -86,7 +86,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   it('6. CDP del contrato: filtro por contrato y activos, limit=0 (lista vacía como [])', () => {
     let respuesta: any;
     crud.getCdps({ query: DEL_CONTRATO, limit: 0 }).subscribe((r) => (respuesta = r));
-    const req = http.expectOne(`${CRUD}/disponibilidad_presupuestal/?query=${DEL_CONTRATO}&limit=0`);
+    const req = http.expectOne(`${CRUD}/disponibilidades-presupuestales/?query=${DEL_CONTRATO}&limit=0`);
     expect(req.request.method).toBe('GET');
     req.flush(ok([]));
     expect(respuesta.Data).toEqual([]);
@@ -101,7 +101,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       valor_a_tomar: 45000000,
     };
     crud.postCdp(cdp).subscribe();
-    const req = http.expectOne(`${CRUD}/disponibilidad_presupuestal/`);
+    const req = http.expectOne(`${CRUD}/disponibilidades-presupuestales/`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(cdp);
     req.flush(ok({ id: 1, ...cdp }));
@@ -109,7 +109,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
 
   it('8. DELETE lógico de CDP', () => {
     crud.deleteCdp(9).subscribe();
-    const req = http.expectOne(`${CRUD}/disponibilidad_presupuestal/9`);
+    const req = http.expectOne(`${CRUD}/disponibilidades-presupuestales/9`);
     expect(req.request.method).toBe('DELETE');
     req.flush(ok({ id: 9 }));
   });
@@ -119,11 +119,11 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       .getEstados({ query: `contrato_general_id.id:42,actual:true,activo:true`, sortby: 'fecha_creacion,id', order: 'desc', limit: 1 })
       .subscribe();
     http
-      .expectOne(`${CRUD}/estado_contrato/?query=contrato_general_id.id:42,actual:true,activo:true&sortby=fecha_creacion,id&order=desc&limit=1`)
+      .expectOne(`${CRUD}/estados-contrato/?query=contrato_general_id.id:42,actual:true,activo:true&sortby=fecha_creacion,id&order=desc&limit=1`)
       .flush(ok([{ id: 3, estado_interno_parametro_id: 6799, actual: true }]));
 
     crud.getEstados({ query: DEL_CONTRATO, sortby: 'fecha_creacion,id', order: 'desc', limit: 0 }).subscribe();
-    http.expectOne(`${CRUD}/estado_contrato/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=0`).flush(ok([]));
+    http.expectOne(`${CRUD}/estados-contrato/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=0`).flush(ok([]));
   });
 
   it('11. POST de estado (el CRUD lo marca como actual)', () => {
@@ -135,7 +135,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       estado_interno_parametro_id: 6799,
     };
     crud.postEstadoContrato(estado).subscribe();
-    const req = http.expectOne(`${CRUD}/estado_contrato/`);
+    const req = http.expectOne(`${CRUD}/estados-contrato/`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(estado);
     req.flush(ok({ id: 3, ...estado }));
@@ -143,21 +143,21 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
 
   it('12 a 15. especificaciones: GET con filtro, POST, PUT y DELETE', () => {
     crud.getEspecificacionesTecnicas({ query: DEL_CONTRATO, limit: 0 }).subscribe();
-    http.expectOne(`${CRUD}/especificacion_tecnica/?query=${DEL_CONTRATO}&limit=0`).flush(ok([]));
+    http.expectOne(`${CRUD}/especificaciones-tecnicas/?query=${DEL_CONTRATO}&limit=0`).flush(ok([]));
 
     crud.postEspecificacionTecnica({ descripcion: 'Osciloscopio', contrato_general_id: { id: 42 } }).subscribe();
-    const post = http.expectOne(`${CRUD}/especificacion_tecnica/`);
+    const post = http.expectOne(`${CRUD}/especificaciones-tecnicas/`);
     expect(post.request.method).toBe('POST');
     post.flush(ok({ id: 1 }));
 
     crud.putEspecificacionTecnica(1, { cantidad: 3 }).subscribe();
-    const put = http.expectOne(`${CRUD}/especificacion_tecnica/1`);
+    const put = http.expectOne(`${CRUD}/especificaciones-tecnicas/1`);
     expect(put.request.method).toBe('PUT');
     expect(put.request.body).toEqual({ cantidad: 3 });
     put.flush(ok({ id: 1 }));
 
     crud.deleteEspecificacionTecnica(1).subscribe();
-    const del = http.expectOne(`${CRUD}/especificacion_tecnica/1`);
+    const del = http.expectOne(`${CRUD}/especificaciones-tecnicas/1`);
     expect(del.request.method).toBe('DELETE');
     del.flush(ok({ id: 1 }));
   });
@@ -166,7 +166,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
     crud.put(42, { proveedor_numero_documento: '1000000001', tipo_persona_id: 1 }).subscribe();
     crud.put(42, { sede_solicitante_id: 10, dependencia_solicitante_id: 20 }).subscribe();
     crud.put(42, { tipo_control_id: 6611 }).subscribe();
-    const reqs = http.match(`${CRUD}/contrato_general/42`);
+    const reqs = http.match(`${CRUD}/contratos-generales/42`);
     expect(reqs.map((r) => r.request.method)).toEqual(['PUT', 'PUT', 'PUT']);
     expect(reqs.map((r) => r.request.body)).toEqual([
       { proveedor_numero_documento: '1000000001', tipo_persona_id: 1 },
@@ -185,15 +185,15 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       contrato_general_id: { id: 42 },
     };
     crud.getOrdenadores({ query: DEL_CONTRATO, sortby: 'fecha_creacion,id', order: 'desc', limit: 1 }).subscribe();
-    http.expectOne(`${CRUD}/ordenador_contrato/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
+    http.expectOne(`${CRUD}/ordenadores-contrato/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
 
     crud.postOrdenadorContrato(ordenador).subscribe();
-    const post = http.expectOne(`${CRUD}/ordenador_contrato/`);
+    const post = http.expectOne(`${CRUD}/ordenadores-contrato/`);
     expect(post.request.method).toBe('POST');
     post.flush(ok({ id: 7 }));
 
     crud.putOrdenadorContrato(7, ordenador).subscribe();
-    const put = http.expectOne(`${CRUD}/ordenador_contrato/7`);
+    const put = http.expectOne(`${CRUD}/ordenadores-contrato/7`);
     expect(put.request.method).toBe('PUT');
     expect(put.request.body).toEqual(ordenador);
     put.flush(ok({ id: 7 }));
@@ -213,16 +213,16 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       contrato_general_id: { id: 42 },
     };
     crud.getSupervisores({ query: DEL_CONTRATO, sortby: 'id', order: 'asc', limit: 0 }).subscribe();
-    http.expectOne(`${CRUD}/supervisor_contrato/?query=${DEL_CONTRATO}&sortby=id&order=asc&limit=0`).flush(ok([]));
+    http.expectOne(`${CRUD}/supervisores/?query=${DEL_CONTRATO}&sortby=id&order=asc&limit=0`).flush(ok([]));
 
     crud.postSupervisor(supervisor).subscribe();
-    const post = http.expectOne(`${CRUD}/supervisor_contrato/`);
+    const post = http.expectOne(`${CRUD}/supervisores/`);
     expect(post.request.method).toBe('POST');
     expect(post.request.body).toEqual(supervisor);
     post.flush(ok({ id: 8 }));
 
     crud.putSupervisor(8, supervisor).subscribe();
-    const put = http.expectOne(`${CRUD}/supervisor_contrato/8`);
+    const put = http.expectOne(`${CRUD}/supervisores/8`);
     expect(put.request.method).toBe('PUT');
     put.flush(ok({ id: 8 }));
   });
@@ -230,7 +230,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   it('28. documento vigente por entidad_tipo, entidad_id y tipo, el más reciente', () => {
     const query = 'entidad_tipo:contrato_general,entidad_id:42,tipo_documento_id:6670,activo:true';
     gestion.getDocumentos({ query, sortby: 'fecha_creacion,id', order: 'desc', limit: 1 }).subscribe();
-    http.expectOne(`${CRUD}/documento_contrato/?query=${query}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
+    http.expectOne(`${CRUD}/documentos-contratos/?query=${query}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
   });
 
   it('29. POST de documento polimórfico (entidad_tipo contrato_general)', () => {
@@ -242,14 +242,14 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       documento_enlace: 'uid-1',
     };
     gestion.postDocumento(documento).subscribe();
-    const req = http.expectOne(`${CRUD}/documento_contrato/`);
+    const req = http.expectOne(`${CRUD}/documentos-contratos/`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(documento);
     req.flush(ok({ id: 1, ...documento }));
   });
 
-  it('33. amparos del contrato en /v1/amparo_poliza', () => {
+  it('33. amparos del contrato en /v1/amparos-polizas', () => {
     polizas.getAmparos({ query: DEL_CONTRATO, sortby: 'id', order: 'asc', limit: 0 }).subscribe();
-    http.expectOne(`${CRUD}/amparo_poliza/?query=${DEL_CONTRATO}&sortby=id&order=asc&limit=0`).flush(ok([]));
+    http.expectOne(`${CRUD}/amparos-polizas/?query=${DEL_CONTRATO}&sortby=id&order=asc&limit=0`).flush(ok([]));
   });
 });
