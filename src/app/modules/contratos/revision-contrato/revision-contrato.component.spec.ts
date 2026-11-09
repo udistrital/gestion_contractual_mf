@@ -11,7 +11,6 @@ import { environment } from 'src/environments/environment';
 import { MinutasMidService } from 'src/app/services/minuta-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
-import { VigenciaService } from 'src/app/services/vigencia.service';
 import { of, throwError } from 'rxjs';
 
 describe('RevisionContratoComponent', () => {
@@ -70,7 +69,6 @@ describe('RevisionContratoComponent', () => {
         { provide: MinutasMidService, useValue: mockMinutasMidService },
         { provide: RolService, useValue: mockRolService },
         { provide: UserService, useValue: mockUserService },
-        { provide: VigenciaService, useValue: { vigenciaActualId: jest.fn() } },
       ],
     });
     fixture = TestBed.createComponent(RevisionContratoComponent);
@@ -125,44 +123,29 @@ describe('RevisionContratoComponent', () => {
       expect(datos).toEqual(expect.objectContaining({ usuario_id: 7, usuario_rol: 'ORDENADOR_DEL_GASTO' }));
     });
 
-    it('el estado registrado se reconoce por Data.id de la respuesta del CRUD', () => {
-      const crear = jest.spyOn(component, 'crearEstadoContrato').mockImplementation();
-      const estado: any = { contrato_general_id: 42, estado_parametro_id: 6773, estado_interno_parametro_id: 6800 };
-      component.crearEstadoAutomaticoContrato(estado, 6801);
-      expect(crear).toHaveBeenCalled();
-    });
   });
 });
 
-describe('RevisionContratoComponent: número de contrato al aprobar', () => {
+describe('RevisionContratoComponent: estados y número de contrato desde el MID', () => {
   const { RECTORIA } = environment.UNIDADES_EJECUTORAS;
   const { EN_FIRMA_ORDENADOR } = environment.ESTADOS_INTERNOS;
   const { SUSCRITO } = environment.ESTADOS_GENERALES;
   const textos = { enviado: 'El contrato fue enviado al contratista' };
+  const respuesta = (numero_contrato: string | null, id = 1) => of({ Data: { estado: { id }, numero_contrato } });
 
   let crud: Record<string, jest.Mock>;
   let mid: Record<string, jest.Mock>;
   let alertas: Record<string, jest.Mock>;
-  let vigencias: Record<string, jest.Mock>;
-  let orden: string[];
 
   function montar(contrato: Record<string, unknown>) {
-    orden = [];
     crud = {
       get: jest.fn().mockReturnValue(of({ Data: { unidad_ejecutora_id: RECTORIA, ...contrato } })),
       getEstados: jest.fn().mockReturnValue(of({ Data: [{ estado_interno_parametro_id: EN_FIRMA_ORDENADOR }] })),
-      put: jest.fn().mockImplementation(() => {
-        orden.push('put');
-        return of({ Success: true, Status: '200', Data: {} });
-      }),
-      postEstadoContrato: jest.fn().mockImplementation(() => {
-        orden.push('estado');
-        return of({ Data: { id: 1 } });
-      }),
+      put: jest.fn(),
+      postEstadoContrato: jest.fn(),
     };
-    mid = { postNumeroContrato: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: '7' })) };
+    mid = { postEstadoContrato: jest.fn().mockReturnValue(respuesta('7')) };
     alertas = { showErrorAlert: jest.fn(), showSuccessAlert: jest.fn() };
-    vigencias = { vigenciaActualId: jest.fn().mockReturnValue(of(9001)) };
     TestBed.configureTestingModule({
       imports: [RouterTestingModule],
       declarations: [RevisionContratoComponent],
@@ -176,7 +159,6 @@ describe('RevisionContratoComponent: número de contrato al aprobar', () => {
         { provide: MinutasMidService, useValue: { getMinuta: jest.fn().mockReturnValue(of({ Data: 'pdf' })) } },
         { provide: RolService, useValue: { getRol: () => ['ORDENADOR_DEL_GASTO'] } },
         { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(9) } },
-        { provide: VigenciaService, useValue: vigencias },
       ],
     });
     const fixture = TestBed.createComponent(RevisionContratoComponent);
@@ -188,100 +170,72 @@ describe('RevisionContratoComponent: número de contrato al aprobar', () => {
     return component;
   }
 
-  it.each([[''], [null], [undefined]])('genera el número cuando numero_contrato es %j', (numero) => {
-    montar({ numero_contrato: numero }).aprobarContrato();
-    expect(mid['postNumeroContrato']).toHaveBeenCalledTimes(1);
-  });
-
-  it('no genera otro número si el contrato ya lo tiene', () => {
-    montar({ numero_contrato: '5', vigencia_id: 9001 }).aprobarContrato();
-    expect(mid['postNumeroContrato']).not.toHaveBeenCalled();
-    expect(crud['put']).not.toHaveBeenCalled();
-    expect(crud['postEstadoContrato']).toHaveBeenCalledTimes(2);
-  });
-
-  it('envía la vigencia y la unidad del contrato como enteros', () => {
-    montar({ numero_contrato: '', vigencia_id: 9002 }).aprobarContrato();
-    expect(mid['postNumeroContrato']).toHaveBeenCalledWith({
-      unidad_ejecutora_id: RECTORIA,
-      vigencia_id: 9002,
-      estado: SUSCRITO,
-    });
-    expect(vigencias['vigenciaActualId']).not.toHaveBeenCalled();
-  });
-
-  it('sin vigencia en el contrato usa la del año actual', () => {
-    montar({ numero_contrato: null, vigencia_id: null }).aprobarContrato();
-    expect(mid['postNumeroContrato'].mock.calls[0][0].vigencia_id).toBe(9001);
-  });
-
-  it('si Parámetros no trae la vigencia muestra el error y no pide número', () => {
-    const component = montar({ numero_contrato: '', vigencia_id: null });
-    vigencias['vigenciaActualId'].mockReturnValue(of(null));
+  it('registra los dos estados en el MID, sin contrato ni número en el cuerpo', async () => {
+    const component = montar({ numero_contrato: '' });
+    await new Promise((resuelto) => setTimeout(resuelto)); // persona_id llega por promesa
     component.aprobarContrato();
-    expect(alertas['showErrorAlert']).toHaveBeenCalledWith(
-      'No se encontró la vigencia del año actual en Parámetros',
-      'Error al consultar la vigencia'
-    );
-    expect(mid['postNumeroContrato']).not.toHaveBeenCalled();
+
+    expect(mid['postEstadoContrato']).toHaveBeenCalledTimes(2);
+    const [[id1, primero], [id2, segundo]] = mid['postEstadoContrato'].mock.calls;
+    expect([id1, id2]).toEqual([42, 42]);
+    expect(segundo.estado_parametro_id).toBe(SUSCRITO);
+    for (const cambio of [primero, segundo]) {
+      expect(cambio).not.toHaveProperty('contrato_general_id');
+      expect(cambio).not.toHaveProperty('numero_contrato');
+      expect(cambio).toEqual(expect.objectContaining({ usuario_id: 9, usuario_rol: 'ORDENADOR_DEL_GASTO' }));
+    }
+  });
+
+  it('no calcula ni guarda el número: no llama al CRUD para eso', () => {
+    montar({ numero_contrato: '' }).aprobarContrato();
+
+    expect(crud['put']).not.toHaveBeenCalled();
     expect(crud['postEstadoContrato']).not.toHaveBeenCalled();
   });
 
-  it('si la consulta a Parámetros falla muestra el error y no pide número', () => {
-    const component = montar({ numero_contrato: '', vigencia_id: null });
-    vigencias['vigenciaActualId'].mockReturnValue(throwError(() => new Error('500')));
-    component.aprobarContrato();
-    expect(alertas['showErrorAlert']).toHaveBeenCalledWith('No se encontró la vigencia del año actual en Parámetros');
-    expect(mid['postNumeroContrato']).not.toHaveBeenCalled();
-  });
+  it('muestra el número que asigna el MID', () => {
+    const component = montar({ numero_contrato: '' });
+    mid['postEstadoContrato'].mockReturnValueOnce(respuesta(null)).mockReturnValueOnce(respuesta('7'));
 
-  it('guarda número y vigencia antes de registrar los estados', () => {
-    montar({ numero_contrato: '', vigencia_id: null }).aprobarContrato();
-    expect(crud['put']).toHaveBeenCalledWith(42, {
-      numero_contrato: '7',
-      vigencia_id: 9001,
-    });
-    expect(orden).toEqual(['put', 'estado', 'estado']);
+    component.aprobarContrato();
+
+    expect(component.numero_contrato).toBe('7');
     expect(alertas['showSuccessAlert']).toHaveBeenCalledWith(
       `${textos.enviado}. Número de contrato: 7`,
       'CONTRATO ENVIADO'
     );
   });
 
-  it('si el MID falla muestra el error y no registra estados', () => {
-    const component = montar({ numero_contrato: '' });
-    mid['postNumeroContrato'].mockReturnValue(throwError(() => new Error('500')));
+  it('si el contrato ya tenía número no lo anuncia como nuevo', () => {
+    const component = montar({ numero_contrato: '5' });
+    mid['postEstadoContrato'].mockReturnValue(respuesta('5'));
+
     component.aprobarContrato();
-    expect(alertas['showErrorAlert']).toHaveBeenCalledWith('Error al generar número de contrato');
-    expect(crud['put']).not.toHaveBeenCalled();
-    expect(crud['postEstadoContrato']).not.toHaveBeenCalled();
+
+    expect(alertas['showSuccessAlert']).toHaveBeenCalledWith(textos.enviado, 'CONTRATO ENVIADO');
   });
 
-  it('si el MID responde sin éxito muestra el error y no registra estados', () => {
+  it('si falla el primer estado no registra el segundo', () => {
     const component = montar({ numero_contrato: '' });
-    mid['postNumeroContrato'].mockReturnValue(of({ Success: false, Status: 500 }));
-    component.aprobarContrato();
-    expect(alertas['showErrorAlert']).toHaveBeenCalled();
-    expect(crud['postEstadoContrato']).not.toHaveBeenCalled();
-  });
+    mid['postEstadoContrato'].mockReturnValue(throwError(() => ({ status: 500 })));
 
-  it('si no se puede guardar el número no registra estados', () => {
-    const component = montar({ numero_contrato: '' });
-    crud['put'].mockReturnValue(throwError(() => new Error('500')));
     component.aprobarContrato();
-    expect(alertas['showErrorAlert']).toHaveBeenCalledWith('Error al guardar número de contrato');
-    expect(crud['postEstadoContrato']).not.toHaveBeenCalled();
-    expect(component.numero_contrato).toBe('');
-  });
 
-  it('un reintento tras fallar los estados no genera otro número', () => {
-    const component = montar({ numero_contrato: '' });
-    crud['postEstadoContrato'].mockReturnValue(throwError(() => new Error('500')));
-    component.aprobarContrato();
+    expect(mid['postEstadoContrato']).toHaveBeenCalledTimes(1);
     expect(alertas['showErrorAlert']).toHaveBeenCalledWith('Error al crear estado automático');
+  });
 
-    crud['postEstadoContrato'].mockReturnValue(of({ Data: { id: 1 } }));
+  it('muestra el motivo del MID cuando no puede asignar el número', () => {
+    const component = montar({ numero_contrato: '' });
+    mid['postEstadoContrato']
+      .mockReturnValueOnce(respuesta(null))
+      .mockReturnValueOnce(
+        throwError(() => ({ status: 400, error: { Message: 'El contrato no tiene vigencia_id' } }))
+      );
+
     component.aprobarContrato();
-    expect(mid['postNumeroContrato']).toHaveBeenCalledTimes(1);
+
+    expect(alertas['showErrorAlert']).toHaveBeenCalledWith('El contrato no tiene vigencia_id');
+    expect(alertas['showSuccessAlert']).not.toHaveBeenCalled();
   });
 });
