@@ -205,6 +205,42 @@ describe('PasoContratistasComponent', () => {
       expect(component.errorClases).toContain('No se pudieron cargar las clases de contratista');
     });
 
+    it('con el contratista bloqueado y sin clase no guarda', async () => {
+      await crearCon(Promise.resolve({ [environment.CLASE_CONTRATISTA_ID]: [] }));
+      fixture.componentRef.setInput('bloquearContratista', true);
+      fixture.componentRef.setInput('contratistaPrevalidado', {
+        proveedor: { tipo_persona: 'NATURAL', numero_documento: '1000000001', nombre_completo_proveedor: 'CONTRATISTA DE PRUEBA', tipo_persona_id: 1 },
+        contratos: [],
+      });
+      fixture.componentRef.setInput('contratoGeneral', { id: 105 } as any);
+      fixture.detectChanges();
+      await tick();
+      // El contratista prevalidado no se borra aunque no haya clase.
+      expect(component.datosContratista).toBeTruthy();
+      component.guardarYContinuar();
+      expect(mockContratoGeneralCrudService.put).not.toHaveBeenCalled();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(expect.stringContaining('No se pudieron cargar las clases'));
+    });
+
+    it('si el prevalidado llega antes que las clases, lo conserva y luego fija Contratista Único', async () => {
+      let responder: (valor: unknown) => void = () => {};
+      mockParametrosService.getParametrosPorTipo.mockReturnValueOnce(new Promise((r) => (responder = r)));
+      fixture = TestBed.createComponent(PasoContratistasComponent);
+      component = fixture.componentInstance;
+      fixture.componentRef.setInput('bloquearContratista', true);
+      fixture.componentRef.setInput('contratistaPrevalidado', {
+        proveedor: { tipo_persona: 'NATURAL', numero_documento: '1000000001', nombre_completo_proveedor: 'CONTRATISTA DE PRUEBA', tipo_persona_id: 1 },
+        contratos: [],
+      });
+      fixture.detectChanges();
+      expect(component.datosContratista).toBeTruthy();
+      responder({ [environment.CLASE_CONTRATISTA_ID]: CLASES });
+      await tick();
+      expect(component.datosContratista).toBeTruthy();
+      expect(component.form.getRawValue().claseContratista).toBe(UNICO);
+      expect(component.form.getRawValue().documentoContratista).toBe('1000000001');
+    });
+
     it('sin "Contratista Único" entre las opciones también avisa', async () => {
       await crearCon(Promise.resolve({ [environment.CLASE_CONTRATISTA_ID]: [{ Id: CONSORCIO, Nombre: 'Consorcio' }] }));
       expect(component.errorClases).not.toBe('');
