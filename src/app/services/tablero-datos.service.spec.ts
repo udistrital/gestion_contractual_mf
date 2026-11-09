@@ -62,7 +62,7 @@ describe('TableroDatosService', () => {
       `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Nombre:2026&fields=Id&limit=1`
     );
     expect(requestManager.setPath).toHaveBeenCalledWith('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    expect(requestManager.get).toHaveBeenCalledWith('v1/tableros/contratos?vigencia-id=6900');
+    expect(requestManager.get).toHaveBeenCalledWith('tableros/contratos?vigencia-id=6900');
   });
 
   it('guarda el Id de cada vigencia para no volver a consultarlo', async () => {
@@ -75,7 +75,7 @@ describe('TableroDatosService', () => {
   it('sin vigencia trae todas las vigencias', async () => {
     await firstValueFrom(service.cargarContratos('', hoy));
     expect(parametrosService.get).not.toHaveBeenCalled();
-    expect(requestManager.get).toHaveBeenCalledWith('v1/tableros/contratos');
+    expect(requestManager.get).toHaveBeenCalledWith('tableros/contratos');
   });
 
   it('un año sin parámetro de vigencia no consulta el CRUD', async () => {
