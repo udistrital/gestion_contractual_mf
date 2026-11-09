@@ -51,6 +51,11 @@ export class PasoSupervisoresComponent implements OnInit {
   }]
   sedes: SedeContratoMidResponse[] = [];
   dependenciasPorSede: { [key: number]: DependenciaContratoMidResponse[] } = {};
+  // El CRUD v2 ya no guarda la sede (crud#51 3a1e5ab): la sede solo filtra las dependencias.
+  // Al cargar un contrato la sede queda vacía y la dependencia guardada se ofrece sola,
+  // para que se vea sin borrarla.
+  dependenciaGuardadaSolicitante: DependenciaContratoMidResponse | null = null;
+  dependenciasGuardadasSupervisor: (DependenciaContratoMidResponse | null)[] = [];
   solicitanteSaved = false;
   cargandoDatosGuardados = false;
   private contratoCargadoId: number = 0;
@@ -71,7 +76,7 @@ export class PasoSupervisoresComponent implements OnInit {
   constructor() {
     this.form = this._formBuilder.group({
       solicitante: this._formBuilder.group({
-        sede: [null, Validators.required],
+        sede: [null],
         dependencia: [null, Validators.required],
       }),
       supervisores: this._formBuilder.array([this.crearSupervisorFormGroup()]),
@@ -120,19 +125,12 @@ export class PasoSupervisoresComponent implements OnInit {
       .subscribe({
         next: (response: any) => {
           const data = response?.Data;
-          if (data && (data.sede_solicitante_id || data.dependencia_solicitante_id)) {
-            const sedeId = data.sede_solicitante_id;
-            const depId = data.dependencia_solicitante_id;
+          if (data?.dependencia_solicitante_id) {
+            const depId = Number(data.dependencia_solicitante_id);
             this.solicitanteId = contratoId;
             this.solicitanteSaved = true;
-
-            if (sedeId) {
-              this.cargarDependencias(Number(sedeId), 'solicitante', undefined, false);
-            }
-            this.form.get('solicitante')?.patchValue({
-              sede: sedeId,
-              dependencia: depId,
-            });
+            this.dependenciaGuardadaSolicitante = dependenciaGuardada(depId);
+            this.form.get('solicitante')?.patchValue({ dependencia: depId });
             this.cdRef.detectChanges();
             this.aplicarModoVisualizacion();
           }
@@ -176,19 +174,15 @@ export class PasoSupervisoresComponent implements OnInit {
                 cargo_legado: supervisor.cargo_legado,
               };
 
-              const sedeId = Number(supervisor.sede_id);
               const depId = Number(supervisor.dependencia_id);
 
-              if (sedeId) {
-                this.cargarDependencias(sedeId, 'supervisor', index, false);
-              }
               if (depId) {
+                this.dependenciasGuardadasSupervisor[index] = dependenciaGuardada(depId, supervisor.dependencia_legado);
                 this.cargarSupervisor(String(depId), index);
               }
 
               supervisorForm.patchValue({
-                sede: sedeId,
-                dependencia: depId,
+                dependencia: depId || null,
                 codigoVerificacion: supervisor.digito_verificacion,
                 // Se guarda una sola vez en el contrato (ContratoGeneral.TipoControlId).
                 tipoControl: this.contratoGeneral()?.tipo_control_id ?? null,
@@ -226,7 +220,6 @@ export class PasoSupervisoresComponent implements OnInit {
     const contratoId = this.contratoGeneral()?.id as number;
     this.contratoGeneralCrudService
       .put(contratoId, {
-        sede_solicitante_id: Number(this.form.get('solicitante.sede')?.value),
         dependencia_solicitante_id: Number(
           this.form.get('solicitante.dependencia')?.value
         ),
@@ -288,7 +281,6 @@ export class PasoSupervisoresComponent implements OnInit {
           dependencia_legado: this.supervisorLegacy[i].dependencia_legado,
           cargo_legado: this.supervisorLegacy[i].cargo_legado,
           digito_verificacion: entero(supervisorGroup.get('codigoVerificacion')?.value),
-          sede_id: entero(supervisorGroup.get('sede')?.value),
           dependencia_id: entero(supervisorGroup.get('dependencia')?.value),
           contrato_general_id: { id: this.contratoGeneral()?.id as number },
         };
@@ -365,18 +357,21 @@ export class PasoSupervisoresComponent implements OnInit {
   // Métodos existentes mantenidos
   getDependenciasSolicitante(): DependenciaContratoMidResponse[] {
     const sedeId = this.form.get('solicitante.sede')?.value;
-    return sedeId ? this.dependenciasPorSede[Number(sedeId)] || [] : [];
+    if (sedeId) return this.dependenciasPorSede[Number(sedeId)] || [];
+    return this.dependenciaGuardadaSolicitante ? [this.dependenciaGuardadaSolicitante] : [];
   }
 
   getDependenciasSupervisor(index: number): DependenciaContratoMidResponse[] {
     const supervisor = this.getSupervisoresFormArray().at(index);
     const sedeId = supervisor?.get('sede')?.value;
-    return sedeId ? this.dependenciasPorSede[Number(sedeId)] || [] : [];
+    if (sedeId) return this.dependenciasPorSede[Number(sedeId)] || [];
+    const guardada = this.dependenciasGuardadasSupervisor[index];
+    return guardada ? [guardada] : [];
   }
 
   private crearSupervisorFormGroup() {
     return this._formBuilder.group({
-      sede: [null, Validators.required],
+      sede: [null],
       dependencia: [null, Validators.required],
       nombre: [{value: '', disabled: true}, Validators.required],
       cargo: [{value: '', disabled: true}, Validators.required],
@@ -594,4 +589,9 @@ export class PasoSupervisoresComponent implements OnInit {
       console.log('Step Info General - out of view');
     }
   }
+}
+
+/** Opción de la dependencia guardada cuando no hay sede; sin nombre se muestra el Id. */
+function dependenciaGuardada(id: number, nombre?: string | null): DependenciaContratoMidResponse {
+  return { id, nombre: nombre || `Dependencia guardada (Id ${id})` };
 }

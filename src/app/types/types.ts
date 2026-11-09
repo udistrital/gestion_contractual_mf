@@ -41,7 +41,6 @@ export interface ContratoGeneral {
   proveedor_numero_documento?: string;
   tipo_persona_id?: number | null;
   clase_proveedor_id?: number | null;
-  sede_solicitante_id?: number | null;
   dependencia_solicitante_id?: number | null;
 }
 
@@ -267,7 +266,6 @@ export interface SupervisorToSave {
   cargo_id?: number;
   documento?: number;
   digito_verificacion: number | null;
-  sede_id: number | null;
   dependencia_id: number | null;
   contrato_general_id: ReferenciaCrud;
 }

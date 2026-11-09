@@ -36,8 +36,7 @@
               label="Sede Universitaria Solicitante"
               [items]="sedes"
               [control]="form.get('solicitante.sede')"
-              [soloLectura]="viewMode()"
-              [required]="true">
+              [soloLectura]="viewMode()">
             </app-searchable-select>
           </div>
           <div class="col-12 col-md-6">
@@ -130,9 +129,6 @@
                         </mat-option>
                       }
                     </mat-select>
-                    @if (supervisorGroup.get('sede')?.hasError('required')) {
-                      <mat-error>Este campo es requerido</mat-error>
-                    }
                   </mat-form-field>
                 </div>
 
