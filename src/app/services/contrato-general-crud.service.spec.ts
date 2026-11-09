@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService, rutaConsulta } from './contrato-general-crud.service';
 import { of } from 'rxjs';
+import Swal from 'sweetalert2';
 import { VigenciaService } from './vigencia.service';
 import { GestionContractualCrudService } from './gestion-contractual-crud.service';
 import { PolizasService } from './polizas.service';
@@ -78,6 +79,30 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(cuerpo);
     req.flush(ok({ id: 42, ...cuerpo }));
+  });
+
+  describe('alerta genérica de errores en el POST del contrato', () => {
+    let alerta: jest.SpyInstance;
+    beforeEach(() => {
+      alerta = jest.spyOn(Swal, 'fire').mockResolvedValue({} as any);
+    });
+    afterEach(() => alerta.mockRestore());
+
+    it('un 409 se propaga sin la alerta genérica: el registro reintenta y muestra el resultado', () => {
+      let estado = 0;
+      crud.post({ consecutivo_elaboracion: '27' }).subscribe({ error: (e) => (estado = e.status) });
+      http.expectOne(`${CRUD}/contratos-generales/`).flush({ Success: false }, { status: 409, statusText: 'Conflict' });
+      expect(estado).toBe(409);
+      expect(alerta).not.toHaveBeenCalled();
+    });
+
+    it('otros errores siguen mostrando la alerta genérica', () => {
+      let estado = 0;
+      crud.post({ consecutivo_elaboracion: '27' }).subscribe({ error: (e) => (estado = e.status) });
+      http.expectOne(`${CRUD}/contratos-generales/`).flush({ Success: false }, { status: 400, statusText: 'Bad Request' });
+      expect(estado).toBe(400);
+      expect(alerta).toHaveBeenCalledWith(expect.objectContaining({ title: 'Error 400' }));
+    });
   });
 
   it('3. PUT /v1/contratos-generales/{id} parcial, sin id en el cuerpo', () => {

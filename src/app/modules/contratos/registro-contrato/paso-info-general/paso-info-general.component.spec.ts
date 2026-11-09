@@ -224,7 +224,9 @@ describe('PasoInfoGeneralComponent: guardado', () => {
       expect(crud['post']).toHaveBeenCalledTimes(2);
       expect(crud['post'].mock.calls[1][0]).toEqual(expect.objectContaining({ consecutivo_elaboracion: '28', vigencia_id: 9001 }));
       expect(crud['postEstadoContrato']).toHaveBeenCalledTimes(1);
-      expect(TestBed.inject(AlertService).showSuccessAlert).toHaveBeenCalled();
+      // Solo el resultado final: éxito, sin alerta de error por el primer 409.
+      expect(TestBed.inject(AlertService).showSuccessAlert).toHaveBeenCalledTimes(1);
+      expect(TestBed.inject(AlertService).showErrorAlert).not.toHaveBeenCalled();
     });
 
     it('si el 409 se repite no reintenta más y muestra un error claro', async () => {
@@ -234,10 +236,12 @@ describe('PasoInfoGeneralComponent: guardado', () => {
       expect(mid['postConsecutivo']).toHaveBeenCalledTimes(2);
       expect(crud['post']).toHaveBeenCalledTimes(2);
       expect(crud['postEstadoContrato']).not.toHaveBeenCalled();
+      expect(TestBed.inject(AlertService).showErrorAlert).toHaveBeenCalledTimes(1);
       expect(TestBed.inject(AlertService).showErrorAlert).toHaveBeenCalledWith(
         expect.stringContaining('mismo consecutivo'),
         'Error al asignar el consecutivo'
       );
+      expect(TestBed.inject(AlertService).showSuccessAlert).not.toHaveBeenCalled();
       expect(component.guardando()).toBe(false);
     });
 
