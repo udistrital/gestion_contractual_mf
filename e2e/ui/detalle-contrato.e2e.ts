@@ -336,12 +336,11 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
 
     const solicitante = (label: string) => valorSelect(seccion.locator('app-searchable-select', { hasText: label }));
 
-    // El CRUD v2 ya no guarda la sede (crud#51 3a1e5ab): el MID (simulado) da el nombre
-    // de la dependencia guardada y su única sede, que se precarga.
-    await expect.soft(solicitante('Sede Universitaria Solicitante')).toHaveText(/Sede Calle 40/);
+    // La sede se quitó del formulario a pedido de la clienta; el nombre de la dependencia
+    // guardada sale del MID (simulado).
+    await expect.soft(seccion.getByText(/Sede Universitaria/)).toHaveCount(0);
     await expect.soft(solicitante('Dependencia Solicitante')).toHaveText(/Facultad de Ingeniería/);
-    await expect.soft(valorSelect(formField('sede').first())).toHaveText(/Sede Calle 40/);
-    await expect.soft(valorSelect(formField('dependencia').first())).toHaveText(/Facultad de Ingeniería/);
+    await expect.soft(solicitante('Dependencia Supervisor')).toHaveText(/Facultad de Ingeniería/);
     await expect.soft(seccion).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(seccion).toContainText('Decano');
     // "Tipo y Alcance del Control" se carga de ContratoGeneral.TipoControlId.

@@ -294,6 +294,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
             useValue: {
               getSedes: jest.fn().mockReturnValue(of([])),
               getDependenciasBySede: jest.fn().mockReturnValue(of([])),
+              getDependencias: jest.fn().mockReturnValue(of([{ id: 20, nombre: 'Facultad de Ingeniería' }])),
               getDependencia: jest
                 .fn()
                 .mockReturnValue(of({ id: 20, nombre: 'Facultad de Ingeniería', sedes: [{ id: 10, nombre: 'Sede Calle 40' }] })),

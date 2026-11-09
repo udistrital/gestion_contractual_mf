@@ -150,6 +150,7 @@ export function responderServicioExterno(route: Route, ruta: string, query: URLS
   }
   if (ruta === 'gestion_contractual_mid/espacios-fisicos/sedes') return json(ok(SEDES));
   if (/^gestion_contractual_mid\/espacios-fisicos\/dependencias-sede\/\d+$/.test(ruta)) return json(ok(DEPENDENCIAS));
+  if (ruta === 'gestion_contractual_mid/espacios-fisicos/dependencias') return json(ok(DEPENDENCIAS));
   const dependencia = ruta.match(/^gestion_contractual_mid\/espacios-fisicos\/dependencias\/(\d+)$/);
   if (dependencia) {
     const encontrada = DEPENDENCIAS.find((d) => d.id === Number(dependencia[1]));
