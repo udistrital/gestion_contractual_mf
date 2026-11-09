@@ -23,9 +23,12 @@ import { CLASE_CONTRATISTA_UNICO, CORE_MF_STUB, PROVEEDOR, VIGENCIA_ACTUAL_ID, r
  * El navegador corre a las 20:30 de Colombia (en UTC ya es el día siguiente) para
  * comprobar el día de las columnas date; la base se prueba en America/Bogota.
  *
- * Ejecutar: CRUD_BEEGO_URL=http://localhost:8080/ pnpm run test:e2e -- registro-crud-beego
+ * Ejecutar: CRUD_BEEGO_URL=http://localhost:8080/ [MID_BEEGO_URL=http://localhost:8081/] pnpm run test:e2e -- registro-crud-beego
  */
 const CRUD_BEEGO_URL = process.env.CRUD_BEEGO_URL;
+// Con MID_BEEGO_URL, espacios físicos y el consecutivo van al MID real (Oikos simulado); si no, se simulan aquí.
+const MID_BEEGO_URL = process.env.MID_BEEGO_URL?.replace(/\/$/, '');
+const peticionesAlMid: string[] = [];
 const CONTENEDOR_BD = process.env.CRUD_BEEGO_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
 const EVIDENCIAS = process.env.EVIDENCIAS_390_BEEGO ?? join(homedir(), 'argo_repos', 'evidencias-390-beego');
 
@@ -62,6 +65,16 @@ async function responder(route: Route): Promise<void> {
     return route.fulfill({ response: respuesta });
   }
   if (ruta === 'gestion_contractual_mid/contratos-generales/consecutivo') cuerposConsecutivo.push(route.request().postDataJSON());
+  // El consecutivo también va al MID real: con la única del crud#51 (0307723) un valor fijo
+  // chocaría entre corridas.
+  if (
+    MID_BEEGO_URL &&
+    (ruta.startsWith('gestion_contractual_mid/espacios-fisicos/') || ruta === 'gestion_contractual_mid/contratos-generales/consecutivo')
+  ) {
+    const destino = `${MID_BEEGO_URL}/${ruta.replace('gestion_contractual_mid/', '')}${url.search}`;
+    peticionesAlMid.push(`${route.request().method()} ${destino}`);
+    return route.fulfill({ response: await route.fetch({ url: destino }) });
+  }
   const externa = responderServicioExterno(route, ruta, url.searchParams);
   if (externa) return externa;
   noSimuladas.push(`${route.request().method()} ${url.pathname}${url.search}`);
@@ -301,9 +314,10 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
 
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
-    // Sin sede guardada, la sede queda vacía y se ve la dependencia guardada.
-    await expect.soft(supervisores.locator('app-searchable-select', { hasText: 'Sede Universitaria Solicitante' })).not.toContainText('Sede Calle 40');
-    await expect.soft(buscable(supervisores, 'Dependencia Solicitante')).toHaveText(/Dependencia guardada \(Id 20\)/);
+    // El CRUD no guarda la sede: el MID da el nombre de la dependencia y su única sede.
+    await expect.soft(buscable(supervisores, 'Sede Universitaria Solicitante')).toHaveText(/Sede Calle 40/);
+    await expect.soft(buscable(supervisores, 'Dependencia Solicitante')).toHaveText(/Facultad de Ingeniería/);
+    await expect.soft(supervisores.locator('mat-select[formcontrolname="sede"]').first()).toContainText('Sede Calle 40');
     await expect.soft(supervisores.locator('mat-select[formcontrolname="dependencia"]').first()).toContainText('Facultad de Ingeniería');
     await expect.soft(supervisores).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(supervisores.locator('mat-select[formcontrolname="tipoControl"]').first()).toContainText('Técnico, administrativo y financiero');
@@ -344,9 +358,14 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
     await expect(supervisores).toContainText('SUPERVISOR DE PRUEBA');
-    // Precarga: dependencias guardadas sin sede.
-    await expect(buscable(supervisores, 'Dependencia Solicitante')).toHaveText(/Dependencia guardada \(Id 20\)/);
+    // Precarga: nombre de la dependencia y sede desde el MID.
+    await expect(buscable(supervisores, 'Dependencia Solicitante')).toHaveText(/Facultad de Ingeniería/);
+    await expect(buscable(supervisores, 'Sede Universitaria Solicitante')).toHaveText(/Sede Calle 40/);
+    await expect(supervisores.locator('mat-select[formcontrolname="sede"]').first()).toContainText('Sede Calle 40');
     await expect(supervisores.locator('mat-select[formcontrolname="dependencia"]').first()).toContainText('Facultad de Ingeniería');
+    if (MID_BEEGO_URL) {
+      expect.soft(peticionesAlMid.some((p) => p.includes('/espacios-fisicos/dependencias/20'))).toBe(true);
+    }
     await capturar(page, '09a-edicion-solicitante-supervisor');
     const solicitante = page.waitForRequest(
       (r) => r.method() === 'PUT' && r.url().includes(`/v1/contratos-generales/${contratoId}`) && 'dependencia_solicitante_id' in (r.postDataJSON() ?? {})

@@ -1,6 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AlertService } from 'src/app/services/alert.service';
 import { CdpsService } from 'src/app/services/cdps.service';
@@ -275,7 +275,15 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
     let component: PasoSupervisoresComponent;
     let crud: Record<string, jest.Mock>;
 
-    async function montar(supervisoresGuardados: unknown[]) {
+    let mid: Record<string, jest.Mock>;
+    const DEPENDENCIA_20 = { id: 20, nombre: 'Facultad de Ingeniería', sedes: [{ id: 10, nombre: 'Sede Calle 40' }] };
+
+    async function montar(supervisoresGuardados: unknown[], dependencia: any = throwError(() => new Error('sin MID'))) {
+      mid = {
+        getSedes: jest.fn().mockReturnValue(of([])),
+        getDependenciasBySede: jest.fn().mockReturnValue(of([])),
+        getDependencia: jest.fn().mockReturnValue(dependencia),
+      };
       crud = {
         // El CRUD v2 ya no guarda sede_solicitante_id ni sede_id del supervisor (crud#51 3a1e5ab).
         get: jest.fn().mockReturnValue(of(ok({ ...contrato, dependencia_solicitante_id: 20 }))),
@@ -288,13 +296,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
         declarations: [PasoSupervisoresComponent],
         providers: [
           { provide: AlertService, useValue: alertServiceMock() },
-          {
-            provide: ContratoGeneralMidService,
-            useValue: {
-              getSedes: jest.fn().mockReturnValue(of([])),
-              getDependenciasBySede: jest.fn().mockReturnValue(of([])),
-            },
-          },
+          { provide: ContratoGeneralMidService, useValue: mid },
           { provide: ContratoGeneralCrudService, useValue: crud },
           {
             provide: OrdenadoresSupervisoresContratacionMidService,
@@ -352,7 +354,6 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
 
     it('la sede solo filtra: al elegirla se listan sus dependencias', async () => {
       await montar([]);
-      const mid = TestBed.inject(ContratoGeneralMidService) as unknown as Record<string, jest.Mock>;
       mid['getDependenciasBySede'].mockReturnValue(of([{ id: 21, nombre: 'Facultad de Ingeniería' }]));
       component.form.get('solicitante.sede')?.setValue(10);
       expect(mid['getDependenciasBySede']).toHaveBeenCalledWith(10);
@@ -360,6 +361,44 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       expect(component.form.get('solicitante.sede')?.hasError('required')).toBe(false);
       component.form.get('solicitante.sede')?.setValue(null);
       expect(component.form.get('solicitante.sede')?.valid).toBe(true);
+    });
+
+    describe('nombre y sede desde GET espacios-fisicos/dependencias/{id} del MID', () => {
+      it('con una sede: precarga la sede, carga sus dependencias sin borrar la guardada y muestra el nombre', async () => {
+        await montar([], of(DEPENDENCIA_20));
+        mid['getDependenciasBySede'].mockReturnValue(of([{ id: 20, nombre: 'Facultad de Ingeniería' }, { id: 21, nombre: 'Otra' }]));
+        expect(mid['getDependencia']).toHaveBeenCalledWith(20);
+        expect(component.form.get('solicitante')?.getRawValue()).toEqual({ sede: 10, dependencia: 20 });
+        expect(mid['getDependenciasBySede']).toHaveBeenCalledWith(10);
+        expect(component.dependenciaGuardadaSolicitante).toEqual({ id: 20, nombre: 'Facultad de Ingeniería' });
+      });
+
+      it('con varias sedes: no preselecciona ninguna y muestra la dependencia con su nombre', async () => {
+        await montar([], of({ ...DEPENDENCIA_20, sedes: [{ id: 10, nombre: 'A' }, { id: 11, nombre: 'B' }] }));
+        expect(component.form.get('solicitante')?.getRawValue()).toEqual({ sede: null, dependencia: 20 });
+        expect(component.getDependenciasSolicitante()).toEqual([{ id: 20, nombre: 'Facultad de Ingeniería' }]);
+        expect(mid['getDependenciasBySede']).not.toHaveBeenCalled();
+      });
+
+      it('si el MID falla: la dependencia queda con su Id y el formulario no se bloquea', async () => {
+        await montar([]);
+        expect(component.getDependenciasSolicitante()).toEqual([{ id: 20, nombre: 'Dependencia guardada (Id 20)' }]);
+        expect(component.form.get('solicitante.sede')?.valid).toBe(true);
+        expect(component.form.get('solicitante')?.getRawValue().dependencia).toBe(20);
+      });
+
+      it('supervisor: precarga la sede y conserva el nombre de dependencia_legado', async () => {
+        await montar([supervisorGuardado], of({ ...DEPENDENCIA_20, nombre: 'Nombre en Oikos' }));
+        const grupo = component.getSupervisoresFormArray().at(0);
+        expect(grupo.get('sede')?.value).toBe(10);
+        expect(grupo.get('dependencia')?.value).toBe(20);
+        expect(component.dependenciasGuardadasSupervisor[0]).toEqual({ id: 20, nombre: 'DEP' });
+      });
+
+      it('supervisor sin dependencia_legado: toma el nombre del MID', async () => {
+        await montar([{ ...supervisorGuardado, dependencia_legado: '' }], of(DEPENDENCIA_20));
+        expect(component.dependenciasGuardadasSupervisor[0]).toEqual({ id: 20, nombre: 'Facultad de Ingeniería' });
+      });
     });
 
     it('guarda el solicitante con PUT parcial en contrato_general', async () => {

@@ -336,10 +336,11 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
 
     const solicitante = (label: string) => valorSelect(seccion.locator('app-searchable-select', { hasText: label }));
 
-    // El CRUD v2 ya no guarda la sede (crud#51 3a1e5ab): la sede queda vacía y se ve la
-    // dependencia guardada; la del supervisor con su nombre en dependencia_legado.
-    await expect.soft(solicitante('Sede Universitaria Solicitante')).not.toHaveText(/Sede Calle 40/);
-    await expect.soft(solicitante('Dependencia Solicitante')).toHaveText(/Dependencia guardada \(Id 20\)/);
+    // El CRUD v2 ya no guarda la sede (crud#51 3a1e5ab): el MID (simulado) da el nombre
+    // de la dependencia guardada y su única sede, que se precarga.
+    await expect.soft(solicitante('Sede Universitaria Solicitante')).toHaveText(/Sede Calle 40/);
+    await expect.soft(solicitante('Dependencia Solicitante')).toHaveText(/Facultad de Ingeniería/);
+    await expect.soft(valorSelect(formField('sede').first())).toHaveText(/Sede Calle 40/);
     await expect.soft(valorSelect(formField('dependencia').first())).toHaveText(/Facultad de Ingeniería/);
     await expect.soft(seccion).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(seccion).toContainText('Decano');
