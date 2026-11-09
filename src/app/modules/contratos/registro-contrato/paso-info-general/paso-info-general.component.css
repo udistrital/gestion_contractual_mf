@@ -114,41 +114,20 @@
   letter-spacing: 0.5px;
 }
 
-/* Estimación de Término */
-.estimacion-termino-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* Campos de formulario a ancho completo */
+mat-form-field,
+.w-100 {
+  width: 100%;
+  display: block;
 }
 
-.estimacion-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #625e59;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.estimacion-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Estimación de Término (mismo mat-form-field outline para idéntica altura y alineación) */
+.estimacion-field ::ng-deep .mat-mdc-text-field-wrapper {
   background-color: #f2f4f6;
-  border: 1px solid #d8dadc;
-  border-radius: 4px;
-  height: 56px;
-  padding: 0 14px;
-  color: #191c1e;
 }
 
-.estimacion-icon {
-  color: #801313;
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
-}
-
-.estimacion-texto {
-  font-size: 13.5px;
+.estimacion-field input {
   font-weight: 600;
+  color: #191c1e;
+  cursor: default;
 }

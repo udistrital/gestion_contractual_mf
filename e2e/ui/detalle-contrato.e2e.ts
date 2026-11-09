@@ -103,24 +103,24 @@ const contratoEnConsulta = {
 };
 
 const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
-  ordenador_contrato: [
+  'ordenadores': [
     { id: 71, contrato_general_id: DEL_CONTRATO, tercero_id: null, cargo_id: 12, documento_identidad: '1000000003', resolucion: null, ordenador_argo_id: 1, ordenador_sicapital_id: 1001, activo: true },
   ],
-  disponibilidad_presupuestal: [
+  'disponibilidades-presupuestales': [
     { id: 501, contrato_general_id: DEL_CONTRATO, numero_cdp_id: 1234, vigencia_cdp_id: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
   ],
-  supervisor_contrato: [
+  supervisores: [
     { id: 61, contrato_general_id: DEL_CONTRATO, supervisor_id: 7788, documento: 1000000005, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
   ],
-  especificacion_tecnica: [
+  'especificaciones-tecnicas': [
     { id: 801, contrato_general_id: DEL_CONTRATO, descripcion: 'Osciloscopio digital de 4 canales 200 MHz', cantidad: 3, valor_unitario: 9500000, valor_total: 28500000, activo: true },
     { id: 802, contrato_general_id: DEL_CONTRATO, descripcion: 'Fuente de alimentación DC programable', cantidad: 5, valor_unitario: 3300000, valor_total: 16500000, activo: true },
   ],
-  amparo_poliza: [
+  'amparos-polizas': [
     { id: 901, contrato_general_id: DEL_CONTRATO, poliza_id: null, amparo_id: AMPARO_CUMPLIMIENTO, tipo_valor_amparo_id: 2, suficiencia: 20, valor: null, descripcion: 'Cumplimiento del contrato por el 20 % del valor', fecha_inicio: null, fecha_fin: null, activo: true },
     { id: 902, contrato_general_id: DEL_CONTRATO, poliza_id: null, amparo_id: AMPARO_CALIDAD, tipo_valor_amparo_id: 2, suficiencia: 10, valor: null, descripcion: 'Calidad de los bienes por el 10 % del valor', fecha_inicio: null, fecha_fin: null, activo: true },
   ],
-  estado_contrato: [
+  'estados-contrato': [
     { id: 3, contrato_general_id: DEL_CONTRATO, estado_parametro_id: 6773, estado_interno_parametro_id: 6799, actual: true, motivo: null, fecha_evento: null, usuario_id: 1, usuario_rol: 'ABOGADO_CONTRATACION_RECTOR', activo: true },
   ],
 };
@@ -136,8 +136,8 @@ const consultasCrud: string[] = [];
 /** Responde gestion_contractual_crud en el formato esperado del CRUD Beego v2. */
 function responderCrudBeego(route: Route, ruta: string, query: URLSearchParams): Promise<void> | null {
   const json = (data: unknown) => route.fulfill({ status: 200, json: data });
-  if (ruta === `gestion_contractual_crud/v1/contrato_general/${CONTRATO_ID}`) return json(ok(contrato));
-  const lista = ruta.match(/^gestion_contractual_crud\/v1\/(\w+)\/$/);
+  if (ruta === `gestion_contractual_crud/v1/contratos-generales/${CONTRATO_ID}`) return json(ok(contrato));
+  const lista = ruta.match(/^gestion_contractual_crud\/v1\/([\w-]+)\/$/);
   // Filtro por FK en snake_case, verificado contra la rama del CRUD.
   if (lista && (query.get('query') ?? '').includes(`contrato_general_id.id:${CONTRATO_ID}`)) {
     consultasCrud.push(`${lista[1]}?${query.toString()}`);
@@ -206,7 +206,7 @@ async function controlesHabilitados(seccion: Locator, excluir: string[] = []): P
     if (await campo.evaluate((el) => !!el.closest('.ql-tooltip'))) continue;
     const nombre = await nombreControl(campo);
     if (excluir.some((e) => nombre.includes(e))) continue;
-    if (await campo.isEnabled()) habilitados.push(nombre);
+    if (await campo.isEditable()) habilitados.push(nombre);
   }
   for (const select of await seccion.locator('mat-select').all()) {
     if ((await select.getAttribute('aria-disabled')) !== 'true') habilitados.push(await nombreControl(select));
@@ -310,19 +310,19 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
 
   await test.step('02 info presupuestal: CDP, ordenador y datos en solo lectura', async () => {
     const seccion = page.locator('app-paso-info-presupuestal');
-    const opcion = (control: string) => seccion.locator(`select[formcontrolname="${control}"] option:checked`);
+    const campo = (label: string) => valorSelect(seccion.locator('app-searchable-select', { hasText: label }));
 
     await expect.soft(seccion.locator('table')).toContainText('1234');
     await expect.soft(seccion.locator('table')).toContainText('FACULTAD DE INGENIERIA');
-    await expect.soft(opcion('tipoMoneda')).toHaveText('Peso colombiano');
+    await expect.soft(campo('Tipo de Moneda')).toHaveText(/Peso colombiano/);
     await expect.soft(seccion.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
-    await expect.soft(opcion('ordenadorGasto')).toHaveText('RECTOR');
+    await expect.soft(campo('Cargo Ordenador del Gasto')).toHaveText(/RECTOR/);
     await expect.soft(seccion.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
-    await expect.soft(opcion('origenRecurso')).toHaveText('Recursos propios');
-    await expect.soft(opcion('origenPresupuesto')).toHaveText('Presupuesto de la vigencia');
-    await expect.soft(opcion('tipoGasto')).toHaveText('Inversión');
-    await expect.soft(opcion('temaGasto')).toHaveText('Dotación de laboratorios');
-    await expect.soft(opcion('medioPago')).toHaveText('Transferencia electrónica');
+    await expect.soft(campo('Origen de Recursos')).toHaveText(/Recursos propios/);
+    await expect.soft(campo('Origen Presupuesto')).toHaveText(/Presupuesto de la vigencia/);
+    await expect.soft(campo('Tipo de Gasto')).toHaveText(/Inversión/);
+    await expect.soft(campo('Tema Gasto Inversión')).toHaveText(/Dotación de laboratorios/);
+    await expect.soft(campo('Medio de Pago')).toHaveText(/Transferencia electrónica/);
     await expect.soft(seccion.locator('app-editor-enriquecido .ql-editor')).toContainText('Un único pago');
 
     await verificarSoloLectura(seccion);

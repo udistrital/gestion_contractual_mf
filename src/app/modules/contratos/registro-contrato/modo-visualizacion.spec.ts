@@ -382,6 +382,14 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           { provide: AlertService, useValue: alertServiceMock() },
           { provide: ProveedoresService, useValue: proveedoresService },
           {
+            provide: ParametrosService,
+            useValue: {
+              getParametrosPorTipo: jest
+                .fn()
+                .mockResolvedValue({ [environment.CLASE_CONTRATISTA_ID]: [{ Id: 9120, Nombre: 'Contratista Único' }] }),
+            },
+          },
+          {
             provide: ContratoGeneralCrudService,
             useValue: {
               // El contratista vive en contrato_general (modelo v2).

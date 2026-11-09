@@ -54,6 +54,7 @@ interface Paragrafo {
 })
 export class PasoClausulasParagrafosComponent implements OnInit {
   nextStep = output<void>();
+  prevStep = output<void>();
   stepCompleted = output<boolean>();
   contratoGeneral = input<ContratoGeneral>()
   viewMode = input<boolean>(false);

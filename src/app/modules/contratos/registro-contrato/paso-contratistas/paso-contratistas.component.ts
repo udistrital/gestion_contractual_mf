@@ -18,10 +18,11 @@ import {
 } from '@angular/forms';
 import { ProveedoresService } from 'src/app/services/proveedores.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { ParametrosService } from 'src/app/services/parametros.service';
 import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { ApiResponse, ContratistaResponse, ContratoGeneral, DatosContratista, ProveedorObject } from 'src/app/types/types';
+import { ApiResponse, ContratistaResponse, ContratoGeneral, DatosContratista, ParametroResponse, ProveedorObject } from 'src/app/types/types';
 import { AlertService } from 'src/app/services/alert.service';
 
 
@@ -33,6 +34,7 @@ import { AlertService } from 'src/app/services/alert.service';
 })
 export class PasoContratistasComponent implements OnInit, OnDestroy {
   nextStep = output<void>();
+  prevStep = output<void>();
   stepCompleted = output<boolean>();
 
   private contratistaId: number | null = null;
@@ -42,7 +44,12 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
   viewMode = input<boolean>(false);
 
   form: FormGroup;
-  tiposContratista = [{ value: 'clase1', viewValue: 'Contratista Único' }];
+  // Clases de contratista del parámetro tipo 120. Solo "Contratista Único" tiene flujo;
+  // consorcio y unión temporal están sin definir.
+  tiposContratista: ParametroResponse[] = [];
+  claseContratistaUnicoId: number | null = null;
+  errorClases = '';
+  private clasesCargadas: Promise<void>;
   datosContratista: DatosContratista | null = null;
 
   contratistaObject: ProveedorObject = {
@@ -67,10 +74,12 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     private alertService: AlertService,
     private fb: FormBuilder,
     private proveedoresService: ProveedoresService,
-    private contratoGeneralCrudService: ContratoGeneralCrudService
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private parametrosService: ParametrosService
   ) {
+    this.clasesCargadas = this.cargarClasesContratista();
     this.form = this.fb.group({
-      claseContratista: ['clase1', Validators.required],
+      claseContratista: [null as number | null, Validators.required],
       documentoContratista: [
         '',
         [Validators.required, Validators.minLength(5)],
@@ -104,13 +113,45 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       .get('claseContratista')
       ?.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        this.mostrarConsulta = value === 'clase1';
+        // null: aún no hay clase (Parámetros no ha respondido); disable() también lo emite.
+        if (value == null) return;
+        this.mostrarConsulta = this.esContratistaUnico(value);
         if (!this.mostrarConsulta) {
           this.form.get('documentoContratista')?.reset();
           this.resetContratista();
         }
       });
     this.aplicarModoVisualizacion();
+  }
+
+  private cargarClasesContratista(): Promise<void> {
+    return this.parametrosService
+      .getParametrosPorTipo([environment.CLASE_CONTRATISTA_ID])
+      .then((parametros) => {
+        this.tiposContratista = parametros?.[environment.CLASE_CONTRATISTA_ID] ?? [];
+        // El Id de "Contratista Único" se toma por nombre: cambia entre ambientes.
+        this.claseContratistaUnicoId =
+          this.tiposContratista.find((clase) => normalizar(clase.Nombre) === 'contratista unico')?.Id ?? null;
+      })
+      .catch((error) => {
+        console.error('Error al cargar las clases de contratista:', error);
+        this.tiposContratista = [];
+        this.claseContratistaUnicoId = null;
+      })
+      .then(() => {
+        if (!this.claseContratistaUnicoId) {
+          this.errorClases =
+            'No se pudieron cargar las clases de contratista desde Parámetros. Intente más tarde o contacte al administrador.';
+          return;
+        }
+        if (this.form.get('claseContratista')?.value == null) {
+          this.form.patchValue({ claseContratista: this.claseContratistaUnicoId });
+        }
+      });
+  }
+
+  esContratistaUnico(claseId: number | null | undefined): boolean {
+    return claseId != null && claseId === this.claseContratistaUnicoId;
   }
 
   /** En modo visualización el formulario queda en solo lectura. */
@@ -129,9 +170,11 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       prevalidado.numero_documento ||
       '';
 
-    this.form.patchValue({
-      claseContratista: 'clase1',
-      documentoContratista: doc,
+    this.form.patchValue({ documentoContratista: doc });
+    this.clasesCargadas.then(() => {
+      if (this.claseContratistaUnicoId) {
+        this.form.patchValue({ claseContratista: this.claseContratistaUnicoId });
+      }
     });
     this.mostrarConsulta = true;
     this.actualizarObjetoContratista();
@@ -150,7 +193,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
 
   buscarContratista() {
     const { claseContratista, documentoContratista } = this.form.value;
-    if (claseContratista === 'clase1' && documentoContratista) {
+    if (this.esContratistaUnico(claseContratista) && documentoContratista) {
       this.errorMessage = '';
 
       this.proveedoresService
@@ -319,18 +362,21 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (response: any) => {
+        next: async (response: any) => {
+          await this.clasesCargadas;
           const documentoGuardado = response?.Data?.proveedor_numero_documento;
+          // Los contratos anteriores al parámetro no tienen clase: eran todos de contratista único.
+          const claseGuardada = response?.Data?.clase_proveedor_id ?? this.claseContratistaUnicoId;
           const contratista = documentoGuardado ? response.Data : null;
           const doc = documentoGuardado || docFallback;
           if (contratista) {
             this.contratistaId = contratoId;
           }
+          if (claseGuardada) {
+            this.form.patchValue({ claseContratista: claseGuardada });
+          }
           if (doc) {
-            this.form.patchValue({
-              claseContratista: 'clase1',
-              documentoContratista: doc,
-            });
+            this.form.patchValue({ documentoContratista: doc });
             this.buscarContratista();
           }
           this.aplicarModoVisualizacion();
@@ -340,13 +386,11 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
             this.stepCompleted.emit(!!contratista);
           }
         },
-        error: (error) => {
+        error: async (error) => {
           console.error('Error al cargar contratista:', error);
+          await this.clasesCargadas;
           if (docFallback) {
-            this.form.patchValue({
-              claseContratista: 'clase1',
-              documentoContratista: docFallback,
-            });
+            this.form.patchValue({ documentoContratista: docFallback });
             this.buscarContratista();
           }
         },
@@ -367,6 +411,12 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       this.datosContratista.proveedor?.tipo_persona_id ||
       (this.datosContratista as any).tipo_persona_id ||
       1;
+    // Con el contratista bloqueado el control está deshabilitado y no cuenta en la validez.
+    const claseProveedorId = this.form.getRawValue().claseContratista;
+    if (!claseProveedorId) {
+      this.alertService.showErrorAlert(this.errorClases || 'Seleccione la clase de contratista.');
+      return;
+    }
 
     // El contratista se guarda en contrato_general (PUT parcial).
     const request$ = this.contratoGeneralCrudService.put(
@@ -374,6 +424,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       {
         proveedor_numero_documento: String(doc),
         tipo_persona_id: Number(tipoPersonaId),
+        clase_proveedor_id: Number(claseProveedorId),
       }
     );
 
@@ -412,4 +463,9 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
     });
   }
 
+}
+
+/** Minúsculas y sin tildes, para comparar nombres de Parámetros. */
+function normalizar(texto: string | undefined): string {
+  return (texto ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
 }

@@ -60,11 +60,12 @@ export class RequestManager {
    * Perform a POST http request
    * @param endpoint service's end-point
    * @param element data to send as JSON
+   * @param estadosSinAlerta estados de error que maneja quien llama, sin la alerta genérica
    * @returns Observable<any>
    */
-  post(endpoint: any, element: any) {
+  post(endpoint: any, element: any, estadosSinAlerta: number[] = []) {
     return this.http.post<any>(`${this.path}${endpoint}`, element, this.httpOptions).pipe(
-      catchError((error) => this.errManager.handleError(error)),
+      catchError((error) => this.errManager.handleError(error, estadosSinAlerta)),
     );
   }
 

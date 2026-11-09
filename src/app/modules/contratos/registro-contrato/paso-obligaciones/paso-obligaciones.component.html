@@ -292,7 +292,7 @@
           type="button"
           mat-stroked-button
           color="primary"
-          matStepperPrevious
+          (click)="prevStep.emit()"
           class="dock-btn-back"
         >
           <mat-icon>arrow_back</mat-icon>

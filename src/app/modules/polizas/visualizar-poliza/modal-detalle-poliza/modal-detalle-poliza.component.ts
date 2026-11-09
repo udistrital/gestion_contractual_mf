@@ -73,14 +73,13 @@ export class ModalDetallePolizaComponent implements OnInit {
     }
 
     this.generandoActa = true;
-    const contratoId = Number(this.dataModal.contratoId);
     const fallo = (mensaje: string) => {
       this.generandoActa = false;
       ventana.close();
       this.alertService.showErrorAlert(mensaje);
     };
 
-    this.polizasService.getActaGuardada(contratoId).subscribe({
+    this.polizasService.getActaGuardada(this.poliza.id).subscribe({
       next: (response: any) => {
         const documento = (response?.Data as any[])?.[0];
         if (!documento?.documento_enlace) {

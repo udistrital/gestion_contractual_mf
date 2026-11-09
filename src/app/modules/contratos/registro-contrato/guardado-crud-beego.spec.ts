@@ -6,6 +6,7 @@ import { AlertService } from 'src/app/services/alert.service';
 import { CdpsService } from 'src/app/services/cdps.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { VigenciaService } from 'src/app/services/vigencia.service';
 import { OrdenadoresSupervisoresContratacionMidService } from 'src/app/services/ordenadores-supervisores-contratacion-mid.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { RolService } from 'src/app/services/rol.service';
@@ -58,6 +59,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
           },
           { provide: ContratoGeneralCrudService, useValue: crud },
           { provide: ContratoGeneralMidService, useValue: mid },
+          { provide: VigenciaService, useValue: { vigenciaActualId: () => of(9001) } },
           { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
         ],
         schemas: [NO_ERRORS_SCHEMA],

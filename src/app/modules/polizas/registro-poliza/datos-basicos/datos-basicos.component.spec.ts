@@ -90,6 +90,23 @@ describe('DatosBasicosComponent', () => {
       expect(component.isLoading).toBe(false);
     });
 
+    it('precarga las fechas con el mismo día guardado en el CRUD', () => {
+      (polizasService.getPolizaPorContrato as jest.Mock).mockReturnValue(
+        of({ Data: [polizaExistente] })
+      );
+
+      component.contratoId = '5';
+
+      const dia = (campo: string) => {
+        const fecha: Date = component.polizaForm.get(campo)?.value;
+        return [fecha.getFullYear(), fecha.getMonth() + 1, fecha.getDate()];
+      };
+      expect(dia('fecha_inicio')).toEqual([2026, 1, 1]);
+      expect(dia('fecha_fin')).toEqual([2026, 12, 31]);
+      expect(dia('fecha_expedicion')).toEqual([2025, 12, 1]);
+      expect(dia('fecha_aprobacion')).toEqual([2025, 12, 5]);
+    });
+
     it('no emite ni asigna polizaId si Data[0] no existe', () => {
       (polizasService.getPolizaPorContrato as jest.Mock).mockReturnValue(
         of({ Data: [] })

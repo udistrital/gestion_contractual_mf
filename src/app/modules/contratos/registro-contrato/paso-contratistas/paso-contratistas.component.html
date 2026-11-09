@@ -26,13 +26,18 @@
             <mat-label>Clase Contratista</mat-label>
             <mat-icon matPrefix>business</mat-icon>
             <mat-select formControlName="claseContratista">
-              @for (tipo of tiposContratista; track tipo.value) {
-                <mat-option [value]="tipo.value">
-                  {{ tipo.viewValue }}
+              @for (tipo of tiposContratista; track tipo.Id) {
+                <mat-option [value]="tipo.Id">
+                  {{ tipo.Nombre }}
                 </mat-option>
               }
             </mat-select>
           </mat-form-field>
+          @if (errorClases) {
+            <p class="clase-mensaje" role="alert">{{ errorClases }}</p>
+          } @else if (form.get('claseContratista')?.value != null && !esContratistaUnico(form.get('claseContratista')?.value)) {
+            <p class="clase-mensaje" role="status">El registro de consorcios y uniones temporales aún no está disponible.</p>
+          }
         </div>
       </div>
 
@@ -199,7 +204,7 @@
         type="button"
         mat-stroked-button
         class="btn-dock-volver"
-        matStepperPrevious>
+        (click)="prevStep.emit()">
         <mat-icon>arrow_back</mat-icon>
         <span>Volver: General y Presupuesto</span>
       </button>

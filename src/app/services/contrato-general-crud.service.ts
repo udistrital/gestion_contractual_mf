@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { RequestManager } from '../managers/requestManager';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+import { RECURSOS_CRUD } from '../core/constants/recursos-crud';
+import { VigenciaService } from './vigencia.service';
 import {
   CDPContratoCRUD,
   ConsultaCrud,
@@ -11,22 +14,26 @@ import {
 
 /**
  * Ruta de una consulta de lista del CRUD Beego v2:
- * v1/<recurso>/?query=campo:valor,...&sortby=...&order=...&limit=...
+ * <recurso>/?query=campo:valor,...&sortby=...&order=...&limit=...
  * El filtro (query) lo arma el componente que consume el service.
  */
 export function rutaConsulta(recurso: string, consulta: ConsultaCrud): string {
   const parametros = [`query=${consulta.query}`];
   if (consulta.sortby) parametros.push(`sortby=${consulta.sortby}`);
   if (consulta.order) parametros.push(`order=${consulta.order}`);
+  if (consulta.fields) parametros.push(`fields=${consulta.fields}`);
   parametros.push(`limit=${consulta.limit}`);
-  return `v1/${recurso}/?${parametros.join('&')}`;
+  return `${recurso}/?${parametros.join('&')}`;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class ContratoGeneralCrudService {
-  constructor(private requestManager: RequestManager) {
+  constructor(
+    private requestManager: RequestManager,
+    private vigenciaService: VigenciaService
+  ) {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
   }
 
@@ -35,14 +42,16 @@ export class ContratoGeneralCrudService {
 
   get(idContrato: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get(`v1/contrato_general/${idContrato}`);
+    return this.requestManager.get(`${RECURSOS_CRUD.contratoGeneral}/${idContrato}`);
   }
 
+  // El 409 (consecutivo repetido) lo maneja el registro: reintenta y muestra solo el resultado final.
   post(contrato_general_parcial: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post(
-      'v1/contrato_general/',
-      contrato_general_parcial
+      `${RECURSOS_CRUD.contratoGeneral}/`,
+      contrato_general_parcial,
+      [409]
     );
   }
 
@@ -50,7 +59,7 @@ export class ContratoGeneralCrudService {
   put(id_contrato: number, contrato_general_parcial: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.put(
-      `v1/contrato_general/${id_contrato}`,
+      `${RECURSOS_CRUD.contratoGeneral}/${id_contrato}`,
       contrato_general_parcial
     );
   }
@@ -60,7 +69,7 @@ export class ContratoGeneralCrudService {
   getCdps(consulta: ConsultaCrud): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get(
-      rutaConsulta('disponibilidad_presupuestal', consulta)
+      rutaConsulta(RECURSOS_CRUD.disponibilidadPresupuestal, consulta)
     );
   }
 
@@ -71,24 +80,24 @@ export class ContratoGeneralCrudService {
       );
     }
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.post('v1/disponibilidad_presupuestal/', cdpData);
+    return this.requestManager.post(`${RECURSOS_CRUD.disponibilidadPresupuestal}/`, cdpData);
   }
 
   deleteCdp(id: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.delete('v1/disponibilidad_presupuestal', id);
+    return this.requestManager.delete(RECURSOS_CRUD.disponibilidadPresupuestal, id);
   }
 
   // estado_contrato: el POST marca el nuevo estado como actual.
 
   getEstados(consulta: ConsultaCrud): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get(rutaConsulta('estado_contrato', consulta));
+    return this.requestManager.get(rutaConsulta(RECURSOS_CRUD.estadoContrato, consulta));
   }
 
   postEstadoContrato(estado: EstadoContrato): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.post('v1/estado_contrato/', estado);
+    return this.requestManager.post(`${RECURSOS_CRUD.estadoContrato}/`, estado);
   }
 
   // especificacion_tecnica
@@ -96,14 +105,14 @@ export class ContratoGeneralCrudService {
   getEspecificacionesTecnicas(consulta: ConsultaCrud): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get(
-      rutaConsulta('especificacion_tecnica', consulta)
+      rutaConsulta(RECURSOS_CRUD.especificacionTecnica, consulta)
     );
   }
 
   postEspecificacionTecnica(especificacion: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post(
-      'v1/especificacion_tecnica/',
+      `${RECURSOS_CRUD.especificacionTecnica}/`,
       especificacion
     );
   }
@@ -111,14 +120,14 @@ export class ContratoGeneralCrudService {
   putEspecificacionTecnica(id: number, especificacion: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.put(
-      `v1/especificacion_tecnica/${id}`,
+      `${RECURSOS_CRUD.especificacionTecnica}/${id}`,
       especificacion
     );
   }
 
   deleteEspecificacionTecnica(id: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.delete('v1/especificacion_tecnica', id);
+    return this.requestManager.delete(RECURSOS_CRUD.especificacionTecnica, id);
   }
 
   // ordenador_contrato: un solo ordenador activo por contrato (el paso
@@ -126,42 +135,54 @@ export class ContratoGeneralCrudService {
 
   getOrdenadores(consulta: ConsultaCrud): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get(rutaConsulta('ordenador_contrato', consulta));
+    return this.requestManager.get(rutaConsulta(RECURSOS_CRUD.ordenadorContrato, consulta));
   }
 
   postOrdenadorContrato(ordenador: OrdenadorContratoData): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.post('v1/ordenador_contrato/', ordenador);
+    return this.requestManager.post(`${RECURSOS_CRUD.ordenadorContrato}/`, ordenador);
   }
 
   putOrdenadorContrato(id: number, ordenador: OrdenadorContratoData): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.put(`v1/ordenador_contrato/${id}`, ordenador as any);
+    return this.requestManager.put(`${RECURSOS_CRUD.ordenadorContrato}/${id}`, ordenador as any);
   }
 
   // supervisor_contrato
 
   getSupervisores(consulta: ConsultaCrud): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get(rutaConsulta('supervisor_contrato', consulta));
+    return this.requestManager.get(rutaConsulta(RECURSOS_CRUD.supervisorContrato, consulta));
   }
 
   postSupervisor(data: SupervisorToSave): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.post('v1/supervisor_contrato/', data);
+    return this.requestManager.post(`${RECURSOS_CRUD.supervisorContrato}/`, data);
   }
 
   putSupervisor(id: number, data: SupervisorToSave): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.put(`v1/supervisor_contrato/${id}`, data as any);
+    return this.requestManager.put(`${RECURSOS_CRUD.supervisorContrato}/${id}`, data as any);
   }
 
-  /**
-   * Pendiente: el CRUD Beego no tiene la consulta por año y sus consumidores
-   * (pólizas y actas) están fuera de la #390. Se deja la ruta anterior.
-   */
+  /** Ids de los contratos activos de la vigencia. `fields` solo acepta PascalCase. */
   getContratosPorVigencia(year: string | null): Observable<any> {
-    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.get(`contratos-generales/vigencia/${year}`);
+    return this.vigenciaService.vigenciaId(year ?? '').pipe(
+      switchMap((vigenciaId) => {
+        if (!vigenciaId) return of({ Data: [] });
+        this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+        return this.requestManager.get<any>(
+          rutaConsulta(RECURSOS_CRUD.contratoGeneral, {
+            query: `vigencia_id:${vigenciaId},activo:true`,
+            fields: 'Id',
+            limit: 0,
+          })
+        );
+      }),
+      map((respuesta: any) => ({
+        ...respuesta,
+        Data: (respuesta?.Data ?? []).map((contrato: { Id: number }) => contrato.Id),
+      }))
+    );
   }
 }

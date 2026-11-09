@@ -24,12 +24,12 @@
                 <div class="col-12 col-sm-3">
                   <mat-form-field appearance="outline" class="w-100">
                     <mat-label>Vigencia Fiscal:</mat-label>
+                    <mat-icon matIconPrefix>event</mat-icon>
                     <mat-select formControlName="vigencia">
                       @for (vigencia of vigencias; track vigencia) {
                         <mat-option [value]="vigencia.value">{{ vigencia.viewValue }}</mat-option>
                       }
                     </mat-select>
-                    <mat-icon matPrefix>event</mat-icon>
                   </mat-form-field>
                 </div>
                 <div class="col-12 col-sm-6">
@@ -171,203 +171,152 @@
             <div class="row g-3">
               <!-- Tipo de Moneda -->
               <div class="col-12 col-md-4">
-                <div class="campo-bloque">
-                  <label class="campo-label">
-                    <span>TIPO DE MONEDA <span class="text-error">*</span></span>
-                  </label>
-                  <div class="campo-control-wrapper">
-                    <mat-icon class="campo-icon-left">attach_money</mat-icon>
-                    <select class="campo-select" formControlName="tipoMoneda">
-                      @for (moneda of monedas; track moneda) {
-                        <option [ngValue]="moneda.Id">{{ moneda.Nombre }}</option>
-                      }
-                    </select>
-                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
-                  </div>
-                </div>
+                <app-searchable-select
+                  label="Tipo de Moneda"
+                  icon="attach_money"
+                  [items]="monedas"
+                  [control]="form.get('tipoMoneda')"
+                  [soloLectura]="viewMode()"
+                  [required]="true"
+                >
+                </app-searchable-select>
               </div>
 
               <!-- Valor Total del Contrato -->
               <div class="col-12 col-md-8">
-                <div class="campo-bloque">
-                  <label class="campo-label d-flex justify-content-between align-items-center">
-                    <span>VALOR TOTAL DEL CONTRATO <span class="text-error">*</span></span>
-                    <span class="campo-subtext-valor" [title]="valorEnLetras">{{ valorEnLetras }}</span>
-                  </label>
-                  <div class="campo-control-wrapper">
-                    <mat-icon class="campo-icon-left">point_of_sale</mat-icon>
-                    <input
-                      type="text"
-                      class="campo-input font-mono-val"
-                      formControlName="valorContrato"
-                      (keydown)="onlyNumbers($event)"
-                      placeholder="0"
-                    />
-                    <span class="badge-cop">COP</span>
-                  </div>
-                </div>
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Valor Total del Contrato:</mat-label>
+                  <mat-icon matIconPrefix>point_of_sale</mat-icon>
+                  <input
+                    matInput
+                    type="text"
+                    class="font-mono-val"
+                    formControlName="valorContrato"
+                    (keydown)="onlyNumbers($event)"
+                    placeholder="0"
+                  />
+                  <span matTextSuffix class="badge-cop-suffix">COP</span>
+                  <mat-hint align="end" class="campo-subtext-valor">{{ valorEnLetras }}</mat-hint>
+                </mat-form-field>
               </div>
 
               <!-- Cargo Ordenador del Gasto -->
               <div class="col-12 col-md-6">
-                <div class="campo-bloque">
-                  <label class="campo-label d-flex justify-content-between align-items-center">
-                    <span>CARGO ORDENADOR DEL GASTO <span class="text-error">*</span></span>
-                    <span class="campo-subtext-hint">Por delegación</span>
-                  </label>
-                  <div class="campo-control-wrapper">
-                    <mat-icon class="campo-icon-left">manage_accounts</mat-icon>
-                    <select class="campo-select" formControlName="ordenadorGasto">
-                      @for (ordenador of ordenadores; track ordenador) {
-                        <option [ngValue]="ordenador.id">{{ ordenador.rol }}</option>
-                      }
-                    </select>
-                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
-                  </div>
-                </div>
+                <app-searchable-select
+                  label="Cargo Ordenador del Gasto"
+                  icon="manage_accounts"
+                  [items]="ordenadores"
+                  [control]="form.get('ordenadorGasto')"
+                  [soloLectura]="viewMode()"
+                  [required]="true"
+                >
+                </app-searchable-select>
               </div>
 
               <!-- Nombre y Apellido Ordenador -->
               <div class="col-12 col-md-6">
-                <div class="campo-bloque">
-                  <label class="campo-label">
-                    <span>NOMBRE Y APELLIDO ORDENADOR <span class="text-error">*</span></span>
-                  </label>
-                  <div class="campo-control-wrapper campo-disabled">
-                    <mat-icon class="campo-icon-left">person</mat-icon>
-                    <input
-                      type="text"
-                      class="campo-input cursor-not-allowed"
-                      formControlName="nombreOrdenador"
-                      readonly
-                    />
-                    <mat-icon class="campo-icon-lock" title="Validado en planta activa">lock</mat-icon>
-                  </div>
-                </div>
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Nombre y Apellido Ordenador:</mat-label>
+                  <mat-icon matIconPrefix>person</mat-icon>
+                  <input
+                    matInput
+                    type="text"
+                    formControlName="nombreOrdenador"
+                    readonly
+                  />
+                  <mat-icon matIconSuffix title="Validado en planta activa">lock</mat-icon>
+                </mat-form-field>
               </div>
 
               <!-- Origen de Recursos -->
               <div class="col-12 col-md-6">
-                <div class="campo-bloque">
-                  <label class="campo-label">
-                    <span>ORIGEN DE RECURSOS <span class="text-error">*</span></span>
-                  </label>
-                  <div class="campo-control-wrapper">
-                    <mat-icon class="campo-icon-left">savings</mat-icon>
-                    <select class="campo-select" formControlName="origenRecurso">
-                      @for (origen of origen_recursos; track origen) {
-                        <option [ngValue]="origen.Id">{{ origen.Nombre }}</option>
-                      }
-                    </select>
-                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
-                  </div>
-                </div>
+                <app-searchable-select
+                  label="Origen de Recursos"
+                  icon="savings"
+                  [items]="origen_recursos"
+                  [control]="form.get('origenRecurso')"
+                  [soloLectura]="viewMode()"
+                  [required]="true"
+                >
+                </app-searchable-select>
               </div>
 
               <!-- Origen Presupuesto -->
               <div class="col-12 col-md-6">
-                <div class="campo-bloque">
-                  <label class="campo-label">
-                    <span>ORIGEN PRESUPUESTO <span class="text-error">*</span></span>
-                  </label>
-                  <div class="campo-control-wrapper">
-                    <mat-icon class="campo-icon-left">account_balance</mat-icon>
-                    <select class="campo-select" formControlName="origenPresupuesto">
-                      @for (pres of origen_presupuestos; track pres) {
-                        <option [ngValue]="pres.Id">{{ pres.Nombre }}</option>
-                      }
-                    </select>
-                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
-                  </div>
-                </div>
+                <app-searchable-select
+                  label="Origen Presupuesto"
+                  icon="account_balance"
+                  [items]="origen_presupuestos"
+                  [control]="form.get('origenPresupuesto')"
+                  [soloLectura]="viewMode()"
+                  [required]="true"
+                >
+                </app-searchable-select>
               </div>
 
               <!-- Tipo Gasto -->
               <div class="col-12 col-md-4">
-                <div class="campo-bloque">
-                  <label class="campo-label">
-                    <span>TIPO DE GASTO <span class="text-error">*</span></span>
-                  </label>
-                  <div class="campo-control-wrapper">
-                    <mat-icon class="campo-icon-left">category</mat-icon>
-                    <select class="campo-select" formControlName="tipoGasto">
-                      @for (gasto of gastos; track gasto) {
-                        <option [ngValue]="gasto.Id">{{ gasto.Nombre }}</option>
-                      }
-                    </select>
-                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
-                  </div>
-                </div>
+                <app-searchable-select
+                  label="Tipo de Gasto"
+                  icon="category"
+                  [items]="gastos"
+                  [control]="form.get('tipoGasto')"
+                  [soloLectura]="viewMode()"
+                  [required]="true"
+                >
+                </app-searchable-select>
               </div>
 
               <!-- Tema Gasto Inversión -->
               <div class="col-12 col-md-4">
-                <div class="campo-bloque">
-                  <label class="campo-label">
-                    <span>TEMA GASTO INVERSIÓN <span class="text-error">*</span></span>
-                  </label>
-                  <div class="campo-control-wrapper">
-                    <mat-icon class="campo-icon-left">trending_up</mat-icon>
-                    <select class="campo-select" formControlName="temaGasto">
-                      @for (tema of tema_gasto; track tema) {
-                        <option [ngValue]="tema.Id">{{ tema.Nombre }}</option>
-                      }
-                    </select>
-                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
-                  </div>
-                </div>
+                <app-searchable-select
+                  label="Tema Gasto Inversión"
+                  icon="trending_up"
+                  [items]="tema_gasto"
+                  [control]="form.get('temaGasto')"
+                  [soloLectura]="viewMode()"
+                  [required]="true"
+                >
+                </app-searchable-select>
               </div>
 
               <!-- Medio Pago -->
               <div class="col-12 col-md-4">
-                <div class="campo-bloque">
-                  <label class="campo-label">
-                    <span>MEDIO DE PAGO <span class="text-error">*</span></span>
-                  </label>
-                  <div class="campo-control-wrapper">
-                    <mat-icon class="campo-icon-left">payment</mat-icon>
-                    <select class="campo-select" formControlName="medioPago">
-                      @for (medio of medios_pago; track medio) {
-                        <option [ngValue]="medio.Id">{{ medio.Nombre }}</option>
-                      }
-                    </select>
-                    <mat-icon class="campo-icon-arrow">expand_more</mat-icon>
-                  </div>
-                </div>
+                <app-searchable-select
+                  label="Medio de Pago"
+                  icon="payment"
+                  [items]="medios_pago"
+                  [control]="form.get('medioPago')"
+                  [soloLectura]="viewMode()"
+                  [required]="true"
+                >
+                </app-searchable-select>
               </div>
 
               @if (showCambioMonedaFields) {
                 <div class="col-12 col-md-6">
-                  <div class="campo-bloque">
-                    <label class="campo-label">
-                      <span>VALOR MONEDA EXTRANJERA <span class="text-error">*</span></span>
-                    </label>
-                    <div class="campo-control-wrapper">
-                      <mat-icon class="campo-icon-left">euro</mat-icon>
-                      <input
-                        type="text"
-                        class="campo-input"
-                        formControlName="monedaExtranjera"
-                        (keydown)="onlyNumbers($event)"
-                      />
-                    </div>
-                  </div>
+                  <mat-form-field class="w-100" appearance="outline">
+                    <mat-label>Valor Moneda Extranjera:</mat-label>
+                    <mat-icon matIconPrefix>euro</mat-icon>
+                    <input
+                      matInput
+                      type="text"
+                      formControlName="monedaExtranjera"
+                      (keydown)="onlyNumbers($event)"
+                    />
+                  </mat-form-field>
                 </div>
                 <div class="col-12 col-md-6">
-                  <div class="campo-bloque">
-                    <label class="campo-label">
-                      <span>VALOR DE TASA CAMBIO <span class="text-error">*</span></span>
-                    </label>
-                    <div class="campo-control-wrapper">
-                      <mat-icon class="campo-icon-left">currency_exchange</mat-icon>
-                      <input
-                        type="text"
-                        class="campo-input"
-                        formControlName="tasaCambio"
-                        (keydown)="onlyNumbers($event)"
-                      />
-                    </div>
-                  </div>
+                  <mat-form-field class="w-100" appearance="outline">
+                    <mat-label>Valor de Tasa Cambio:</mat-label>
+                    <mat-icon matIconPrefix>currency_exchange</mat-icon>
+                    <input
+                      matInput
+                      type="text"
+                      formControlName="tasaCambio"
+                      (keydown)="onlyNumbers($event)"
+                    />
+                  </mat-form-field>
                 </div>
               }
 
@@ -407,10 +356,11 @@
 
         <div class="btn-container mt-4">
           <button
+            type="button"
             mat-stroked-button
             style="border: 1px solid var(--md-primary-500)"
             color="primary"
-            matStepperPrevious
+            (click)="prevStep.emit()"
           >
             <mat-icon>arrow_back</mat-icon>
             Volver

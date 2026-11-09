@@ -14,6 +14,7 @@ import { environment } from 'src/environments/environment';
 import { aFechaCrud, desdeFechaCrud } from 'src/app/utils/fechas-crud';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
+import { VigenciaService } from 'src/app/services/vigencia.service';
 import { RolService } from 'src/app/services/rol.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { UserService } from 'src/app/services/user.service';
@@ -101,6 +102,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   private readonly parametrosService = inject(ParametrosService);
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
   private readonly contratoGeneralMidService = inject(ContratoGeneralMidService);
+  private readonly vigenciaService = inject(VigenciaService);
   private readonly cdRef = inject(ChangeDetectorRef);
   private readonly userService = inject(UserService);
 
@@ -134,8 +136,10 @@ export class PasoInfoGeneralComponent implements OnInit {
   perfilesContratista: ParametroResponse[] = [];
 
   unidadesEjecutoras: SimpleItem[] = [];
+  unidadesEjecutorasParametros: ParametroResponse[] = [];
 
   tiposParametrosRequeridos = [
+    environment.UNIDAD_EJECUTORA_ID,
     environment.TIPO_COMPROMISO_ID,
     environment.TIPO_CONTRATO_ID,
     environment.MODALIDAD_SELECCION_ID,
@@ -269,6 +273,7 @@ export class PasoInfoGeneralComponent implements OnInit {
   private async loadInitialData(): Promise<void> {
     return this.parametrosService.getParametrosPorTipo(this.tiposParametrosRequeridos).then(
       (data: Record<number, ParametroResponse[]>) => {
+        this.unidadesEjecutorasParametros = data[environment.UNIDAD_EJECUTORA_ID] || [];
         this.tiposCompromisos = data[environment.TIPO_COMPROMISO_ID];
         this.modalidadesSeleccion = data[environment.MODALIDAD_SELECCION_ID];
         this.regimenesContratacion = data[environment.REGIMEN_CONTRATACION_ID];
@@ -280,26 +285,51 @@ export class PasoInfoGeneralComponent implements OnInit {
       .catch((err) => this.handleError(err));
   }
 
+  private obtenerNombreUnidadEjecutora(id: number, fallback: string): string {
+    const param = this.unidadesEjecutorasParametros?.find((p) => Number(p.Id) === id);
+    return param?.Nombre || fallback;
+  }
+
   private processRoles(): void {
-    const defaultOptions = [
-      {
-        Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-        Nombre: 'Rectoría',
-      },
-      {
-        Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-        Nombre: 'IDEXUD',
-      },
-    ];
+    const nombreRectoria = this.obtenerNombreUnidadEjecutora(
+      environment.UNIDADES_EJECUTORAS.RECTORIA,
+      'Rectoría'
+    );
+    const nombreIdexud = this.obtenerNombreUnidadEjecutora(
+      environment.UNIDADES_EJECUTORAS.IDEXUD,
+      'IDEXUD'
+    );
+
+    const catalogoUnidades: SimpleItem[] =
+      this.unidadesEjecutorasParametros?.length > 0
+        ? this.unidadesEjecutorasParametros.map((p) => ({
+            Id: Number(p.Id),
+            Nombre: p.Nombre,
+          }))
+        : [
+            {
+              Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+              Nombre: nombreRectoria,
+            },
+            {
+              Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+              Nombre: nombreIdexud,
+            },
+          ];
 
     const filteredRoles = this.roles.filter(
       (role) => role.includes('RECTOR') || role.includes('IDEXUD')
     );
 
+    const ueIdNavegacion = Number(history.state?.unidadEjecutoraId);
+
     if (filteredRoles.length === 0) {
-      this.unidadesEjecutoras = defaultOptions;
+      this.unidadesEjecutoras = catalogoUnidades;
+      const ueSeleccionada =
+        catalogoUnidades.find((u) => u.Id === ueIdNavegacion)?.Id ??
+        catalogoUnidades[0]?.Id;
       this.formInfoGeneral.patchValue({
-        unidadEjecutoraId: defaultOptions[0].Id
+        unidadEjecutoraId: ueSeleccionada
       });
       return;
     }
@@ -309,23 +339,37 @@ export class PasoInfoGeneralComponent implements OnInit {
         if (role.includes('RECTOR')) {
           return {
             Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-            Nombre: 'Rectoría',
+            Nombre: nombreRectoria,
           };
         }
         if (role.includes('IDEXUD')) {
           return {
             Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-            Nombre: 'IDEXUD',
+            Nombre: nombreIdexud,
           };
         }
         return null;
       })
       .filter((item): item is SimpleItem => item !== null);
 
+    if (ueIdNavegacion) {
+      const ueDesdeCatalogo = catalogoUnidades.find((u) => u.Id === ueIdNavegacion);
+      if (ueDesdeCatalogo) {
+        mappedItems.push(ueDesdeCatalogo);
+      }
+    }
+
     const uniqueMap = new Map(mappedItems.map((item) => [item.Id, item]));
     this.unidadesEjecutoras = Array.from(uniqueMap.values());
 
-    if (this.unidadesEjecutoras.length === 1) {
+    if (
+      ueIdNavegacion &&
+      this.unidadesEjecutoras.some((u) => u.Id === ueIdNavegacion)
+    ) {
+      this.formInfoGeneral.patchValue({
+        unidadEjecutoraId: ueIdNavegacion
+      });
+    } else if (this.unidadesEjecutoras.length === 1) {
       this.formInfoGeneral.patchValue({
         unidadEjecutoraId: this.unidadesEjecutoras[0].Id
       });
@@ -477,13 +521,35 @@ export class PasoInfoGeneralComponent implements OnInit {
       return;
     }
 
+    // El contrato no se guarda sin vigencia.
+    this.vigenciaService.vigenciaActualId().subscribe({
+      next: (vigenciaId) => {
+        if (vigenciaId) {
+          this.pedirConsecutivo(parseInt(unidad_ejecutora_id, 10), vigenciaId);
+        } else {
+          this.avisarSinVigencia();
+        }
+      },
+      error: () => this.avisarSinVigencia(),
+    });
+  }
+
+  private avisarSinVigencia() {
+    this.guardando.set(false);
+    this.alertService.showErrorAlert(
+      'No se encontró la vigencia del año actual en Parámetros. El contrato no se guardó.',
+      'Error al consultar la vigencia'
+    );
+  }
+
+  private pedirConsecutivo(unidad_ejecutora_id: number, vigenciaId: number, reintento = false) {
     // Obtener el consecutivo del contrato
     this.contratoGeneralMidService
-      .postConsecutivo({ unidad_ejecutora_id })
+      .postConsecutivo({ unidad_ejecutora_id, vigencia_id: vigenciaId })
       .subscribe({
         next: (response: ApiResponse<any>) => {
           if (response.Success && response.Status === 200) {
-            this.guardarContrato(response.Data, parseInt(unidad_ejecutora_id, 10));
+            this.guardarContrato(response.Data, unidad_ejecutora_id, vigenciaId, reintento);
           } else {
             this.guardando.set(false);
             this.alertService.showErrorAlert(
@@ -503,7 +569,12 @@ export class PasoInfoGeneralComponent implements OnInit {
       });
   }
 
-  guardarContrato(consecutivo: string | null, unidad_ejecutora_id: number) {
+  guardarContrato(
+    consecutivo: string | null,
+    unidad_ejecutora_id: number,
+    vigenciaId: number | null = null,
+    reintento = false
+  ) {
     if (this.viewMode() || this.formInfoGeneral.invalid) {
       this.guardando.set(false);
       this.formInfoGeneral.markAllAsTouched();
@@ -539,6 +610,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       : this.contratoGeneralCrudService.post({
           ...formParsed,
           consecutivo_elaboracion: consecutivo,
+          vigencia_id: vigenciaId,
         });
 
     saveOperation.subscribe({
@@ -559,6 +631,21 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.nextStep.emit();
       },
       error: async (error) => {
+        // 409: otro contrato tomó el mismo consecutivo (restricción única). Se pide uno
+        // nuevo y se reintenta una sola vez. Ante otros errores, como el 400 genérico
+        // del CRUD, no se reintenta.
+        if (!contratoId && error?.status === 409 && vigenciaId) {
+          if (!reintento) {
+            this.pedirConsecutivo(unidad_ejecutora_id, vigenciaId, true);
+            return;
+          }
+          this.guardando.set(false);
+          this.alertService.showErrorAlert(
+            'Otro contrato tomó el mismo consecutivo dos veces seguidas. El contrato no se guardó; intente de nuevo en unos segundos.',
+            'Error al asignar el consecutivo'
+          );
+          return;
+        }
         this.guardando.set(false);
         this.alertService.showErrorAlert(
           'Ocurrió un error al guardar los datos',
