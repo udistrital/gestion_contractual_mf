@@ -113,6 +113,8 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       .get('claseContratista')
       ?.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
+        // null: aún no hay clase (Parámetros no ha respondido); disable() también lo emite.
+        if (value == null) return;
         this.mostrarConsulta = this.esContratistaUnico(value);
         if (!this.mostrarConsulta) {
           this.form.get('documentoContratista')?.reset();
@@ -409,7 +411,12 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       this.datosContratista.proveedor?.tipo_persona_id ||
       (this.datosContratista as any).tipo_persona_id ||
       1;
+    // Con el contratista bloqueado el control está deshabilitado y no cuenta en la validez.
     const claseProveedorId = this.form.getRawValue().claseContratista;
+    if (!claseProveedorId) {
+      this.alertService.showErrorAlert(this.errorClases || 'Seleccione la clase de contratista.');
+      return;
+    }
 
     // El contratista se guarda en contrato_general (PUT parcial).
     const request$ = this.contratoGeneralCrudService.put(
