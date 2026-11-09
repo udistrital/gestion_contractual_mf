@@ -542,14 +542,14 @@ export class PasoInfoGeneralComponent implements OnInit {
     );
   }
 
-  private pedirConsecutivo(unidad_ejecutora_id: number, vigenciaId: number) {
+  private pedirConsecutivo(unidad_ejecutora_id: number, vigenciaId: number, reintento = false) {
     // Obtener el consecutivo del contrato
     this.contratoGeneralMidService
       .postConsecutivo({ unidad_ejecutora_id, vigencia_id: vigenciaId })
       .subscribe({
         next: (response: ApiResponse<any>) => {
           if (response.Success && response.Status === 200) {
-            this.guardarContrato(response.Data, unidad_ejecutora_id, vigenciaId);
+            this.guardarContrato(response.Data, unidad_ejecutora_id, vigenciaId, reintento);
           } else {
             this.guardando.set(false);
             this.alertService.showErrorAlert(
@@ -572,7 +572,8 @@ export class PasoInfoGeneralComponent implements OnInit {
   guardarContrato(
     consecutivo: string | null,
     unidad_ejecutora_id: number,
-    vigenciaId: number | null = null
+    vigenciaId: number | null = null,
+    reintento = false
   ) {
     if (this.viewMode() || this.formInfoGeneral.invalid) {
       this.guardando.set(false);
@@ -630,6 +631,21 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.nextStep.emit();
       },
       error: async (error) => {
+        // 409: otro contrato tomó el mismo consecutivo (restricción única). Se pide uno
+        // nuevo y se reintenta una sola vez. Ante otros errores, como el 400 genérico
+        // del CRUD, no se reintenta.
+        if (!contratoId && error?.status === 409 && vigenciaId) {
+          if (!reintento) {
+            this.pedirConsecutivo(unidad_ejecutora_id, vigenciaId, true);
+            return;
+          }
+          this.guardando.set(false);
+          this.alertService.showErrorAlert(
+            'Otro contrato tomó el mismo consecutivo dos veces seguidas. El contrato no se guardó; intente de nuevo en unos segundos.',
+            'Error al asignar el consecutivo'
+          );
+          return;
+        }
         this.guardando.set(false);
         this.alertService.showErrorAlert(
           'Ocurrió un error al guardar los datos',
