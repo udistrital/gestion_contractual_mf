@@ -100,6 +100,11 @@ export interface DependenciaContratoMidResponse {
   nombre: string;
 }
 
+/** GET espacios-fisicos/dependencias/{id} del MID: la dependencia y las sedes donde está en Oikos. */
+export interface DependenciaConSedesMidResponse extends DependenciaContratoMidResponse {
+  sedes: DependenciaContratoMidResponse[];
+}
+
 export interface ApiResponse<T> {
   Success: boolean;
   Status: number;
