@@ -16,7 +16,7 @@ import {
   ContratoGeneral,
   DependenciaContratoMidResponse,
   ParametroResponse,
-  SedeContratoMidResponse, SupervisorResponse, SupervisorToSave,
+  SupervisorResponse, SupervisorToSave,
 } from 'src/app/types/types';
 import { environment } from 'src/environments/environment';
 import { ParametrosService } from 'src/app/services/parametros.service';
@@ -43,18 +43,13 @@ export class PasoSupervisoresComponent implements OnInit {
 
   solicitanteId: number | null = null;
   supervisoresIds: number[] = [];
-  supervisorLegacy = [{
-    documento: '',
-    sede_legado: '',
-    dependencia_legado: '',
-    cargo_legado: '',
-  }]
-  sedes: SedeContratoMidResponse[] = [];
-  dependenciasPorSede: { [key: number]: DependenciaContratoMidResponse[] } = {};
-  // El CRUD v2 ya no guarda la sede (crud#51 3a1e5ab): la sede solo filtra las dependencias.
-  // Al cargar un contrato, el MID da el nombre de la dependencia guardada y sus sedes: con una
-  // sola se precarga; con varias, o si el MID falla, la sede queda vacía y la dependencia
-  // guardada se ofrece sola, para que se vea sin borrarla.
+  // Documento del supervisor que llega del MID de ordenadores y supervisores.
+  supervisorLegacy = [{ documento: '' }];
+  // La sede se quitó del formulario a pedido de la clienta (crud#51 3a1e5ab): se listan
+  // todas las dependencias activas del MID. Al cargar un contrato, el nombre de la
+  // dependencia guardada sale de GET espacios-fisicos/dependencias/{id}; si el MID falla,
+  // se ofrece con su Id para que se vea sin borrarla.
+  dependencias: DependenciaContratoMidResponse[] = [];
   dependenciaGuardadaSolicitante: DependenciaContratoMidResponse | null = null;
   dependenciasGuardadasSupervisor: (DependenciaContratoMidResponse | null)[] = [];
   solicitanteSaved = false;
@@ -77,7 +72,6 @@ export class PasoSupervisoresComponent implements OnInit {
   constructor() {
     this.form = this._formBuilder.group({
       solicitante: this._formBuilder.group({
-        sede: [null],
         dependencia: [null, Validators.required],
       }),
       supervisores: this._formBuilder.array([this.crearSupervisorFormGroup()]),
@@ -90,7 +84,7 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.cargarSedes();
+    this.cargarDependencias();
     this.cargarTiposControl();
     this.setupFormListeners();
     this.aplicarModoVisualizacion();
@@ -132,7 +126,7 @@ export class PasoSupervisoresComponent implements OnInit {
             this.solicitanteSaved = true;
             this.dependenciaGuardadaSolicitante = dependenciaGuardada(depId);
             this.form.get('solicitante')?.patchValue({ dependencia: depId });
-            this.precargarSede(depId, 'solicitante');
+            this.cargarNombreDependencia(depId, 'solicitante');
             this.cdRef.detectChanges();
             this.aplicarModoVisualizacion();
           }
@@ -169,19 +163,14 @@ export class PasoSupervisoresComponent implements OnInit {
               const supervisorForm = this.getSupervisoresFormArray().at(index);
               if (!supervisorForm) return;
 
-              this.supervisorLegacy[index] = {
-                documento: String(supervisor.documento ?? ''),
-                sede_legado: supervisor.sede_legado,
-                dependencia_legado: supervisor.dependencia_legado,
-                cargo_legado: supervisor.cargo_legado,
-              };
+              this.supervisorLegacy[index] = { documento: String(supervisor.documento ?? '') };
 
               const depId = Number(supervisor.dependencia_id);
 
               if (depId) {
                 this.dependenciasGuardadasSupervisor[index] = dependenciaGuardada(depId, supervisor.dependencia_legado);
                 this.cargarSupervisor(String(depId), index);
-                this.precargarSede(depId, 'supervisor', index);
+                this.cargarNombreDependencia(depId, 'supervisor', index);
               }
 
               supervisorForm.patchValue({
@@ -279,10 +268,8 @@ export class PasoSupervisoresComponent implements OnInit {
         // cargo_id y el documento no vienen del formulario: sin valor no se envían,
         // porque un null en el PUT borra lo guardado.
         const supervisorData: SupervisorToSave = {
+          // Las columnas de legado (sede, dependencia y cargo) no se escriben.
           ...(documento === null ? {} : { supervisor_id: documento, documento }), // TODO: Validar Supervisor ID
-          sede_legado: this.supervisorLegacy[i].sede_legado,
-          dependencia_legado: this.supervisorLegacy[i].dependencia_legado,
-          cargo_legado: this.supervisorLegacy[i].cargo_legado,
           digito_verificacion: entero(supervisorGroup.get('codigoVerificacion')?.value),
           dependencia_id: entero(supervisorGroup.get('dependencia')?.value),
           contrato_general_id: { id: this.contratoGeneral()?.id as number },
@@ -359,44 +346,24 @@ export class PasoSupervisoresComponent implements OnInit {
 
   // Métodos existentes mantenidos
   getDependenciasSolicitante(): DependenciaContratoMidResponse[] {
-    const sedeId = this.form.get('solicitante.sede')?.value;
-    const guardada = this.dependenciaGuardadaSolicitante;
-    if (sedeId) {
-      return conGuardada(this.dependenciasPorSede[Number(sedeId)] || [], guardada, this.form.get('solicitante.dependencia')?.value);
-    }
-    return guardada ? [guardada] : [];
+    return conGuardada(this.dependencias, this.dependenciaGuardadaSolicitante, this.form.get('solicitante.dependencia')?.value);
   }
 
   getDependenciasSupervisor(index: number): DependenciaContratoMidResponse[] {
     const supervisor = this.getSupervisoresFormArray().at(index);
-    const sedeId = supervisor?.get('sede')?.value;
-    const guardada = this.dependenciasGuardadasSupervisor[index];
-    if (sedeId) {
-      return conGuardada(this.dependenciasPorSede[Number(sedeId)] || [], guardada, supervisor?.get('dependencia')?.value);
-    }
-    return guardada ? [guardada] : [];
+    return conGuardada(this.dependencias, this.dependenciasGuardadasSupervisor[index], supervisor?.get('dependencia')?.value);
   }
 
-  /**
-   * Nombre y sede de la dependencia guardada, desde el MID. La sede se fija sin emitir
-   * cambios, para que los listeners no borren la dependencia, y luego se cargan las
-   * dependencias de esa sede sin reiniciarla. Si el MID falla queda lo que ya se ve.
-   */
-  private precargarSede(dependenciaId: number, tipo: 'solicitante' | 'supervisor', index = 0): void {
+  /** Nombre de la dependencia guardada, desde el MID. Si falla queda la opción con su Id. */
+  private cargarNombreDependencia(dependenciaId: number, tipo: 'solicitante' | 'supervisor', index = 0): void {
     this.contratoGeneralMidService.getDependencia(dependenciaId).subscribe({
       next: (dependencia) => {
-        if (!dependencia?.id) return;
+        if (!dependencia?.nombre) return;
         if (tipo === 'solicitante') {
           this.dependenciaGuardadaSolicitante = dependenciaGuardada(dependenciaId, dependencia.nombre);
         } else if (this.dependenciasGuardadasSupervisor[index]?.nombre === dependenciaGuardada(dependenciaId).nombre) {
           // Al supervisor solo le falta el nombre si no traía dependencia_legado.
           this.dependenciasGuardadasSupervisor[index] = dependenciaGuardada(dependenciaId, dependencia.nombre);
-        }
-        if (dependencia.sedes?.length === 1) {
-          const sedeId = dependencia.sedes[0].id;
-          const grupo = tipo === 'solicitante' ? this.form.get('solicitante') : this.getSupervisoresFormArray().at(index);
-          grupo?.get('sede')?.setValue(sedeId, { emitEvent: false });
-          this.cargarDependencias(sedeId, tipo, index, false);
         }
         this.cdRef.detectChanges();
       },
@@ -406,7 +373,6 @@ export class PasoSupervisoresComponent implements OnInit {
 
   private crearSupervisorFormGroup() {
     return this._formBuilder.group({
-      sede: [null],
       dependencia: [null, Validators.required],
       nombre: [{value: '', disabled: true}, Validators.required],
       cargo: [{value: '', disabled: true}, Validators.required],
@@ -416,40 +382,11 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 
   private setupFormListeners(): void {
-    this.form
-      .get('solicitante.sede')
-      ?.valueChanges.pipe(
-        distinctUntilChanged(),
-        filter((sedeId) => sedeId !== null && sedeId !== undefined)
-      )
-      .subscribe((sedeId) => {
-        if (this.cargandoDatosGuardados) return;
-        this.cargarDependencias(Number(sedeId), 'solicitante');
-      });
-
     this.setupSupervisorListeners(0);
   }
 
   private setupSupervisorListeners(index: number): void {
     const supervisor = this.getSupervisoresFormArray().at(index);
-
-    supervisor.get('sede')?.valueChanges.pipe(
-      distinctUntilChanged(),
-      filter((sedeId) => sedeId !== null && sedeId !== undefined)
-    ).subscribe((sedeId) => {
-      if (this.cargandoDatosGuardados) return;
-      this.cargarDependencias(Number(sedeId), 'supervisor', index);
-
-      supervisor.patchValue({
-        dependencia: null,
-        nombre: '',
-        cargo: '',
-        codigoVerificacion: '',
-        cargoId: '',
-        documento: ''
-      }, { emitEvent: false });
-
-    });
 
     supervisor.get('dependencia')?.valueChanges.pipe(
       distinctUntilChanged(),
@@ -476,12 +413,7 @@ export class PasoSupervisoresComponent implements OnInit {
           if (response.Success && response.Data && response.Data.length > 0) {
             const supervisorData = response.Data[0];
 
-            this.supervisorLegacy[index] = {
-              documento: supervisorData.documento,
-              sede_legado: supervisorData.sede_supervisor,
-              dependencia_legado: supervisorData.dependencia_supervisor,
-              cargo_legado: supervisorData.cargo_id
-            }
+            this.supervisorLegacy[index] = { documento: supervisorData.documento };
             supervisor.patchValue({
               nombre: supervisorData.nombre,
               cargo: supervisorData.cargo,
@@ -523,39 +455,10 @@ export class PasoSupervisoresComponent implements OnInit {
     this.supervisorLegacy = []
   }
 
-  private cargarSedes(): void {
+  /** Todas las dependencias activas (MID, Oikos); el selector tiene búsqueda. */
+  private cargarDependencias(): void {
     this.contratoGeneralMidService
-      .getSedes()
-      .pipe(
-        finalize(() => {
-          this.cdRef.detectChanges();
-        })
-      )
-      .subscribe({
-        next: (sedes) => {
-          this.sedes = sedes;
-          this.cdRef.detectChanges();
-        },
-        error: async (error) => {
-          console.error('Error al cargar sedes:', error);
-          this.alertService.showErrorAlert(
-            'Ocurrió un error al cargar las sedes, por favor intenta más tarde.',
-            'Error al cargar sedes'
-          );
-        },
-      });
-  }
-
-  private cargarDependencias(
-    sedeId: number,
-    tipo: 'solicitante' | 'supervisor',
-    supervisorIndex?: number,
-    resetDependencia: boolean = true
-  ): void {
-    if (!sedeId) return;
-
-    this.contratoGeneralMidService
-      .getDependenciasBySede(sedeId)
+      .getDependencias()
       .pipe(
         finalize(() => {
           this.cdRef.detectChanges();
@@ -563,27 +466,14 @@ export class PasoSupervisoresComponent implements OnInit {
       )
       .subscribe({
         next: (dependencias) => {
-          this.dependenciasPorSede[sedeId] = dependencias;
-
-          if (resetDependencia) {
-            switch (tipo) {
-              case 'supervisor':
-                if (supervisorIndex !== undefined) {
-                  const supervisor = this.getSupervisoresFormArray().at(supervisorIndex);
-                  supervisor.get('dependencia')?.setValue(null, { emitEvent: false });
-                }
-                break;
-
-              case 'solicitante':
-                this.form.get('solicitante.dependencia')?.setValue(null, { emitEvent: false });
-                break;
-            }
-          }
-
-          this.cdRef.detectChanges();
+          this.dependencias = dependencias;
         },
-        error: async (error) => {
-          console.error(`Error al cargar dependencias para sede ${sedeId}:`, error);
+        error: (error) => {
+          console.error('Error al cargar dependencias:', error);
+          this.alertService.showErrorAlert(
+            'Ocurrió un error al cargar las dependencias, por favor intenta más tarde.',
+            'Error al cargar dependencias'
+          );
         },
       });
   }
@@ -626,7 +516,7 @@ export class PasoSupervisoresComponent implements OnInit {
   }
 }
 
-/** La dependencia guardada sigue entre las opciones aunque la sede no la liste. */
+/** La dependencia guardada sigue entre las opciones aunque la lista no la traiga (inactiva o sin MID). */
 function conGuardada(
   lista: DependenciaContratoMidResponse[],
   guardada: DependenciaContratoMidResponse | null | undefined,
@@ -636,7 +526,7 @@ function conGuardada(
   return [...lista, guardada];
 }
 
-/** Opción de la dependencia guardada cuando no hay sede; sin nombre se muestra el Id. */
+/** Opción de la dependencia guardada; sin nombre se muestra el Id. */
 function dependenciaGuardada(id: number, nombre?: string | null): DependenciaContratoMidResponse {
   return { id, nombre: nombre || `Dependencia guardada (Id ${id})` };
 }

@@ -265,9 +265,10 @@ export interface SupervisorData {
 export interface SupervisorToSave {
   id?: number;
   supervisor_id?: number;
-  sede_legado: string;
-  dependencia_legado: string;
-  cargo_legado: string;
+  // Columnas de legado: el MF las lee, pero no las escribe.
+  sede_legado?: string;
+  dependencia_legado?: string;
+  cargo_legado?: string;
   cargo_id?: number;
   documento?: number;
   digito_verificacion: number | null;
