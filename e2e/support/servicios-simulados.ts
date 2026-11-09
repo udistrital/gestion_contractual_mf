@@ -20,6 +20,8 @@ export const AMPARO_CUMPLIMIENTO = 6602;
 export const AMPARO_CALIDAD = 6605;
 export const TIPO_CONTROL_TECNICO = 6611;
 export const VIGENCIA_ACTUAL_ID = 9001;
+/** Clase de contratista (tipo 120). Ids ficticios: el MF busca "Contratista Único" por nombre. */
+export const CLASE_CONTRATISTA_UNICO = 6631;
 
 export const ok = (Data: unknown, Message = 'Consulta exitosa') => ({ Success: true, Status: 200, Message, Data });
 
@@ -49,6 +51,7 @@ export const PARAMETROS: Record<number, unknown[]> = {
   115: [param(6571, 'Contratación Directa'), param(6572, 'Invitación Directa')],
   116: [param(6591, 'Régimen Especial - Acuerdo 03 de 2015'), param(6592, 'Ley 80 de 1993')],
   117: [param(6596, 'PRO-OC-01 Orden de compra'), param(6597, 'PRO-CD-02 Contratación directa')],
+  120: [param(CLASE_CONTRATISTA_UNICO, 'Contratista Único'), param(6632, 'Consorcio'), param(6633, 'Unión Temporal')],
   119: [param(TIPO_CONTROL_TECNICO, 'Técnico, administrativo y financiero'), param(6612, 'Administrativo y contable')],
   7: [param(211, 'MESES'), param(212, 'DÍAS')],
   137: [param(6773, 'POR SUSCRIBIR')],

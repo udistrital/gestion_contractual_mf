@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { CORE_MF_STUB, PROVEEDOR, VIGENCIA_ACTUAL_ID, responderServicioExterno } from '../support/servicios-simulados';
+import { CLASE_CONTRATISTA_UNICO, CORE_MF_STUB, PROVEEDOR, VIGENCIA_ACTUAL_ID, responderServicioExterno } from '../support/servicios-simulados';
 
 /**
  * Integración local de #390 contra el CRUD Go/Beego v2 REAL de la #385.
@@ -248,6 +248,13 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
   await test.step('paso 2: contratista (se guarda en contrato_general)', async () => {
     const seccion = page.locator('app-paso-contratistas');
     await expect(seccion.locator('input[formcontrolname="documentoContratista"]')).toHaveValue('1000000001');
+    // Las clases salen del parámetro tipo 120 (simulado) y se preselecciona "Contratista Único".
+    const clase = seccion.locator('mat-select[formcontrolname="claseContratista"]');
+    await expect(clase).toContainText('Contratista Único');
+    await clase.click({ force: true });
+    await expect(page.getByRole('option')).toHaveText(['Contratista Único', 'Consorcio', 'Unión Temporal']);
+    await capturar(page, '03a-clase-contratista');
+    await page.keyboard.press('Escape');
     await seccion.getByRole('button', { name: /Consultar Registro/ }).click();
     await expect(seccion).toContainText('CONTRATISTA DE PRUEBA');
     await seccion.getByRole('button', { name: /Siguiente: Estructura y Necesidad/ }).click();
@@ -291,6 +298,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await expect.soft(supervisores).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(supervisores.locator('mat-select[formcontrolname="tipoControl"]').first()).toContainText('Técnico, administrativo y financiero');
     await expect.soft(page.locator('app-paso-contratistas input[formcontrolname="documentoContratista"]')).toHaveValue('1000000001');
+    await expect.soft(page.locator('app-paso-contratistas mat-select[formcontrolname="claseContratista"]')).toContainText('Contratista Único');
     await capturar(page, '06-detalle-supervisores-contratista');
 
     await page.locator('.step-pill[aria-label="Especificaciones Técnicas"]').click();
@@ -300,7 +308,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
 
   const camposSinValorContrato = [
     'perfil_contratista_id', 'fecha_suscripcion_estudio', 'valor_contrato_me', 'valor_tasa_cambio',
-    'clase_proveedor_id', 'condiciones', 'observaciones', 'fecha_inicial', 'fecha_final', 'fecha_suscripcion',
+    'condiciones', 'observaciones', 'fecha_inicial', 'fecha_final', 'fecha_suscripcion',
   ];
   const camposSinValorOrdenador = ['tercero_id', 'cargo_id', 'ordenador_sicapital_id', 'documento_identidad', 'resolucion'];
   const delContrato = `contrato_general_id = ${contratoId}`;
@@ -330,11 +338,22 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await supervisores.getByRole('button', { name: /(Guardar|Actualizar) Supervisores/ }).click();
     expect.soft((await supervisor).postDataJSON()).not.toHaveProperty('cargo_id');
     await aceptarAlerta(page);
+
+    // Al editar se carga la clase guardada y se vuelve a enviar con el contratista.
+    const contratista = page.locator('app-paso-contratistas');
+    await expect(contratista.locator('mat-select[formcontrolname="claseContratista"]')).toContainText('Contratista Único');
+    await expect(contratista).toContainText('CONTRATISTA DE PRUEBA');
+    const putContratista = page.waitForRequest(
+      (r) => r.method() === 'PUT' && r.url().includes(`/v1/contratos-generales/${contratoId}`) && 'clase_proveedor_id' in (r.postDataJSON() ?? {})
+    );
+    await contratista.getByRole('button', { name: /Siguiente: Estructura y Necesidad/ }).click();
+    expect.soft((await putContratista).postDataJSON().clase_proveedor_id).toBe(CLASE_CONTRATISTA_UNICO);
+    await aceptarAlerta(page);
   });
 
   await test.step('base de datos: un solo ordenador activo, contratista y solicitante en contrato_general', async () => {
     const contrato = sql(
-      `select proveedor_numero_documento, tipo_persona_id, sede_solicitante_id, dependencia_solicitante_id, tipo_control_id ` +
+      `select proveedor_numero_documento, tipo_persona_id, sede_solicitante_id, dependencia_solicitante_id, tipo_control_id, clase_proveedor_id ` +
         `from contratacion.contrato_general where id = ${contratoId}`
     );
     const sinValor = columnas('contrato_general', `id = ${contratoId}`, camposSinValorContrato);
@@ -352,7 +371,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     writeFileSync(
       join(EVIDENCIAS, '08-base-de-datos.txt'),
       `Zona horaria de la base: ${sql('show timezone')}\nHora del navegador: ${AHORA.toISOString()} (20:30 en Colombia)\n\n` +
-        `Contrato ${contratoId}\ncontrato_general (proveedor_numero_documento|tipo_persona_id|sede_solicitante_id|dependencia_solicitante_id|tipo_control_id):\n${contrato}\n\n` +
+        `Contrato ${contratoId}\ncontrato_general (proveedor_numero_documento|tipo_persona_id|sede_solicitante_id|dependencia_solicitante_id|tipo_control_id|clase_proveedor_id):\n${contrato}\n\n` +
         `contrato_general sin valor (${camposSinValorContrato.join('|')}):\n${sinValor}\n\n` +
         `ordenador_contrato sin valor al crearlo (${camposSinValorOrdenador.join('|')}):\n${sinValorOrdenador}\n\n` +
         `supervisor_contrato.cargo_id al crearlo: ${cargoSupervisorInicial}\n` +
@@ -361,7 +380,8 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
         Object.entries(conteos).map(([k, v]) => `${k}: ${v}`).join('\n') +
         `\n\nPeticiones al CRUD Beego (${peticionesAlCrud.length}):\n${peticionesAlCrud.join('\n')}\n`
     );
-    expect.soft(contrato).toBe('1000000001|1|10|20|6611');
+    // clase_proveedor_id es el Id simulado de "Contratista Único" (tipo 120).
+    expect.soft(contrato).toBe(`1000000001|1|10|20|6611|${CLASE_CONTRATISTA_UNICO}`);
     expect.soft(sinValor).toBe(nulos(camposSinValorContrato));
     expect.soft(sinValorOrdenador).toBe(nulos(camposSinValorOrdenador));
     expect.soft(cargoSupervisorInicial).toBe('NULL');
