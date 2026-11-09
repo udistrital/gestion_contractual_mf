@@ -208,4 +208,57 @@ describe('PasoInfoGeneralComponent: guardado', () => {
     await guardar();
     expect(crud['post'].mock.calls[0][0].aplica_poliza).toBeNull();
   });
+
+  describe('reintento del consecutivo', () => {
+    // El RequestManager entrega el error como {status, message, details}.
+    const choque = () => throwError(() => ({ status: 409, message: 'Conflicto', details: null }));
+
+    it('ante un 409 pide otro consecutivo, reintenta el POST una vez y guarda', async () => {
+      await montar();
+      mid['postConsecutivo']
+        .mockReturnValueOnce(of({ Success: true, Status: 200, Data: '27' }))
+        .mockReturnValueOnce(of({ Success: true, Status: 200, Data: '28' }));
+      crud['post'].mockReturnValueOnce(choque()).mockReturnValueOnce(respuesta(201));
+      await guardar();
+      expect(mid['postConsecutivo']).toHaveBeenCalledTimes(2);
+      expect(crud['post']).toHaveBeenCalledTimes(2);
+      expect(crud['post'].mock.calls[1][0]).toEqual(expect.objectContaining({ consecutivo_elaboracion: '28', vigencia_id: 9001 }));
+      expect(crud['postEstadoContrato']).toHaveBeenCalledTimes(1);
+      expect(TestBed.inject(AlertService).showSuccessAlert).toHaveBeenCalled();
+    });
+
+    it('si el 409 se repite no reintenta más y muestra un error claro', async () => {
+      await montar();
+      crud['post'].mockReturnValue(choque());
+      await guardar();
+      expect(mid['postConsecutivo']).toHaveBeenCalledTimes(2);
+      expect(crud['post']).toHaveBeenCalledTimes(2);
+      expect(crud['postEstadoContrato']).not.toHaveBeenCalled();
+      expect(TestBed.inject(AlertService).showErrorAlert).toHaveBeenCalledWith(
+        expect.stringContaining('mismo consecutivo'),
+        'Error al asignar el consecutivo'
+      );
+      expect(component.guardando()).toBe(false);
+    });
+
+    it('ante un 400 (respuesta genérica del CRUD) no reintenta', async () => {
+      await montar();
+      crud['post'].mockReturnValue(throwError(() => ({ status: 400, message: 'Solicitud incorrecta', details: null })));
+      await guardar();
+      expect(mid['postConsecutivo']).toHaveBeenCalledTimes(1);
+      expect(crud['post']).toHaveBeenCalledTimes(1);
+      expect(TestBed.inject(AlertService).showErrorAlert).toHaveBeenCalledWith(
+        'Ocurrió un error al guardar los datos',
+        'Error al guardar los datos'
+      );
+    });
+
+    it('al editar un 409 no pide consecutivo', async () => {
+      await montar(existente);
+      crud['put'].mockReturnValue(choque());
+      await guardar();
+      expect(mid['postConsecutivo']).not.toHaveBeenCalled();
+      expect(crud['put']).toHaveBeenCalledTimes(1);
+    });
+  });
 });
