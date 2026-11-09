@@ -63,7 +63,7 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
   afterEach(() => http.verify());
 
   it('1. GET /v1/contratos-generales/{id} y entrega la respuesta tal cual', () => {
-    const contrato = { id: 42, objeto: 'Compra', tipo_control_id: null, fecha_suscripcion: null, sede_solicitante_id: 10 };
+    const contrato = { id: 42, objeto: 'Compra', tipo_control_id: null, fecha_suscripcion: null, dependencia_solicitante_id: 20 };
     let respuesta: any;
     crud.get(42).subscribe((r) => (respuesta = r));
     const req = http.expectOne(`${CRUD}/contratos-generales/42`);
@@ -194,13 +194,13 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
 
   it('16 a 21. contratista, solicitante y tipo de control se guardan con PUT parcial en contrato_general', () => {
     crud.put(42, { proveedor_numero_documento: '1000000001', tipo_persona_id: 1 }).subscribe();
-    crud.put(42, { sede_solicitante_id: 10, dependencia_solicitante_id: 20 }).subscribe();
+    crud.put(42, { dependencia_solicitante_id: 20 }).subscribe();
     crud.put(42, { tipo_control_id: 6611 }).subscribe();
     const reqs = http.match(`${CRUD}/contratos-generales/42`);
     expect(reqs.map((r) => r.request.method)).toEqual(['PUT', 'PUT', 'PUT']);
     expect(reqs.map((r) => r.request.body)).toEqual([
       { proveedor_numero_documento: '1000000001', tipo_persona_id: 1 },
-      { sede_solicitante_id: 10, dependencia_solicitante_id: 20 },
+      { dependencia_solicitante_id: 20 },
       { tipo_control_id: 6611 },
     ]);
     reqs.forEach((r) => r.flush(ok({ id: 42 })));
@@ -238,7 +238,6 @@ describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
       cargo_id: 5,
       documento: 3,
       digito_verificacion: 1,
-      sede_id: 10,
       dependencia_id: 20,
       contrato_general_id: { id: 42 },
     };
