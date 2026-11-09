@@ -6,9 +6,8 @@ import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 import {
-  EstadoContrato,
+  CambioEstadoContrato,
   DocumentoContrato,
-  ApiResponse,
 } from 'src/app/types/types';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { RolService } from 'src/app/services/rol.service';
@@ -20,10 +19,9 @@ import {
   rolPorEstado,
 } from 'src/app/utils/rolesEstados';
 import { SubirArchivoComponent } from './cargar-archivo/cargar-archivo.component';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
 import { MinutasMidService } from 'src/app/services/minuta-mid.service';
-import { VigenciaService } from 'src/app/services/vigencia.service';
 
 @Component({
     selector: 'app-revision-contrato',
@@ -38,7 +36,6 @@ export class RevisionContratoComponent {
   documentos = { minuta: '', documentos_precontractuales: '' };
   contrato_general_id = 0;
   unidad_ejecutora_id = 0;
-  vigencia_id: number = 0;
   numero_contrato: string = '';
   usuario_id: number = 0;
   roles: string[] = [];
@@ -57,8 +54,7 @@ export class RevisionContratoComponent {
     private gestorDocumentalService: GestorDocumentalService,
     private minutasMidService: MinutasMidService,
     private rolService: RolService,
-    private userService: UserService,
-    private vigenciaService: VigenciaService
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
@@ -117,7 +113,6 @@ export class RevisionContratoComponent {
         const contratoData = contrato?.Data;
         if (contratoData) {
           this.unidad_ejecutora_id = contratoData.unidad_ejecutora_id || 0;
-          this.vigencia_id = contratoData.vigencia_id || 0;
           this.numero_contrato = contratoData.numero_contrato || '';
         }
 
@@ -359,152 +354,69 @@ export class RevisionContratoComponent {
       estado_parametro_id = environment.ESTADOS_GENERALES.POR_SUSCRIBIR;
     }
 
-    let estadoContrato: EstadoContrato = {
-      contrato_general_id: { id: this.contrato_general_id },
+    const cambio: CambioEstadoContrato = {
       usuario_id: this.usuario_id,
       usuario_rol: rol,
       estado_parametro_id,
       estado_interno_parametro_id: estadoActual,
     };
 
-    if (!this.numero_contrato) {
-      this.generarNumeroContrato(estadoContrato, estadoAnterior);
-    } else {
-      this.crearEstadoAutomaticoContrato(estadoContrato, estadoAnterior);
-    }
+    this.crearEstadoAutomaticoContrato(cambio, estadoAnterior);
   }
 
-  crearEstadoAutomaticoContrato(
-    estadoContrato: EstadoContrato,
-    estado: number,
-    numeroContrato?: string
-  ) {
-    this.contratoGeneralCrudService
-      .postEstadoContrato(estadoContrato)
+  // Los dos estados se registran en el MID: al pasar a SUSCRITO asigna el número
+  // de contrato y lo devuelve. El MF no lo calcula ni lo envía.
+  crearEstadoAutomaticoContrato(cambio: CambioEstadoContrato, estado: number) {
+    const numeroAntes = this.numero_contrato;
+    this.contratoGeneralMidService
+      .postEstadoContrato(this.contrato_general_id, cambio)
       .subscribe({
         next: (response: any) => {
-          if (response?.Data?.id) {
-            estadoContrato.estado_parametro_id =
-              environment.ESTADOS_GENERALES.SUSCRITO;
-            estadoContrato.estado_interno_parametro_id = estado;
-            this.crearEstadoContrato(estadoContrato, numeroContrato);
+          if (response?.Data?.estado?.id) {
+            this.recibirNumero(response);
+            this.crearEstadoContrato(
+              {
+                ...cambio,
+                estado_parametro_id: environment.ESTADOS_GENERALES.SUSCRITO,
+                estado_interno_parametro_id: estado,
+              },
+              numeroAntes
+            );
           }
         },
         error: (error) =>
-          this.handleError('Error al crear estado automático', error),
+          this.handleError(this.mensajeDelMid(error, 'Error al crear estado automático'), error),
       });
   }
 
-  crearEstadoContrato(estadoContrato: EstadoContrato, numeroContrato?: string) {
-    this.contratoGeneralCrudService
-      .postEstadoContrato(estadoContrato)
+  crearEstadoContrato(cambio: CambioEstadoContrato, numeroAntes = this.numero_contrato) {
+    this.contratoGeneralMidService
+      .postEstadoContrato(this.contrato_general_id, cambio)
       .subscribe({
         next: (response: any) => {
-          if (response?.Data?.id) {
+          if (response?.Data?.estado?.id) {
+            this.recibirNumero(response);
+            const numeroNuevo = this.numero_contrato !== numeroAntes ? this.numero_contrato : '';
             this.alertService.showSuccessAlert(
-              numeroContrato
-                ? `${this.textos.enviado}. Número de contrato: ${numeroContrato}`
+              numeroNuevo
+                ? `${this.textos.enviado}. Número de contrato: ${numeroNuevo}`
                 : this.textos.enviado,
               'CONTRATO ENVIADO'
             );
           }
         },
         error: (error) =>
-          this.handleError('Error al crear estado de contrato', error),
+          this.handleError(this.mensajeDelMid(error, 'Error al crear estado de contrato'), error),
       });
   }
 
-  // Generar número de contrato si aplica
-  generarNumeroContrato(estadoContrato: EstadoContrato, estado: number) {
-    // Provisional: el año actual cuando el contrato no tiene vigencia (#397, pregunta 2).
-    const vigencia = this.vigencia_id
-      ? of(this.vigencia_id)
-      : this.vigenciaService.vigenciaActualId();
-
-    vigencia.subscribe({
-      next: (vigenciaId) => {
-        if (vigenciaId) {
-          this.pedirNumeroContrato(vigenciaId, estadoContrato, estado);
-        } else {
-          this.alertService.showErrorAlert(
-            'No se encontró la vigencia del año actual en Parámetros',
-            'Error al consultar la vigencia'
-          );
-        }
-      },
-      error: (error) => {
-        this.handleError('No se encontró la vigencia del año actual en Parámetros', error);
-      },
-    });
+  private recibirNumero(response: any) {
+    const numero = response?.Data?.numero_contrato;
+    if (numero) this.numero_contrato = numero;
   }
 
-  private pedirNumeroContrato(
-    vigenciaId: number,
-    estadoContrato: EstadoContrato,
-    estado: number
-  ) {
-    this.contratoGeneralMidService
-      .postNumeroContrato({
-        unidad_ejecutora_id: Number(this.unidad_ejecutora_id),
-        vigencia_id: vigenciaId,
-        estado: environment.ESTADOS_GENERALES.SUSCRITO,
-      })
-      .subscribe({
-        next: (response: ApiResponse<any>) => {
-          if (response.Success && response.Status === 200) {
-            this.guardarNumeroContrato(
-              response.Data,
-              vigenciaId,
-              estadoContrato,
-              estado
-            );
-          } else {
-            this.alertService.showErrorAlert(
-              'Error al generar número de contrato',
-              'Por favor, intente de nuevo'
-            );
-          }
-        },
-        error: (error) => {
-          this.handleError('Error al generar número de contrato', error);
-        },
-      });
-  }
-
-  // Guarda el número y la vigencia antes de los estados: si falla, el contrato no queda SUSCRITO sin número.
-  // La vigencia también se guarda porque el conteo del número filtra por ella.
-  guardarNumeroContrato(
-    numeroContrato: string,
-    vigenciaId: number,
-    estadoContrato: EstadoContrato,
-    estado: number
-  ) {
-    this.contratoGeneralCrudService
-      .put(this.contrato_general_id, {
-        numero_contrato: numeroContrato,
-        vigencia_id: vigenciaId,
-      })
-      .subscribe({
-        next: (response: ApiResponse<any>) => {
-          // El CRUD Beego responde Status como texto ("200"): basta con Success.
-          if (response.Success) {
-            this.numero_contrato = numeroContrato;
-            this.vigencia_id = vigenciaId;
-            this.crearEstadoAutomaticoContrato(
-              estadoContrato,
-              estado,
-              numeroContrato
-            );
-          } else {
-            this.alertService.showErrorAlert(
-              'Error al guardar número de contrato',
-              'Por favor, intente de nuevo'
-            );
-          }
-        },
-        error: (error) => {
-          this.handleError('Error al guardar número de contrato', error);
-        },
-      });
+  // El MID explica por qué no asigna el número (sin vigencia, unidad sin prefijo).
+  private mensajeDelMid(error: any, porDefecto: string): string {
+    return error?.status === 400 && error?.error?.Message ? error.error.Message : porDefecto;
   }
 }

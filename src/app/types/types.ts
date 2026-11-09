@@ -88,6 +88,9 @@ export interface EstadoContrato {
   motivo?: string;
 }
 
+/** Cambio de estado que recibe el MID; el contrato va en la ruta y el número lo asigna el MID. */
+export type CambioEstadoContrato = Omit<EstadoContrato, 'contrato_general_id'>;
+
 export interface SedeContratoMidResponse {
   Id: number;
   Nombre: string;
