@@ -15,7 +15,10 @@ export interface ErrorResponse {
 export class HttpErrorManager {
   constructor(private ngZone: NgZone) {}
 
-  public handleError(error: HttpErrorResponse): Observable<ErrorResponse> {
+  /**
+   * @param estadosSinAlerta estados que maneja quien llama: se propagan sin la alerta genérica.
+   */
+  public handleError(error: HttpErrorResponse, estadosSinAlerta: number[] = []): Observable<ErrorResponse> {
     let errorResponse: ErrorResponse;
 
     if (error.error instanceof ErrorEvent) {
@@ -34,7 +37,9 @@ export class HttpErrorManager {
       console.error(`Error del backend ${error.status}:`, error.error);
     }
 
-    this.showErrorMessage(errorResponse);
+    if (!estadosSinAlerta.includes(errorResponse.status)) {
+      this.showErrorMessage(errorResponse);
+    }
 
     return throwError(errorResponse);
   }

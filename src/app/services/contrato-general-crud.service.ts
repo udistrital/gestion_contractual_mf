@@ -45,11 +45,13 @@ export class ContratoGeneralCrudService {
     return this.requestManager.get(`${RECURSOS_CRUD.contratoGeneral}/${idContrato}`);
   }
 
+  // El 409 (consecutivo repetido) lo maneja el registro: reintenta y muestra solo el resultado final.
   post(contrato_general_parcial: any): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.post(
       `${RECURSOS_CRUD.contratoGeneral}/`,
-      contrato_general_parcial
+      contrato_general_parcial,
+      [409]
     );
   }
 
