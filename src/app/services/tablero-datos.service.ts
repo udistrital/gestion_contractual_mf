@@ -17,7 +17,6 @@ interface ContratoTableroCrud {
   vigencia_id: number | null;
   fecha_final: string | null;
   dependencia_solicitante_id: number | null;
-  sede_solicitante_id: number | null;
   estado_parametro_id: number | null;
   fecha_estado: string | null;
   abogado_id: number | null;
@@ -43,7 +42,7 @@ export class TableroDatosService {
       switchMap((vigenciaId) => {
         // Año sin parámetro de vigencia: ningún contrato puede tenerlo
         if (vigenciaId === null) return of([] as ContratoTableroCrud[]);
-        const filtro = vigenciaId ? `?vigencia-id=${vigenciaId}` : '';
+        const filtro = vigenciaId ? `?vigencia_id=${vigenciaId}` : '';
         this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
         return this.requestManager
           .get<any>(`tableros/contratos${filtro}`)
@@ -77,7 +76,7 @@ export class TableroDatosService {
     c: ContratoTableroCrud,
     vigencia: string,
     hoy: Date
-  ): ContratoTablero & { sedeId: number | null } {
+  ): ContratoTablero {
     const abogadoId =
       c.abogado_id != null && c.abogado_id !== USUARIO_ID_GENERICO ? c.abogado_id : null;
 
@@ -92,24 +91,17 @@ export class TableroDatosService {
         : 0,
       fechaFinal: c.fecha_final ? new Date(`${c.fecha_final.substring(0, 10)}T00:00:00`) : null,
       dependenciaId: c.dependencia_solicitante_id ?? null,
-      sedeId: c.sede_solicitante_id ?? null,
       dependencia: '',
       abogadoId,
       abogado: '',
     };
   }
 
-  private nombresDependencias(
-    contratos: Array<ContratoTablero & { sedeId: number | null }>
-  ): Observable<Map<number, string>> {
-    const sedes = [...new Set(contratos.map((c) => c.sedeId).filter((s): s is number => s != null))];
-    if (!sedes.length) return of(new Map());
-    return forkJoin(
-      sedes.map((sede) =>
-        this.contratoMidService.getDependenciasBySede(sede).pipe(catchError(() => of([])))
-      )
-    ).pipe(
-      map((listas) => new Map(listas.flat().map((d) => [Number(d.id), d.nombre] as [number, string])))
+  private nombresDependencias(contratos: ContratoTablero[]): Observable<Map<number, string>> {
+    if (!contratos.some((c) => c.dependenciaId != null)) return of(new Map());
+    return this.contratoMidService.getDependencias().pipe(
+      catchError(() => of([])),
+      map((lista) => new Map(lista.map((d) => [Number(d.id), d.nombre] as [number, string])))
     );
   }
 
