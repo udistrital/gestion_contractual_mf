@@ -283,7 +283,11 @@ describe('Guardado de los pasos con el CRUD', () => {
       { id: 22, nombre: 'Rectoría' },
     ];
 
-    async function montar(supervisoresGuardados: unknown[], dependencia: any = throwError(() => new Error('sin MID'))) {
+    async function montar(
+      supervisoresGuardados: unknown[],
+      dependencia: any = throwError(() => new Error('sin MID')),
+      dependenciaSolicitante: number | null = 20
+    ) {
       mid = {
         getDependencias: jest.fn().mockReturnValue(of(DEPENDENCIAS)),
         getDependencia: jest.fn().mockReturnValue(dependencia),
@@ -320,7 +324,7 @@ describe('Guardado de los pasos con el CRUD', () => {
       fixture = TestBed.createComponent(PasoSupervisoresComponent);
       component = fixture.componentInstance;
       // El registro entrega el contrato completo, con el solicitante.
-      fixture.componentRef.setInput('contratoGeneral', { ...contrato, dependencia_solicitante_id: 20 });
+      fixture.componentRef.setInput('contratoGeneral', { ...contrato, dependencia_solicitante_id: dependenciaSolicitante });
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
@@ -390,6 +394,22 @@ describe('Guardado de los pasos con el CRUD', () => {
       jest.spyOn(component.form.get('solicitante')!, 'invalid', 'get').mockReturnValue(false);
       component.guardarSolicitante();
       expect(crud['put']).toHaveBeenCalledWith(42, { dependencia_solicitante_id: 20 });
+    });
+
+    it('la primera vez que guarda el solicitante no muestra la alerta de éxito; al guardarlo de nuevo, sí', async () => {
+      await montar([], undefined, null);
+      const alertas = TestBed.inject(AlertService) as unknown as ReturnType<typeof alertServiceMock>;
+      expect(component.solicitanteSaved).toBe(false);
+      component.form.get('solicitante')?.patchValue({ dependencia: 21 });
+      jest.spyOn(component.form.get('solicitante')!, 'invalid', 'get').mockReturnValue(false);
+
+      component.guardarSolicitante();
+      expect(crud['put']).toHaveBeenCalledWith(42, { dependencia_solicitante_id: 21 });
+      expect(component.solicitanteSaved).toBe(true);
+      expect(alertas.showSuccessAlert).not.toHaveBeenCalled();
+
+      component.guardarSolicitante();
+      expect(alertas.showSuccessAlert).toHaveBeenCalledWith('La información del solicitante se ha guardado correctamente');
     });
 
     it('actualiza el supervisor existente con PUT y enteros, y guarda tipo_control_id en el contrato', async () => {

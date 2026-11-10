@@ -41,7 +41,6 @@ export class PasoSupervisoresComponent implements OnInit {
   contratoGeneral = input<ContratoGeneral>();
   viewMode = input<boolean>(false);
 
-  solicitanteId: number | null = null;
   supervisoresIds: number[] = [];
   // Documento del supervisor que llega del MID de ordenadores y supervisores.
   supervisorLegacy = [{ documento: '' }];
@@ -117,7 +116,6 @@ export class PasoSupervisoresComponent implements OnInit {
     // no se vuelve a consultar el CRUD.
     const depSolicitante = Number(this.contratoGeneral()?.dependencia_solicitante_id);
     if (depSolicitante) {
-      this.solicitanteId = contratoId;
       this.solicitanteSaved = true;
       this.dependenciaGuardadaSolicitante = dependenciaGuardada(depSolicitante);
       this.form.get('solicitante')?.patchValue({ dependencia: depSolicitante });
@@ -208,8 +206,7 @@ export class PasoSupervisoresComponent implements OnInit {
       })
       .subscribe({
         next: () => {
-          const actualizado = !!this.solicitanteId;
-          this.solicitanteId = contratoId;
+          const actualizado = this.solicitanteSaved;
           this.solicitanteSaved = true;
           if (actualizado) {
             this.alertService.showSuccessAlert(
