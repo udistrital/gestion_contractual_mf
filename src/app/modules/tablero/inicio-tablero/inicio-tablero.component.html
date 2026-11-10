@@ -1,16 +1,13 @@
-<plantilla-tarjeta-contenedora
-  [title]="'Tablero de gestión contractual'"
-  [contenido]="contenidoTablero"
-></plantilla-tarjeta-contenedora>
+<!-- Sin rol de jefe de contratación ni de abogado no se muestra nada -->
+@if (rol()) {
+  <plantilla-tarjeta-contenedora
+    [title]="'Tablero de gestión contractual'"
+    [contenido]="contenidoTablero"
+  ></plantilla-tarjeta-contenedora>
+}
 
 <ng-template #contenidoTablero>
-  @if (rol() === undefined) {
-    <div class="tb-vacio">Cargando tablero…</div>
-  } @else if (rol() === null) {
-    <div class="tb-card tb-vacio">
-      Las estadísticas de contratación están disponibles para los roles de jefe de contratación y abogado.
-    </div>
-  } @else {
+  @if (rol()) {
     <div class="tablero">
       <header class="encabezado">
         <div>
