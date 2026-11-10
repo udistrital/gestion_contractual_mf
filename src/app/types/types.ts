@@ -41,7 +41,6 @@ export interface ContratoGeneral {
   proveedor_numero_documento?: string;
   tipo_persona_id?: number | null;
   clase_proveedor_id?: number | null;
-  sede_solicitante_id?: number | null;
   dependencia_solicitante_id?: number | null;
 }
 
@@ -99,6 +98,11 @@ export interface SedeContratoMidResponse {
 export interface DependenciaContratoMidResponse {
   id: number;
   nombre: string;
+}
+
+/** GET espacios-fisicos/dependencias/{id} del MID: la dependencia y las sedes donde está en Oikos. */
+export interface DependenciaConSedesMidResponse extends DependenciaContratoMidResponse {
+  sedes: DependenciaContratoMidResponse[];
 }
 
 export interface ApiResponse<T> {
@@ -261,13 +265,13 @@ export interface SupervisorData {
 export interface SupervisorToSave {
   id?: number;
   supervisor_id?: number;
-  sede_legado: string;
-  dependencia_legado: string;
-  cargo_legado: string;
+  // Columnas de legado: el MF las lee, pero no las escribe.
+  sede_legado?: string;
+  dependencia_legado?: string;
+  cargo_legado?: string;
   cargo_id?: number;
   documento?: number;
   digito_verificacion: number | null;
-  sede_id: number | null;
   dependencia_id: number | null;
   contrato_general_id: ReferenciaCrud;
 }

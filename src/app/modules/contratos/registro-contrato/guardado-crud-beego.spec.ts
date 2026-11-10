@@ -1,6 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AlertService } from 'src/app/services/alert.service';
 import { CdpsService } from 'src/app/services/cdps.service';
@@ -275,9 +275,22 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
     let component: PasoSupervisoresComponent;
     let crud: Record<string, jest.Mock>;
 
-    async function montar(supervisoresGuardados: unknown[]) {
+    let mid: Record<string, jest.Mock>;
+    const DEPENDENCIA_20 = { id: 20, nombre: 'Facultad de Ingeniería', sedes: [{ id: 10, nombre: 'Sede Calle 40' }] };
+    // Lista completa del MID; la dependencia 20 no está (p. ej., inactiva) para probar su nombre.
+    const DEPENDENCIAS = [
+      { id: 21, nombre: 'Oficina Asesora Jurídica' },
+      { id: 22, nombre: 'Rectoría' },
+    ];
+
+    async function montar(supervisoresGuardados: unknown[], dependencia: any = throwError(() => new Error('sin MID'))) {
+      mid = {
+        getDependencias: jest.fn().mockReturnValue(of(DEPENDENCIAS)),
+        getDependencia: jest.fn().mockReturnValue(dependencia),
+      };
       crud = {
-        get: jest.fn().mockReturnValue(of(ok({ ...contrato, sede_solicitante_id: 10, dependencia_solicitante_id: 20 }))),
+        // El CRUD v2 ya no guarda sede_solicitante_id ni sede_id del supervisor (crud#51 3a1e5ab).
+        get: jest.fn().mockReturnValue(of(ok({ ...contrato, dependencia_solicitante_id: 20 }))),
         getSupervisores: jest.fn().mockReturnValue(of(ok(supervisoresGuardados))),
         put: jest.fn().mockReturnValue(of(ok({ id: 42 }))),
         putSupervisor: jest.fn().mockReturnValue(of(ok({ id: 1 }))),
@@ -287,13 +300,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
         declarations: [PasoSupervisoresComponent],
         providers: [
           { provide: AlertService, useValue: alertServiceMock() },
-          {
-            provide: ContratoGeneralMidService,
-            useValue: {
-              getSedes: jest.fn().mockReturnValue(of([])),
-              getDependenciasBySede: jest.fn().mockReturnValue(of([])),
-            },
-          },
+          { provide: ContratoGeneralMidService, useValue: mid },
           { provide: ContratoGeneralCrudService, useValue: crud },
           {
             provide: OrdenadoresSupervisoresContratacionMidService,
@@ -324,7 +331,6 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
       sede_legado: 'SEDE',
       dependencia_legado: 'DEP',
       cargo_legado: 'Decano',
-      sede_id: 10,
       dependencia_id: 20,
       digito_verificacion: 3,
     };
@@ -338,30 +344,57 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
         order: 'asc',
         limit: 0,
       });
-      expect(component.form.get('solicitante')?.value).toEqual(
-        expect.objectContaining({ sede: 10, dependencia: 20 })
-      );
+      // Sin sede en el formulario (a pedido de la clienta).
+      expect(component.form.get('solicitante')?.getRawValue()).toEqual({ dependencia: 20 });
+      expect(component.getSupervisoresFormArray().at(0).get('sede')).toBeNull();
+    });
+
+    it('lista todas las dependencias del MID, sin filtrar por sede', async () => {
+      await montar([]);
+      expect(mid['getDependencias']).toHaveBeenCalledTimes(1);
+      // El solicitante agrega su dependencia guardada (20); el supervisor nuevo, ninguna.
+      expect(component.getDependenciasSolicitante()).toEqual(expect.arrayContaining(DEPENDENCIAS));
+      expect(component.getDependenciasSupervisor(0)).toEqual(DEPENDENCIAS);
+    });
+
+    describe('nombre de la dependencia guardada desde GET espacios-fisicos/dependencias/{id}', () => {
+      it('muestra el nombre aunque la lista no la traiga, y no toca sede', async () => {
+        await montar([], of(DEPENDENCIA_20));
+        expect(mid['getDependencia']).toHaveBeenCalledWith(20);
+        expect(component.getDependenciasSolicitante()).toEqual([...DEPENDENCIAS, { id: 20, nombre: 'Facultad de Ingeniería' }]);
+        expect(component.form.get('solicitante')?.getRawValue()).toEqual({ dependencia: 20 });
+      });
+
+      it('si el MID falla: la dependencia queda con su Id y el formulario no se bloquea', async () => {
+        await montar([]);
+        expect(component.getDependenciasSolicitante()).toContainEqual({ id: 20, nombre: 'Dependencia guardada (Id 20)' });
+        expect(component.form.get('solicitante')?.getRawValue().dependencia).toBe(20);
+        expect(component.form.get('solicitante')?.valid).toBe(true);
+      });
+
+      it('supervisor: conserva el nombre de dependencia_legado', async () => {
+        await montar([supervisorGuardado], of({ ...DEPENDENCIA_20, nombre: 'Nombre en Oikos' }));
+        expect(component.getSupervisoresFormArray().at(0).get('dependencia')?.value).toBe(20);
+        expect(component.getDependenciasSupervisor(0)).toContainEqual({ id: 20, nombre: 'DEP' });
+      });
+
+      it('supervisor sin dependencia_legado: toma el nombre del MID', async () => {
+        await montar([{ ...supervisorGuardado, dependencia_legado: '' }], of(DEPENDENCIA_20));
+        expect(component.dependenciasGuardadasSupervisor[0]).toEqual({ id: 20, nombre: 'Facultad de Ingeniería' });
+      });
     });
 
     it('guarda el solicitante con PUT parcial en contrato_general', async () => {
       await montar([]);
       jest.spyOn(component.form.get('solicitante')!, 'invalid', 'get').mockReturnValue(false);
       component.guardarSolicitante();
-      expect(crud['put']).toHaveBeenCalledWith(42, {
-        sede_solicitante_id: 10,
-        dependencia_solicitante_id: 20,
-      });
+      expect(crud['put']).toHaveBeenCalledWith(42, { dependencia_solicitante_id: 20 });
     });
 
     it('actualiza el supervisor existente con PUT y enteros, y guarda tipo_control_id en el contrato', async () => {
       await montar([supervisorGuardado]);
       // Datos del supervisor que en la pantalla llegan del MID de ordenadores y supervisores.
-      component.supervisorLegacy[0] = {
-        documento: '1000000004',
-        sede_legado: 'SEDE',
-        dependencia_legado: 'DEP',
-        cargo_legado: 'Decano',
-      };
+      component.supervisorLegacy[0] = { documento: '1000000004' };
       component.getSupervisoresFormArray().at(0).patchValue({ codigoVerificacion: '3' });
       jest.spyOn(component.form.get('supervisores')!, 'invalid', 'get').mockReturnValue(false);
       await component.guardarSupervisores();
@@ -371,18 +404,23 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
           supervisor_id: 1000000004,
           documento: 1000000004,
           digito_verificacion: 3,
-          sede_id: 10,
           dependencia_id: 20,
           contrato_general_id: { id: 42 },
         })
       );
+      const cuerpoPut = crud['putSupervisor'].mock.calls[0][1];
+      expect(cuerpoPut).not.toHaveProperty('sede_id');
+      // Las columnas de legado no se escriben.
+      expect(cuerpoPut).not.toHaveProperty('sede_legado');
+      expect(cuerpoPut).not.toHaveProperty('dependencia_legado');
+      expect(cuerpoPut).not.toHaveProperty('cargo_legado');
       expect(crud['postSupervisor']).not.toHaveBeenCalled();
       expect(crud['put']).toHaveBeenCalledWith(42, { tipo_control_id: 6611 });
     });
 
     it('no envía en el PUT cargo_id ni el documento sin valor, para no borrar lo guardado', async () => {
       await montar([supervisorGuardado]);
-      component.supervisorLegacy[0] = { documento: '', sede_legado: 'SEDE', dependencia_legado: 'DEP', cargo_legado: 'Decano' };
+      component.supervisorLegacy[0] = { documento: '' };
       jest.spyOn(component.form.get('supervisores')!, 'invalid', 'get').mockReturnValue(false);
       await component.guardarSupervisores();
       const cuerpo = crud['putSupervisor'].mock.calls[0][1];
@@ -393,12 +431,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
 
     it('crea el supervisor nuevo con POST y toma su id de Data', async () => {
       await montar([]);
-      component.supervisorLegacy[0] = {
-        documento: '1000000004',
-        sede_legado: '',
-        dependencia_legado: '',
-        cargo_legado: '',
-      };
+      component.supervisorLegacy[0] = { documento: '1000000004' };
       jest.spyOn(component.form.get('supervisores')!, 'invalid', 'get').mockReturnValue(false);
       await component.guardarSupervisores();
       expect(crud['postSupervisor']).toHaveBeenCalledWith(

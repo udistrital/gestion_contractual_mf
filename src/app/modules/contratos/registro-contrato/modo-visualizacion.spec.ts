@@ -282,7 +282,6 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
         sede_legado: '',
         dependencia_legado: '',
         cargo_legado: '',
-        sede_id: '10',
         dependencia_id: '20',
         digito_verificacion: '1',
       });
@@ -295,6 +294,10 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
             useValue: {
               getSedes: jest.fn().mockReturnValue(of([])),
               getDependenciasBySede: jest.fn().mockReturnValue(of([])),
+              getDependencias: jest.fn().mockReturnValue(of([{ id: 20, nombre: 'Facultad de Ingeniería' }])),
+              getDependencia: jest
+                .fn()
+                .mockReturnValue(of({ id: 20, nombre: 'Facultad de Ingeniería', sedes: [{ id: 10, nombre: 'Sede Calle 40' }] })),
             },
           },
           {
@@ -302,7 +305,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
             useValue: {
               // El solicitante vive en contrato_general (modelo v2).
               get: jest.fn().mockReturnValue(
-                of({ Success: true, Status: '200', Data: { id: 1, sede_solicitante_id: 10, dependencia_solicitante_id: 20 } })
+                of({ Success: true, Status: '200', Data: { id: 1, dependencia_solicitante_id: 20 } })
               ),
               getSupervisores: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: [supervisor(1), supervisor(2)] })),
             },

@@ -38,7 +38,7 @@ export class ContratoGeneralCrudService {
   }
 
   // contrato_general: también guarda el contratista (proveedor_*), el
-  // solicitante (sede/dependencia_solicitante_id) y el tipo_control_id.
+  // solicitante (dependencia_solicitante_id) y el tipo_control_id.
 
   get(idContrato: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');

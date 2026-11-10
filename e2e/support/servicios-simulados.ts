@@ -150,6 +150,14 @@ export function responderServicioExterno(route: Route, ruta: string, query: URLS
   }
   if (ruta === 'gestion_contractual_mid/espacios-fisicos/sedes') return json(ok(SEDES));
   if (/^gestion_contractual_mid\/espacios-fisicos\/dependencias-sede\/\d+$/.test(ruta)) return json(ok(DEPENDENCIAS));
+  if (ruta === 'gestion_contractual_mid/espacios-fisicos/dependencias') return json(ok(DEPENDENCIAS));
+  const dependencia = ruta.match(/^gestion_contractual_mid\/espacios-fisicos\/dependencias\/(\d+)$/);
+  if (dependencia) {
+    const encontrada = DEPENDENCIAS.find((d) => d.id === Number(dependencia[1]));
+    return encontrada
+      ? json(ok({ ...encontrada, sedes: [{ id: SEDES[0].Id, nombre: SEDES[0].Nombre }] }))
+      : json({ Success: false, Status: 404, Message: 'No se encontró la dependencia', Data: null }, 404);
+  }
   if (ruta === 'gestion_contractual_mid/contratos-generales/consecutivo' && metodo === 'POST')
     return json(ok(CONSECUTIVO, 'Consecutivo generado'));
 

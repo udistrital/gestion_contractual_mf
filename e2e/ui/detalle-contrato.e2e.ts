@@ -87,7 +87,6 @@ const contrato = {
   tipo_persona_id: 1,
   clase_proveedor_id: null,
   dependencia_solicitante_id: 20,
-  sede_solicitante_id: 10,
   activo: true,
   fecha_creacion: '2026-10-20T15:04:11Z',
   fecha_modificacion: '2026-10-27T10:12:45Z',
@@ -110,7 +109,7 @@ const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
     { id: 501, contrato_general_id: DEL_CONTRATO, numero_cdp_id: 1234, vigencia_cdp_id: 2024, valor_a_tomar: 45000000, fecha_registro: '2026-10-21T00:00:00Z', activo: true },
   ],
   supervisores: [
-    { id: 61, contrato_general_id: DEL_CONTRATO, supervisor_id: 7788, documento: 1000000005, digito_verificacion: 3, cargo_id: 45, sede_id: 10, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
+    { id: 61, contrato_general_id: DEL_CONTRATO, supervisor_id: 7788, documento: 1000000005, digito_verificacion: 3, cargo_id: 45, dependencia_id: 20, sede_legado: 'Sede Calle 40', dependencia_legado: 'Facultad de Ingeniería', cargo_legado: 'Decano', activo: true },
   ],
   'especificaciones-tecnicas': [
     { id: 801, contrato_general_id: DEL_CONTRATO, descripcion: 'Osciloscopio digital de 4 canales 200 MHz', cantidad: 3, valor_unitario: 9500000, valor_total: 28500000, activo: true },
@@ -337,16 +336,11 @@ test('detalle de contrato en solo lectura (backend simulado)', async () => {
 
     const solicitante = (label: string) => valorSelect(seccion.locator('app-searchable-select', { hasText: label }));
 
-    await expect.soft(solicitante('Sede Universitaria Solicitante')).toHaveText(/Sede Calle 40/);
-    await expect.soft(valorSelect(formField('sede').first())).toHaveText(/Sede Calle 40/);
-    // Conocido en develop (lo corrige la rama de la #382): al cargar las dependencias de
-    // la sede, cargarDependencias() deja en null la dependencia guardada del solicitante
-    // y del supervisor. No es de esta rama, así que solo se deja registrado.
-    test.info().annotations.push({
-      type: 'conocido-develop',
-      description: `Dependencia solicitante: "${await solicitante('Dependencia Solicitante').textContent()}", ` +
-        `dependencia supervisor: "${await valorSelect(formField('dependencia').first()).textContent()}"`,
-    });
+    // La sede se quitó del formulario a pedido de la clienta; el nombre de la dependencia
+    // guardada sale del MID (simulado).
+    await expect.soft(seccion.getByText(/Sede Universitaria/)).toHaveCount(0);
+    await expect.soft(solicitante('Dependencia Solicitante')).toHaveText(/Facultad de Ingeniería/);
+    await expect.soft(solicitante('Dependencia Supervisor')).toHaveText(/Facultad de Ingeniería/);
     await expect.soft(seccion).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(seccion).toContainText('Decano');
     // "Tipo y Alcance del Control" se carga de ContratoGeneral.TipoControlId.

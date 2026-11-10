@@ -23,9 +23,12 @@ import { CLASE_CONTRATISTA_UNICO, CORE_MF_STUB, PROVEEDOR, VIGENCIA_ACTUAL_ID, r
  * El navegador corre a las 20:30 de Colombia (en UTC ya es el día siguiente) para
  * comprobar el día de las columnas date; la base se prueba en America/Bogota.
  *
- * Ejecutar: CRUD_BEEGO_URL=http://localhost:8080/ pnpm run test:e2e -- registro-crud-beego
+ * Ejecutar: CRUD_BEEGO_URL=http://localhost:8080/ [MID_BEEGO_URL=http://localhost:8081/] pnpm run test:e2e -- registro-crud-beego
  */
 const CRUD_BEEGO_URL = process.env.CRUD_BEEGO_URL;
+// Con MID_BEEGO_URL, espacios físicos (dependencias) y el consecutivo van al MID real (Oikos simulado); si no, se simulan aquí.
+const MID_BEEGO_URL = process.env.MID_BEEGO_URL?.replace(/\/$/, '');
+const peticionesAlMid: string[] = [];
 const CONTENEDOR_BD = process.env.CRUD_BEEGO_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
 const EVIDENCIAS = process.env.EVIDENCIAS_390_BEEGO ?? join(homedir(), 'argo_repos', 'evidencias-390-beego');
 
@@ -62,6 +65,16 @@ async function responder(route: Route): Promise<void> {
     return route.fulfill({ response: respuesta });
   }
   if (ruta === 'gestion_contractual_mid/contratos-generales/consecutivo') cuerposConsecutivo.push(route.request().postDataJSON());
+  // El consecutivo también va al MID real: con la única del crud#51 (0307723) un valor fijo
+  // chocaría entre corridas.
+  if (
+    MID_BEEGO_URL &&
+    (ruta.startsWith('gestion_contractual_mid/espacios-fisicos/') || ruta === 'gestion_contractual_mid/contratos-generales/consecutivo')
+  ) {
+    const destino = `${MID_BEEGO_URL}/${ruta.replace('gestion_contractual_mid/', '')}${url.search}`;
+    peticionesAlMid.push(`${route.request().method()} ${destino}`);
+    return route.fulfill({ response: await route.fetch({ url: destino }) });
+  }
   const externa = responderServicioExterno(route, ruta, url.searchParams);
   if (externa) return externa;
   noSimuladas.push(`${route.request().method()} ${url.pathname}${url.search}`);
@@ -226,7 +239,8 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
   await test.step('paso 2: solicitante, supervisor y tipo de control', async () => {
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const seccion = page.locator('app-paso-supervisores');
-    await seleccionar(page, buscable(seccion, 'Sede Universitaria Solicitante'), 'Sede Calle 40');
+    // Sin selector de sede (a pedido de la clienta): se listan todas las dependencias.
+    await expect(seccion.getByText(/Sede Universitaria/)).toHaveCount(0);
     await seleccionar(page, buscable(seccion, 'Dependencia Solicitante'), 'Facultad de Ingeniería');
     // El primer guardado no muestra alerta y, por OnPush, la vista no refleja
     // "Solicitante guardado" hasta otro ciclo (así viene de develop): se espera el PUT.
@@ -234,13 +248,20 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
       (r) => r.request().method() === 'PUT' && r.url().includes(`/v1/contratos-generales/${contratoId}`)
     );
     await seccion.getByRole('button', { name: /(Guardar|Actualizar) Solicitante/ }).click();
-    expect((await guardado).status()).toBe(200);
+    const respuestaSolicitante = await guardado;
+    expect(respuestaSolicitante.status()).toBe(200);
+    expect.soft(respuestaSolicitante.request().postDataJSON()).toEqual({ dependencia_solicitante_id: 20 });
 
-    await seleccionar(page, seccion.locator('mat-select[formcontrolname="sede"]').first(), 'Sede Calle 40');
-    await seleccionar(page, seccion.locator('mat-select[formcontrolname="dependencia"]').first(), 'Facultad de Ingeniería');
+    await seleccionar(page, buscable(seccion, 'Dependencia Supervisor'), 'Facultad de Ingeniería');
     await expect(seccion).toContainText('SUPERVISOR DE PRUEBA');
     await seleccionar(page, seccion.locator('mat-select[formcontrolname="tipoControl"]').first(), 'Técnico, administrativo y financiero');
+    const supervisorNuevo = page.waitForRequest((r) => r.method() === 'POST' && r.url().includes('/v1/supervisores/'));
     await seccion.getByRole('button', { name: /Guardar Supervisores/ }).click();
+    const cuerpoSupervisor = (await supervisorNuevo).postDataJSON();
+    expect.soft(cuerpoSupervisor).not.toHaveProperty('sede_id');
+    // Las columnas de legado no se escriben.
+    for (const legado of ['sede_legado', 'dependencia_legado', 'cargo_legado']) expect.soft(cuerpoSupervisor).not.toHaveProperty(legado);
+    expect.soft(cuerpoSupervisor.dependencia_id).toBe(20);
     await aceptarAlerta(page);
     await capturar(page, '02-paso2-supervisores');
   });
@@ -294,7 +315,10 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
 
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
-    await expect.soft(supervisores.locator('app-searchable-select', { hasText: 'Sede Universitaria Solicitante' })).toContainText('Sede Calle 40');
+    // Sin sede; el nombre de la dependencia guardada sale del MID.
+    await expect.soft(supervisores.getByText(/Sede Universitaria/)).toHaveCount(0);
+    await expect.soft(buscable(supervisores, 'Dependencia Solicitante')).toHaveText(/Facultad de Ingeniería/);
+    await expect.soft(buscable(supervisores, 'Dependencia Supervisor')).toHaveText(/Facultad de Ingeniería/);
     await expect.soft(supervisores).toContainText('SUPERVISOR DE PRUEBA');
     await expect.soft(supervisores.locator('mat-select[formcontrolname="tipoControl"]').first()).toContainText('Técnico, administrativo y financiero');
     await expect.soft(page.locator('app-paso-contratistas input[formcontrolname="documentoContratista"]')).toHaveValue('1000000001');
@@ -334,9 +358,27 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
     await expect(supervisores).toContainText('SUPERVISOR DE PRUEBA');
+    // Al editar: el nombre de la dependencia guardada, sin selector de sede.
+    await expect(buscable(supervisores, 'Dependencia Solicitante')).toHaveText(/Facultad de Ingeniería/);
+    await expect(buscable(supervisores, 'Dependencia Supervisor')).toHaveText(/Facultad de Ingeniería/);
+    await expect(supervisores.getByText(/Sede Universitaria/)).toHaveCount(0);
+    if (MID_BEEGO_URL) {
+      expect.soft(peticionesAlMid.some((p) => p.includes('/espacios-fisicos/dependencias/20'))).toBe(true);
+    }
+    await capturar(page, '09a-edicion-solicitante-supervisor');
+    const solicitante = page.waitForRequest(
+      (r) => r.method() === 'PUT' && r.url().includes(`/v1/contratos-generales/${contratoId}`) && 'dependencia_solicitante_id' in (r.postDataJSON() ?? {})
+    );
+    await supervisores.getByRole('button', { name: /(Guardar|Actualizar) Solicitante/ }).click();
+    expect.soft((await solicitante).postDataJSON()).toEqual({ dependencia_solicitante_id: 20 });
+    await aceptarAlerta(page);
     const supervisor = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/supervisores/'));
     await supervisores.getByRole('button', { name: /(Guardar|Actualizar) Supervisores/ }).click();
-    expect.soft((await supervisor).postDataJSON()).not.toHaveProperty('cargo_id');
+    const cuerpoEdicion = (await supervisor).postDataJSON();
+    expect.soft(cuerpoEdicion).not.toHaveProperty('cargo_id');
+    expect.soft(cuerpoEdicion).not.toHaveProperty('sede_id');
+    for (const legado of ['sede_legado', 'dependencia_legado', 'cargo_legado']) expect.soft(cuerpoEdicion).not.toHaveProperty(legado);
+    expect.soft(cuerpoEdicion.dependencia_id).toBe(20);
     await aceptarAlerta(page);
 
     // Al editar se carga la clase guardada y se vuelve a enviar con el contratista.
@@ -353,7 +395,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
 
   await test.step('base de datos: un solo ordenador activo, contratista y solicitante en contrato_general', async () => {
     const contrato = sql(
-      `select proveedor_numero_documento, tipo_persona_id, sede_solicitante_id, dependencia_solicitante_id, tipo_control_id, clase_proveedor_id ` +
+      `select proveedor_numero_documento, tipo_persona_id, dependencia_solicitante_id, tipo_control_id, clase_proveedor_id ` +
         `from contratacion.contrato_general where id = ${contratoId}`
     );
     const sinValor = columnas('contrato_general', `id = ${contratoId}`, camposSinValorContrato);
@@ -371,7 +413,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     writeFileSync(
       join(EVIDENCIAS, '08-base-de-datos.txt'),
       `Zona horaria de la base: ${sql('show timezone')}\nHora del navegador: ${AHORA.toISOString()} (20:30 en Colombia)\n\n` +
-        `Contrato ${contratoId}\ncontrato_general (proveedor_numero_documento|tipo_persona_id|sede_solicitante_id|dependencia_solicitante_id|tipo_control_id|clase_proveedor_id):\n${contrato}\n\n` +
+        `Contrato ${contratoId}\ncontrato_general (proveedor_numero_documento|tipo_persona_id|dependencia_solicitante_id|tipo_control_id|clase_proveedor_id):\n${contrato}\n\n` +
         `contrato_general sin valor (${camposSinValorContrato.join('|')}):\n${sinValor}\n\n` +
         `ordenador_contrato sin valor al crearlo (${camposSinValorOrdenador.join('|')}):\n${sinValorOrdenador}\n\n` +
         `supervisor_contrato.cargo_id al crearlo: ${cargoSupervisorInicial}\n` +
@@ -381,7 +423,11 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
         `\n\nPeticiones al CRUD Beego (${peticionesAlCrud.length}):\n${peticionesAlCrud.join('\n')}\n`
     );
     // clase_proveedor_id es el Id simulado de "Contratista Único" (tipo 120).
-    expect.soft(contrato).toBe(`1000000001|1|10|20|6611|${CLASE_CONTRATISTA_UNICO}`);
+    expect.soft(contrato).toBe(`1000000001|1|20|6611|${CLASE_CONTRATISTA_UNICO}`);
+    expect.soft(columnas('supervisor_contrato', delContrato, ['dependencia_id'])).toBe('20');
+    expect.soft(columnas('supervisor_contrato', delContrato, ['sede_legado', 'dependencia_legado', 'cargo_legado'])).toBe(
+      nulos(['sede_legado', 'dependencia_legado', 'cargo_legado'])
+    );
     expect.soft(sinValor).toBe(nulos(camposSinValorContrato));
     expect.soft(sinValorOrdenador).toBe(nulos(camposSinValorOrdenador));
     expect.soft(cargoSupervisorInicial).toBe('NULL');
@@ -407,7 +453,7 @@ test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () 
   const consultar = () => ({
     contratos: sql('select count(*) from contratacion.contrato_general'),
     estados: sql(`select count(*) from contratacion.estado_contrato where contrato_general_id = ${id}`),
-    fila: columnas('contrato_general', `id = ${id}`, ['consecutivo_elaboracion', 'plazo_ejecucion', 'proveedor_numero_documento', 'sede_solicitante_id']),
+    fila: columnas('contrato_general', `id = ${id}`, ['consecutivo_elaboracion', 'plazo_ejecucion', 'proveedor_numero_documento', 'dependencia_solicitante_id']),
   });
   const antes = consultar();
   const aplicaPoliza = () => columnas('contrato_general', `id = ${id}`, ['aplica_poliza']);
@@ -483,7 +529,6 @@ test('fecha de estudios: conserva el día al guardar y al editar', async () => {
     fechas.push(fechaGuardada());
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
     const supervisores = page.locator('app-paso-supervisores');
-    await seleccionar(page, buscable(supervisores, 'Sede Universitaria Solicitante'), 'Sede Calle 40');
     await seleccionar(page, buscable(supervisores, 'Dependencia Solicitante'), 'Facultad de Ingeniería');
     const guardado = page.waitForResponse(
       (r) => r.request().method() === 'PUT' && r.url().includes(`/v1/contratos-generales/${contratoId}`)
