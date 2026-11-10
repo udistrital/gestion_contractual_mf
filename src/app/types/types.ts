@@ -87,6 +87,13 @@ export interface EstadoContrato {
   motivo?: string;
 }
 
+/** Estado registrado en el CRUD (POST estados-contrato/): lo enviado, con su id. */
+export interface EstadoContratoCrud extends EstadoContrato {
+  id: number;
+  activo?: boolean;
+  fecha_creacion?: string;
+}
+
 /** Cambio de estado que recibe el MID; el contrato va en la ruta y el número lo asigna el MID. */
 export type CambioEstadoContrato = Omit<EstadoContrato, 'contrato_general_id'>;
 

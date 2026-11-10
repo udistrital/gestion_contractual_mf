@@ -5,7 +5,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
-import { EstadoContrato } from 'src/app/types/types';
+import { SweetAlertResult } from 'sweetalert2';
+import { ApiResponse, EstadoContrato, EstadoContratoCrud } from 'src/app/types/types';
 
 @Component({
     selector: 'app-modal-motivos-rechazo',
@@ -38,7 +39,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
   preguntarConfirmacionRechazo() {
     this.alertService
       .showConfirmAlert('¿Está seguro(a) de rechazar el contrato?')
-      .then((confirmado: any) => {
+      .then((confirmado: SweetAlertResult) => {
         if (!confirmado.value) {
           return;
         }
@@ -57,7 +58,7 @@ export class ModalMotivosRechazoComponent implements OnInit {
     };
     this.contratoGeneralCrudService
       .postEstadoContrato(estado)
-      .subscribe((res: any) => {
+      .subscribe((res: ApiResponse<EstadoContratoCrud>) => {
         if (res?.Data?.id) {
           this.dialogRef.close({ rechazado: true });
         } else {

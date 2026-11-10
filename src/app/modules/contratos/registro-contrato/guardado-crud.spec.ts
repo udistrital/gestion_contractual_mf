@@ -290,7 +290,7 @@ describe('Guardado de los pasos con el CRUD', () => {
       };
       crud = {
         // El contrato y los supervisores no tienen sede: solo la dependencia.
-        get: jest.fn().mockReturnValue(of(ok({ ...contrato, dependencia_solicitante_id: 20 }))),
+        get: jest.fn(),
         getSupervisores: jest.fn().mockReturnValue(of(ok(supervisoresGuardados))),
         put: jest.fn().mockReturnValue(of(ok({ id: 42 }))),
         putSupervisor: jest.fn().mockReturnValue(of(ok({ id: 1 }))),
@@ -319,7 +319,8 @@ describe('Guardado de los pasos con el CRUD', () => {
       });
       fixture = TestBed.createComponent(PasoSupervisoresComponent);
       component = fixture.componentInstance;
-      fixture.componentRef.setInput('contratoGeneral', contrato);
+      // El registro entrega el contrato completo, con el solicitante.
+      fixture.componentRef.setInput('contratoGeneral', { ...contrato, dependencia_solicitante_id: 20 });
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
@@ -335,9 +336,9 @@ describe('Guardado de los pasos con el CRUD', () => {
       digito_verificacion: 3,
     };
 
-    it('lee el solicitante de contrato_general y los supervisores activos en orden de id', async () => {
+    it('toma el solicitante del contrato cargado, sin reconsultar el CRUD, y los supervisores activos en orden de id', async () => {
       await montar([supervisorGuardado]);
-      expect(crud['get']).toHaveBeenCalledWith(42);
+      expect(crud['get']).not.toHaveBeenCalled();
       expect(crud['getSupervisores']).toHaveBeenCalledWith({
         query: DEL_CONTRATO,
         sortby: 'id',

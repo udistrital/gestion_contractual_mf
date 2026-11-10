@@ -303,10 +303,8 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              // El solicitante vive en contrato_general.
-              get: jest.fn().mockReturnValue(
-                of({ Success: true, Status: '200', Data: { id: 1, dependencia_solicitante_id: 20 } })
-              ),
+              // El solicitante llega en el input contratoGeneral; no se reconsulta el contrato.
+              get: jest.fn(),
               getSupervisores: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: [supervisor(1), supervisor(2)] })),
             },
           },
@@ -330,10 +328,16 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       pasoCompleto = [];
       component.stepCompleted.subscribe((completo) => pasoCompleto.push(completo));
       fixture.componentRef.setInput('viewMode', true);
-      fixture.componentRef.setInput('contratoGeneral', contrato);
+      fixture.componentRef.setInput('contratoGeneral', { ...contrato, dependencia_solicitante_id: 20 });
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
+    });
+
+    it('muestra el solicitante del contrato cargado sin reconsultar el CRUD', () => {
+      expect(component.form.get('solicitante')?.getRawValue()).toEqual({ dependencia: 20 });
+      expect(component.form.get('solicitante')?.disabled).toBe(true);
+      expect(TestBed.inject(ContratoGeneralCrudService).get).not.toHaveBeenCalled();
     });
 
     it('carga Tipo y Alcance del Control desde el contrato y sus opciones desde Parámetros', () => {

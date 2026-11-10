@@ -113,27 +113,18 @@ export class PasoSupervisoresComponent implements OnInit {
     this.contratoCargadoId = contratoId;
     this.cargandoDatosGuardados = true;
 
-    // Cargar datos del solicitante (viven en contrato_general)
-    this.contratoGeneralCrudService
-      .get(contratoId)
-      .subscribe({
-        next: (response: any) => {
-          const data = response?.Data;
-          if (data?.dependencia_solicitante_id) {
-            const depId = Number(data.dependencia_solicitante_id);
-            this.solicitanteId = contratoId;
-            this.solicitanteSaved = true;
-            this.dependenciaGuardadaSolicitante = dependenciaGuardada(depId);
-            this.form.get('solicitante')?.patchValue({ dependencia: depId });
-            this.cargarNombreDependencia(depId, 'solicitante');
-            this.cdRef.detectChanges();
-            this.aplicarModoVisualizacion();
-          }
-        },
-        error: () => {
-          console.log('No se pudo cargar el solicitante.');
-        },
-      });
+    // El solicitante viene en el contrato que carga el registro (input contratoGeneral):
+    // no se vuelve a consultar el CRUD.
+    const depSolicitante = Number(this.contratoGeneral()?.dependencia_solicitante_id);
+    if (depSolicitante) {
+      this.solicitanteId = contratoId;
+      this.solicitanteSaved = true;
+      this.dependenciaGuardadaSolicitante = dependenciaGuardada(depSolicitante);
+      this.form.get('solicitante')?.patchValue({ dependencia: depSolicitante });
+      this.cargarNombreDependencia(depSolicitante, 'solicitante');
+      this.cdRef.markForCheck();
+      this.aplicarModoVisualizacion();
+    }
 
     // Cargar supervisores
     this.contratoGeneralCrudService
