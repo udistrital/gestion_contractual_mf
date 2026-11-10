@@ -15,8 +15,8 @@ import {
 /**
  * E2E de #390: detalle del contrato en solo lectura (/contratos/detalle/:id) con
  * backend SIMULADO. Ninguna petición sale a los servicios. gestion_contractual_crud
- * se responde en el formato de la rama del crud#51 (feature/385-crud-beego-v2) del CRUD Go/Beego v2
- * (rutas /v1/<recurso>/, snake_case, Status texto, [] vacías, null, FK { id }); el MID y los demás
+ * se responde en el formato del CRUD (rutas /v1/<recurso>/, snake_case, [] vacías,
+ * null, FK { id }); el MID y los demás
  * servicios, con las simulaciones de e2e/support. Se verifica, paso por paso, que
  * los datos se ven, que los controles están deshabilitados, que no hay acciones de
  * edición y que el detalle no hace ningún POST, PUT, PATCH ni DELETE.
@@ -34,8 +34,7 @@ const usuario = Buffer.from(
 ).toString('base64');
 
 // ---------------------------------------------------------------------------
-// Datos simulados del contrato de prueba, en el formato de la rama
-// feature/385-crud-beego-v2 (crud#51) del CRUD Beego v2: snake_case, Status como texto,
+// Datos simulados del contrato de prueba, en el formato del CRUD: snake_case,
 // [] en listas vacías, null en lo que no tiene valor y FK como objeto { id }.
 // ---------------------------------------------------------------------------
 
@@ -132,8 +131,8 @@ const escrituras: string[] = [];
 const noSimuladas: string[] = [];
 const consultasCrud: string[] = [];
 
-/** Responde gestion_contractual_crud en el formato esperado del CRUD Beego v2. */
-function responderCrudBeego(route: Route, ruta: string, query: URLSearchParams): Promise<void> | null {
+/** Responde gestion_contractual_crud en el formato del CRUD. */
+function responderCrud(route: Route, ruta: string, query: URLSearchParams): Promise<void> | null {
   const json = (data: unknown) => route.fulfill({ status: 200, json: data });
   if (ruta === `gestion_contractual_crud/v1/contratos-generales/${CONTRATO_ID}`) return json(ok(contrato));
   const lista = ruta.match(/^gestion_contractual_crud\/v1\/([\w-]+)\/$/);
@@ -152,7 +151,7 @@ function responder(route: Route): Promise<void> {
   // Consulta de contratos (gestion_contractual_mid).
   if (ruta === 'gestion_contractual_mid/contratos-generales')
     return route.fulfill({ status: 200, json: { Success: true, Status: 200, Message: 'Consulta exitosa', Data: [contratoEnConsulta], Metadata: { total: 1 } } });
-  const respuesta = responderCrudBeego(route, ruta, url.searchParams) ?? responderServicioExterno(route, ruta, url.searchParams);
+  const respuesta = responderCrud(route, ruta, url.searchParams) ?? responderServicioExterno(route, ruta, url.searchParams);
   if (respuesta) return respuesta;
   noSimuladas.push(`${route.request().method()} ${url.pathname}${url.search}`);
   return route.fulfill({ status: 404, json: { Success: false, Status: 404, Message: 'Ruta no simulada en la prueba', Data: null } });

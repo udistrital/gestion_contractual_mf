@@ -43,7 +43,7 @@ describe('PasoContratistasComponent', () => {
   };
 
   const mockContratoGeneralCrudService = {
-    // El contratista vive en contrato_general (modelo v2).
+    // El contratista vive en contrato_general.
     get: jest.fn().mockReturnValue(
       of({ Success: true, Status: '200', Data: { id: 105, proveedor_numero_documento: '', tipo_persona_id: 0 } })
     ),

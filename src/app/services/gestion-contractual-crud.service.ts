@@ -13,7 +13,7 @@ export class GestionContractualCrudService {
         this.requestManager.setPath("GESTION_CONTRACTUAL_CRUD_SERVICE");
     }
 
-    // documento_contrato (CRUD Beego v2): lo comparten contrato, póliza y acta de inicio.
+    // documento_contrato: lo comparten contrato, póliza y acta de inicio.
     getDocumentos(consulta: ConsultaCrud) {
         return this.get(rutaConsulta(RECURSOS_CRUD.documentoContrato, consulta));
     }

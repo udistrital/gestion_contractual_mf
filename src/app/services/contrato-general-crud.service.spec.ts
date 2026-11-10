@@ -16,14 +16,13 @@ jest.mock('sweetalert2', () => ({
 }));
 
 /**
- * Rutas /v1 del CRUD Beego v2 y filtros que arman los pasos. Las respuestas
- * tienen el formato de la rama feature/385-crud-beego-v2 (crud#51): snake_case,
- * Status como texto, [] en listas vacías, null en lo que no tiene valor y FK como objeto
- * { id }. El MF no las transforma.
+ * Rutas /v1 del CRUD y filtros que arman los pasos. Las respuestas simuladas
+ * tienen el formato del CRUD: snake_case, [] en listas vacías, null en lo que no
+ * tiene valor y FK como objeto { id }. El MF no las transforma.
  */
 const CRUD = environment.GESTION_CONTRACTUAL_CRUD_SERVICE.replace(/\/$/, '');
 const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
-// Filtro por FK verificado contra la rama del crud#51.
+// Filtro por FK del CRUD.
 const DEL_CONTRATO = 'contrato_general_id.id:42,activo:true';
 
 describe('rutaConsulta', () => {
@@ -37,7 +36,7 @@ describe('rutaConsulta', () => {
   });
 });
 
-describe('Services del MF con el CRUD Beego v2 (sin adaptador)', () => {
+describe('Services del MF con el CRUD', () => {
   let crud: ContratoGeneralCrudService;
   let gestion: GestionContractualCrudService;
   let polizas: PolizasService;

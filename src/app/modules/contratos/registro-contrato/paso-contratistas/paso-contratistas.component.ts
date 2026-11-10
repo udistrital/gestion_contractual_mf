@@ -352,7 +352,7 @@ export class PasoContratistasComponent implements OnInit, OnDestroy {
       (this.contratoGeneral() as any)?.contratista?.identificacion ||
       (this.contratoGeneral() as any)?.numero_documento;
 
-    // El contratista vive en contrato_general (modelo v2).
+    // El contratista vive en contrato_general.
     this.contratoGeneralCrudService
       .get(contratoId)
       .pipe(

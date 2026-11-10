@@ -13,7 +13,7 @@ import {
 } from '../types/types';
 
 /**
- * Ruta de una consulta de lista del CRUD Beego v2:
+ * Ruta de una consulta de lista del CRUD:
  * <recurso>/?query=campo:valor,...&sortby=...&order=...&limit=...
  * El filtro (query) lo arma el componente que consume el service.
  */

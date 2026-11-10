@@ -303,7 +303,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              // El solicitante vive en contrato_general (modelo v2).
+              // El solicitante vive en contrato_general.
               get: jest.fn().mockReturnValue(
                 of({ Success: true, Status: '200', Data: { id: 1, dependencia_solicitante_id: 20 } })
               ),
@@ -395,7 +395,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              // El contratista vive en contrato_general (modelo v2).
+              // El contratista vive en contrato_general.
               get: jest
                 .fn()
                 .mockReturnValue(of({ Success: true, Status: '200', Data: { id: 7, proveedor_numero_documento: '1000000001', tipo_persona_id: 1 } })),

@@ -80,7 +80,7 @@ describe('RevisionContratoComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  describe('CRUD Beego v2 (#390)', () => {
+  describe('registro de estados en el CRUD', () => {
     beforeEach(() => {
       component.contrato_general_id = 42;
       jest.clearAllMocks();

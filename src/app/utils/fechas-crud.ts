@@ -1,5 +1,5 @@
 /**
- * Las columnas date del CRUD Beego guardan el día UTC de lo que reciben y lo
+ * Las columnas date del CRUD guardan el día UTC de lo que reciben y lo
  * devuelven como medianoche UTC. Estas funciones conservan el día local.
  */
 

@@ -16,9 +16,9 @@ import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-inf
 import { PasoSupervisoresComponent } from './paso-supervisores/paso-supervisores.component';
 
 /**
- * Guardado de los pasos contra el CRUD Beego v2 (#390): los filtros se arman
- * en el paso y las respuestas tienen el formato de la rama del crud#51 (feature/385-crud-beego-v2)
- * (snake_case, Status como texto, [] en listas vacías, null en lo que no tiene valor, FK { id }).
+ * Guardado de los pasos contra el CRUD: los filtros se arman en el paso y las
+ * respuestas simuladas tienen el formato del CRUD (snake_case, [] en listas vacías,
+ * null en lo que no tiene valor, FK { id }).
  */
 
 const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
@@ -32,8 +32,8 @@ const alertServiceMock = () => ({
 
 const contrato: any = { id: 42, unidad_ejecutora_id: 1, valor_pesos: 1000000, tipo_control_id: 6611 };
 
-describe('Guardado de los pasos con el CRUD Beego v2', () => {
-  describe('PasoInfoGeneralComponent: valores nulos y tipos del modelo v2', () => {
+describe('Guardado de los pasos con el CRUD', () => {
+  describe('PasoInfoGeneralComponent: valores nulos y tipos del modelo', () => {
     let component: PasoInfoGeneralComponent;
     let crud: Record<string, jest.Mock>;
     let mid: Record<string, jest.Mock>;
@@ -289,7 +289,7 @@ describe('Guardado de los pasos con el CRUD Beego v2', () => {
         getDependencia: jest.fn().mockReturnValue(dependencia),
       };
       crud = {
-        // El CRUD v2 ya no guarda sede_solicitante_id ni sede_id del supervisor (crud#51 3a1e5ab).
+        // El contrato y los supervisores no tienen sede: solo la dependencia.
         get: jest.fn().mockReturnValue(of(ok({ ...contrato, dependencia_solicitante_id: 20 }))),
         getSupervisores: jest.fn().mockReturnValue(of(ok(supervisoresGuardados))),
         put: jest.fn().mockReturnValue(of(ok({ id: 42 }))),

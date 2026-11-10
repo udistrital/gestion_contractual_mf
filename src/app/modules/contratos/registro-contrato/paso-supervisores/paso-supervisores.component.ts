@@ -45,8 +45,7 @@ export class PasoSupervisoresComponent implements OnInit {
   supervisoresIds: number[] = [];
   // Documento del supervisor que llega del MID de ordenadores y supervisores.
   supervisorLegacy = [{ documento: '' }];
-  // La sede se quitó del formulario a pedido de la clienta (crud#51 3a1e5ab): se listan
-  // todas las dependencias activas del MID. Al cargar un contrato, el nombre de la
+  // El formulario no pide sede: se listan todas las dependencias activas del MID. Al cargar un contrato, el nombre de la
   // dependencia guardada sale de GET espacios-fisicos/dependencias/{id}; si el MID falla,
   // se ofrece con su Id para que se vea sin borrarla.
   dependencias: DependenciaContratoMidResponse[] = [];
@@ -114,7 +113,7 @@ export class PasoSupervisoresComponent implements OnInit {
     this.contratoCargadoId = contratoId;
     this.cargandoDatosGuardados = true;
 
-    // Cargar datos del solicitante (viven en contrato_general, modelo v2)
+    // Cargar datos del solicitante (viven en contrato_general)
     this.contratoGeneralCrudService
       .get(contratoId)
       .subscribe({

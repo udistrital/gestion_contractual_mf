@@ -37,19 +37,19 @@ export interface ContratoGeneral {
   unidad_ejecutora_id: number;
   estados?: any;
   contratista?: any;
-  // Modelo v2 (CRUD Beego): contratista y solicitante viven en contrato_general.
+  // Contratista y solicitante viven en contrato_general.
   proveedor_numero_documento?: string;
   tipo_persona_id?: number | null;
   clase_proveedor_id?: number | null;
   dependencia_solicitante_id?: number | null;
 }
 
-/** FK del CRUD Beego v2: se envía y llega como objeto con el id (p. ej. contrato_general_id: { id: 42 }). */
+/** FK del CRUD: se envía y llega como objeto con el id (p. ej. contrato_general_id: { id: 42 }). */
 export interface ReferenciaCrud {
   id: number;
 }
 
-/** Consulta de listas del CRUD Beego v2 (query=campo:valor,..., limit, sortby, order). */
+/** Consulta de listas del CRUD (query=campo:valor,..., limit, sortby, order). */
 export interface ConsultaCrud {
   query: string;
   limit: number;

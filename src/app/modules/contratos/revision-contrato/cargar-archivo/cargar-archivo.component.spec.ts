@@ -30,7 +30,7 @@ describe('CargarArchivoComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('registra la minuta por entidad y con el usuario, como la guarda el CRUD Beego', () => {
+  it('registra la minuta por entidad y con el usuario, como la guarda el CRUD', () => {
     const post = jest
       .spyOn(TestBed.inject(GestionContractualCrudService), 'postDocumento')
       .mockReturnValue(of({ Data: { id: 5 } }) as any);

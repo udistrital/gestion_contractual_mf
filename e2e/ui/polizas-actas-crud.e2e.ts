@@ -6,18 +6,18 @@ import { join } from 'node:path';
 import { CORE_MF_STUB, VIGENCIA_ACTUAL_ID, responderServicioExterno } from '../support/servicios-simulados';
 
 /**
- * Pantallas de pólizas y actas contra el CRUD Beego v2 y el MID REALES (#397).
+ * Pantallas de pólizas y actas contra el CRUD y el MID REALES (#397).
  *
- * Las peticiones a gestion_contractual_crud van a CRUD_BEEGO_URL y las de pólizas y
- * amparos del MID a MID_BEEGO_URL (MID de mid#28 apuntando a ese mismo CRUD). Se simulan
+ * Las peticiones a gestion_contractual_crud van a CRUD_URL y las de pólizas y
+ * amparos del MID a MID_URL (MID de mid#28 apuntando a ese mismo CRUD). Se simulan
  * core-mf, Parámetros, minuta_contractual_mid y el gestor documental.
  *
- * Ejecutar: CRUD_BEEGO_URL=http://localhost:8080/ MID_BEEGO_URL=http://localhost:8081/
- *           pnpm run test:e2e -- polizas-actas-crud-beego
+ * Ejecutar: CRUD_URL=http://localhost:8080/ MID_URL=http://localhost:8081/
+ *           pnpm run test:e2e -- polizas-actas-crud
  */
-const CRUD_BEEGO_URL = process.env.CRUD_BEEGO_URL?.replace(/\/$/, '');
-const MID_BEEGO_URL = process.env.MID_BEEGO_URL?.replace(/\/$/, '');
-const CONTENEDOR_BD = process.env.CRUD_BEEGO_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
+const CRUD_URL = process.env.CRUD_URL?.replace(/\/$/, '');
+const MID_URL = process.env.MID_URL?.replace(/\/$/, '');
+const CONTENEDOR_BD = process.env.CRUD_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
 const EVIDENCIAS = process.env.EVIDENCIAS_397 ?? join(homedir(), 'argo_repos', 'evidencias-397');
 const VIGENCIA = String(new Date().getFullYear());
 const DESCRIPCION_AMPARO = 'Amparo de cumplimiento de prueba';
@@ -25,7 +25,7 @@ const NUMERO_POLIZA = 'POL-PRUEBA-397';
 const ACTA_PDF = 'JVBERi0xLjQK';
 const ENLACE_ACTA = '00000000-0000-4000-8000-000000000000';
 
-test.skip(!CRUD_BEEGO_URL || !MID_BEEGO_URL, 'Requiere CRUD_BEEGO_URL y MID_BEEGO_URL');
+test.skip(!CRUD_URL || !MID_URL, 'Requiere CRUD_URL y MID_URL');
 test.describe.configure({ mode: 'serial' });
 
 const usuario = Buffer.from(
@@ -52,10 +52,10 @@ async function responder(route: Route): Promise<void> {
   const url = new URL(route.request().url());
   const ruta = url.pathname.replace('/apioas/', '');
   if (ruta.startsWith('gestion_contractual_crud/v1/')) {
-    return reenviar(route, `${CRUD_BEEGO_URL}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`);
+    return reenviar(route, `${CRUD_URL}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`);
   }
   if (/^gestion_contractual_mid\/(polizas|amparos-polizas|amparos-contratos)/.test(ruta)) {
-    return reenviar(route, `${MID_BEEGO_URL}/${ruta.replace('gestion_contractual_mid/', '')}${url.search}`);
+    return reenviar(route, `${MID_URL}/${ruta.replace('gestion_contractual_mid/', '')}${url.search}`);
   }
   if (/\/acta-poliza\/contratos\/\d+$/.test(ruta)) {
     return route.fulfill({ json: { Success: true, Status: 200, Data: ACTA_PDF } });
@@ -106,12 +106,12 @@ async function capturar(archivo: string) {
 
 test.beforeAll(async ({ browser }) => {
   mkdirSync(EVIDENCIAS, { recursive: true });
-  const contrato = await postJson(`${CRUD_BEEGO_URL}/v1/contratos-generales/`, {
+  const contrato = await postJson(`${CRUD_URL}/v1/contratos-generales/`, {
     unidad_ejecutora_id: 6818,
     vigencia_id: VIGENCIA_ACTUAL_ID,
   });
   contratoId = contrato.Data.id;
-  await postJson(`${MID_BEEGO_URL}/amparos-polizas`, [
+  await postJson(`${MID_URL}/amparos-polizas`, [
     {
       contrato_general_id: contratoId,
       amparo_id: 6602,

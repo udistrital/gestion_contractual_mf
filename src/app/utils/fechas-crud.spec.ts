@@ -1,6 +1,6 @@
 import { aFechaCrud, desdeFechaCrud } from './fechas-crud';
 
-describe('fechas del CRUD Beego', () => {
+describe('fechas del CRUD', () => {
   it('envía el día local aunque en UTC ya sea el día siguiente', () => {
     expect(aFechaCrud(new Date(2026, 9, 31, 23, 30))).toBe('2026-10-31T00:00:00Z');
     expect(aFechaCrud(new Date(2026, 0, 5, 0, 10))).toBe('2026-01-05T00:00:00Z');

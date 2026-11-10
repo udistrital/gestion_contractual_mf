@@ -6,11 +6,10 @@ import { join } from 'node:path';
 import { CLASE_CONTRATISTA_UNICO, CORE_MF_STUB, PROVEEDOR, VIGENCIA_ACTUAL_ID, responderServicioExterno } from '../support/servicios-simulados';
 
 /**
- * Integración local de #390 contra el CRUD Go/Beego v2 REAL de la #385.
+ * Integración local de #390 contra gestion_contractual_crud REAL.
  *
  * Las peticiones del MF a gestion_contractual_crud se reenvían al CRUD que corre en
- * CRUD_BEEGO_URL (por ejemplo http://localhost:8080/, levantado con el
- * docker-compose de la rama de la #385). Así no hace falta cambiar el environment
+ * CRUD_URL (por ejemplo http://localhost:8080/, levantado en local). Así no hace falta cambiar el environment
  * del MF ni depender de CORS. Solo se simulan el core-mf, gestion_contractual_mid
  * (consecutivo, parámetros, espacios físicos) y los demás servicios externos.
  *
@@ -23,21 +22,21 @@ import { CLASE_CONTRATISTA_UNICO, CORE_MF_STUB, PROVEEDOR, VIGENCIA_ACTUAL_ID, r
  * El navegador corre a las 20:30 de Colombia (en UTC ya es el día siguiente) para
  * comprobar el día de las columnas date; la base se prueba en America/Bogota.
  *
- * Ejecutar: CRUD_BEEGO_URL=http://localhost:8080/ [MID_BEEGO_URL=http://localhost:8081/] pnpm run test:e2e -- registro-crud-beego
+ * Ejecutar: CRUD_URL=http://localhost:8080/ [MID_URL=http://localhost:8081/] pnpm run test:e2e -- registro-crud
  */
-const CRUD_BEEGO_URL = process.env.CRUD_BEEGO_URL;
-// Con MID_BEEGO_URL, espacios físicos (dependencias) y el consecutivo van al MID real (Oikos simulado); si no, se simulan aquí.
-const MID_BEEGO_URL = process.env.MID_BEEGO_URL?.replace(/\/$/, '');
+const CRUD_URL = process.env.CRUD_URL;
+// Con MID_URL, espacios físicos (dependencias) y el consecutivo van al MID real (Oikos simulado); si no, se simulan aquí.
+const MID_URL = process.env.MID_URL?.replace(/\/$/, '');
 const peticionesAlMid: string[] = [];
-const CONTENEDOR_BD = process.env.CRUD_BEEGO_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
-const EVIDENCIAS = process.env.EVIDENCIAS_390_BEEGO ?? join(homedir(), 'argo_repos', 'evidencias-390-beego');
+const CONTENEDOR_BD = process.env.CRUD_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
+const EVIDENCIAS = process.env.EVIDENCIAS_REGISTRO_CRUD ?? join(homedir(), 'argo_repos', 'evidencias-registro-crud');
 
 /*
- * Probada contra la rama feature/385-crud-beego-v2 del crud#51 (snake_case, [] en
- * listas vacías, POST/PUT con el registro y su id, y null en lo que no tiene valor).
- * El MF maneja Status como texto, las FK como objeto { id } y las fechas con aFechaCrud.
+ * Formato del CRUD: snake_case, [] en listas vacías, POST/PUT con el registro y su id,
+ * y null en lo que no tiene valor. El MF maneja las FK como objeto { id } y las fechas
+ * con aFechaCrud.
  */
-test.skip(!CRUD_BEEGO_URL, 'Requiere CRUD_BEEGO_URL con el CRUD Beego v2 corriendo en local');
+test.skip(!CRUD_URL, 'Requiere CRUD_URL con el CRUD corriendo en local');
 
 const usuario = Buffer.from(
   JSON.stringify({ user: { role: ['ABOGADO_CONTRATACION_RECTOR'] }, userService: { role: [] } })
@@ -56,7 +55,7 @@ async function responder(route: Route): Promise<void> {
   const url = new URL(route.request().url());
   const ruta = url.pathname.replace('/apioas/', '');
   if (ruta.startsWith('gestion_contractual_crud/v1/')) {
-    const destino = `${CRUD_BEEGO_URL!.replace(/\/$/, '')}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`;
+    const destino = `${CRUD_URL!.replace(/\/$/, '')}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`;
     peticionesAlCrud.push(`${route.request().method()} ${destino}`);
     const respuesta = await route.fetch({ url: destino });
     if (route.request().method() === 'POST' && ruta === 'gestion_contractual_crud/v1/contratos-generales/') {
@@ -65,13 +64,13 @@ async function responder(route: Route): Promise<void> {
     return route.fulfill({ response: respuesta });
   }
   if (ruta === 'gestion_contractual_mid/contratos-generales/consecutivo') cuerposConsecutivo.push(route.request().postDataJSON());
-  // El consecutivo también va al MID real: con la única del crud#51 (0307723) un valor fijo
+  // El consecutivo también va al MID real: con la restricción única del consecutivo un valor fijo
   // chocaría entre corridas.
   if (
-    MID_BEEGO_URL &&
+    MID_URL &&
     (ruta.startsWith('gestion_contractual_mid/espacios-fisicos/') || ruta === 'gestion_contractual_mid/contratos-generales/consecutivo')
   ) {
-    const destino = `${MID_BEEGO_URL}/${ruta.replace('gestion_contractual_mid/', '')}${url.search}`;
+    const destino = `${MID_URL}/${ruta.replace('gestion_contractual_mid/', '')}${url.search}`;
     peticionesAlMid.push(`${route.request().method()} ${destino}`);
     return route.fulfill({ response: await route.fetch({ url: destino }) });
   }
@@ -81,7 +80,7 @@ async function responder(route: Route): Promise<void> {
   return route.fulfill({ status: 404, json: { Success: false, Status: 404, Message: 'Ruta no simulada', Data: null } });
 }
 
-/** Consulta la base del CRUD Beego (contenedor del docker-compose de la #385). */
+/** Consulta la base de datos del CRUD (contenedor CRUD_DB_CONTAINER). */
 function sql(consulta: string): string {
   return execFileSync('docker', ['exec', CONTENEDOR_BD, 'psql', '-U', 'postgres', '-d', 'administrativa', '-tAc', consulta], {
     encoding: 'utf-8',
@@ -187,7 +186,7 @@ test.afterAll(async () => {
   await context.close();
 });
 
-test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', async () => {
+test('registro y edición contra el CRUD real y detalle del contrato', async () => {
   test.setTimeout(300_000);
 
   await test.step('paso 1: datos básicos (crea el contrato en contrato_general)', async () => {
@@ -296,7 +295,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await capturar(page, '04-especificaciones');
   });
 
-  await test.step('detalle del contrato con los datos guardados en el CRUD Beego', async () => {
+  await test.step('detalle del contrato con los datos guardados en el CRUD', async () => {
     await page.evaluate(
       (menuDetalle) => localStorage.setItem('menu', menuDetalle),
       menu(['/gestion-contractual/contratos/registrar', `/gestion-contractual/contratos/detalle/${contratoId}`])
@@ -362,7 +361,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
     await expect(buscable(supervisores, 'Dependencia Solicitante')).toHaveText(/Facultad de Ingeniería/);
     await expect(buscable(supervisores, 'Dependencia Supervisor')).toHaveText(/Facultad de Ingeniería/);
     await expect(supervisores.getByText(/Sede Universitaria/)).toHaveCount(0);
-    if (MID_BEEGO_URL) {
+    if (MID_URL) {
       expect.soft(peticionesAlMid.some((p) => p.includes('/espacios-fisicos/dependencias/20'))).toBe(true);
     }
     await capturar(page, '09a-edicion-solicitante-supervisor');
@@ -420,7 +419,7 @@ test('registro y edición contra el CRUD Beego v2 real y detalle del contrato', 
         `supervisor_contrato.cargo_id tras editar (se fijó en 45 por SQL): ${cargoSupervisor}\n` +
         `ordenador_contrato tras editar (cargo_id|ordenador_sicapital_id|documento_identidad, fijados por SQL): ${ordenadorEditado}\n\n` +
         Object.entries(conteos).map(([k, v]) => `${k}: ${v}`).join('\n') +
-        `\n\nPeticiones al CRUD Beego (${peticionesAlCrud.length}):\n${peticionesAlCrud.join('\n')}\n`
+        `\n\nPeticiones al CRUD (${peticionesAlCrud.length}):\n${peticionesAlCrud.join('\n')}\n`
     );
     // clase_proveedor_id es el Id simulado de "Contratista Único" (tipo 120).
     expect.soft(contrato).toBe(`1000000001|1|20|6611|${CLASE_CONTRATISTA_UNICO}`);

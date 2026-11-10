@@ -60,7 +60,7 @@ export class PolizasService {
     return this.requestManager.get(`polizas?query=${query}&limit=1`);
   }
   
-  /** amparo_poliza del CRUD Beego v2; el filtro lo arma quien consume. */
+  /** amparo_poliza del CRUD; el filtro lo arma quien consume. */
   getAmparos(consulta: ConsultaCrud): Observable<ApiResponse<AmparoPolizaDto[]>> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.get(rutaConsulta(RECURSOS_CRUD.amparoPoliza, consulta));

@@ -587,7 +587,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       tipo_compromiso_id: formData.tipoCompromisoId,
       tipo_contrato_id: formData.tipoContratoId,
       perfil_contratista_id: formData.perfilContratistaId ?? null,
-      // Tipos del modelo v2: fecha, bool y entero; lo que no aplica va como null.
+      // Tipos del modelo: fecha, bool y entero; lo que no aplica va como null.
       fecha_suscripcion_estudio: formData.fechaSuscripcionEstudios
         ? aFechaCrud(formData.fechaSuscripcionEstudios)
         : null,

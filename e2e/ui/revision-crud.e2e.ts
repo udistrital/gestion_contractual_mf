@@ -6,18 +6,18 @@ import { join } from 'node:path';
 import { CORE_MF_STUB, responderServicioExterno } from '../support/servicios-simulados';
 
 /**
- * Aprobación del jefe contra el CRUD Beego v2 y el MID REALES (#397): el MF registra
+ * Aprobación del jefe contra el CRUD y el MID REALES (#397): el MF registra
  * los estados en POST /contratos-generales/{id}/estados del MID, que asigna el número
  * al pasar a SUSCRITO. Se simulan core-mf, minuta, gestor documental y Parámetros.
  * persona_id va simulado: sin él el MF envía usuario_id 0, que el CRUD rechaza, así que
  * la prueba lo cambia por USUARIO_ID_PRUEBA antes de reenviar al MID.
  *
- * Ejecutar: CRUD_BEEGO_URL=http://localhost:8080/ MID_BEEGO_URL=http://localhost:8081/
- *           pnpm run test:e2e -- revision-crud-beego
+ * Ejecutar: CRUD_URL=http://localhost:8080/ MID_URL=http://localhost:8081/
+ *           pnpm run test:e2e -- revision-crud
  */
-const CRUD_BEEGO_URL = process.env.CRUD_BEEGO_URL?.replace(/\/$/, '');
-const MID_BEEGO_URL = process.env.MID_BEEGO_URL?.replace(/\/$/, '');
-const CONTENEDOR_BD = process.env.CRUD_BEEGO_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
+const CRUD_URL = process.env.CRUD_URL?.replace(/\/$/, '');
+const MID_URL = process.env.MID_URL?.replace(/\/$/, '');
+const CONTENEDOR_BD = process.env.CRUD_DB_CONTAINER ?? 'gestion_contractual_crud_390_db';
 const EVIDENCIAS = process.env.EVIDENCIAS_397 ?? join(homedir(), 'argo_repos', 'evidencias-397');
 const RECTORIA = 6818;
 const SUSCRITO = 6774;
@@ -25,7 +25,7 @@ const USUARIO_ID_PRUEBA = 7;
 // Vigencia propia de cada corrida: el consecutivo arranca en 1 sin depender de corridas anteriores.
 const VIGENCIA_ID = 900_000 + (Date.now() % 100_000);
 
-test.skip(!CRUD_BEEGO_URL || !MID_BEEGO_URL, 'Requiere CRUD_BEEGO_URL y MID_BEEGO_URL');
+test.skip(!CRUD_URL || !MID_URL, 'Requiere CRUD_URL y MID_URL');
 
 const b64 = (valor: unknown) => Buffer.from(JSON.stringify(valor)).toString('base64');
 
@@ -47,12 +47,12 @@ async function postJson(url: string, cuerpo: unknown) {
 test('aprobación del jefe: el MID asigna el número al pasar a SUSCRITO', async ({ browser }) => {
   test.setTimeout(120_000);
   mkdirSync(EVIDENCIAS, { recursive: true });
-  const contrato = await postJson(`${CRUD_BEEGO_URL}/v1/contratos-generales/`, {
+  const contrato = await postJson(`${CRUD_URL}/v1/contratos-generales/`, {
     unidad_ejecutora_id: RECTORIA,
     vigencia_id: VIGENCIA_ID,
   });
   const id = contrato.Data.id;
-  await postJson(`${CRUD_BEEGO_URL}/v1/estados-contrato/`, {
+  await postJson(`${CRUD_URL}/v1/estados-contrato/`, {
     contrato_general_id: { id },
     estado_parametro_id: 6773,
     estado_interno_parametro_id: 6800,
@@ -69,11 +69,11 @@ test('aprobación del jefe: el MID asigna el número al pasar a SUSCRITO', async
     const ruta = url.pathname.replace('/apioas/', '');
     if (peticion.method() !== 'GET') escrituras.push(`${peticion.method()} ${ruta}`);
     if (ruta.startsWith('gestion_contractual_crud/v1/')) {
-      const destino = `${CRUD_BEEGO_URL}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`;
+      const destino = `${CRUD_URL}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`;
       return route.fulfill({ response: await route.fetch({ url: destino }) });
     }
     if (/^gestion_contractual_mid\/contratos-generales\/\d+\/estados$/.test(ruta)) {
-      const destino = `${MID_BEEGO_URL}/${ruta.replace('gestion_contractual_mid/', '')}`;
+      const destino = `${MID_URL}/${ruta.replace('gestion_contractual_mid/', '')}`;
       const cuerpo = peticion.postDataJSON();
       cambiosEnviados.push(cuerpo);
       const postData = JSON.stringify({ ...cuerpo, usuario_id: cuerpo.usuario_id || USUARIO_ID_PRUEBA });
