@@ -11,7 +11,7 @@ describe('TableroDatosService', () => {
   let service: TableroDatosService;
   let requestManager: { setPath: jest.Mock; get: jest.Mock };
   let parametrosService: { get: jest.Mock };
-  let midService: { getDependenciasBySede: jest.Mock };
+  let midService: { getDependencias: jest.Mock };
   let tercerosService: { getTerceroPorId: jest.Mock };
   const hoy = new Date(2026, 9, 20, 10, 0);
 
@@ -24,7 +24,6 @@ describe('TableroDatosService', () => {
     vigencia_id: 6900,
     fecha_final: '2026-12-31T00:00:00Z',
     dependencia_solicitante_id: 31,
-    sede_solicitante_id: 2,
     estado_parametro_id: 6773,
     fecha_estado: '2026-10-12T09:00:00Z',
     abogado_id: 500,
@@ -39,7 +38,7 @@ describe('TableroDatosService', () => {
       get: jest.fn().mockReturnValue(of({ Status: '200', Data: [{ Id: 6900 }] })),
     };
     midService = {
-      getDependenciasBySede: jest.fn().mockReturnValue(of([{ id: 31, nombre: 'Facultad de Ingeniería' }])),
+      getDependencias: jest.fn().mockReturnValue(of([{ id: 31, nombre: 'Facultad de Ingeniería' }])),
     };
     tercerosService = {
       getTerceroPorId: jest.fn().mockReturnValue(of({ Id: 500, NombreCompleto: 'Abogado B de Prueba ' })),
@@ -56,13 +55,13 @@ describe('TableroDatosService', () => {
     service = TestBed.inject(TableroDatosService);
   });
 
-  it('busca el Id del parámetro de vigencia y consulta el CRUD con vigencia-id', async () => {
+  it('busca el Id del parámetro de vigencia y consulta el CRUD con vigencia_id', async () => {
     await firstValueFrom(service.cargarContratos('2026', hoy));
     expect(parametrosService.get).toHaveBeenCalledWith(
       `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Nombre:2026&fields=Id&limit=1`
     );
     expect(requestManager.setPath).toHaveBeenCalledWith('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    expect(requestManager.get).toHaveBeenCalledWith('tableros/contratos?vigencia-id=6900');
+    expect(requestManager.get).toHaveBeenCalledWith('tableros/contratos?vigencia_id=6900');
   });
 
   it('guarda el Id de cada vigencia para no volver a consultarlo', async () => {
@@ -103,7 +102,7 @@ describe('TableroDatosService', () => {
     expect(c.dependencia).toBe('Facultad de Ingeniería');
     expect(c.abogadoId).toBe(500);
     expect(c.abogado).toBe('Abogado B de Prueba');
-    expect(midService.getDependenciasBySede).toHaveBeenCalledWith(2);
+    expect(midService.getDependencias).toHaveBeenCalledTimes(1);
     expect(tercerosService.getTerceroPorId).toHaveBeenCalledWith(500);
   });
 
@@ -116,7 +115,7 @@ describe('TableroDatosService', () => {
   });
 
   it('usa nombres de respaldo si MID o terceros fallan', async () => {
-    midService.getDependenciasBySede.mockReturnValue(throwError(() => new Error('MID')));
+    midService.getDependencias.mockReturnValue(throwError(() => new Error('MID')));
     tercerosService.getTerceroPorId.mockReturnValue(throwError(() => new Error('Terceros')));
     const [c] = await firstValueFrom(service.cargarContratos('2026', hoy));
     expect(c.dependencia).toBe('Dependencia 31');
@@ -133,7 +132,6 @@ describe('TableroDatosService', () => {
             numero_contrato: 'CPS-1',
             fecha_final: null,
             dependencia_solicitante_id: null,
-            sede_solicitante_id: null,
             estado_parametro_id: null,
             fecha_estado: null,
             abogado_id: null,
@@ -148,7 +146,7 @@ describe('TableroDatosService', () => {
     expect(c.dependencia).toBe('Sin dependencia registrada');
     expect(c.abogado).toBe('Sin identificar');
     expect(c.numero).toBe('CPS-1');
-    expect(midService.getDependenciasBySede).not.toHaveBeenCalled();
+    expect(midService.getDependencias).not.toHaveBeenCalled();
 
     requestManager.get.mockReturnValue(of({ Data: null }));
     expect(await firstValueFrom(service.cargarContratos('2026', hoy))).toEqual([]);
