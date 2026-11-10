@@ -3,7 +3,7 @@ export interface ContratoGeneral {
   tipo_compromiso_id?: number;
   tipo_contrato_id?: number;
   perfil_contratista_id?: number;
-  fecha_suscripcion_estudios?: Date;
+  fecha_suscripcion_estudio?: Date;
   aplica_poliza?: boolean;
   modalidad_seleccion_id?: number;
   tipo_control_id?: number;
@@ -16,7 +16,7 @@ export interface ContratoGeneral {
   valor_pesos?: number;
   tipo_gasto_id?: number;
   origen_recursos_id?: number;
-  origen_presupuestos_id?: number;
+  origen_presupuesto_id?: number;
   tema_gasto_inversion_id?: number;
   valor_contrato_me?: number;
   valor_tasa_cambio?: number;
@@ -37,14 +37,33 @@ export interface ContratoGeneral {
   unidad_ejecutora_id: number;
   estados?: any;
   contratista?: any;
+  // Contratista y solicitante viven en contrato_general.
+  proveedor_numero_documento?: string;
+  tipo_persona_id?: number | null;
+  clase_proveedor_id?: number | null;
+  dependencia_solicitante_id?: number | null;
+}
+
+/** FK del CRUD: se envía y llega como objeto con el id (p. ej. contrato_general_id: { id: 42 }). */
+export interface ReferenciaCrud {
+  id: number;
+}
+
+/** Consulta de listas del CRUD (query=campo:valor,..., limit, sortby, order). */
+export interface ConsultaCrud {
+  query: string;
+  limit: number;
+  sortby?: string;
+  order?: string;
+  fields?: string;
 }
 
 export interface CDPContratoCRUD {
   id?: number;
   numero_cdp_id: number;
-  fecha_registro: Date;
-  vigencia_cdp: number;
-  contrato_general_id: number | null;
+  fecha_registro: string;
+  vigencia_cdp_id: number;
+  contrato_general_id: ReferenciaCrud | null;
   valor_a_tomar?: number;
 }
 
@@ -60,7 +79,7 @@ export interface CDP {
 }
 
 export interface EstadoContrato {
-  contrato_general_id: number;
+  contrato_general_id: ReferenciaCrud;
   usuario_id: number;
   usuario_rol: string;
   estado_parametro_id: number;
@@ -68,12 +87,15 @@ export interface EstadoContrato {
   motivo?: string;
 }
 
-export interface ContratistaCRUD {
-  id?: string;
-  numero_documento: string;
-  tipo_persona_id: number;
-  contrato_general_id: number;
+/** Estado registrado en el CRUD (POST estados-contrato/): lo enviado, con su id. */
+export interface EstadoContratoCrud extends EstadoContrato {
+  id: number;
+  activo?: boolean;
+  fecha_creacion?: string;
 }
+
+/** Cambio de estado que recibe el MID; el contrato va en la ruta y el número lo asigna el MID. */
+export type CambioEstadoContrato = Omit<EstadoContrato, 'contrato_general_id'>;
 
 export interface SedeContratoMidResponse {
   Id: number;
@@ -83,6 +105,11 @@ export interface SedeContratoMidResponse {
 export interface DependenciaContratoMidResponse {
   id: number;
   nombre: string;
+}
+
+/** GET espacios-fisicos/dependencias/{id} del MID: la dependencia y las sedes donde está en Oikos. */
+export interface DependenciaConSedesMidResponse extends DependenciaContratoMidResponse {
+  sedes: DependenciaContratoMidResponse[];
 }
 
 export interface ApiResponse<T> {
@@ -98,11 +125,13 @@ export interface EspecificacionTecnica {
   cantidad: number;
   valor_unitario: number;
   valor_total: number;
-  contrato_general_id?: number;
+  contrato_general_id?: ReferenciaCrud;
 }
 
+/** documento_contrato es polimórfico: entidad_tipo + entidad_id (contrato_general, poliza o acta_inicio). */
 export interface DocumentoContrato {
-  contrato_general_id: number;
+  entidad_tipo: 'contrato_general' | 'poliza' | 'acta_inicio';
+  entidad_id: number;
   tipo_documento_id: number;
   usuario_id?: number;
   usuario_rol?: string;
@@ -207,24 +236,17 @@ export interface CDPData {
 
 export interface OrdenadorContratoData {
   tercero_id?: number;
-  ordenador_argo_id: number;
-  ordenador_sicapital_id: number;
+  ordenador_argo_id: number | null;
+  ordenador_sicapital_id?: number;
   resolucion?: string;
-  documento_identidad: string;
-  cargo_id: number;
-  contrato_general_id?: number;
+  documento_identidad?: string;
+  cargo_id?: number;
+  contrato_general_id?: ReferenciaCrud;
 }
 
 export interface CDPItem {
   Id: string;
   Nombre: string;
-}
-
-export interface Solicitante {
-  id?: number;
-  dependencia_solicitante_id: number;
-  sede_solicitante_id: number;
-  contrato_general_id: number;
 }
 
 export interface SupervisorResponse {
@@ -249,16 +271,16 @@ export interface SupervisorData {
 
 export interface SupervisorToSave {
   id?: number;
-  supervisor_id: string;
-  sede_legado: string;
-  dependencia_legado: string;
-  cargo_legado: string;
-  cargo_id: string;
-  documento: string;
-  digito_verificacion: string;
-  sede_id: string;
-  dependencia_id: string;
-  contrato_general_id: number;
+  supervisor_id?: number;
+  // Columnas de legado: el MF las lee, pero no las escribe.
+  sede_legado?: string;
+  dependencia_legado?: string;
+  cargo_legado?: string;
+  cargo_id?: number;
+  documento?: number;
+  digito_verificacion: number | null;
+  dependencia_id: number | null;
+  contrato_general_id: ReferenciaCrud;
 }
 
 export interface Proveedor {

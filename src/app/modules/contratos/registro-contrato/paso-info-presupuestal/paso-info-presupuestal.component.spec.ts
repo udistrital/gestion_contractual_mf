@@ -38,7 +38,7 @@ describe('PasoInfoPresupuestalComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('debe permitir asociar los CDPs enviando solo los campos admitidos por CreateCdpDto (sin valor_a_tomar) y antes de diligenciar el valor del contrato', async () => {
+  it('debe permitir asociar los CDPs enviando solo los campos del modelo del CRUD (sin valor_a_tomar) y antes de diligenciar el valor del contrato', async () => {
     fixture.componentRef.setInput('contratoGeneral', { id: 31 } as any);
     component.selectedCDP = [
       {
@@ -52,7 +52,7 @@ describe('PasoInfoPresupuestalComponent', () => {
       .spyOn((component as any).contratoGeneralCrudService, 'postCdp')
       .mockReturnValue({
         subscribe: (obs: any) => {
-          obs.next?.({ Data: { id: 10, numero_cdp_id: 28, vigencia_cdp: 2024, contrato_general_id: 31 } });
+          obs.next?.({ Data: { id: 10, numero_cdp_id: 28, vigencia_cdp_id: 2024, contrato_general_id: { id: 31 } } });
           obs.complete?.();
         },
       } as any);
@@ -64,8 +64,8 @@ describe('PasoInfoPresupuestalComponent', () => {
     expect(payload).toEqual(
       expect.objectContaining({
         numero_cdp_id: 28,
-        vigencia_cdp: 2024,
-        contrato_general_id: 31,
+        vigencia_cdp_id: 2024,
+        contrato_general_id: { id: 31 },
       })
     );
     expect(payload).not.toHaveProperty('valor_a_tomar');

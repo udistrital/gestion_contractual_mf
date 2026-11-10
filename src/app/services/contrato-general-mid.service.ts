@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { RequestManager } from "../managers/requestManager";
 import { Observable } from "rxjs";
-import { DependenciaContratoMidResponse, SedeContratoMidResponse } from "../types/types";
+import { CambioEstadoContrato, DependenciaConSedesMidResponse, DependenciaContratoMidResponse, SedeContratoMidResponse } from "../types/types";
 import { map } from "rxjs/operators";
 
 @Injectable({
@@ -28,9 +28,10 @@ export class ContratoGeneralMidService {
     return this.requestManager.post(`contratos-generales/consecutivo`, data);
   }
 
-  postNumeroContrato(data: any): Observable<any> {
+  /** Registra un estado; al pasar a SUSCRITO el MID asigna y devuelve el número de contrato. */
+  postEstadoContrato(idContrato: number, cambio: CambioEstadoContrato): Observable<any> {
     this.requestManager.setPath("GESTION_CONTRACTUAL_MID_SERVICE");
-    return this.requestManager.post(`contratos-generales/numero-contrato`, data);
+    return this.requestManager.post(`contratos-generales/${idContrato}/estados`, cambio);
   }
 
   getContratos(params: any): Observable<any> {
@@ -106,6 +107,22 @@ export class ContratoGeneralMidService {
           return [];
         })
       );
+  }
+
+  /** Todas las dependencias activas, ordenadas por nombre. */
+  getDependencias(): Observable<DependenciaContratoMidResponse[]> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
+    return this.requestManager
+      .get('espacios-fisicos/dependencias')
+      .pipe(map((response: any) => (Array.isArray(response?.Data) ? response.Data : [])));
+  }
+
+  /** Nombre de la dependencia (y sus sedes), para mostrar la dependencia guardada. */
+  getDependencia(dependenciaId: number): Observable<DependenciaConSedesMidResponse> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
+    return this.requestManager
+      .get(`espacios-fisicos/dependencias/${dependenciaId}`)
+      .pipe(map((response: any) => response?.Data as DependenciaConSedesMidResponse));
   }
 
   getDependenciasBySede(sedeId: number): Observable<DependenciaContratoMidResponse[]> {

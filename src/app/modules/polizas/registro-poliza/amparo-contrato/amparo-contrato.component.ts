@@ -404,7 +404,7 @@ export class AmparoContratoComponent implements OnInit, OnChanges, OnDestroy {
 
       await firstValueFrom(
         this.polizasService.registrarDocumentoActa(
-          contratoId,
+          this.polizaId!,
           subida.res.Id,
           subida.res.Enlace
         )

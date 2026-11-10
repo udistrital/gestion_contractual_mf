@@ -1,0 +1,323 @@
+import { TestBed } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
+import { ContratoGeneralCrudService, rutaConsulta } from './contrato-general-crud.service';
+import { of } from 'rxjs';
+import Swal from 'sweetalert2';
+import { VigenciaService } from './vigencia.service';
+import { GestionContractualCrudService } from './gestion-contractual-crud.service';
+import { PolizasService } from './polizas.service';
+import { GestorDocumentalService } from './gestor-documental.service';
+
+jest.mock('sweetalert2', () => ({
+  __esModule: true,
+  default: { fire: jest.fn() },
+}));
+
+/**
+ * Rutas /v1 del CRUD y filtros que arman los pasos. Las respuestas simuladas
+ * tienen el formato del CRUD: snake_case, [] en listas vacías, null en lo que no
+ * tiene valor y FK como objeto { id }. El MF no las transforma.
+ */
+const CRUD = environment.GESTION_CONTRACTUAL_CRUD_SERVICE.replace(/\/$/, '');
+const ok = (Data: unknown) => ({ Success: true, Status: '200', Message: 'Request successful', Data });
+// Filtro por FK del CRUD.
+const DEL_CONTRATO = 'contrato_general_id.id:42,activo:true';
+
+describe('rutaConsulta', () => {
+  it('arma query, sortby, order y limit explícito', () => {
+    expect(rutaConsulta('estados-contrato', { query: 'a:1', sortby: 'fecha_creacion,id', order: 'desc', limit: 1 })).toBe(
+      'estados-contrato/?query=a:1&sortby=fecha_creacion,id&order=desc&limit=1'
+    );
+    expect(rutaConsulta('disponibilidades-presupuestales', { query: 'a:1', limit: 0 })).toBe(
+      'disponibilidades-presupuestales/?query=a:1&limit=0'
+    );
+  });
+});
+
+describe('Services del MF con el CRUD', () => {
+  let crud: ContratoGeneralCrudService;
+  let gestion: GestionContractualCrudService;
+  let polizas: PolizasService;
+  let http: HttpTestingController;
+  let vigencias: { vigenciaId: jest.Mock };
+
+  beforeEach(() => {
+    vigencias = { vigenciaId: jest.fn().mockReturnValue(of(9001)) };
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: GestorDocumentalService, useValue: {} },
+        { provide: VigenciaService, useValue: vigencias },
+      ],
+    });
+    crud = TestBed.inject(ContratoGeneralCrudService);
+    gestion = TestBed.inject(GestionContractualCrudService);
+    polizas = TestBed.inject(PolizasService);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  it('1. GET /v1/contratos-generales/{id} y entrega la respuesta tal cual', () => {
+    const contrato = { id: 42, objeto: 'Compra', tipo_control_id: null, fecha_suscripcion: null, dependencia_solicitante_id: 20 };
+    let respuesta: any;
+    crud.get(42).subscribe((r) => (respuesta = r));
+    const req = http.expectOne(`${CRUD}/contratos-generales/42`);
+    expect(req.request.method).toBe('GET');
+    req.flush(ok(contrato));
+    expect(respuesta).toEqual(ok(contrato));
+  });
+
+  it('2. POST /v1/contratos-generales/ con el cuerpo en snake_case del MF', () => {
+    const cuerpo = { tipo_contrato_id: 1, consecutivo_elaboracion: '27', unidad_ejecutora_id: 1 };
+    crud.post(cuerpo).subscribe();
+    const req = http.expectOne(`${CRUD}/contratos-generales/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(cuerpo);
+    req.flush(ok({ id: 42, ...cuerpo }));
+  });
+
+  describe('alerta genérica de errores en el POST del contrato', () => {
+    let alerta: jest.SpyInstance;
+    beforeEach(() => {
+      alerta = jest.spyOn(Swal, 'fire').mockResolvedValue({} as any);
+    });
+    afterEach(() => alerta.mockRestore());
+
+    it('un 409 se propaga sin la alerta genérica: el registro reintenta y muestra el resultado', () => {
+      let estado = 0;
+      crud.post({ consecutivo_elaboracion: '27' }).subscribe({ error: (e) => (estado = e.status) });
+      http.expectOne(`${CRUD}/contratos-generales/`).flush({ Success: false }, { status: 409, statusText: 'Conflict' });
+      expect(estado).toBe(409);
+      expect(alerta).not.toHaveBeenCalled();
+    });
+
+    it('otros errores siguen mostrando la alerta genérica', () => {
+      let estado = 0;
+      crud.post({ consecutivo_elaboracion: '27' }).subscribe({ error: (e) => (estado = e.status) });
+      http.expectOne(`${CRUD}/contratos-generales/`).flush({ Success: false }, { status: 400, statusText: 'Bad Request' });
+      expect(estado).toBe(400);
+      expect(alerta).toHaveBeenCalledWith(expect.objectContaining({ title: 'Error 400' }));
+    });
+  });
+
+  it('3. PUT /v1/contratos-generales/{id} parcial, sin id en el cuerpo', () => {
+    crud.put(42, { valor_pesos: '45000000' }).subscribe();
+    const req = http.expectOne(`${CRUD}/contratos-generales/42`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ valor_pesos: '45000000' });
+    req.flush(ok({ id: 42 }));
+  });
+
+  it('6. CDP del contrato: filtro por contrato y activos, limit=0 (lista vacía como [])', () => {
+    let respuesta: any;
+    crud.getCdps({ query: DEL_CONTRATO, limit: 0 }).subscribe((r) => (respuesta = r));
+    const req = http.expectOne(`${CRUD}/disponibilidades-presupuestales/?query=${DEL_CONTRATO}&limit=0`);
+    expect(req.request.method).toBe('GET');
+    req.flush(ok([]));
+    expect(respuesta.Data).toEqual([]);
+  });
+
+  it('7. POST de CDP con los nombres del MF (incluido valor_a_tomar)', () => {
+    const cdp = {
+      numero_cdp_id: 1234,
+      fecha_registro: '2026-10-31T00:00:00Z',
+      vigencia_cdp_id: 2026,
+      contrato_general_id: { id: 42 },
+      valor_a_tomar: 45000000,
+    };
+    crud.postCdp(cdp).subscribe();
+    const req = http.expectOne(`${CRUD}/disponibilidades-presupuestales/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(cdp);
+    req.flush(ok({ id: 1, ...cdp }));
+  });
+
+  it('8. DELETE lógico de CDP', () => {
+    crud.deleteCdp(9).subscribe();
+    const req = http.expectOne(`${CRUD}/disponibilidades-presupuestales/9`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(ok({ id: 9 }));
+  });
+
+  it('9 y 10. estados: actual (actual:true, el más reciente, limit=1) e historial', () => {
+    crud
+      .getEstados({ query: `contrato_general_id.id:42,actual:true,activo:true`, sortby: 'fecha_creacion,id', order: 'desc', limit: 1 })
+      .subscribe();
+    http
+      .expectOne(`${CRUD}/estados-contrato/?query=contrato_general_id.id:42,actual:true,activo:true&sortby=fecha_creacion,id&order=desc&limit=1`)
+      .flush(ok([{ id: 3, estado_interno_parametro_id: 6799, actual: true }]));
+
+    crud.getEstados({ query: DEL_CONTRATO, sortby: 'fecha_creacion,id', order: 'desc', limit: 0 }).subscribe();
+    http.expectOne(`${CRUD}/estados-contrato/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=0`).flush(ok([]));
+  });
+
+  it('11. POST de estado (el CRUD lo marca como actual)', () => {
+    const estado = {
+      contrato_general_id: { id: 42 },
+      usuario_id: 1,
+      usuario_rol: 'ABOGADO_CONTRATACION_RECTOR',
+      estado_parametro_id: 6773,
+      estado_interno_parametro_id: 6799,
+    };
+    crud.postEstadoContrato(estado).subscribe();
+    const req = http.expectOne(`${CRUD}/estados-contrato/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(estado);
+    req.flush(ok({ id: 3, ...estado }));
+  });
+
+  it('12 a 15. especificaciones: GET con filtro, POST, PUT y DELETE', () => {
+    crud.getEspecificacionesTecnicas({ query: DEL_CONTRATO, limit: 0 }).subscribe();
+    http.expectOne(`${CRUD}/especificaciones-tecnicas/?query=${DEL_CONTRATO}&limit=0`).flush(ok([]));
+
+    crud.postEspecificacionTecnica({ descripcion: 'Osciloscopio', contrato_general_id: { id: 42 } }).subscribe();
+    const post = http.expectOne(`${CRUD}/especificaciones-tecnicas/`);
+    expect(post.request.method).toBe('POST');
+    post.flush(ok({ id: 1 }));
+
+    crud.putEspecificacionTecnica(1, { cantidad: 3 }).subscribe();
+    const put = http.expectOne(`${CRUD}/especificaciones-tecnicas/1`);
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body).toEqual({ cantidad: 3 });
+    put.flush(ok({ id: 1 }));
+
+    crud.deleteEspecificacionTecnica(1).subscribe();
+    const del = http.expectOne(`${CRUD}/especificaciones-tecnicas/1`);
+    expect(del.request.method).toBe('DELETE');
+    del.flush(ok({ id: 1 }));
+  });
+
+  it('16 a 21. contratista, solicitante y tipo de control se guardan con PUT parcial en contrato_general', () => {
+    crud.put(42, { proveedor_numero_documento: '1000000001', tipo_persona_id: 1 }).subscribe();
+    crud.put(42, { dependencia_solicitante_id: 20 }).subscribe();
+    crud.put(42, { tipo_control_id: 6611 }).subscribe();
+    const reqs = http.match(`${CRUD}/contratos-generales/42`);
+    expect(reqs.map((r) => r.request.method)).toEqual(['PUT', 'PUT', 'PUT']);
+    expect(reqs.map((r) => r.request.body)).toEqual([
+      { proveedor_numero_documento: '1000000001', tipo_persona_id: 1 },
+      { dependencia_solicitante_id: 20 },
+      { tipo_control_id: 6611 },
+    ]);
+    reqs.forEach((r) => r.flush(ok({ id: 42 })));
+  });
+
+  it('23 y 24. ordenador: consulta del activo y PUT o POST', () => {
+    const ordenador = {
+      ordenador_argo_id: 1,
+      ordenador_sicapital_id: 1001,
+      documento_identidad: '1000000003',
+      cargo_id: 12,
+      contrato_general_id: { id: 42 },
+    };
+    crud.getOrdenadores({ query: DEL_CONTRATO, sortby: 'fecha_creacion,id', order: 'desc', limit: 1 }).subscribe();
+    http.expectOne(`${CRUD}/ordenadores/?query=${DEL_CONTRATO}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
+
+    crud.postOrdenadorContrato(ordenador).subscribe();
+    const post = http.expectOne(`${CRUD}/ordenadores/`);
+    expect(post.request.method).toBe('POST');
+    post.flush(ok({ id: 7 }));
+
+    crud.putOrdenadorContrato(7, ordenador).subscribe();
+    const put = http.expectOne(`${CRUD}/ordenadores/7`);
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body).toEqual(ordenador);
+    put.flush(ok({ id: 7 }));
+  });
+
+  it('25 a 27. supervisores: GET en orden de id, POST y PUT', () => {
+    const supervisor = {
+      supervisor_id: 3,
+      sede_legado: '',
+      dependencia_legado: '',
+      cargo_legado: '',
+      cargo_id: 5,
+      documento: 3,
+      digito_verificacion: 1,
+      dependencia_id: 20,
+      contrato_general_id: { id: 42 },
+    };
+    crud.getSupervisores({ query: DEL_CONTRATO, sortby: 'id', order: 'asc', limit: 0 }).subscribe();
+    http.expectOne(`${CRUD}/supervisores/?query=${DEL_CONTRATO}&sortby=id&order=asc&limit=0`).flush(ok([]));
+
+    crud.postSupervisor(supervisor).subscribe();
+    const post = http.expectOne(`${CRUD}/supervisores/`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual(supervisor);
+    post.flush(ok({ id: 8 }));
+
+    crud.putSupervisor(8, supervisor).subscribe();
+    const put = http.expectOne(`${CRUD}/supervisores/8`);
+    expect(put.request.method).toBe('PUT');
+    put.flush(ok({ id: 8 }));
+  });
+
+  it('28. documento vigente por entidad_tipo, entidad_id y tipo, el más reciente', () => {
+    const query = 'entidad_tipo:contrato_general,entidad_id:42,tipo_documento_id:6670,activo:true';
+    gestion.getDocumentos({ query, sortby: 'fecha_creacion,id', order: 'desc', limit: 1 }).subscribe();
+    http.expectOne(`${CRUD}/documentos-contratos/?query=${query}&sortby=fecha_creacion,id&order=desc&limit=1`).flush(ok([]));
+  });
+
+  it('29. POST de documento polimórfico (entidad_tipo contrato_general)', () => {
+    const documento = {
+      entidad_tipo: 'contrato_general' as const,
+      entidad_id: 42,
+      tipo_documento_id: 6670,
+      documento_id: 900,
+      documento_enlace: 'uid-1',
+    };
+    gestion.postDocumento(documento).subscribe();
+    const req = http.expectOne(`${CRUD}/documentos-contratos/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(documento);
+    req.flush(ok({ id: 1, ...documento }));
+  });
+
+  it('33. amparos del contrato en /v1/amparos-polizas', () => {
+    polizas.getAmparos({ query: DEL_CONTRATO, sortby: 'id', order: 'asc', limit: 0 }).subscribe();
+    http.expectOne(`${CRUD}/amparos-polizas/?query=${DEL_CONTRATO}&sortby=id&order=asc&limit=0`).flush(ok([]));
+  });
+
+  it('34. contratos de una vigencia: filtra por vigencia_id y entrega los ids', () => {
+    let respuesta: any;
+    crud.getContratosPorVigencia('2026').subscribe((r) => (respuesta = r));
+    http
+      .expectOne(`${CRUD}/contratos-generales/?query=vigencia_id:9001,activo:true&fields=Id&limit=0`)
+      .flush(ok([{ Id: 3 }, { Id: 4 }]));
+    expect(respuesta.Data).toEqual([3, 4]);
+  });
+
+  it('35. sin parámetro de vigencia no consulta el CRUD y no entrega contratos', () => {
+    vigencias.vigenciaId.mockReturnValue(of(null));
+    let respuesta: any;
+    crud.getContratosPorVigencia('2030').subscribe((r) => (respuesta = r));
+    expect(respuesta.Data).toEqual([]);
+  });
+
+  it('36. acta de la póliza: consulta por entidad y tipo de documento', () => {
+    const tipo = environment.TIPO_DOCUMENTO_ID_PARAMETROS.ACTA_APROBACION_POLIZA;
+    polizas.getActaGuardada(7).subscribe();
+    http
+      .expectOne(
+        `${CRUD}/documentos-contratos/?query=entidad_tipo:poliza,entidad_id:7,tipo_documento_id:${tipo},activo:true&sortby=fecha_creacion,id&order=desc&limit=1`
+      )
+      .flush(ok([]));
+  });
+
+  it('37. acta de la póliza: se registra con entidad_tipo poliza', () => {
+    polizas.registrarDocumentoActa(7, 10, 'uid-10').subscribe();
+    const req = http.expectOne(`${CRUD}/documentos-contratos/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      entidad_tipo: 'poliza',
+      entidad_id: 7,
+      tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.ACTA_APROBACION_POLIZA,
+      documento_id: 10,
+      documento_enlace: 'uid-10',
+    });
+    req.flush(ok({ id: 1 }));
+  });
+});

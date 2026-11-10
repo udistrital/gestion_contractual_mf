@@ -365,7 +365,7 @@ describe('AmparoContratoComponent', () => {
       expect(component.isRegistrando).toBe(false);
     });
 
-    it('genera el acta, la sube al gestor documental y la registra en el contrato', async () => {
+    it('genera el acta, la sube al gestor documental y la registra en la póliza', async () => {
       (polizasService.getAmparosContratoMid as jest.Mock).mockReturnValue(
         of({ Data: [{ ...amparoBase, id: 1, poliza_id: 1 }] })
       );
@@ -382,7 +382,7 @@ describe('AmparoContratoComponent', () => {
       expect(polizasService.getActaAprobacionPoliza).toHaveBeenCalledWith(5);
       expect(polizasService.subirActa).toHaveBeenCalledWith(5, 'QUNUQQ==');
       expect(polizasService.registrarDocumentoActa).toHaveBeenCalledWith(
-        5,
+        1,
         10,
         'enlace-nuxeo'
       );

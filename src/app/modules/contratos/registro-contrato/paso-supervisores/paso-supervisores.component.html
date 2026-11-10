@@ -30,17 +30,7 @@
 
       <div class="bloque-body">
         <div class="row g-3">
-          <div class="col-12 col-md-6">
-            <app-searchable-select
-              icon="location_city"
-              label="Sede Universitaria Solicitante"
-              [items]="sedes"
-              [control]="form.get('solicitante.sede')"
-              [soloLectura]="viewMode()"
-              [required]="true">
-            </app-searchable-select>
-          </div>
-          <div class="col-12 col-md-6">
+          <div class="col-12">
             <app-searchable-select
               icon="account_balance"
               label="Dependencia Solicitante"
@@ -117,42 +107,17 @@
                 }
               </div>
 
-              <!-- Selectores de Sede y Dependencia -->
+              <!-- Dependencia (sin sede: se quitó del formulario a pedido de la clienta) -->
               <div class="row g-3 mb-3">
-                <div class="col-12 col-md-6">
-                  <mat-form-field appearance="outline" class="w-100">
-                    <mat-label>Sede Universitaria Supervisor</mat-label>
-                    <mat-icon matPrefix>location_city</mat-icon>
-                    <mat-select formControlName="sede">
-                      @for (sede of sedes; track sede.Id) {
-                        <mat-option [value]="sede.Id">
-                          {{ sede.Nombre }}
-                        </mat-option>
-                      }
-                    </mat-select>
-                    @if (supervisorGroup.get('sede')?.hasError('required')) {
-                      <mat-error>Este campo es requerido</mat-error>
-                    }
-                  </mat-form-field>
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <mat-form-field appearance="outline" class="w-100">
-                    <mat-label>Dependencia Supervisor</mat-label>
-                    <mat-icon matPrefix>account_balance</mat-icon>
-                    <mat-select
-                      formControlName="dependencia"
-                      [disabled]="viewMode() || !supervisorGroup.get('sede')?.value">
-                      @for (dep of getDependenciasSupervisor(i); track dep.id) {
-                        <mat-option [value]="dep.id">
-                          {{ dep.nombre }}
-                        </mat-option>
-                      }
-                    </mat-select>
-                    @if (supervisorGroup.get('dependencia')?.hasError('required')) {
-                      <mat-error>Este campo es requerido</mat-error>
-                    }
-                  </mat-form-field>
+                <div class="col-12">
+                  <app-searchable-select
+                    icon="account_balance"
+                    label="Dependencia Supervisor"
+                    [items]="getDependenciasSupervisor(i)"
+                    [control]="supervisorGroup.get('dependencia')"
+                    [soloLectura]="viewMode()"
+                    [required]="true">
+                  </app-searchable-select>
                 </div>
               </div>
 
@@ -161,7 +126,7 @@
                 <div class="detail-tile">
                   <span class="detail-label">Nombre Completo</span>
                   <span class="detail-val text-truncate" [title]="supervisorGroup.get('nombre')?.value">
-                    {{ supervisorGroup.get('nombre')?.value || 'Seleccione sede y dependencia...' }}
+                    {{ supervisorGroup.get('nombre')?.value || 'Seleccione la dependencia...' }}
                   </span>
                   @if (supervisorGroup.get('nombre')?.value) {
                     <span class="detail-pill-success">
@@ -194,9 +159,9 @@
                     <mat-label>Tipo y Alcance del Control</mat-label>
                     <mat-icon matPrefix>tune</mat-icon>
                     <mat-select formControlName="tipoControl">
-                      <mat-option value="tecnico">Técnico, Administrativo y Financiero</mat-option>
-                      <mat-option value="administrativo">Administrativo y Contable</mat-option>
-                      <mat-option value="financiero">Exclusivamente Financiero</mat-option>
+                      @for (tipo of tiposControl; track tipo.Id) {
+                        <mat-option [value]="tipo.Id">{{ tipo.Nombre }}</mat-option>
+                      }
                     </mat-select>
                     @if (supervisorGroup.get('tipoControl')?.hasError('required')) {
                       <mat-error>Este campo es requerido</mat-error>

@@ -11,7 +11,7 @@ export const environment = {
   CLAUSULAS_PARAGRAFOS_SERVICE:
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/clausulas_paragrafos_crud/',
   GESTION_CONTRACTUAL_CRUD_SERVICE:
-    'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestion_contractual_crud/',
+    'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestion_contractual_crud/v1/',
   GESTION_CONTRACTUAL_MID_SERVICE:
     'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestion_contractual_mid/',
   MINUTA_CONTRACTUAL_MID_SERVICE:

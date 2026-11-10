@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
+import { RECURSOS_CRUD } from '../core/constants/recursos-crud';
 import { RequestManager } from '../managers/requestManager';
+import { ConsultaCrud, DocumentoContrato } from '../types/types';
+import { rutaConsulta } from './contrato-general-crud.service';
 
 @Injectable({
     providedIn: 'root',
@@ -10,10 +13,13 @@ export class GestionContractualCrudService {
         this.requestManager.setPath("GESTION_CONTRACTUAL_CRUD_SERVICE");
     }
 
-    // Método para registrar un acta de inicio
-    registrarActaInicio(data: any) {
-        const endpoint = `acta_inicio`;
-        return this.post(endpoint, data);
+    // documento_contrato: lo comparten contrato, póliza y acta de inicio.
+    getDocumentos(consulta: ConsultaCrud) {
+        return this.get(rutaConsulta(RECURSOS_CRUD.documentoContrato, consulta));
+    }
+
+    postDocumento(documento: DocumentoContrato) {
+        return this.post(`${RECURSOS_CRUD.documentoContrato}/`, documento);
     }
 
     // Método genérico GET

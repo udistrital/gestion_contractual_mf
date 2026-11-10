@@ -11,7 +11,7 @@ import { GestorDocumentalService } from 'src/app/services/gestor-documental.serv
 import { AlertService } from 'src/app/services/alert.service';
 import { DocumentoContrato } from 'src/app/types/types';
 import { environment } from 'src/environments/environment';
-import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 
 @Component({
     selector: 'app-pdf-viewer-modal',
@@ -34,7 +34,7 @@ export class PdfViewerModalComponent implements OnInit {
     private fileService: FileService,
     private alertService: AlertService,
     private gestorDocumentalService: GestorDocumentalService,
-    private contratoGeneralCrudService: ContratoGeneralCrudService
+    private gestionContractualCrudService: GestionContractualCrudService
   ) {}
 
   async ngOnInit() {
@@ -94,16 +94,17 @@ export class PdfViewerModalComponent implements OnInit {
 
     const documentoContrato: DocumentoContrato = {
       tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
-      contrato_general_id,
+      entidad_tipo: 'contrato_general',
+      entidad_id: contrato_general_id,
       documento_id,
       documento_enlace,
     };
 
-    this.contratoGeneralCrudService
-      .postDocumentoContrato(documentoContrato)
+    this.gestionContractualCrudService
+      .postDocumento(documentoContrato)
       .subscribe({
         next: (response: any) => {
-          if (response.id) {
+          if (response?.Data?.id) {
             this.alertService.showSuccessAlert(
               'El documento del contrato se ha guardado exitosamente'
             );

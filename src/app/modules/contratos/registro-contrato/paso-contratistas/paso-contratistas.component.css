@@ -644,3 +644,9 @@
   color: #475569 !important;
   cursor: not-allowed;
 }
+
+.clase-mensaje {
+  margin: 4px 0 0;
+  color: #801313;
+  font-size: 13px;
+}

@@ -3,7 +3,7 @@ import { RequestManager } from '../managers/requestManager';
 import {ApiResponse, ParametroResponse} from "../types/types";
 import { lastValueFrom } from 'rxjs';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ParametrosService {
 
     private parametrosCache: Record<number, ParametroResponse[]> = {};

@@ -89,6 +89,7 @@ const contrato = {
   justificacion: 'Justificación guardada',
   objeto: 'Objeto guardado',
   actividades: '1. Actividad guardada',
+  tipo_control_id: 6611,
 } as unknown as ContratoGeneral;
 
 describe('Modo visualización de los pasos del registro de contrato', () => {
@@ -158,7 +159,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     it('calcula la estimación de término con los datos cargados', async () => {
       const conFecha = {
         ...contrato,
-        fecha_suscripcion_estudios: '2026-02-01T12:00:00',
+        fecha_suscripcion_estudio: '2026-02-01T12:00:00',
         plazo_ejecucion: 12,
       } as unknown as ContratoGeneral;
       await montar(true, conFecha, { [environment.UNIDAD_EJECUCION_ID]: [{ Id: 6, Nombre: 'MESES' }] });
@@ -205,8 +206,8 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              gerOrdenadorGuardado: jest.fn().mockReturnValue(of({ Data: { ordenador_argo_id: 3 } })),
-              getCdpContrato: jest.fn().mockReturnValue(of({ Data: [] })),
+              getOrdenadores: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: [{ id: 5, ordenador_argo_id: 3 }] })),
+              getCdps: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: [] })),
             },
           },
           {
@@ -228,12 +229,27 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
+      // Los datos se cargan cuando ya están el contrato y los parámetros (efecto).
+      await fixture.whenStable();
+      fixture.detectChanges();
     });
 
     it('deshabilita el formulario después de cargar el contrato y el ordenador', () => {
       expect(component.form.disabled).toBe(true);
       expect(component.form.getRawValue().valorContrato).toBe('1000000');
       expect(component.form.getRawValue().ordenadorGasto).toBe(3);
+    });
+
+    it('carga el contrato aunque llegue después de los parámetros', async () => {
+      const tardio = TestBed.createComponent(PasoInfoPresupuestalComponent);
+      tardio.componentRef.setInput('viewMode', true);
+      tardio.detectChanges();
+      await tardio.whenStable();
+      tardio.componentRef.setInput('contratoGeneral', contrato);
+      tardio.detectChanges();
+      await tardio.whenStable();
+      tardio.detectChanges();
+      expect(tardio.componentInstance.form.getRawValue().valorContrato).toBe('1000000');
     });
 
     it('el cambio de moneda no reactiva los campos de moneda extranjera', () => {
@@ -266,7 +282,6 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
         sede_legado: '',
         dependencia_legado: '',
         cargo_legado: '',
-        sede_id: '10',
         dependencia_id: '20',
         digito_verificacion: '1',
       });
@@ -279,20 +294,31 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
             useValue: {
               getSedes: jest.fn().mockReturnValue(of([])),
               getDependenciasBySede: jest.fn().mockReturnValue(of([])),
+              getDependencias: jest.fn().mockReturnValue(of([{ id: 20, nombre: 'Facultad de Ingeniería' }])),
+              getDependencia: jest
+                .fn()
+                .mockReturnValue(of({ id: 20, nombre: 'Facultad de Ingeniería', sedes: [{ id: 10, nombre: 'Sede Calle 40' }] })),
             },
           },
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              getSolicitante: jest.fn().mockReturnValue(
-                of({ Data: { id: 1, sede_solicitante_id: 10, dependencia_solicitante_id: 20 } })
-              ),
-              getSupervisores: jest.fn().mockReturnValue(of({ Data: [supervisor(1), supervisor(2)] })),
+              // El solicitante llega en el input contratoGeneral; no se reconsulta el contrato.
+              get: jest.fn(),
+              getSupervisores: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: [supervisor(1), supervisor(2)] })),
             },
           },
           {
             provide: OrdenadoresSupervisoresContratacionMidService,
             useValue: { getSupervisoresDependencia: jest.fn().mockReturnValue(of({ Data: [] })) },
+          },
+          {
+            provide: ParametrosService,
+            useValue: {
+              getParametrosPorTipo: jest.fn().mockResolvedValue({
+                [environment.TIPO_CONTROL_ID]: [{ Id: 6611, Nombre: 'Técnico, administrativo y financiero' }],
+              }),
+            },
           },
         ],
         schemas: [NO_ERRORS_SCHEMA],
@@ -302,10 +328,22 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       pasoCompleto = [];
       component.stepCompleted.subscribe((completo) => pasoCompleto.push(completo));
       fixture.componentRef.setInput('viewMode', true);
-      fixture.componentRef.setInput('contratoGeneral', contrato);
+      fixture.componentRef.setInput('contratoGeneral', { ...contrato, dependencia_solicitante_id: 20 });
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
+    });
+
+    it('muestra el solicitante del contrato cargado sin reconsultar el CRUD', () => {
+      expect(component.form.get('solicitante')?.getRawValue()).toEqual({ dependencia: 20 });
+      expect(component.form.get('solicitante')?.disabled).toBe(true);
+      expect(TestBed.inject(ContratoGeneralCrudService).get).not.toHaveBeenCalled();
+    });
+
+    it('carga Tipo y Alcance del Control desde el contrato y sus opciones desde Parámetros', () => {
+      expect(component.tiposControl).toEqual([{ Id: 6611, Nombre: 'Técnico, administrativo y financiero' }]);
+      expect(component.getSupervisoresFormArray().at(0).get('tipoControl')?.value).toBe(6611);
+      expect(component.getSupervisoresFormArray().at(1).get('tipoControl')?.value).toBe(6611);
     });
 
     it('en visualización marca el paso como completo con los supervisores cargados', () => {
@@ -351,11 +389,20 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           { provide: AlertService, useValue: alertServiceMock() },
           { provide: ProveedoresService, useValue: proveedoresService },
           {
+            provide: ParametrosService,
+            useValue: {
+              getParametrosPorTipo: jest
+                .fn()
+                .mockResolvedValue({ [environment.CLASE_CONTRATISTA_ID]: [{ Id: 9120, Nombre: 'Contratista Único' }] }),
+            },
+          },
+          {
             provide: ContratoGeneralCrudService,
             useValue: {
-              getContratista: jest
+              // El contratista vive en contrato_general.
+              get: jest
                 .fn()
-                .mockReturnValue(of({ Success: true, Data: { id: '7', numero_documento: '1000000001' } })),
+                .mockReturnValue(of({ Success: true, Status: '200', Data: { id: 7, proveedor_numero_documento: '1000000001', tipo_persona_id: 1 } })),
             },
           },
         ],
@@ -638,7 +685,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           {
             provide: ContratoGeneralCrudService,
             useValue: {
-              getEstadoActual: jest.fn().mockReturnValue(of({})),
+              getEstados: jest.fn().mockReturnValue(of({ Success: true, Status: '200', Data: [] })),
               getEspecificacionesTecnicas: jest.fn().mockReturnValue(of({ Success: true, Data: [] })),
             },
           },
