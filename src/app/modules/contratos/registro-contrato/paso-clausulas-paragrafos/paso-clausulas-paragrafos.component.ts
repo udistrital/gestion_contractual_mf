@@ -17,7 +17,9 @@ import { MatStepper } from '@angular/material/stepper';
 import { NgZone } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
-import { MinutasMidService } from 'src/app/services/minuta-mid.service';
+import { MinutasMidService, mensajeDeErrorMinuta } from 'src/app/services/minuta-mid.service';
+import { MENSAJES_MINUTA } from 'src/app/core/constants/mensajes-minuta';
+import { EstadosSinAlerta } from 'src/app/managers/errorManager';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
 import { rolPorEstado } from 'src/app/utils/rolesEstados';
@@ -73,6 +75,8 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   private contratoCargadoId: number = 0;
   private cargandoContrato: boolean = false;
   private contextoMinutaCargado: boolean = false;
+  /** Mientras se genera la vista previa de la minuta (botones deshabilitados). */
+  generandoMinuta = false;
   private estadoActualCargadoId: number = 0;
 
   // Datos contextuales para interpolación de minutas ARGO
@@ -1419,7 +1423,14 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       });
   }
 
-  private actualizarContrato(mostrarAlerta: boolean = true): Promise<void> {
+  /**
+   * Guarda el clausulado en clausulas_paragrafos_crud (PUT y, si falla, POST).
+   * Resuelve true si alguno guardó y false si no; nunca rechaza, porque las
+   * cláusulas quedan siempre en la caché local.
+   * @param alertaHttp false omite la alerta genérica de error HTTP: quien llama
+   *   muestra su propio mensaje (vista previa de la minuta).
+   */
+  private actualizarContrato(mostrarAlerta: boolean = true, alertaHttp: boolean = true): Promise<boolean> {
     const contratoActualizado = {
       clausula_ids: this.clausulas.controls
         .map((c) => c.get('id')?.value)
@@ -1438,15 +1449,17 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     // Guardar siempre en cache local para resiliencia
     this.guardarEnCacheLocal();
 
-    return new Promise((resolve, reject) => {
+    const estadosSinAlerta: EstadosSinAlerta = alertaHttp ? [] : 'todos';
+
+    return new Promise<boolean>((resolve, reject) => {
       if (!this.contratoId || this.contratoId <= 0) {
         this.stepCompleted.emit(this.clausulas.length > 0);
-        resolve();
+        resolve(true);
         return;
       }
 
       this.clausulasParagrafosService
-        .put(`contratos/${this.contratoId}`, contratoActualizado)
+        .put(`contratos/${this.contratoId}`, contratoActualizado, estadosSinAlerta)
         .subscribe({
           next: (response: any) => {
             const isOk =
@@ -1463,14 +1476,14 @@ export class PasoClausulasParagrafosComponent implements OnInit {
                   'Clausulado contractual guardado exitosamente.'
                 );
               }
-              resolve();
+              resolve(true);
             } else {
-              this.intentarCrearContratoBackend(contratoActualizado, resolve, reject, mostrarAlerta);
+              this.intentarCrearContratoBackend(contratoActualizado, resolve, reject, mostrarAlerta, estadosSinAlerta);
             }
           },
           error: (error) => {
             console.warn('PUT contratos/:id falló, intentando POST:', error);
-            this.intentarCrearContratoBackend(contratoActualizado, resolve, reject, mostrarAlerta);
+            this.intentarCrearContratoBackend(contratoActualizado, resolve, reject, mostrarAlerta, estadosSinAlerta);
           },
         });
     });
@@ -1478,9 +1491,10 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
   private intentarCrearContratoBackend(
     payload: any,
-    resolve: () => void,
+    resolve: (guardado: boolean) => void,
     reject: (reason?: any) => void,
-    mostrarAlerta: boolean = true
+    mostrarAlerta: boolean = true,
+    estadosSinAlerta: EstadosSinAlerta = []
   ) {
     const bodyPost = {
       ...payload,
@@ -1488,7 +1502,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     };
 
     this.clausulasParagrafosService
-      .post(`contratos/${this.contratoId}`, bodyPost)
+      .post(`contratos/${this.contratoId}`, bodyPost, estadosSinAlerta)
       .subscribe({
         next: (response: any) => {
           const isOk =
@@ -1505,16 +1519,16 @@ export class PasoClausulasParagrafosComponent implements OnInit {
                 'Clausulado contractual guardado exitosamente.'
               );
             }
-            resolve();
+            resolve(true);
           } else {
             this.stepCompleted.emit(true);
-            resolve();
+            resolve(false);
           }
         },
         error: (error) => {
           console.warn('POST contratos/:id no respondió con éxito, manteniendo en cache local:', error);
           this.stepCompleted.emit(true);
-          resolve();
+          resolve(false);
         },
       });
   }
@@ -1594,6 +1608,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   async openPdfViewer() {
+    if (this.generandoMinuta) return;
     const contratoGen = this.contratoGeneral();
     const contratoId = (contratoGen?.id ?? (contratoGen as any)?.Id ?? this.contratoId) as number;
 
@@ -1604,26 +1619,20 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       return;
     }
 
+    this.generandoMinuta = true;
     try {
+      // La minuta se arma con las cláusulas guardadas: si no se pudieron guardar,
+      // no se genera para no mostrar un documento desactualizado. Se omite la
+      // alerta genérica del error HTTP para que quede un solo mensaje.
       if (!this.viewMode()) {
-        // 1. Sincronizar cláusulas actuales al backend sin mostrar alerta invasiva
-        await this.actualizarContrato(false);
-      }
-    } catch (e) {
-      console.warn('Advertencia al sincronizar estado antes de vista previa:', e);
-    }
-
-    try {
-      const response: any = await lastValueFrom(this.minutasMidService.getMinuta(contratoId));
-      const base64Data = response?.Data ?? response?.base64 ?? response;
-
-      if (!base64Data || typeof base64Data !== 'string') {
-        this.alertService.showErrorAlert(
-          response?.Message || 'No se pudo generar la minuta preliminar en PDF.'
-        );
-        return;
+        const guardado = await this.actualizarContrato(false, false);
+        if (!guardado) {
+          this.alertService.showErrorAlert(MENSAJES_MINUTA.guardadoPrevioFallido);
+          return;
+        }
       }
 
+      const base64Data = await lastValueFrom(this.minutasMidService.getMinutaPdf(contratoId));
       const file = base64ToBlob(base64Data, 'application/pdf');
       const datos = {
         base64: base64Data,
@@ -1637,13 +1646,14 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       // Sin datos de registro el visor no ofrece guardar la minuta (solo lectura).
       this.dialog.open(PdfViewerModalComponent, {
         width: '70vw',
-        data: { file, datos: this.viewMode() ? null : datos },
+        data: { file, datos: this.viewMode() ? null : datos, titulo: 'Minuta preliminar' },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al generar la vista previa de minuta:', error);
-      this.alertService.showErrorAlert(
-        error?.error?.Message || error?.message || 'Error al generar la vista previa de la minuta preliminar.'
-      );
+      this.alertService.showErrorAlert(mensajeDeErrorMinuta(error));
+    } finally {
+      this.generandoMinuta = false;
+      this.cdr.markForCheck();
     }
   }
 

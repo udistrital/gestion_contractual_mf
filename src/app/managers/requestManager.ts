@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { catchError, map } from 'rxjs/operators';
-import {ErrorResponse, HttpErrorManager} from './errorManager'
+import {ErrorResponse, EstadosSinAlerta, HttpErrorManager} from './errorManager'
 
 /**
  * This class manage the http connections with internal REST services. Use the response format {
@@ -63,7 +63,7 @@ export class RequestManager {
    * @param estadosSinAlerta estados de error que maneja quien llama, sin la alerta genérica
    * @returns Observable<any>
    */
-  post(endpoint: any, element: any, estadosSinAlerta: number[] = []) {
+  post(endpoint: any, element: any, estadosSinAlerta: EstadosSinAlerta = []) {
     return this.http.post<any>(`${this.path}${endpoint}`, element, this.httpOptions).pipe(
       catchError((error) => this.errManager.handleError(error, estadosSinAlerta)),
     );
@@ -87,12 +87,13 @@ export class RequestManager {
    * Perform a PUT http request
    * @param endpoint service's end-point
    * @param element data to send as JSON, With the id to UPDATE
+   * @param estadosSinAlerta estados de error que maneja quien llama, sin la alerta genérica
    * @returns Observable<any>
    */
-  put(endpoint: any, element: { Id: any; }) {
+  put(endpoint: any, element: { Id: any; }, estadosSinAlerta: EstadosSinAlerta = []) {
     const path = (element.Id) ? `${this.path}${endpoint}/${element.Id}` : `${this.path}${endpoint}`;
     return this.http.put<any>(path, element, this.httpOptions).pipe(
-      catchError((error) => this.errManager.handleError(error)),
+      catchError((error) => this.errManager.handleError(error, estadosSinAlerta)),
     );
   }
 

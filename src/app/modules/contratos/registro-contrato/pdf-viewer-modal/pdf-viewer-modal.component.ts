@@ -27,10 +27,12 @@ export class PdfViewerModalComponent implements OnInit {
   pdfLoading = true;
   pdfSrc?: Uint8Array;
   guardarDoc: boolean = false;
+  /** Título del modal; "Documentos" si quien lo abre no envía otro. */
+  titulo = 'Documentos';
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
-    public data: { file: File; datos: any },
+    public data: { file: File; datos: any; titulo?: string },
     private fileService: FileService,
     private alertService: AlertService,
     private gestorDocumentalService: GestorDocumentalService,
@@ -39,6 +41,7 @@ export class PdfViewerModalComponent implements OnInit {
 
   async ngOnInit() {
     this.guardarDoc = this.data.datos || false;
+    this.titulo = this.data.titulo || 'Documentos';
     await this.loadPdf();
   }
 

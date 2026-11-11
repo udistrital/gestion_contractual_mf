@@ -22,10 +22,11 @@
           mat-stroked-button
           class="banner-action-btn preview-btn"
           (click)="openPdfViewer()"
+          [disabled]="generandoMinuta"
           title="Ver vista previa de la minuta preliminar"
         >
           <mat-icon>visibility</mat-icon>
-          <span>Vista Previa de Minuta</span>
+          <span>{{ generandoMinuta ? 'Generando minuta…' : 'Vista Previa de Minuta' }}</span>
         </button>
 
         @if (!viewMode()) {
@@ -406,9 +407,10 @@
           mat-stroked-button
           class="dock-btn-preview"
           (click)="openPdfViewer()"
+          [disabled]="generandoMinuta"
         >
           <mat-icon>visibility</mat-icon>
-          <span>Vista Previa Minuta</span>
+          <span>{{ generandoMinuta ? 'Generando minuta…' : 'Vista Previa Minuta' }}</span>
         </button>
         <div class="dock-step-indicator">
           <span class="dock-step-badge">Paso 4 de 5</span>

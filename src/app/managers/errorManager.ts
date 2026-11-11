@@ -3,6 +3,9 @@ import { Injectable, NgZone } from '@angular/core';
 import { throwError, Observable } from 'rxjs';
 import Swal from 'sweetalert2';
 
+/** Estados de error que maneja quien llama, sin la alerta genérica; 'todos' para cualquiera. */
+export type EstadosSinAlerta = number[] | 'todos';
+
 export interface ErrorResponse {
   status: number;
   message: string;
@@ -17,8 +20,9 @@ export class HttpErrorManager {
 
   /**
    * @param estadosSinAlerta estados que maneja quien llama: se propagan sin la alerta genérica.
+   *   'todos' omite la alerta para cualquier estado.
    */
-  public handleError(error: HttpErrorResponse, estadosSinAlerta: number[] = []): Observable<ErrorResponse> {
+  public handleError(error: HttpErrorResponse, estadosSinAlerta: EstadosSinAlerta = []): Observable<ErrorResponse> {
     let errorResponse: ErrorResponse;
 
     if (error.error instanceof ErrorEvent) {
@@ -37,7 +41,7 @@ export class HttpErrorManager {
       console.error(`Error del backend ${error.status}:`, error.error);
     }
 
-    if (!estadosSinAlerta.includes(errorResponse.status)) {
+    if (estadosSinAlerta !== 'todos' && !estadosSinAlerta.includes(errorResponse.status)) {
       this.showErrorMessage(errorResponse);
     }
 

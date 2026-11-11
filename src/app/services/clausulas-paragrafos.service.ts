@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { RequestManager } from '../managers/requestManager';
 import { Observable } from 'rxjs';
+import { EstadosSinAlerta } from '../managers/errorManager';
 
 @Injectable({
   providedIn: 'root'
@@ -16,14 +17,14 @@ export class ClausulasParagrafosService {
     return this.requestManager.get(endpoint);
   }
 
-  post(endpoint: string, element: any): Observable<any> {
+  post(endpoint: string, element: any, estadosSinAlerta: EstadosSinAlerta = []): Observable<any> {
     this.requestManager.setPath('CLAUSULAS_PARAGRAFOS_SERVICE');
-    return this.requestManager.post(endpoint, element);
+    return this.requestManager.post(endpoint, element, estadosSinAlerta);
   }
 
-  put(endpoint: string, element: any): Observable<any> {
+  put(endpoint: string, element: any, estadosSinAlerta: EstadosSinAlerta = []): Observable<any> {
     this.requestManager.setPath('CLAUSULAS_PARAGRAFOS_SERVICE');
-    return this.requestManager.put(endpoint, element);
+    return this.requestManager.put(endpoint, element, estadosSinAlerta);
   }
 
   delete(endpoint: string, element: any): Observable<any> {

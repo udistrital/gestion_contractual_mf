@@ -17,6 +17,8 @@ export const MENSAJES_MINUTA = {
   interno: 'No se pudo generar la minuta. Intente de nuevo.',
   invalida: 'La minuta llegó vacía o dañada.',
   conexion: 'No hay conexión con el servicio de minutas. Intente de nuevo.',
+  guardadoPrevioFallido:
+    'No se pudieron guardar las cláusulas. La minuta no se generó para no mostrar datos desactualizados.',
 } as const;
 
 /** Nombre legible de cada faltante que reporta la minuta en el Status 422. */

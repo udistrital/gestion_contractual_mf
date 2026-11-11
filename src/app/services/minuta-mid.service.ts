@@ -54,6 +54,22 @@ export class MinutasMidService {
   }
 }
 
+/** Indica si `error` es un ErrorMinuta de getMinutaPdf. */
+export function esErrorMinuta(error: unknown): error is ErrorMinuta {
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    typeof (error as ErrorMinuta).mensaje === 'string' &&
+    typeof (error as ErrorMinuta).tipo === 'string' &&
+    typeof (error as ErrorMinuta).reintentable === 'boolean'
+  );
+}
+
+/** Mensaje para el usuario: el del ErrorMinuta o uno genérico, nunca un texto técnico. */
+export function mensajeDeErrorMinuta(error: unknown): string {
+  return esErrorMinuta(error) ? error.mensaje : MENSAJES_MINUTA.interno;
+}
+
 /** Sobre de la minuta: objeto con Status numérico (o texto numérico). */
 function esSobreMinuta(valor: unknown): valor is RespuestaMinuta {
   if (!valor || typeof valor !== 'object') return false;
