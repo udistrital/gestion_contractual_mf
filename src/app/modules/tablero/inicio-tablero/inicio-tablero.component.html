@@ -13,10 +13,13 @@
         <div>
           <p class="subtitulo">
             @if (rol() === 'JEFE') {
-              Vigencia {{ vigencia() }} · Todos los contratos de la Oficina de Contratación ·
-              {{ propios().length }} contratos
+              Vigencia {{ vigencia() }} · Todos los contratos de la Oficina de Contratación
             } @else {
-              Vigencia {{ vigencia() }} · Contratos asignados a ti · {{ propios().length }} contratos
+              Vigencia {{ vigencia() }} · Contratos asignados a ti
+            }
+            <!-- El total solo se muestra cuando la consulta terminó bien -->
+            @if (!cargandoTablero() && !error() && !sinPersona()) {
+              · {{ propios().length }} contratos
             }
           </p>
         </div>
@@ -35,72 +38,81 @@
         </mat-form-field>
       </header>
 
-      @if (error()) {
+      <!-- Carga, error y datos se excluyen: un fallo no se muestra como ceros ni como datos parciales -->
+      @if (cargandoTablero()) {
+        <div class="cargando" role="status">
+          <mat-spinner diameter="36"></mat-spinner>
+          Cargando estadísticas de contratación…
+        </div>
+      } @else if (error() || sinPersona()) {
         <div class="aviso" role="alert">
           <mat-icon>error_outline</mat-icon>
-          No fue posible cargar las estadísticas de contratación.
+          @if (error()) {
+            No fue posible cargar las estadísticas de contratación. Intenta de nuevo más tarde.
+          } @else {
+            No fue posible identificar tu usuario para mostrar tus contratos.
+          }
         </div>
-      }
+      } @else {
+        <app-resumen-estados [conteo]="conteo()" [detalleTotal]="detalleTotal()"></app-resumen-estados>
 
-      <app-resumen-estados [conteo]="conteo()" [detalleTotal]="detalleTotal()"></app-resumen-estados>
+        <div class="fila-mapa">
+          <section class="tb-card">
+            <div class="tb-card-header">
+              <div>
+                <h2>Dependencia solicitante × estado</h2>
+                <p>
+                  Cada celda es el número de contratos; el tono indica la concentración. Haz clic en una celda
+                  para filtrar el resumen y la carga.
+                </p>
+              </div>
+              <span class="tb-espacio"></span>
+              @if (nombreDependencia()) {
+                <button mat-stroked-button color="primary" type="button" (click)="seleccionarDependencia(null)">
+                  <mat-icon>filter_alt_off</mat-icon>
+                  Quitar filtro
+                </button>
+              }
+            </div>
+            <div class="tb-card-body">
+              <app-mapa-calor-dependencias
+                [grupos]="gruposDependencias()"
+                [seleccionada]="dependenciaSeleccionada()"
+                (seleccionar)="seleccionarDependencia($event)"
+              ></app-mapa-calor-dependencias>
+            </div>
+          </section>
 
-      <div class="fila-treemap">
+          <app-semaforo-gestion
+            [alertas]="alertas()"
+            [total]="conteo().total"
+            [mostrarAbogado]="rol() === 'JEFE'"
+          ></app-semaforo-gestion>
+        </div>
+
         <section class="tb-card">
           <div class="tb-card-header">
             <div>
-              <h2>Contratos por dependencia solicitante</h2>
+              <h2>{{ rol() === 'JEFE' ? 'Carga por abogado' : 'Mi carga de trabajo' }}</h2>
               <p>
-                El área de cada bloque es proporcional al número de contratos. Haz clic en un bloque para
-                filtrar el resumen y la carga.
+                @if (rol() === 'JEFE') {
+                  Contratos asignados a cada abogado en la vigencia {{ vigencia() }}, por estado
+                } @else {
+                  Tus contratos frente al promedio de la oficina · vigencia {{ vigencia() }}
+                }
               </p>
             </div>
-            <span class="tb-espacio"></span>
-            @if (nombreDependencia()) {
-              <button mat-stroked-button color="primary" type="button" (click)="seleccionarDependencia(null)">
-                <mat-icon>filter_alt_off</mat-icon>
-                Quitar filtro
-              </button>
-            }
           </div>
           <div class="tb-card-body">
-            <app-treemap-dependencias
-              [grupos]="gruposDependencias()"
-              [seleccionada]="dependenciaSeleccionada()"
-              [alertasPorDependencia]="alertasPorDependencia()"
-              (seleccionar)="seleccionarDependencia($event)"
-            ></app-treemap-dependencias>
+            <app-carga-abogados
+              [contratos]="rol() === 'JEFE' ? propiosFiltrados() : todosFiltrados()"
+              [alertas]="alertas()"
+              [rol]="rol()!"
+              [abogadoId]="personaId() ?? null"
+            ></app-carga-abogados>
           </div>
         </section>
-
-        <app-semaforo-gestion
-          [alertas]="alertas()"
-          [total]="conteo().total"
-          [mostrarAbogado]="rol() === 'JEFE'"
-        ></app-semaforo-gestion>
-      </div>
-
-      <section class="tb-card">
-        <div class="tb-card-header">
-          <div>
-            <h2>{{ rol() === 'JEFE' ? 'Carga por abogado' : 'Mi carga de trabajo' }}</h2>
-            <p>
-              @if (rol() === 'JEFE') {
-                Contratos asignados a cada abogado en la vigencia {{ vigencia() }}, por estado
-              } @else {
-                Tus contratos frente al promedio de la oficina · vigencia {{ vigencia() }}
-              }
-            </p>
-          </div>
-        </div>
-        <div class="tb-card-body">
-          <app-carga-abogados
-            [contratos]="rol() === 'JEFE' ? propiosFiltrados() : todosFiltrados()"
-            [alertas]="alertas()"
-            [rol]="rol()!"
-            [abogadoId]="personaId()"
-          ></app-carga-abogados>
-        </div>
-      </section>
+      }
     </div>
   }
 </ng-template>
