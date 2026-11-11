@@ -309,6 +309,8 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
         this.contratoGeneralCrudService.put(contratoId, formData)
       );
 
+      await this.actualizarValoresATomar();
+
       this.alertService.showSuccessAlert(
         'La información presupuestal se ha guardado correctamente',
         'Datos guardados'
@@ -369,7 +371,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
                   );
 
                   return responseCDP.Status === 200 && responseCDP.Data?.length > 0
-                    ? (responseCDP.Data[0] as CDP)
+                    ? this.conValorGuardado(responseCDP.Data[0] as CDP, cdpContrato)
                     : null;
                 } catch (error) {
                   console.error(
@@ -556,6 +558,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           fecha_registro: aFechaCrud(new Date()),
           vigencia_cdp_id: parseInt(cdp.vigencia, 10),
           contrato_general_id: { id: contratoId },
+          valor_a_tomar: this.valorATomar(cdp),
         }));
 
         const respuestas = await Promise.all(
@@ -571,6 +574,8 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
           }
         });
       }
+
+      await this.actualizarValoresATomar();
 
       this.cdpGuardado.emit(this.selectedCDP);
       this.alertService.showSuccessAlert(
@@ -589,6 +594,49 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
     const limpio = valor.toString().replace(/[^0-9.-]+/g, '');
     const num = parseFloat(limpio);
     return isNaN(num) ? 0 : num;
+  }
+
+  /** Valor a tomar del CDP; si no se ha diligenciado, el total del CDP. */
+  private valorATomar(cdp: CDP): number {
+    return cdp.valor_a_tomar !== undefined && cdp.valor_a_tomar !== null && cdp.valor_a_tomar !== ''
+      ? this.parseNumero(cdp.valor_a_tomar)
+      : this.parseNumero(cdp.valor_contratacion);
+  }
+
+  /** CDP consultado en financiera con el valor a tomar guardado en el CRUD; si es null, el total del CDP. */
+  private conValorGuardado(cdp: CDP, guardado: CDPContratoCRUD): CDP {
+    const valor = guardado.valor_a_tomar;
+    return {
+      ...cdp,
+      valor_a_tomar:
+        valor !== undefined && valor !== null
+          ? Number(valor)
+          : this.parseNumero(cdp.valor_contratacion),
+    };
+  }
+
+  /**
+   * PUT de valor_a_tomar en los CDP ya guardados cuyo valor difiere del que tiene el CRUD
+   * (también si allá está en null). El PUT del CRUD es parcial: solo se envía ese campo.
+   */
+  private async actualizarValoresATomar(): Promise<void> {
+    for (const cdp of this.selectedCDP) {
+      const guardado = this.cdpsContrato.find(
+        (c) => Number(c.numero_cdp_id) === parseInt(cdp.numero_disponibilidad, 10)
+      );
+      const valor = this.valorATomar(cdp);
+      const sinCambio =
+        guardado?.valor_a_tomar !== undefined &&
+        guardado?.valor_a_tomar !== null &&
+        Number(guardado.valor_a_tomar) === valor;
+      if (!guardado?.id || sinCambio) {
+        continue;
+      }
+      const res = await firstValueFrom(
+        this.contratoGeneralCrudService.putCdp(guardado.id, { valor_a_tomar: valor })
+      );
+      guardado.valor_a_tomar = res?.Data?.valor_a_tomar ?? valor;
+    }
   }
 
   onValorTomarChange(element: CDP) {
