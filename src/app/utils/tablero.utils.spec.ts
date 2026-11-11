@@ -10,7 +10,6 @@ import {
   estadoPorId,
   porcentaje,
   rolTablero,
-  squarify,
 } from './tablero.utils';
 
 describe('tablero.utils', () => {
@@ -145,25 +144,8 @@ describe('tablero.utils', () => {
     });
   });
 
-  it('squarify reparte toda el área proporcionalmente', () => {
-    const area = { x: 0, y: 0, w: 100, h: 50 };
-    const rects = squarify([2500, 1500, 1000], area);
-    expect(rects).toHaveLength(3);
-    const suma = rects.reduce((s, r) => s + r.w * r.h, 0);
-    expect(suma).toBeCloseTo(5000);
-    expect(rects[0].w * rects[0].h).toBeCloseTo(2500);
-    rects.forEach((r) => {
-      expect(r.x + r.w).toBeLessThanOrEqual(100.0001);
-      expect(r.y + r.h).toBeLessThanOrEqual(50.0001);
-    });
-  });
-
   it('agruparPor ignora los contratos sin estado', () => {
     const grupos = agruparPor([{ ...contratoPrueba(), estado: null }], (c) => String(c.dependenciaId), (c) => c.dependencia);
     expect(grupos).toEqual([]);
-  });
-
-  it('squarify sin valores no devuelve rectángulos', () => {
-    expect(squarify([], { x: 0, y: 0, w: 100, h: 50 })).toEqual([]);
   });
 });
