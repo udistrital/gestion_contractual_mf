@@ -28,14 +28,36 @@
         <div class="main-content">
           @if (selectedTab === 0) {
             <div class="pdf-container">
-              @if (isLoading) {
-                <div class="loading-shade">
-                  <mat-spinner></mat-spinner>
-                </div>
+              @switch (estadoMinuta.tipo) {
+                @case ('cargando') {
+                  <div class="estado-minuta">
+                    <mat-spinner diameter="48"></mat-spinner>
+                    <p>Cargando minuta…</p>
+                  </div>
+                }
+                @case ('documento') {
+                  <p class="origen-minuta">{{ etiquetaOrigenMinuta }}</p>
+                  <app-pdf-visualizador
+                    [base64Document]="documentos.minuta"
+                    (errorDocumento)="onErrorVisorMinuta()"
+                  ></app-pdf-visualizador>
+                }
+                @case ('error') {
+                  <div class="estado-minuta" role="alert">
+                    <p>{{ mensajeErrorMinuta }}</p>
+                    @if (minutaReintentable) {
+                      <button mat-stroked-button color="primary" (click)="reintentarMinuta()">
+                        Reintentar
+                      </button>
+                    }
+                  </div>
+                }
+                @case ('sin-documento') {
+                  <div class="estado-minuta">
+                    <p>No hay minuta disponible.</p>
+                  </div>
+                }
               }
-              <app-pdf-visualizador
-                [base64Document]="documentos.minuta"
-              ></app-pdf-visualizador>
             </div>
           }
           @if (selectedTab === 1) {
