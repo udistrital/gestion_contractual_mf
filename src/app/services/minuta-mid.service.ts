@@ -50,7 +50,7 @@ export class MinutasMidService {
 
   getActaAprobacionPoliza(contrato_id: number): Observable<any> {
     this.requestManager.setPath('MINUTA_CONTRACTUAL_MID_SERVICE');
-    return this.requestManager.get(`minutas/acta-poliza/${contrato_id}`);
+    return this.requestManager.get(`acta-poliza/contratos/${contrato_id}`);
   }
 }
 

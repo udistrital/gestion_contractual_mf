@@ -267,6 +267,18 @@ describe('MinutasMidService', () => {
     });
   });
 
+  it('getActaAprobacionPoliza pide la ruta real del acta de póliza', () => {
+    let respuesta: unknown;
+    service.getActaAprobacionPoliza(ID_CONTRATO).subscribe((r) => (respuesta = r));
+    const req = httpMock.expectOne(
+      `${environment.MINUTA_CONTRACTUAL_MID_SERVICE}acta-poliza/contratos/${ID_CONTRATO}`
+    );
+    expect(req.request.method).toBe('GET');
+    const cuerpo = sobre(200, 'ok', PDF);
+    req.flush(cuerpo);
+    expect(respuesta).toEqual(cuerpo);
+  });
+
   it('getMinuta sigue pidiendo la misma ruta, sin interpretar la respuesta', () => {
     let respuesta: unknown;
     service.getMinuta(ID_CONTRATO).subscribe((r) => (respuesta = r));
