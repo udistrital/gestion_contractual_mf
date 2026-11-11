@@ -370,3 +370,35 @@ export interface ContratistaResponse {
   fecha_modificacion: string | null;
   contrato_general_id: number;
 }
+
+/** Sobre que responde minuta_contractual_mid en GET minutas/contratos/{id}. */
+export interface RespuestaMinuta {
+  Success: boolean;
+  Status: number;
+  Message: string;
+  /** PDF en base64; solo llega con Status 200. */
+  Data?: string;
+}
+
+export type TipoErrorMinuta =
+  | 'parametro'
+  | 'no-encontrado'
+  | 'sin-plantilla'
+  | 'faltan-datos'
+  | 'servicio'
+  | 'interno'
+  | 'invalida'
+  | 'conexion';
+
+/** Error de la minuta ya interpretado, con el mensaje para el usuario. */
+export interface ErrorMinuta {
+  /** Status del cuerpo o código HTTP; null si no hubo respuesta. */
+  status: number | null;
+  tipo: TipoErrorMinuta;
+  mensaje: string;
+  reintentable: boolean;
+  /** Campos faltantes tal como los nombra la minuta (p. ej. 'ordenador'). */
+  faltantes?: string[];
+  /** Servicio que no respondió, tomado del Message (p. ej. 'plantillas_mid'). */
+  servicio?: string;
+}
