@@ -9,7 +9,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { PasoClausulasParagrafosComponent } from './paso-clausulas-paragrafos.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatStepper } from '@angular/material/stepper';
-import { of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
+import { ErrorMinuta } from 'src/app/types/types';
+
+const PDF = btoa('%PDF-1.4\n%%EOF\n');
+const GUARDADO_FALLIDO =
+  'No se pudieron guardar las cláusulas. La minuta no se generó para no mostrar datos desactualizados.';
 
 describe('PasoClausulasParagrafosComponent', () => {
   let component: PasoClausulasParagrafosComponent;
@@ -33,7 +40,7 @@ describe('PasoClausulasParagrafosComponent', () => {
     };
 
     mockMinutasMidService = {
-      getMinuta: jest.fn().mockReturnValue(of({ Data: 'ZHVtbXkgcGRmIGNvbnRlbnQ=' })),
+      getMinutaPdf: jest.fn().mockReturnValue(of(PDF)),
     };
 
     mockDialog = {
@@ -532,14 +539,167 @@ describe('PasoClausulasParagrafosComponent', () => {
     it('debe solicitar la minuta con el id del contrato y abrir el diálogo modal', async () => {
       fixture.componentRef.setInput('contratoGeneral', { id: 2 } as any);
       const minutasMidService = TestBed.inject(MinutasMidService);
-      (minutasMidService.getMinuta as jest.Mock).mockReturnValue(of({ Data: 'ZHVtbXkgcGRmIGNvbnRlbnQ=' }));
       const dialog = TestBed.inject(MatDialog);
 
       await component.openPdfViewer();
 
-      expect(minutasMidService.getMinuta).toHaveBeenCalledWith(2);
+      expect(minutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
       expect(dialog.open).toHaveBeenCalled();
     });
   });
-});
 
+  describe('Vista previa de la minuta (#405)', () => {
+    let clausulasService: Record<string, jest.Mock>;
+    let dialog: { open: jest.Mock };
+
+    const error422: ErrorMinuta = {
+      status: 422,
+      tipo: 'faltan-datos',
+      mensaje: 'Faltan datos para generar la minuta: ordenador del gasto.',
+      reintentable: true,
+      faltantes: ['ordenador'],
+    };
+
+    const botonesVistaPrevia = (): HTMLButtonElement[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('button.preview-btn, button.dock-btn-preview'));
+
+    beforeEach(() => {
+      clausulasService = TestBed.inject(ClausulasParagrafosService) as unknown as Record<string, jest.Mock>;
+      dialog = TestBed.inject(MatDialog) as unknown as { open: jest.Mock };
+      fixture.componentRef.setInput('contratoGeneral', { id: 2 } as any);
+      component.contratoId = 2;
+      mockAlertService.showErrorAlert.mockClear();
+      dialog.open.mockClear();
+    });
+
+    it('abre el modal "Minuta preliminar" solo con el PDF de getMinutaPdf', async () => {
+      await component.openPdfViewer();
+
+      expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
+      expect(dialog.open).toHaveBeenCalledTimes(1);
+      const [modal, config] = dialog.open.mock.calls[0];
+      expect(modal).toBe(PdfViewerModalComponent);
+      expect(config.data.titulo).toBe('Minuta preliminar');
+      expect(config.data.file).toBeInstanceOf(Blob);
+      expect(config.data.datos).toEqual(expect.objectContaining({ base64: PDF, contrato_general_id: 2 }));
+      expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+      expect(component.generandoMinuta).toBe(false);
+    });
+
+    it('guarda las cláusulas antes de generar, sin la alerta genérica de error HTTP', async () => {
+      await component.openPdfViewer();
+
+      expect(clausulasService['put']).toHaveBeenCalledWith('contratos/2', expect.any(Object), 'todos');
+      expect(clausulasService['put'].mock.invocationCallOrder[0]).toBeLessThan(
+        mockMinutasMidService.getMinutaPdf.mock.invocationCallOrder[0]
+      );
+    });
+
+    it('ante un ErrorMinuta muestra su mensaje, no abre el modal y libera los botones', async () => {
+      mockMinutasMidService.getMinutaPdf.mockReturnValueOnce(throwError(() => error422));
+
+      await component.openPdfViewer();
+
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledTimes(1);
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(error422.mensaje);
+      expect(dialog.open).not.toHaveBeenCalled();
+      expect(component.generandoMinuta).toBe(false);
+    });
+
+    it('ante un error que no es de la minuta muestra un texto genérico, nunca el técnico', async () => {
+      mockMinutasMidService.getMinutaPdf.mockReturnValueOnce(
+        throwError(() => new Error("Failed to execute 'atob' on 'Window'"))
+      );
+
+      await component.openPdfViewer();
+
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith('No se pudo generar la minuta. Intente de nuevo.');
+      expect(dialog.open).not.toHaveBeenCalled();
+    });
+
+    it('deshabilita los dos botones con "Generando minuta…" mientras dura la petición', async () => {
+      const respuesta = new Subject<string>();
+      mockMinutasMidService.getMinutaPdf.mockReturnValueOnce(respuesta);
+
+      const pendiente = component.openPdfViewer();
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      expect(component.generandoMinuta).toBe(true);
+      expect(botonesVistaPrevia().length).toBe(2);
+      for (const boton of botonesVistaPrevia()) {
+        expect(boton.disabled).toBe(true);
+        expect(boton.textContent).toContain('Generando minuta…');
+      }
+
+      respuesta.next(PDF);
+      respuesta.complete();
+      await pendiente;
+      fixture.detectChanges();
+
+      expect(component.generandoMinuta).toBe(false);
+      for (const boton of botonesVistaPrevia()) {
+        expect(boton.disabled).toBe(false);
+        expect(boton.textContent).not.toContain('Generando minuta…');
+      }
+    });
+
+    it('no pide otra minuta mientras hay una en curso', async () => {
+      const respuesta = new Subject<string>();
+      mockMinutasMidService.getMinutaPdf.mockReturnValueOnce(respuesta);
+
+      const primera = component.openPdfViewer();
+      await Promise.resolve();
+      await Promise.resolve();
+      await component.openPdfViewer();
+      respuesta.next(PDF);
+      respuesta.complete();
+      await primera;
+
+      expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledTimes(1);
+      expect(dialog.open).toHaveBeenCalledTimes(1);
+    });
+
+    it('si falla el guardado previo no genera la minuta y deja una sola alerta', async () => {
+      clausulasService['put'].mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 400, error: { Success: false, Status: 400 } }))
+      );
+      clausulasService['post'].mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 409, error: { Success: false, Status: 409 } }))
+      );
+
+      await component.openPdfViewer();
+
+      expect(clausulasService['post']).toHaveBeenCalledWith('contratos/2', expect.any(Object), 'todos');
+      expect(mockMinutasMidService.getMinutaPdf).not.toHaveBeenCalled();
+      expect(dialog.open).not.toHaveBeenCalled();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledTimes(1);
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(GUARDADO_FALLIDO);
+      expect(component.generandoMinuta).toBe(false);
+    });
+
+    it('si el POST de respaldo responde sin éxito tampoco genera la minuta', async () => {
+      clausulasService['put'].mockReturnValueOnce(of({ Success: false }));
+      clausulasService['post'].mockReturnValueOnce(of({ Success: false }));
+
+      await component.openPdfViewer();
+
+      expect(mockMinutasMidService.getMinutaPdf).not.toHaveBeenCalled();
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(GUARDADO_FALLIDO);
+      expect(component.generandoMinuta).toBe(false);
+    });
+
+    it('si el PUT falla pero el POST guarda, genera la minuta', async () => {
+      clausulasService['put'].mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 400, error: { Success: false, Status: 400 } }))
+      );
+
+      await component.openPdfViewer();
+
+      expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
+      expect(dialog.open).toHaveBeenCalledTimes(1);
+      expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+    });
+  });
+});

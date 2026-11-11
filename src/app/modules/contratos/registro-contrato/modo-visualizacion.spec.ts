@@ -692,7 +692,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           { provide: RolService, useValue: { getRol: () => [] } },
           { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
           { provide: ClausulasParagrafosService, useValue: clausulasService },
-          { provide: MinutasMidService, useValue: { getMinuta: jest.fn().mockReturnValue(of({ Data: 'JVBERi0xLjQK' })) } },
+          { provide: MinutasMidService, useValue: { getMinutaPdf: jest.fn().mockReturnValue(of('JVBERi0xLjQK')) } },
           {
             provide: ParametrosService,
             useValue: { get: jest.fn().mockReturnValue(of({ Status: '200', Data: [{ Id: '1', Nombre: 'PRIMERA' }] })) },
@@ -742,8 +742,9 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       await component.openPdfViewer();
       expect(dialog.open).toHaveBeenCalledWith(
         PdfViewerModalComponent,
-        expect.objectContaining({ data: expect.objectContaining({ datos: null }) })
+        expect.objectContaining({ data: expect.objectContaining({ datos: null, titulo: 'Minuta preliminar' }) })
       );
+      expect(clausulasService.post).not.toHaveBeenCalled();
     });
   });
 

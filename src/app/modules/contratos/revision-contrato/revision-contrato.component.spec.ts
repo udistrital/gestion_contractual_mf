@@ -11,7 +11,8 @@ import { environment } from 'src/environments/environment';
 import { MinutasMidService } from 'src/app/services/minuta-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('RevisionContratoComponent', () => {
   let component: RevisionContratoComponent;
@@ -32,9 +33,7 @@ describe('RevisionContratoComponent', () => {
   };
 
   const mockMinutasMidService = {
-    getMinuta: jest
-      .fn()
-      .mockReturnValue(of({ Success: true, Data: 'JVBERi0xLjQK...' })),
+    getMinutaPdf: jest.fn().mockReturnValue(of('JVBERi0xLjQK')),
   };
 
   const mockGestorDocumentalService = {
@@ -156,7 +155,7 @@ describe('RevisionContratoComponent: estados y número de contrato desde el MID'
         { provide: GestionContractualCrudService, useValue: { getDocumentos: jest.fn().mockReturnValue(of({ Data: [] })) } },
         { provide: ContratoGeneralMidService, useValue: mid },
         { provide: GestorDocumentalService, useValue: { getDocumento: jest.fn() } },
-        { provide: MinutasMidService, useValue: { getMinuta: jest.fn().mockReturnValue(of({ Data: 'pdf' })) } },
+        { provide: MinutasMidService, useValue: { getMinutaPdf: jest.fn().mockReturnValue(of('JVBERi0xLjQK')) } },
         { provide: RolService, useValue: { getRol: () => ['ORDENADOR_DEL_GASTO'] } },
         { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(9) } },
       ],
@@ -237,5 +236,186 @@ describe('RevisionContratoComponent: estados y número de contrato desde el MID'
 
     expect(alertas['showErrorAlert']).toHaveBeenCalledWith('El contrato no tiene vigencia_id');
     expect(alertas['showSuccessAlert']).not.toHaveBeenCalled();
+  });
+});
+
+describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
+  const PDF = 'JVBERi0xLjQK';
+  const error502 = {
+    status: 502,
+    tipo: 'servicio',
+    mensaje: 'Un servicio no respondió (plantillas_mid). Intente de nuevo.',
+    reintentable: true,
+    servicio: 'plantillas_mid',
+  };
+  const error404 = { status: 404, tipo: 'no-encontrado', mensaje: 'El contrato no existe.', reintentable: false };
+
+  let fixture: ComponentFixture<RevisionContratoComponent>;
+  let component: RevisionContratoComponent;
+  let documentos: jest.Mock;
+  let gestor: jest.Mock;
+  let minutaPdf: jest.Mock;
+
+  function montar(contratoId = 42) {
+    TestBed.configureTestingModule({
+      imports: [RouterTestingModule],
+      declarations: [RevisionContratoComponent],
+      providers: [
+        { provide: MatDialog, useValue: { open: jest.fn() } },
+        { provide: AlertService, useValue: { showErrorAlert: jest.fn(), showSuccessAlert: jest.fn() } },
+        {
+          provide: ContratoGeneralCrudService,
+          useValue: { get: jest.fn().mockReturnValue(of({ Data: {} })), getEstados: jest.fn().mockReturnValue(of({ Data: [] })) },
+        },
+        { provide: GestionContractualCrudService, useValue: { getDocumentos: documentos } },
+        { provide: ContratoGeneralMidService, useValue: {} },
+        { provide: GestorDocumentalService, useValue: { getDocumento: gestor } },
+        { provide: MinutasMidService, useValue: { getMinutaPdf: minutaPdf } },
+        { provide: RolService, useValue: { getRol: () => [] } },
+        { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+    });
+    fixture = TestBed.createComponent(RevisionContratoComponent);
+    component = fixture.componentInstance;
+    jest.spyOn(component, 'getIdContratoUrl').mockImplementation(() => {
+      component.contrato_general_id = contratoId;
+    });
+    jest.spyOn(component, 'getDocumentosPrecontractuales').mockImplementation(() => undefined);
+    fixture.detectChanges();
+  }
+
+  const texto = (): string => (fixture.nativeElement as HTMLElement).textContent?.replace(/\s+/g, ' ') ?? '';
+  const botonReintentar = (): HTMLButtonElement | undefined =>
+    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Reintentar')
+    );
+
+  beforeEach(() => {
+    documentos = jest.fn().mockReturnValue(of({ Data: [] }));
+    gestor = jest.fn().mockReturnValue(of({ file: PDF }));
+    minutaPdf = jest.fn().mockReturnValue(of(PDF));
+  });
+
+  it('muestra la minuta guardada con "Minuta cargada el dd/mm/aaaa" y no la genera', () => {
+    documentos.mockReturnValue(
+      of({ Data: [{ id: 9, documento_enlace: 'uid-9', fecha_creacion: '2026-11-10T22:15:00Z' }] })
+    );
+    montar();
+
+    expect(gestor).toHaveBeenCalledWith('uid-9');
+    expect(minutaPdf).not.toHaveBeenCalled();
+    expect(component.estadoMinuta).toEqual({ tipo: 'documento', origen: 'guardada', fecha: '10/11/2026' });
+    expect(component.documentos.minuta).toBe(PDF);
+    expect(texto()).toContain('Minuta cargada el 10/11/2026');
+    expect(fixture.nativeElement.querySelector('app-pdf-visualizador')).not.toBeNull();
+  });
+
+  it('sin fecha legible la etiqueta dice solo "Minuta cargada"', () => {
+    documentos.mockReturnValue(of({ Data: [{ id: 9, documento_enlace: 'uid-9' }] }));
+    montar();
+    expect(component.etiquetaOrigenMinuta).toBe('Minuta cargada');
+  });
+
+  it('sin minuta guardada muestra la generada con su etiqueta', () => {
+    montar();
+
+    expect(minutaPdf).toHaveBeenCalledWith(42);
+    expect(component.estadoMinuta).toEqual({ tipo: 'documento', origen: 'generada', fecha: null });
+    expect(texto()).toContain('Minuta generada con los datos actuales, sin firmar');
+  });
+
+  it.each([
+    ['falla la consulta de documentos', () => documentos.mockReturnValue(throwError(() => new Error('crud')))],
+    ['falla la descarga del gestor', () => {
+      documentos.mockReturnValue(of({ Data: [{ documento_enlace: 'uid-9' }] }));
+      gestor.mockReturnValue(throwError(() => new Error('gestor')));
+    }],
+    ['el gestor no trae archivo', () => {
+      documentos.mockReturnValue(of({ Data: [{ documento_enlace: 'uid-9' }] }));
+      gestor.mockReturnValue(of({}));
+    }],
+  ])('si %s usa la minuta generada', (_caso, preparar) => {
+    preparar();
+    montar();
+    expect(minutaPdf).toHaveBeenCalledWith(42);
+    expect(component.etiquetaOrigenMinuta).toBe('Minuta generada con los datos actuales, sin firmar');
+  });
+
+  it('mientras carga muestra el spinner local', () => {
+    minutaPdf.mockReturnValue(new Subject<string>());
+    montar();
+
+    expect(component.estadoMinuta).toEqual({ tipo: 'cargando' });
+    expect(fixture.nativeElement.querySelector('.estado-minuta mat-spinner')).not.toBeNull();
+    expect(texto()).toContain('Cargando minuta…');
+    expect(fixture.nativeElement.querySelector('app-pdf-visualizador')).toBeNull();
+  });
+
+  it('con un error reintentable muestra el mensaje y "Reintentar"', () => {
+    minutaPdf.mockReturnValue(throwError(() => error502));
+    montar();
+
+    expect(component.estadoMinuta).toEqual({ tipo: 'error', mensaje: error502.mensaje, reintentable: true });
+    expect(texto()).toContain(error502.mensaje);
+    expect(botonReintentar()).toBeDefined();
+    expect(fixture.nativeElement.querySelector('app-pdf-visualizador')).toBeNull();
+  });
+
+  it('con un error no reintentable no ofrece "Reintentar"', () => {
+    minutaPdf.mockReturnValue(throwError(() => error404));
+    montar();
+
+    expect(texto()).toContain('El contrato no existe.');
+    expect(botonReintentar()).toBeUndefined();
+  });
+
+  it('con un error que no es de la minuta muestra el texto genérico', () => {
+    minutaPdf.mockReturnValue(throwError(() => new Error('Http failure response for …: 0 Unknown Error')));
+    montar();
+
+    expect(texto()).toContain('No se pudo generar la minuta. Intente de nuevo.');
+    expect(texto()).not.toContain('Http failure');
+    expect(botonReintentar()).toBeDefined();
+  });
+
+  it('"Reintentar" borra el documento anterior antes de volver a pedir', () => {
+    minutaPdf.mockReturnValueOnce(throwError(() => error502));
+    montar();
+    component.documentos.minuta = 'documento-anterior';
+    let minutaAlPedir: string | undefined;
+    let estadoAlPedir: string | undefined;
+    minutaPdf.mockImplementationOnce(() => {
+      minutaAlPedir = component.documentos.minuta;
+      estadoAlPedir = component.estadoMinuta.tipo;
+      return of(PDF);
+    });
+
+    botonReintentar()!.click();
+    fixture.detectChanges();
+
+    expect(minutaAlPedir).toBe('');
+    expect(estadoAlPedir).toBe('cargando');
+    expect(component.estadoMinuta).toEqual({ tipo: 'documento', origen: 'generada', fecha: null });
+    expect(component.documentos.minuta).toBe(PDF);
+  });
+
+  it('sin contrato muestra "No hay minuta disponible."', () => {
+    montar(0);
+
+    expect(component.estadoMinuta).toEqual({ tipo: 'sin-documento' });
+    expect(texto()).toContain('No hay minuta disponible.');
+    expect(minutaPdf).not.toHaveBeenCalled();
+  });
+
+  it('si el visor no puede abrir el PDF muestra "La minuta llegó vacía o dañada."', () => {
+    montar();
+
+    component.onErrorVisorMinuta();
+    fixture.detectChanges();
+
+    expect(component.documentos.minuta).toBe('');
+    expect(texto()).toContain('La minuta llegó vacía o dañada.');
+    expect(botonReintentar()).toBeDefined();
   });
 });
