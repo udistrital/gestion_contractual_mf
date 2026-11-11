@@ -85,7 +85,7 @@
   flex: 1;
 }
 
-/* La lista ocupa el alto que queda junto al treemap y hace scroll */
+/* La lista ocupa el alto que queda junto al mapa de calor y hace scroll */
 .lista-contenedor {
   position: relative;
   flex: 1;
