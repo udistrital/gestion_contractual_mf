@@ -16,6 +16,11 @@ const routes: Routes = [
     loadChildren: () => import('./modules/contratos/contratos.module').then(m => m.ContratosModule)
   },
   {
+    path: 'contratos',
+    canActivate: [authGuard],
+    loadChildren: () => import('./modules/contratos/contratos.module').then(m => m.ContratosModule)
+  },
+  {
     path: 'gestion-contractual/polizas',
     canActivate: [authGuard],
     loadChildren: () => import('./modules/polizas/polizas.module').then(m => m.PolizasModule)
