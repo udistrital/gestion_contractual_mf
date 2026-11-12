@@ -189,28 +189,77 @@ export class PasoGarantiasComponent implements OnInit {
 
     if (!this.contratoGeneral()) {
       this.alertService.showErrorAlert('No se ha encontrado información del contrato');
+      return;
     }
 
-    let response: ApiResponse<AmparoPolizaDto>;
+    try {
+      let response: any;
 
-    if (this.datosExitentes) {
-      response = await firstValueFrom(
-        this.polizasService.putAmparo(this.contratoGeneral()?.id as number, formData)
-      );
-    } else {
-      response = await firstValueFrom(
-        this.polizasService.postAmparos(formData)
+      if (this.datosExitentes) {
+        response = await firstValueFrom(
+          this.polizasService.putAmparo(this.contratoGeneral()?.id as number, formData)
+        );
+      } else {
+        response = await firstValueFrom(
+          this.polizasService.postAmparos(formData)
+        );
+      }
+
+      // El MID registra los amparos de a uno. Si alguno falla, responde Status 206
+      // con { creados, errores: [{ amparo, error }] }
+      const esParcial = response?.Status === 206 || (response?.Data as any)?.errores?.length > 0;
+
+      if (esParcial) {
+        const errores: { amparo: any; error: string }[] = (response?.Data as any)?.errores || [];
+        const nombresErrores = errores.map((err) => {
+          const amparoId = err.amparo?.amparo_id;
+          const param = this.amparos.find((a) => Number(a.Id) === Number(amparoId));
+          return param ? param.Nombre : `Amparo #${amparoId || 'desconocido'}`;
+        });
+
+        // Actualizar los IDs de los amparos que sí se crearon para no duplicarlos
+        const creados: any[] = (response?.Data as any)?.creados || [];
+        if (creados.length > 0) {
+          creados.forEach((creado) => {
+            const fila = this.filasFormArray.controls.find(
+              (c) => Number(c.get('amparo')?.value) === Number(creado.amparo_id)
+            );
+            if (fila && creado.id) {
+              fila.patchValue({ id: creado.id });
+            }
+          });
+          this.datosExitentes = true;
+        }
+
+        const detalle = nombresErrores.length > 0
+          ? `Los siguientes amparos no pudieron ser registrados: ${nombresErrores.join(', ')}.`
+          : 'Algunos amparos no pudieron ser registrados.';
+
+        this.alertService.showErrorAlert(
+          `${detalle} Por favor verifique los datos e intente nuevamente.`,
+          'Registro parcial de garantías'
+        );
+        return;
+      }
+
+      if (response?.Success) {
+        this.alertService.showSuccessAlert(
+          'La información de garantías se ha guardado correctamente',
+          'Datos guardados'
+        );
+        this.nextStep.emit();
+      } else {
+        this.alertService.showErrorAlert(
+          response?.Message || 'Ocurrió un error al guardar las garantías',
+          'Error al guardar amparos'
+        );
+      }
+    } catch (error: any) {
+      this.alertService.showErrorAlert(
+        error?.message || 'Ocurrió un error al enviar el amparo. Por favor, inténtelo de nuevo.',
+        'Error al enviar amparo'
       );
     }
-
-    if (response.Success) {
-      this.alertService.showSuccessAlert(
-        'La información de garantías se ha guardado correctamente',
-        'Datos guardados'
-      );
-    }
-
-    this.nextStep.emit();
   }
 
   get filasFormArray(): FormArray {
