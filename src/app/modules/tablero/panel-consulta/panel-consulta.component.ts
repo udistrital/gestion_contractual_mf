@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { from, of } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { from, of, timer } from 'rxjs';
+import { catchError, concatMap, first, switchMap, take, tap } from 'rxjs/operators';
 import { UserService } from 'src/app/services/user.service';
 import { TableroDatosService } from '../../../services/tablero-datos.service';
 import { ContratoTablero, RolTablero } from '../../../types/tablero.models';
@@ -23,7 +23,8 @@ export class PanelConsultaComponent {
   private readonly datos = inject(TableroDatosService);
   private readonly userService = inject(UserService);
 
-  readonly cargando = signal(false);
+  // Inicia en true para no mostrar ceros antes de la primera consulta
+  readonly cargando = signal(true);
   readonly error = signal(false);
 
   private readonly contratos = toSignal(
@@ -45,10 +46,22 @@ export class PanelConsultaComponent {
     { initialValue: [] as ContratoTablero[] }
   );
 
-  private readonly personaId = toSignal(
-    from(this.userService.getPersonaId()).pipe(catchError(() => of(null))),
-    { initialValue: null }
+  // El core guarda persona_id poco después de iniciar sesión; se reintenta hasta 1 minuto.
+  // undefined mientras se espera; null si no llegó
+  readonly personaId = toSignal(
+    timer(0, 500).pipe(
+      take(120),
+      concatMap(() => from(this.userService.getPersonaId()).pipe(catchError(() => of(null)))),
+      first((id) => id !== null, null)
+    ),
+    { initialValue: undefined }
   );
+
+  // El abogado necesita su persona_id para saber cuáles contratos son suyos
+  readonly cargandoPanel = computed(
+    () => this.cargando() || (this.rol() === 'ABOGADO' && this.personaId() === undefined)
+  );
+  readonly sinPersona = computed(() => this.rol() === 'ABOGADO' && this.personaId() === null);
 
   readonly visibles = computed(() =>
     this.rol() === 'ABOGADO'

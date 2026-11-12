@@ -39,6 +39,16 @@
   width: 150px;
 }
 
+.cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 12px;
+  font-size: 13px;
+  color: var(--tb-texto-suave);
+}
+
 .aviso {
   display: flex;
   align-items: center;
@@ -50,15 +60,15 @@
   font-size: 12.5px;
 }
 
-/* Treemap y semáforo de alertas lado a lado */
-.fila-treemap {
+/* Mapa de calor y semáforo de alertas lado a lado */
+.fila-mapa {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
   gap: 16px;
 }
 
 @media (max-width: 1100px) {
-  .fila-treemap {
+  .fila-mapa {
     grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -8,7 +8,7 @@ import { VigenciaService } from 'src/app/services/vigencia.service';
 import { ContratoTablero, USUARIO_ID_GENERICO } from '../types/tablero.models';
 import { diasEntre, estadoPorId } from '../utils/tablero.utils';
 
-// Fila de GET v1/tableros/contratos del CRUD Beego v2: solo Ids. El CRUD ya
+// Fila de GET tableros/contratos del MID, que la toma del CRUD: solo Ids. El CRUD ya
 // calcula el estado actual, la fecha desde la que está en ese estado y el abogado.
 interface ContratoTableroCrud {
   contrato_general_id: number;
@@ -43,10 +43,16 @@ export class TableroDatosService {
         // Año sin parámetro de vigencia: ningún contrato puede tenerlo
         if (vigenciaId === null) return of([] as ContratoTableroCrud[]);
         const filtro = vigenciaId ? `?vigencia_id=${vigenciaId}` : '';
-        this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+        this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
         return this.requestManager
           .get<any>(`tableros/contratos${filtro}`)
-          .pipe(map((res) => (Array.isArray(res?.Data) ? (res.Data as ContratoTableroCrud[]) : [])));
+          .pipe(
+            map((res) => {
+              // Sin contratos el MID responde Data: []; otra forma es una falla, no un tablero vacío
+              if (!Array.isArray(res?.Data)) throw new Error('Respuesta inválida de tableros/contratos');
+              return res.Data as ContratoTableroCrud[];
+            })
+          );
       }),
       map((data) => data.map((c) => this.mapear(c, vigencia, hoy))),
       switchMap((contratos) =>
@@ -99,8 +105,8 @@ export class TableroDatosService {
 
   private nombresDependencias(contratos: ContratoTablero[]): Observable<Map<number, string>> {
     if (!contratos.some((c) => c.dependenciaId != null)) return of(new Map());
+    // Si el MID falla se propaga el error: sin nombres el tablero quedaría incompleto
     return this.contratoMidService.getDependencias().pipe(
-      catchError(() => of([])),
       map((lista) => new Map(lista.map((d) => [Number(d.id), d.nombre] as [number, string])))
     );
   }

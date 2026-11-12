@@ -4,6 +4,16 @@
   gap: 14px;
 }
 
+.cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 12px;
+  font-size: 13px;
+  color: var(--tb-texto-suave);
+}
+
 .aviso {
   display: flex;
   align-items: center;
