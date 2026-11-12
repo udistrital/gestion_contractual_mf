@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal.component';
 import { ParametrosService } from 'src/app/services/parametros.service';
@@ -150,6 +150,42 @@ describe('PasoInfoPresupuestalComponent', () => {
       await component.guardarListaCDP();
 
       expect(putCdp).toHaveBeenCalledWith(10, { valor_a_tomar: 2500000 });
+    });
+
+    it('al borrar un CDP guardado y volver a agregarlo, lo registra con POST y no con PUT', async () => {
+      component.cdpsContrato = [guardadoCrud(10, 28, 2500000)];
+      const cdp = cdpFinanciera('28', '2500000', 2500000);
+      component.selectedCDP = [cdp];
+      const deleteCdp = jest.spyOn(crud(), 'deleteCdp').mockReturnValue(of({ Data: { id: 10 } }));
+      const postCdp = jest
+        .spyOn(crud(), 'postCdp')
+        .mockImplementation((nuevo: CDPContratoCRUD) => of({ Data: { ...nuevo, id: 20 } }));
+      const putCdp = jest.spyOn(crud(), 'putCdp');
+
+      await component.eliminarCDP(cdp);
+
+      expect(deleteCdp).toHaveBeenCalledWith(10);
+      expect(component.cdpsContrato).toEqual([]);
+
+      component.selectedCDP = [cdpFinanciera('28', '2500000', 1800000)];
+      await component.guardarListaCDP();
+
+      expect(postCdp).toHaveBeenCalledTimes(1);
+      expect((postCdp.mock.calls[0][0] as CDPContratoCRUD).valor_a_tomar).toBe(1800000);
+      expect(putCdp).not.toHaveBeenCalled();
+      expect(component.cdpsContrato.map((c) => c.id)).toEqual([20]);
+    });
+
+    it('si el borrado en el CRUD falla, el CDP sigue contando como guardado', async () => {
+      component.cdpsContrato = [guardadoCrud(10, 28, 2500000)];
+      const cdp = cdpFinanciera('28', '2500000', 2500000);
+      component.selectedCDP = [cdp];
+      jest.spyOn(crud(), 'deleteCdp').mockReturnValue(throwError(() => ({ status: 500, message: 'Error' })));
+
+      await component.eliminarCDP(cdp);
+
+      expect(component.cdpsContrato.map((c) => c.id)).toEqual([10]);
+      expect(component.selectedCDP).toHaveLength(1);
     });
   });
 });

@@ -632,7 +632,7 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
       if (!guardado?.id || sinCambio) {
         continue;
       }
-      const res = await firstValueFrom(
+      const res: ApiResponse<CDPContratoCRUD> = await firstValueFrom(
         this.contratoGeneralCrudService.putCdp(guardado.id, { valor_a_tomar: valor })
       );
       guardado.valor_a_tomar = res?.Data?.valor_a_tomar ?? valor;
@@ -772,13 +772,16 @@ export class PasoInfoPresupuestalComponent implements OnInit, OnDestroy {
       if (contratoId) {
         const cdpContrato = this.cdpsContrato.find(
           (c) =>
-            c.numero_cdp_id === parseInt(cdpAEliminar.numero_disponibilidad)
+            Number(c.numero_cdp_id) === parseInt(cdpAEliminar.numero_disponibilidad, 10)
         );
 
         if (cdpContrato && cdpContrato.id) {
           await firstValueFrom(
             this.contratoGeneralCrudService.deleteCdp(cdpContrato.id)
           );
+          // Borrado en el CRUD (queda inactivo): deja de contar como guardado, así que si se
+          // vuelve a agregar se registra con POST y no con PUT al registro inactivo.
+          this.cdpsContrato = this.cdpsContrato.filter((c) => c.id !== cdpContrato.id);
         }
 
         this.selectedCDP = this.selectedCDP.filter(
