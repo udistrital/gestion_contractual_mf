@@ -22,13 +22,13 @@
             <mat-icon>domain</mat-icon>
             <span>1. DATOS BÁSICOS DEL CONTRATO</span>
           </div>
-          <span class="bloque-badge">8 campos obligatorios / Ley 80</span>
+          <span class="bloque-badge">9 campos obligatorios / Ley 80</span>
         </div>
 
         <div class="bloque-body p-3">
           <div class="row g-3">
             <!-- Unidad Ejecutora -->
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-4">
               <app-searchable-select
                 label="Unidad Ejecutora"
                 icon="corporate_fare"
@@ -40,8 +40,21 @@
               </app-searchable-select>
             </div>
 
+            <!-- Vigencia del Contrato -->
+            <div class="col-12 col-md-4">
+              <app-searchable-select
+                label="Vigencia"
+                icon="calendar_today"
+                [items]="vigenciasContrato"
+                [control]="formInfoGeneral.get('vigenciaId')"
+                [soloLectura]="viewMode()"
+                [required]="true"
+              >
+              </app-searchable-select>
+            </div>
+
             <!-- Tipo de Compromiso -->
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-4">
               <app-searchable-select
                 label="Tipo de Compromiso"
                 icon="feed"

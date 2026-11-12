@@ -108,6 +108,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   formInfoGeneral = this.fb.group({
     unidadEjecutoraId: [0, Validators.required],
+    vigenciaId: [null as number | null, Validators.required],
     tipoCompromisoId: [null as number | null, Validators.required],
     tipoContratoId: [null as number | null, Validators.required],
     perfilContratistaId: [null as number | null],
@@ -137,6 +138,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   unidadesEjecutoras: SimpleItem[] = [];
   unidadesEjecutorasParametros: ParametroResponse[] = [];
+  vigenciasContrato: ParametroResponse[] = [];
 
   tiposParametrosRequeridos = [
     environment.UNIDAD_EJECUTORA_ID,
@@ -150,6 +152,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     environment.PERFIL_CONTRATISTA_ID,
     environment.TIPO_ESTADO_ID,
     environment.TIPO_ESTADO_INTERNO_ID,
+    environment.VIGENCIA_ID,
   ]
 
   aplicaPoliza: { value: string; viewValue: string }[] = [
@@ -279,10 +282,27 @@ export class PasoInfoGeneralComponent implements OnInit {
         this.regimenesContratacion = data[environment.REGIMEN_CONTRATACION_ID];
         this.procedimientos = data[environment.PROCEDIMIENTO_ID];
         this.unidadesEjecucion = data[environment.UNIDAD_EJECUCION_ID];
+        this.vigenciasContrato = (data[environment.VIGENCIA_ID] || []).sort(
+          (a, b) => Number(b.Nombre) - Number(a.Nombre)
+        );
+        this.preseleccionarVigenciaActual();
         this.loadedData.set(true);
         this.cdRef.detectChanges();
       })
       .catch((err) => this.handleError(err));
+  }
+
+  private preseleccionarVigenciaActual(): void {
+    if (this.contratoGeneral()?.id || this.formInfoGeneral.get('vigenciaId')?.value) {
+      return;
+    }
+    const anioActual = String(new Date().getFullYear());
+    const vigenciaActual = this.vigenciasContrato.find(
+      (v) => String(v.Nombre) === anioActual
+    );
+    if (vigenciaActual) {
+      this.formInfoGeneral.patchValue({ vigenciaId: Number(vigenciaActual.Id) });
+    }
   }
 
   private obtenerNombreUnidadEjecutora(id: number, fallback: string): string {
@@ -469,6 +489,7 @@ export class PasoInfoGeneralComponent implements OnInit {
 
     const formData = {
       unidadEjecutoraId: data.unidad_ejecutora_id,
+      vigenciaId: data.vigencia_id ?? null,
       tipoCompromisoId: data.tipo_compromiso_id,
       tipoContratoId: data.tipo_contrato_id,
       perfilContratistaId: data.perfil_contratista_id,
@@ -521,17 +542,23 @@ export class PasoInfoGeneralComponent implements OnInit {
       return;
     }
 
-    // El contrato no se guarda sin vigencia.
-    this.vigenciaService.vigenciaActualId().subscribe({
-      next: (vigenciaId) => {
-        if (vigenciaId) {
-          this.pedirConsecutivo(parseInt(unidad_ejecutora_id, 10), vigenciaId);
-        } else {
-          this.avisarSinVigencia();
-        }
-      },
-      error: () => this.avisarSinVigencia(),
-    });
+    const vigenciaId = formData.vigenciaId;
+    if (vigenciaId) {
+      this.pedirConsecutivo(parseInt(unidad_ejecutora_id, 10), Number(vigenciaId));
+    } else {
+      // El contrato no se guarda sin vigencia.
+      this.vigenciaService.vigenciaActualId().subscribe({
+        next: (id) => {
+          if (id) {
+            this.formInfoGeneral.patchValue({ vigenciaId: id });
+            this.pedirConsecutivo(parseInt(unidad_ejecutora_id, 10), id);
+          } else {
+            this.avisarSinVigencia();
+          }
+        },
+        error: () => this.avisarSinVigencia(),
+      });
+    }
   }
 
   private avisarSinVigencia() {
@@ -605,12 +632,13 @@ export class PasoInfoGeneralComponent implements OnInit {
     };
 
     const contratoId = this.contratoGeneral()?.id;
+    const vigenciaParaCrear = vigenciaId ?? (Number(formData.vigenciaId) || null);
     const saveOperation = contratoId
       ? this.contratoGeneralCrudService.put(contratoId, formParsed)
       : this.contratoGeneralCrudService.post({
           ...formParsed,
           consecutivo_elaboracion: consecutivo,
-          vigencia_id: vigenciaId,
+          vigencia_id: vigenciaParaCrear,
         });
 
     saveOperation.subscribe({
