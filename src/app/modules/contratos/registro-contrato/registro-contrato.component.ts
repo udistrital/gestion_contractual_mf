@@ -369,6 +369,11 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
             }
             this.verificarPasosGuardadosIniciales();
             this.cdRef.detectChanges();
+          } else {
+            this.alertService.showErrorAlert(
+              'No se encontró el contrato general especificado',
+              'Contrato no encontrado'
+            );
           }
         },
         error: (err) => {

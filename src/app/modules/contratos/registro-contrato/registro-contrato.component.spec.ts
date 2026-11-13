@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
+import { AlertService } from 'src/app/services/alert.service';
 import { RegistroContratoComponent } from './registro-contrato.component';
 
 describe('RegistroContratoComponent', () => {
@@ -175,6 +176,33 @@ describe('RegistroContratoComponent', () => {
 
     component.cargarContratoGeneral({ forzar: true });
     expect(get).toHaveBeenCalledTimes(2);
+  });
+
+  it('muestra alerta de error cuando el contrato no existe o la respuesta no tiene ID', () => {
+    const alertService = TestBed.inject(AlertService);
+    const alertSpy = jest.spyOn(alertService, 'showErrorAlert').mockImplementation(() => Promise.resolve());
+    jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(of({ Data: null }));
+
+    fixture.componentRef.setInput('contratoGeneralId', 999);
+    component.cargarContratoGeneral({ forzar: true });
+    expect(alertSpy).toHaveBeenCalledWith(
+      'No se encontró el contrato general especificado',
+      'Contrato no encontrado'
+    );
+  });
+
+  it('muestra alerta de error cuando la consulta al CRUD falla con error HTTP', () => {
+    const alertService = TestBed.inject(AlertService);
+    const alertSpy = jest.spyOn(alertService, 'showErrorAlert').mockImplementation(() => Promise.resolve());
+    jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(throwError(() => new Error('Fallo de conexión')));
+
+    fixture.componentRef.setInput('contratoGeneralId', 999);
+    component.cargarContratoGeneral({ forzar: true });
+    expect(alertSpy).toHaveBeenCalledWith('Error al cargar el contrato general');
   });
 
   describe('tituloVista', () => {
