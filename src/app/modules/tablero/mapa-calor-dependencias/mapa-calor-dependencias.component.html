@@ -1,0 +1,57 @@
+@if (filas().length === 0) {
+  <div class="tb-vacio">Sin contratos en esta vigencia.</div>
+} @else {
+  <div class="contenedor">
+    <table class="mapa">
+      <thead>
+        <tr>
+          <th scope="col" class="col-dependencia">Dependencia</th>
+          @for (e of estados; track e.clave) {
+            <th scope="col"><i [attr.data-estado]="e.clave"></i>{{ e.nombre }}</th>
+          }
+          <th scope="col" class="col-total">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of filas(); track f.grupo.clave) {
+          <tr
+            [class.seleccionada]="seleccionada() === f.grupo.clave"
+            [class.atenuada]="seleccionada() !== null && seleccionada() !== f.grupo.clave"
+          >
+            <th scope="row" class="col-dependencia">
+              <button type="button" class="nombre" [attr.title]="f.grupo.nombre" (click)="elegir(f.grupo.clave)">
+                {{ f.grupo.nombre }}
+              </button>
+            </th>
+            @for (c of f.celdas; track c.estado) {
+              <td>
+                <button
+                  type="button"
+                  class="celda"
+                  [class.oscura]="c.tono !== null && c.tono < tonoClaro"
+                  [style.background]="c.tono !== null ? 'var(--tb-tono-' + c.tono + ')' : null"
+                  [matTooltip]="c.titulo"
+                  [attr.aria-label]="c.titulo"
+                  (click)="elegir(f.grupo.clave)"
+                >
+                  {{ c.valor || '·' }}
+                </button>
+              </td>
+            }
+            <td class="col-total">
+              <span class="barra"><span [style.width.%]="f.anchoTotal"></span></span>
+              <b>{{ f.grupo.total }}</b>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="escala" aria-hidden="true">
+    Menos
+    @for (t of tonos; track t) {
+      <i [style.background]="'var(--tb-tono-' + t + ')'"></i>
+    }
+    Más
+  </div>
+}

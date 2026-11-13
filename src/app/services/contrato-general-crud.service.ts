@@ -83,6 +83,18 @@ export class ContratoGeneralCrudService {
     return this.requestManager.post(`${RECURSOS_CRUD.disponibilidadPresupuestal}/`, cdpData);
   }
 
+  /**
+   * PUT parcial: el CRUD parte del registro guardado y solo cambia los campos enviados.
+   * El id va en la ruta; con Id sin valor, el RequestManager no lo agrega y no viaja en el cuerpo.
+   */
+  putCdp(id: number, cdp: Partial<CDPContratoCRUD>): Observable<any> {
+    this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    return this.requestManager.put(`${RECURSOS_CRUD.disponibilidadPresupuestal}/${id}`, {
+      Id: undefined,
+      ...cdp,
+    });
+  }
+
   deleteCdp(id: number): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.delete(RECURSOS_CRUD.disponibilidadPresupuestal, id);
