@@ -265,4 +265,30 @@ describe('PasoInfoGeneralComponent: guardado', () => {
       expect(crud['put']).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('preselecciona la vigencia del año actual si existe en los parámetros', async () => {
+    const anioActual = String(new Date().getFullYear());
+    await montar();
+    jest.spyOn(TestBed.inject(ParametrosService), 'getParametrosPorTipo').mockResolvedValue({
+      121: [
+        { Id: 8888, Nombre: anioActual },
+        { Id: 7777, Nombre: String(Number(anioActual) - 1) },
+      ] as any,
+    });
+    await (component as any).loadInitialData();
+    expect(component.formInfoGeneral.value.vigenciaId).toBe(8888);
+  });
+
+  it('permite al usuario elegir una vigencia distinta y la envía al consecutivo y al POST', async () => {
+    await montar();
+    component.formInfoGeneral.patchValue({ vigenciaId: 9999 });
+    await guardar();
+    expect(mid['postConsecutivo']).toHaveBeenCalledWith(expect.objectContaining({ vigencia_id: 9999 }));
+    expect(crud['post']).toHaveBeenCalledWith(expect.objectContaining({ vigencia_id: 9999 }));
+  });
+
+  it('deshabilita el selector de vigencia cuando el contrato ya existe', async () => {
+    await montar(existente);
+    expect(component.formInfoGeneral.get('vigenciaId')?.disabled).toBe(true);
+  });
 });
