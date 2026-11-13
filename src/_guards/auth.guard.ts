@@ -93,11 +93,6 @@ function rutasCoinciden(itemUrl: string, targetUrl: string, params: any): boolea
     }
   }
 
-  // Match por prefijo de ruta (ej. menú: /gestion-contractual/contratos/detalle, navegando a /gestion-contractual/contratos/detalle/123)
-  if (normItem && (normTarget.startsWith(normItem + '/') || sinPrefijoTarget.startsWith(sinPrefijoItem + '/'))) {
-    return true;
-  }
-
   return false;
 }
 

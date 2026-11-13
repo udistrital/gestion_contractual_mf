@@ -503,6 +503,9 @@ export class PasoInfoGeneralComponent implements OnInit {
       unidadEjecucionId: data.unidad_ejecucion_id,
     };
     this.formInfoGeneral.patchValue(formData);
+    if (data.id) {
+      this.formInfoGeneral.get('vigenciaId')?.disable({ emitEvent: false });
+    }
     this.cdRef.detectChanges();
     this.aplicarModoVisualizacion();
   }
@@ -542,7 +545,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       return;
     }
 
-    const vigenciaId = formData.vigenciaId;
+    const vigenciaId = formData.vigenciaId ?? this.formInfoGeneral.getRawValue().vigenciaId;
     if (vigenciaId) {
       this.pedirConsecutivo(parseInt(unidad_ejecutora_id, 10), Number(vigenciaId));
     } else {
@@ -632,7 +635,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     };
 
     const contratoId = this.contratoGeneral()?.id;
-    const vigenciaParaCrear = vigenciaId ?? (Number(formData.vigenciaId) || null);
+    const vigenciaParaCrear = vigenciaId ?? (Number(formData.vigenciaId ?? this.formInfoGeneral.getRawValue().vigenciaId) || null);
     const saveOperation = contratoId
       ? this.contratoGeneralCrudService.put(contratoId, formParsed)
       : this.contratoGeneralCrudService.post({

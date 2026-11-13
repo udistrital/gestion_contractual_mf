@@ -47,7 +47,7 @@
                 icon="calendar_today"
                 [items]="vigenciasContrato"
                 [control]="formInfoGeneral.get('vigenciaId')"
-                [soloLectura]="viewMode()"
+                [soloLectura]="viewMode() || !!contratoGeneral()?.id"
                 [required]="true"
               >
               </app-searchable-select>

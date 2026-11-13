@@ -286,4 +286,9 @@ describe('PasoInfoGeneralComponent: guardado', () => {
     expect(mid['postConsecutivo']).toHaveBeenCalledWith(expect.objectContaining({ vigencia_id: 9999 }));
     expect(crud['post']).toHaveBeenCalledWith(expect.objectContaining({ vigencia_id: 9999 }));
   });
+
+  it('deshabilita el selector de vigencia cuando el contrato ya existe', async () => {
+    await montar(existente);
+    expect(component.formInfoGeneral.get('vigenciaId')?.disabled).toBe(true);
+  });
 });
