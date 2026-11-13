@@ -5,7 +5,6 @@ import { map, switchMap } from 'rxjs/operators';
 import { RECURSOS_CRUD } from '../core/constants/recursos-crud';
 import { VigenciaService } from './vigencia.service';
 import {
-  ApiResponse,
   CDPContratoCRUD,
   ConsultaCrud,
   EstadoContrato,
@@ -86,16 +85,14 @@ export class ContratoGeneralCrudService {
 
   /**
    * PUT parcial: el CRUD parte del registro guardado y solo cambia los campos enviados.
-   * Sin Id, el RequestManager no lo agrega a la ruta y no viaja en el cuerpo. El tipo que
-   * declara el RequestManager incluye HttpEvent y ErrorResponse, pero los errores los lanza
-   * el ErrorManager (throwError): lo que emite es el cuerpo de la respuesta del CRUD.
+   * El id va en la ruta; con Id sin valor, el RequestManager no lo agrega y no viaja en el cuerpo.
    */
-  putCdp(id: number, cdp: Partial<CDPContratoCRUD>): Observable<ApiResponse<CDPContratoCRUD>> {
+  putCdp(id: number, cdp: Partial<CDPContratoCRUD>): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
     return this.requestManager.put(`${RECURSOS_CRUD.disponibilidadPresupuestal}/${id}`, {
       Id: undefined,
       ...cdp,
-    }) as unknown as Observable<ApiResponse<CDPContratoCRUD>>;
+    });
   }
 
   deleteCdp(id: number): Observable<any> {
