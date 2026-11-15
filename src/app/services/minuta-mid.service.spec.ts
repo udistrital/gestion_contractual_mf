@@ -278,12 +278,4 @@ describe('MinutasMidService', () => {
     req.flush(cuerpo);
     expect(respuesta).toEqual(cuerpo);
   });
-
-  it('getMinuta sigue pidiendo la misma ruta, sin interpretar la respuesta', () => {
-    let respuesta: unknown;
-    service.getMinuta(ID_CONTRATO).subscribe((r) => (respuesta = r));
-    const cuerpo = sobre(422, 'Faltan datos: ordenador');
-    httpMock.expectOne(URL_MINUTA).flush(cuerpo);
-    expect(respuesta).toEqual(cuerpo);
-  });
 });

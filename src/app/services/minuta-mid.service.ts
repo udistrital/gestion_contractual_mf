@@ -21,16 +21,13 @@ export class MinutasMidService {
     this.requestManager.setPath('MINUTA_CONTRACTUAL_MID_SERVICE');
   }
 
-  getMinuta(contrato_id: number): Observable<any> {
-    this.requestManager.setPath('MINUTA_CONTRACTUAL_MID_SERVICE');
-    return this.requestManager.get(`minutas/contratos/${contrato_id}`);
-  }
-
   /**
    * PDF de la minuta en base64, listo para el visor. Si la minuta no devuelve un
    * PDF válido, el observable falla con un ErrorMinuta que ya trae el mensaje
    * para el usuario. Funciona igual si la minuta responde HTTP 200 con el
    * resultado en Status o si responde el código HTTP real con el mismo cuerpo.
+   * Es la única forma de pedir la minuta: ningún consumidor interpreta la
+   * respuesta por su cuenta.
    */
   getMinutaPdf(idContrato: number): Observable<string> {
     this.requestManager.setPath('MINUTA_CONTRACTUAL_MID_SERVICE');
