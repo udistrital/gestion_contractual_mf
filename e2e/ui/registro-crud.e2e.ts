@@ -18,7 +18,8 @@ import { CLASE_CONTRATISTA_UNICO, CORE_MF_STUB, PROVEEDOR, VIGENCIA_ACTUAL_ID, r
  * detalle y verifica en la base de datos que queda un solo ordenador activo, que
  * contratista y solicitante quedaron en contrato_general y que lo que no tiene valor
  * queda en NULL. Al editar comprueba que no se borra lo que el formulario no maneja
- * y que el paso 1 actualiza el mismo contrato en vez de crear otro.
+ * y que el paso 1 actualiza el mismo contrato en vez de crear otro. El CDP se asocia con un
+ * valor a tomar parcial; al editar se muestra el guardado y el cambio se envía con PUT.
  * El navegador corre a las 20:30 de Colombia (en UTC ya es el día siguiente) para
  * comprobar el día de las columnas date; la base se prueba en America/Bogota.
  *
@@ -50,6 +51,10 @@ const peticionesAlCrud: string[] = [];
 const cuerposConsecutivo: unknown[] = [];
 const noSimuladas: string[] = [];
 let contratoId = 0;
+// valor_a_tomar del CDP 1234 (total simulado: 50.000.000): parcial al registrar y otro al editar.
+const VALOR_A_TOMAR_REGISTRO = 32500000.5;
+const VALOR_A_TOMAR_EDICION = 40000000;
+let valorATomarRegistrado = '';
 
 async function responder(route: Route): Promise<void> {
   const url = new URL(route.request().url());
@@ -212,7 +217,13 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
     await seleccionar(page, seccion.locator('mat-select[formcontrolname="vigencia"]'), '2024');
     // Con un solo CDP disponible, el select buscable lo toma solo y lo agrega a la tabla.
     await expect(seccion.locator('table')).toContainText('1234');
+    // Por defecto el valor a tomar es el total del CDP; se toma solo una parte.
+    const valorATomar = seccion.locator('.valor-tomar-field input');
+    await expect(valorATomar).toHaveValue('50000000');
+    await valorATomar.fill(String(VALOR_A_TOMAR_REGISTRO));
+    const postCdp = page.waitForRequest((r) => r.method() === 'POST' && r.url().includes('/v1/disponibilidades-presupuestales/'));
     await seccion.getByRole('button', { name: /Asociar CDP/ }).click();
+    expect.soft((await postCdp).postDataJSON().valor_a_tomar).toBe(VALOR_A_TOMAR_REGISTRO);
     await aceptarAlerta(page);
 
     await seleccionar(page, buscable(seccion, 'Tipo de Moneda'), 'Peso colombiano');
@@ -232,6 +243,10 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
       await seccion.getByRole('button', { name: /Guardar y Continuar/ }).click();
       await aceptarAlerta(page);
     }
+    // El valor no cambió después del POST: guardar el paso no hace PUT del CDP.
+    expect.soft(peticionesAlCrud.filter((p) => p.startsWith('PUT') && p.includes('/disponibilidades-presupuestales/'))).toEqual([]);
+    valorATomarRegistrado = sql(`select valor_a_tomar from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`);
+    expect.soft(Number(valorATomarRegistrado)).toBe(VALOR_A_TOMAR_REGISTRO);
     await capturar(page, '01-paso1-guardado');
   });
 
@@ -349,9 +364,22 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
     const presupuestal = page.locator('app-paso-info-presupuestal');
     await expect(presupuestal.locator('input[formcontrolname="valorContrato"]')).toHaveValue('45000000');
     await expect(presupuestal.locator('input[formcontrolname="nombreOrdenador"]')).toHaveValue(/ORDENADOR DE PRUEBA/);
+    // Al editar se muestra el valor a tomar guardado en el CRUD, no el total del CDP.
+    const valorATomar = presupuestal.locator('.valor-tomar-field input');
+    await expect(valorATomar).toHaveValue(String(VALOR_A_TOMAR_REGISTRO));
+    await capturar(page, '08a-edicion-valor-a-tomar-guardado');
+    await valorATomar.fill(String(VALOR_A_TOMAR_EDICION));
+    const cdpId = sql(`select id from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`);
+    const putCdp = page.waitForResponse(
+      (r) => r.request().method() === 'PUT' && r.url().endsWith(`/v1/disponibilidades-presupuestales/${cdpId}`)
+    );
     const ordenador = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/v1/ordenadores/'));
     await presupuestal.getByRole('button', { name: /Guardar y Continuar/ }).click();
     expect.soft(Object.keys((await ordenador).postDataJSON())).toEqual(['ordenador_argo_id', 'contrato_general_id']);
+    const respuestaCdp = await putCdp;
+    expect.soft(respuestaCdp.status()).toBe(200);
+    // El PUT del CRUD es parcial: solo viaja valor_a_tomar.
+    expect.soft(respuestaCdp.request().postDataJSON()).toEqual({ valor_a_tomar: VALOR_A_TOMAR_EDICION });
     await aceptarAlerta(page);
 
     await page.locator('.step-pill[aria-label="Solicitante y Supervisor"]').click();
@@ -408,6 +436,8 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
       vigencia_id: sql(`select vigencia_id from contratacion.contrato_general where id = ${contratoId}`),
       estado_actual: sql(`select estado_interno_parametro_id from contratacion.estado_contrato where contrato_general_id = ${contratoId} and actual`),
       fecha_registro_cdp: sql(`select fecha_registro from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
+      valor_a_tomar_cdp: sql(`select valor_a_tomar from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
+      numero_y_vigencia_cdp: columnas('disponibilidad_presupuestal', `${delContrato} and activo`, ['numero_cdp_id', 'vigencia_cdp_id']),
     };
     writeFileSync(
       join(EVIDENCIAS, '08-base-de-datos.txt'),
@@ -418,6 +448,7 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
         `supervisor_contrato.cargo_id al crearlo: ${cargoSupervisorInicial}\n` +
         `supervisor_contrato.cargo_id tras editar (se fijó en 45 por SQL): ${cargoSupervisor}\n` +
         `ordenador_contrato tras editar (cargo_id|ordenador_sicapital_id|documento_identidad, fijados por SQL): ${ordenadorEditado}\n\n` +
+        `disponibilidad_presupuestal.valor_a_tomar al registrar: ${valorATomarRegistrado}\n` +
         Object.entries(conteos).map(([k, v]) => `${k}: ${v}`).join('\n') +
         `\n\nPeticiones al CRUD (${peticionesAlCrud.length}):\n${peticionesAlCrud.join('\n')}\n`
     );
@@ -441,6 +472,9 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
     expect.soft(cuerposConsecutivo[0]).toEqual({ unidad_ejecutora_id: 6818, vigencia_id: VIGENCIA_ACTUAL_ID });
     // La columna date debe quedar con el día local, no con el día UTC.
     expect.soft(conteos.fecha_registro_cdp).toBe(hoyColombia);
+    // El PUT cambió valor_a_tomar y conservó el resto del CDP.
+    expect.soft(Number(conteos.valor_a_tomar_cdp)).toBe(VALOR_A_TOMAR_EDICION);
+    expect.soft(conteos.numero_y_vigencia_cdp).toBe('1234|2024');
     expect.soft(noSimuladas, 'peticiones sin simular').toEqual([]);
   });
 });

@@ -15,7 +15,7 @@ describe('TableroDatosService', () => {
   let tercerosService: { getTerceroPorId: jest.Mock };
   const hoy = new Date(2026, 9, 20, 10, 0);
 
-  // Fila de GET v1/tableros/contratos (CRUD Beego v2): el CRUD ya calcula el
+  // Fila de GET tableros/contratos del MID (tomada del CRUD): el CRUD ya calcula el
   // estado actual, desde cuándo está en él y el abogado.
   const contratoCrud = {
     contrato_general_id: 7,
@@ -55,12 +55,12 @@ describe('TableroDatosService', () => {
     service = TestBed.inject(TableroDatosService);
   });
 
-  it('busca el Id del parámetro de vigencia y consulta el CRUD con vigencia_id', async () => {
+  it('busca el Id del parámetro de vigencia y consulta el MID con vigencia_id', async () => {
     await firstValueFrom(service.cargarContratos('2026', hoy));
     expect(parametrosService.get).toHaveBeenCalledWith(
       `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Nombre:2026&fields=Id&limit=1`
     );
-    expect(requestManager.setPath).toHaveBeenCalledWith('GESTION_CONTRACTUAL_CRUD_SERVICE');
+    expect(requestManager.setPath).toHaveBeenCalledWith('GESTION_CONTRACTUAL_MID_SERVICE');
     expect(requestManager.get).toHaveBeenCalledWith('tableros/contratos?vigencia_id=6900');
   });
 
@@ -77,7 +77,7 @@ describe('TableroDatosService', () => {
     expect(requestManager.get).toHaveBeenCalledWith('tableros/contratos');
   });
 
-  it('un año sin parámetro de vigencia no consulta el CRUD', async () => {
+  it('un año sin parámetro de vigencia no consulta el MID', async () => {
     parametrosService.get.mockReturnValue(of({ Status: '200', Data: [{}] }));
     expect(await firstValueFrom(service.cargarContratos('2019', hoy))).toEqual([]);
     expect(await firstValueFrom(service.cargarContratos('20x6', hoy))).toEqual([]);
@@ -114,12 +114,24 @@ describe('TableroDatosService', () => {
     expect(tercerosService.getTerceroPorId).not.toHaveBeenCalled();
   });
 
-  it('usa nombres de respaldo si MID o terceros fallan', async () => {
+  it('propaga el error si el MID falla, para no mostrar el tablero incompleto', async () => {
     midService.getDependencias.mockReturnValue(throwError(() => new Error('MID')));
+    await expect(firstValueFrom(service.cargarContratos('2026', hoy))).rejects.toThrow('MID');
+  });
+
+  it('usa nombres de respaldo si la dependencia no está en el MID o terceros falla', async () => {
+    midService.getDependencias.mockReturnValue(of([]));
     tercerosService.getTerceroPorId.mockReturnValue(throwError(() => new Error('Terceros')));
     const [c] = await firstValueFrom(service.cargarContratos('2026', hoy));
     expect(c.dependencia).toBe('Dependencia 31');
     expect(c.abogado).toBe('Abogado 500');
+  });
+
+  it('propaga el error si el MID responde sin lista de contratos', async () => {
+    requestManager.get.mockReturnValue(of({ Data: null }));
+    await expect(firstValueFrom(service.cargarContratos('2026', hoy))).rejects.toThrow(
+      'Respuesta inválida de tableros/contratos'
+    );
   });
 
   it('maneja contratos sin dependencia ni estados y respuestas vacías', async () => {
@@ -148,7 +160,7 @@ describe('TableroDatosService', () => {
     expect(c.numero).toBe('CPS-1');
     expect(midService.getDependencias).not.toHaveBeenCalled();
 
-    requestManager.get.mockReturnValue(of({ Data: null }));
+    requestManager.get.mockReturnValue(of({ Data: [] }));
     expect(await firstValueFrom(service.cargarContratos('2026', hoy))).toEqual([]);
   });
 

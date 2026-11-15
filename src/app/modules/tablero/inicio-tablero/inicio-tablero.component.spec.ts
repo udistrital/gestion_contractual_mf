@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
+import { PlantillaTarjetaContenedoraComponent } from 'src/app/shared/templates/plantilla-tarjeta-contenedora/plantilla-tarjeta-contenedora.component';
 import { TableroDatosService } from '../../../services/tablero-datos.service';
 import { contratoPrueba } from '../../../testing/contratos-prueba';
 import { InicioTableroComponent } from './inicio-tablero.component';
@@ -29,7 +30,7 @@ describe('InicioTableroComponent', () => {
     datos = { cargarContratos: jest.fn().mockReturnValue(of(contratos)) };
     parametros = { get: jest.fn().mockReturnValue(vigencias) };
     TestBed.configureTestingModule({
-      declarations: [InicioTableroComponent],
+      declarations: [InicioTableroComponent, PlantillaTarjetaContenedoraComponent],
       providers: [
         { provide: TableroDatosService, useValue: datos },
         { provide: ParametrosService, useValue: parametros },
@@ -111,7 +112,7 @@ describe('InicioTableroComponent', () => {
     fixture.detectChanges();
 
     await jest.advanceTimersByTimeAsync(0);
-    expect(component.personaId()).toBeNull();
+    expect(component.personaId()).toBeUndefined();
     await jest.advanceTimersByTimeAsync(500);
     expect(component.personaId()).toBe(500);
     expect(getPersonaId).toHaveBeenCalledTimes(2);
@@ -168,7 +169,7 @@ describe('InicioTableroComponent', () => {
     expect(component.vigencias()).toEqual([anio, String(+anio - 1), String(+anio - 2)]);
   });
 
-  it('filtra resumen y carga por la dependencia elegida en el treemap', async () => {
+  it('filtra resumen y carga por la dependencia elegida en el mapa de calor', async () => {
     await crear(['JEFE_CONTRATACION_RECTOR']);
     component.seleccionarDependencia('10');
     expect(component.conteo().total).toBe(2);
@@ -176,24 +177,6 @@ describe('InicioTableroComponent', () => {
     expect(component.detalleTotal()).toBe(`Vigencia ${anio} · Ingeniería`);
     component.seleccionarDependencia(null);
     expect(component.conteo().total).toBe(4);
-  });
-
-  it('«Otras» filtra por las dependencias pequeñas y muestra sus alertas', async () => {
-    await crear(['JEFE_CONTRATACION_RECTOR']);
-    const muchos = Array.from({ length: 40 }, (_, i) =>
-      contratoPrueba({ id: 100 + i, dependenciaId: 10, dependencia: 'Ingeniería' })
-    );
-    const pequena = contratoPrueba({ id: 200, dependenciaId: 30, dependencia: 'Idiomas', diasEnEstado: 4 });
-    datos.cargarContratos.mockReturnValue(of([...muchos, pequena]));
-    component.cambiarVigencia('2025');
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(component.alertasPorDependencia()).toEqual({ '30': 1 });
-    component.seleccionarDependencia('otras');
-    expect(component.conteo().total).toBe(1);
-    expect(component.alertas().map((a) => a.contrato.id)).toEqual([200]);
-    expect(component.nombreDependencia()).toBe('Otras dependencias');
   });
 
   it('al cambiar de vigencia recarga y quita el filtro de dependencia', async () => {
@@ -206,13 +189,73 @@ describe('InicioTableroComponent', () => {
     expect(component.dependenciaSeleccionada()).toBeNull();
   });
 
-  it('muestra aviso si el CRUD falla', async () => {
+  it('muestra aviso si el CRUD o el MID fallan, sin presentar ceros ni datos parciales', async () => {
     await crear(['JEFE_CONTRATACION_RECTOR']);
+    expect(fixture.nativeElement.querySelector('app-resumen-estados')).not.toBeNull();
     datos.cargarContratos.mockReturnValue(throwError(() => new Error('CRUD')));
     component.cambiarVigencia('2024');
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
     expect(component.error()).toBe(true);
-    expect(component.conteo().total).toBe(0);
+    const html: HTMLElement = fixture.nativeElement;
+    expect(html.querySelector('.aviso')!.textContent).toContain('No fue posible cargar las estadísticas');
+    expect(html.querySelector('app-resumen-estados')).toBeNull();
+    expect(html.querySelector('app-mapa-calor-dependencias')).toBeNull();
+    expect(html.querySelector('.subtitulo')!.textContent).not.toContain('contratos ·');
+    expect(html.querySelector('.subtitulo')!.textContent).not.toMatch(/\d+ contratos/);
+  });
+
+  it('muestra la carga mientras consulta y no presenta datos hasta que termina', async () => {
+    await crear(['JEFE_CONTRATACION_RECTOR']);
+    const pendiente = new Subject<typeof contratos>();
+    datos.cargarContratos.mockReturnValue(pendiente);
+    component.cambiarVigencia('2024');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(component.cargandoTablero()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.cargando')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('app-resumen-estados')).toBeNull();
+
+    pendiente.next([]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.cargando')).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-mapa-calor-dependencias')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.subtitulo').textContent).toContain('0 contratos');
+  });
+
+  it('abogado: muestra la carga mientras llega su persona_id y un aviso si no llega', async () => {
+    jest.useFakeTimers();
+    TestBed.configureTestingModule({
+      declarations: [InicioTableroComponent, PlantillaTarjetaContenedoraComponent],
+      providers: [
+        { provide: TableroDatosService, useValue: { cargarContratos: jest.fn().mockReturnValue(of(contratos)) } },
+        { provide: ParametrosService, useValue: { get: () => of(null) } },
+        { provide: UserService, useValue: { getPersonaId: () => Promise.reject(new Error('No id found')) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+    });
+    TestBed.overrideComponent(InicioTableroComponent, {
+      set: {
+        providers: [
+          { provide: RolService, useValue: { cargarRol: () => Promise.resolve(), getRol: () => ['ABOGADO_CONTRATACION_RECTOR'] } },
+        ],
+      },
+    });
+    fixture = TestBed.createComponent(InicioTableroComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await jest.advanceTimersByTimeAsync(1000);
+    fixture.detectChanges();
+    expect(component.cargandoTablero()).toBe(true);
+    expect(component.propios()).toEqual([]);
+
+    await jest.advanceTimersByTimeAsync(60000);
+    fixture.detectChanges();
+    expect(component.cargandoTablero()).toBe(false);
+    expect(component.sinPersona()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.aviso').textContent).toContain('No fue posible identificar tu usuario');
+    expect(fixture.nativeElement.querySelector('app-resumen-estados')).toBeNull();
   });
 });

@@ -64,7 +64,8 @@ export interface CDPContratoCRUD {
   fecha_registro: string;
   vigencia_cdp_id: number;
   contrato_general_id: ReferenciaCrud | null;
-  valor_a_tomar?: number;
+  /** Parte del CDP que toma el contrato; el CRUD responde null si no se ha guardado. */
+  valor_a_tomar?: number | null;
 }
 
 export interface CDP {

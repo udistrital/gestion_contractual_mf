@@ -10,7 +10,6 @@ import { environment } from 'src/environments/environment';
 import { TableroDatosService } from '../../../services/tablero-datos.service';
 import { ContratoTablero, RolTablero } from '../../../types/tablero.models';
 import { agruparPor, calcularAlertas, contarPorEstado, rolTablero } from '../../../utils/tablero.utils';
-import { CLAVE_OTRAS, dependenciasMenores } from '../treemap-dependencias/treemap-dependencias.component';
 
 // Página de inicio de ARGO: estadísticas de contratación según el rol del usuario
 @Component({
@@ -34,7 +33,8 @@ export class InicioTableroComponent implements OnInit {
   readonly vigencia = signal(this.anioActual);
   readonly vigencias = signal<string[]>(this.vigenciasPorDefecto());
   readonly dependenciaSeleccionada = signal<string | null>(null);
-  readonly cargando = signal(false);
+  // Inicia en true para no mostrar ceros antes de la primera consulta
+  readonly cargando = signal(true);
   readonly error = signal(false);
 
   private readonly consulta = computed(() => (this.rol() ? this.vigencia() : null));
@@ -60,15 +60,22 @@ export class InicioTableroComponent implements OnInit {
     { initialValue: [] as ContratoTablero[] }
   );
 
-  // El core guarda persona_id poco después de iniciar sesión; se reintenta hasta 1 minuto
+  // El core guarda persona_id poco después de iniciar sesión; se reintenta hasta 1 minuto.
+  // undefined mientras se espera; null si no llegó
   readonly personaId = toSignal(
     timer(0, 500).pipe(
       take(120),
       concatMap(() => from(this.userService.getPersonaId()).pipe(catchError(() => of(null)))),
       first((id) => id !== null, null)
     ),
-    { initialValue: null }
+    { initialValue: undefined }
   );
+
+  // El abogado necesita su persona_id para saber cuáles contratos son suyos
+  readonly cargandoTablero = computed(
+    () => this.cargando() || (this.rol() === 'ABOGADO' && this.personaId() === undefined)
+  );
+  readonly sinPersona = computed(() => this.rol() === 'ABOGADO' && this.personaId() === null);
 
   // Contratos que le corresponden al usuario: todos para el jefe, los propios para el abogado
   readonly propios = computed(() =>
@@ -87,13 +94,7 @@ export class InicioTableroComponent implements OnInit {
 
   private readonly filtrar = (lista: ContratoTablero[]) => {
     const dep = this.dependenciaSeleccionada();
-    if (dep === null) return lista;
-    // "Otras" filtra por todas las dependencias agrupadas en ese bloque del treemap
-    const claves =
-      dep === CLAVE_OTRAS
-        ? new Set(dependenciasMenores(this.gruposDependencias()).map((g) => g.clave))
-        : new Set([dep]);
-    return lista.filter((c) => claves.has(this.claveDependencia(c)));
+    return dep === null ? lista : lista.filter((c) => this.claveDependencia(c) === dep);
   };
 
   readonly propiosFiltrados = computed(() => this.filtrar(this.propios()));
@@ -101,21 +102,9 @@ export class InicioTableroComponent implements OnInit {
   readonly conteo = computed(() => contarPorEstado(this.propiosFiltrados()));
   readonly alertas = computed(() => calcularAlertas(this.propiosFiltrados(), new Date()));
 
-  // Alertas de cada dependencia sin filtro, para mostrarlas en el detalle de "Otras"
-  readonly alertasPorDependencia = computed(() => {
-    const conteo: Record<string, number> = {};
-    calcularAlertas(this.propios(), new Date()).forEach((a) => {
-      const clave = this.claveDependencia(a.contrato);
-      conteo[clave] = (conteo[clave] ?? 0) + 1;
-    });
-    return conteo;
-  });
-
-  readonly nombreDependencia = computed(() => {
-    const dep = this.dependenciaSeleccionada();
-    if (dep === CLAVE_OTRAS) return 'Otras dependencias';
-    return this.gruposDependencias().find((g) => g.clave === dep)?.nombre ?? null;
-  });
+  readonly nombreDependencia = computed(
+    () => this.gruposDependencias().find((g) => g.clave === this.dependenciaSeleccionada())?.nombre ?? null
+  );
 
   readonly detalleTotal = computed(() => {
     const base = `Vigencia ${this.vigencia()}`;

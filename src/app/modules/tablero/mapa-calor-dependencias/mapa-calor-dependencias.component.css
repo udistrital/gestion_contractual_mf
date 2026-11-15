@@ -1,0 +1,140 @@
+.contenedor {
+  max-height: 560px;
+  overflow: auto;
+}
+
+.mapa {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 6px;
+  font-size: 12.5px;
+  color: var(--tb-texto);
+}
+
+.mapa thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--tb-superficie);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--tb-texto-suave);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.mapa thead i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: 1px;
+  background: var(--tb-c);
+}
+
+.mapa .col-dependencia {
+  text-align: left;
+  min-width: 150px;
+}
+
+.mapa .col-total {
+  text-align: left;
+  min-width: 90px;
+}
+
+.nombre {
+  font: inherit;
+  font-weight: 400;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nombre:hover {
+  text-decoration: underline;
+}
+
+.celda {
+  width: 100%;
+  min-width: 44px;
+  height: 30px;
+  font: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--tb-texto-tono-claro);
+  background: var(--tb-primario-suave);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.celda.oscura {
+  color: var(--md-primary-contrast-500, #ffffff);
+}
+
+.celda:hover {
+  filter: brightness(1.08);
+  border-color: var(--tb-texto);
+}
+
+tr.atenuada {
+  opacity: 0.35;
+}
+
+tr.seleccionada .celda {
+  border-color: var(--tb-texto);
+}
+
+tr.seleccionada .nombre {
+  font-weight: 700;
+}
+
+.col-total {
+  white-space: nowrap;
+}
+
+.barra {
+  display: inline-block;
+  width: 70px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  vertical-align: middle;
+  background: var(--tb-borde);
+}
+
+.barra span {
+  display: block;
+  height: 100%;
+  background: var(--tb-primario);
+}
+
+.escala {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--tb-texto-suave);
+}
+
+.escala i {
+  display: inline-block;
+  width: 16px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.escala i:first-of-type {
+  margin-left: 4px;
+}
+
+.escala i:last-of-type {
+  margin-right: 4px;
+}

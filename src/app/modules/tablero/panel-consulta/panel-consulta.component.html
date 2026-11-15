@@ -1,23 +1,34 @@
 <div class="panel">
-  @if (error()) {
+  <!-- Carga, error y datos se excluyen: un fallo no se muestra como ceros ni como datos parciales -->
+  @if (cargandoPanel()) {
+    <div class="cargando" role="status">
+      <mat-spinner diameter="28"></mat-spinner>
+      Cargando resumen de contratos…
+    </div>
+  } @else if (error() || sinPersona()) {
     <div class="aviso" role="alert">
       <mat-icon>error_outline</mat-icon>
-      No fue posible cargar el resumen de contratos. La tabla de consulta sigue disponible.
+      @if (error()) {
+        No fue posible cargar el resumen de contratos.
+      } @else {
+        No fue posible identificar su usuario para mostrar sus contratos.
+      }
     </div>
+  } @else {
+    <app-resumen-estados
+      [conteo]="conteo()"
+      [detalleTotal]="detalleTotal()"
+      [estadoActivo]="estadoActivo()"
+      [seleccionable]="true"
+      (seleccionar)="seleccionarEstado.emit($event)"
+    ></app-resumen-estados>
+    <app-alertas-gestion
+      [alertas]="alertas()"
+      [limite]="6"
+      [mostrarAbogado]="rol() === 'JEFE'"
+      [estadoActivo]="estadoActivo()"
+      [seleccionable]="true"
+      (seleccionarEstado)="seleccionarEstado.emit($event)"
+    ></app-alertas-gestion>
   }
-  <app-resumen-estados
-    [conteo]="conteo()"
-    [detalleTotal]="detalleTotal()"
-    [estadoActivo]="estadoActivo()"
-    [seleccionable]="true"
-    (seleccionar)="seleccionarEstado.emit($event)"
-  ></app-resumen-estados>
-  <app-alertas-gestion
-    [alertas]="alertas()"
-    [limite]="6"
-    [mostrarAbogado]="rol() === 'JEFE'"
-    [estadoActivo]="estadoActivo()"
-    [seleccionable]="true"
-    (seleccionarEstado)="seleccionarEstado.emit($event)"
-  ></app-alertas-gestion>
 </div>

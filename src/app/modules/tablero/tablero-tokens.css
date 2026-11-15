@@ -25,7 +25,7 @@
   --tb-alerta-suave: var(--md-warning-50, #fff7e8);
   --tb-alerta-alta: var(--danger-accent, #b22222);
 
-  /* Escala del treemap: de más a menos contratos */
+  /* Escala del mapa de calor: de más a menos contratos */
   --tb-tono-0: var(--color5, #731514);
   --tb-tono-1: var(--color900, #863028);
   --tb-tono-2: var(--color800, #98483c);
