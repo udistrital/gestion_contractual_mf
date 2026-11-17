@@ -52,6 +52,7 @@ export const PARAMETROS: Record<number, unknown[]> = {
   116: [param(6591, 'Régimen Especial - Acuerdo 03 de 2015'), param(6592, 'Ley 80 de 1993')],
   117: [param(6596, 'PRO-OC-01 Orden de compra'), param(6597, 'PRO-CD-02 Contratación directa')],
   120: [param(CLASE_CONTRATISTA_UNICO, 'Contratista Único'), param(6632, 'Consorcio'), param(6633, 'Unión Temporal')],
+  121: [param(VIGENCIA_ACTUAL_ID, String(new Date().getFullYear()))],
   119: [param(TIPO_CONTROL_TECNICO, 'Técnico, administrativo y financiero'), param(6612, 'Administrativo y contable')],
   7: [param(211, 'MESES'), param(212, 'DÍAS')],
   137: [param(6773, 'POR SUSCRIBIR')],

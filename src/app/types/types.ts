@@ -29,6 +29,7 @@ export interface ContratoGeneral {
   condiciones?: string;
   observaciones?: string;
   vigencia?: string;
+  vigencia_id?: number;
   consecutivo_elaboracion?: string;
   fecha_inicial?: Date;
   fecha_final?: Date;
