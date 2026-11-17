@@ -310,7 +310,8 @@ for (const modo of ['HTTP 200', 'HTTP real'] as Modo[]) {
     });
 
     test('los dos botones muestran "Generando minuta…" mientras se genera', async () => {
-      simulacion.retrasoMinutaMs = 2000;
+      // Margen amplio: con el MF recién compilado, 2 s no alcanzaban para las cuatro aserciones.
+      simulacion.retrasoMinutaMs = 5000;
       await botonVistaPrevia(page).click();
       for (const boton of [botonVistaPrevia(page), botonVistaPreviaDock(page)]) {
         await expect(boton).toBeDisabled();
