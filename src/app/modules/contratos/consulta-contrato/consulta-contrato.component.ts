@@ -86,7 +86,7 @@ export class ConsultaContratoComponent implements OnInit {
   usuarioId: number = 1;
 
   // Control de Rol y Modo Pruebas
-  rolActivo: 'JEFE' | 'ABOGADO' = 'JEFE';
+  rolActivo: 'JEFE' | 'ABOGADO' | 'ORDENADOR' | 'PROVEEDOR' = 'JEFE';
   isProduction: boolean = environment.production;
 
   // Selector de Vigencia (Por defecto el año de la vigencia presente)
@@ -244,12 +244,18 @@ export class ConsultaContratoComponent implements OnInit {
 
   determinarRolInicial(): void {
     if (Array.isArray(this.roles) && this.roles.length > 0) {
-      const esJefe = this.roles.some((r) =>
-        r.includes('JEFE') || r === 'ADMIN_ARGO' || r.includes('ORDENADOR')
-      );
-      const esAbogado = this.roles.some((r) => r.includes('ABOGADO'));
-      if (esAbogado && !esJefe) {
+      const tieneRol = (cadena: string) => this.roles.some((r) => r.includes(cadena));
+      const esJefe = tieneRol('JEFE') || this.roles.includes('ADMIN_ARGO');
+      const esAbogado = tieneRol('ABOGADO');
+      const esOrdenador = tieneRol('ORDENADOR');
+      const esProveedor = tieneRol('PROVEEDOR') || tieneRol('CONTRATISTA');
+
+      if (esAbogado && !esJefe && !esOrdenador && !esProveedor) {
         this.rolActivo = 'ABOGADO';
+      } else if (esOrdenador && !esJefe) {
+        this.rolActivo = 'ORDENADOR';
+      } else if (esProveedor && !esJefe) {
+        this.rolActivo = 'PROVEEDOR';
       } else {
         this.rolActivo = 'JEFE';
       }
@@ -258,7 +264,7 @@ export class ConsultaContratoComponent implements OnInit {
     }
   }
 
-  cambiarRolPruebas(nuevoRol: 'JEFE' | 'ABOGADO'): void {
+  cambiarRolPruebas(nuevoRol: 'JEFE' | 'ABOGADO' | 'ORDENADOR' | 'PROVEEDOR'): void {
     this.rolActivo = nuevoRol;
     this.seleccionContratos.clear();
     this.actualizarMetricasYAlertas();
@@ -631,9 +637,13 @@ export class ConsultaContratoComponent implements OnInit {
     if (this.rolActivo === 'ABOGADO') {
       const rolesAbogado = (this.roles || []).filter((r) => r.includes('ABOGADO'));
       rolesAEvaluar = rolesAbogado.length > 0 ? rolesAbogado : ['ABOGADO_CONTRATACION_RECTOR'];
+    } else if (this.rolActivo === 'ORDENADOR') {
+      rolesAEvaluar = ['ORDENADOR_DEL_GASTO'];
+    } else if (this.rolActivo === 'PROVEEDOR') {
+      rolesAEvaluar = ['PROVEEDOR', 'CONTRATISTA'];
     } else {
       const rolesJefe = (this.roles || []).filter(
-        (r) => r.includes('JEFE') || r === 'ADMIN_ARGO' || r.includes('ORDENADOR')
+        (r) => r.includes('JEFE') || r === 'ADMIN_ARGO'
       );
       rolesAEvaluar = rolesJefe.length > 0 ? rolesJefe : ['JEFE_CONTRATACION_RECTOR'];
     }

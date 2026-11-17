@@ -3,11 +3,13 @@ import { environment } from 'src/environments/environment';
 const generarEstado = (
   accion: string,
   confirmacion: string,
-  enviado: string
+  enviado: string,
+  requiereArchivo: boolean = false
 ) => ({
   accion,
   confirmacion,
   enviado,
+  requiereArchivo,
 });
 
 // Configuración del rol por estado
@@ -22,34 +24,39 @@ export const rolPorEstado: any = {
   ],
   [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: ['ORDENADOR_DEL_GASTO'],
   [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: ['ORDENADOR_DEL_GASTO'],
-  [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['PROVEEDOR'],
+  [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['PROVEEDOR', 'CONTRATISTA'],
 };
 
 const textos = {
   JEFE_CONTRATACION: generarEstado(
     'Aprobar y Enviar a Ordenador',
     '¿Está seguro(a) de aprobar y enviar el contrato al ordenador?',
-    'El contrato fue enviado al ordenador'
+    'El contrato fue enviado al ordenador',
+    false
   ),
   ORDENADOR: generarEstado(
     'Firmar y Enviar a Contratista',
     '¿Está seguro(a) de firmar y enviar el contrato al contratista?',
-    'El contrato fue enviado al contratista'
+    'El contrato fue enviado al contratista',
+    true
   ),
   ORDENADOR_IDEXUD_EN_REVISION: generarEstado(
     'Enviar a Contratista',
     '¿Está seguro(a) de enviar el contrato al contratista?',
-    'El contrato fue enviado al contratista'
+    'El contrato fue enviado al contratista',
+    false
   ),
   ORDENADOR_IDEXUD_EN_FIRMA: generarEstado(
     'Firmar y Enviar a Abogado(a)',
     '¿Está seguro(a) de firmar y enviar el contrato al abogado(a)?',
-    'El contrato fue enviado al abogado(a)'
+    'El contrato fue enviado al abogado(a)',
+    true
   ),
   PROVEEDOR: generarEstado(
     'Firmar y Enviar',
     '¿Está seguro(a) de firmar y enviar contrato?',
-    'El contrato fue enviado exitosamente'
+    'El contrato fue enviado exitosamente',
+    true
   ),
 };
 
@@ -68,6 +75,9 @@ export const textosMensaje: any = {
     PROVEEDOR: {
       [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: textos.PROVEEDOR,
     },
+    CONTRATISTA: {
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: textos.PROVEEDOR,
+    },
   },
   [environment.UNIDADES_EJECUTORAS.IDEXUD]: {
     JEFE_CONTRATACION_RECTOR: {
@@ -83,6 +93,9 @@ export const textosMensaje: any = {
         textos.ORDENADOR_IDEXUD_EN_FIRMA,
     },
     PROVEEDOR: {
+      [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: textos.PROVEEDOR,
+    },
+    CONTRATISTA: {
       [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: textos.PROVEEDOR,
     },
   },
