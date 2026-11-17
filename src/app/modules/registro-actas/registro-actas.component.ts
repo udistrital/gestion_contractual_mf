@@ -256,7 +256,7 @@ export class RegistroActasComponent implements OnInit {
           this.snackBar.open(response?.Message || 'Error al registrar el acta de inicio', 'Cerrar', { duration: 2000 });
           return;
         }
-        this.snackBar.open('Acta de inicio registrada correctamente', 'Cerrar', { duration: 2000 });
+        this.guardarPdfActaInicio(Number(this.form.value.consecutivoContrato), response.Data);
         this.form.reset();
       },
       (error) => {
@@ -264,6 +264,27 @@ export class RegistroActasComponent implements OnInit {
         console.error('Error al registrar el acta de inicio:', error);
       }
     );
-  }  
+  }
+
+  // minuta_contractual_mid solo devuelve el PDF (base64): aquí se sube al
+  // gestor documental y se registra en documentos-contratos
+  private guardarPdfActaInicio(contratoId: number, data: any) {
+    const error = 'Acta de inicio registrada, pero no se pudo guardar el PDF en el gestor documental';
+    this.registroActasService.subirActaInicio(contratoId, data.pdf).subscribe({
+      next: (subida: any) => {
+        if (subida?.Status !== '200' || !subida?.res?.Id) {
+          this.snackBar.open(error, 'Cerrar', { duration: 4000 });
+          return;
+        }
+        this.registroActasService
+          .registrarDocumentoActaInicio(data.acta_inicio.id, subida.res.Id, subida.res.Enlace)
+          .subscribe({
+            next: () => this.snackBar.open('Acta de inicio registrada correctamente', 'Cerrar', { duration: 2000 }),
+            error: () => this.snackBar.open(error, 'Cerrar', { duration: 4000 }),
+          });
+      },
+      error: () => this.snackBar.open(error, 'Cerrar', { duration: 4000 }),
+    });
+  }
 
 }
