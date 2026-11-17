@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -20,11 +20,13 @@ import { ContratoGeneral } from 'src/app/types/types';
 /**
  * Pruebas de Integración y Estabilización del Ciclo de Vida del Contrato (Issue #402).
  * Cubre:
- * 1. Registro de contrato -> Consulta persistida -> Edición sin duplicidad.
- * 2. Casos de error: validaciones, identificador inexistente y fallo de servicios sin confirmación falsa.
- * 3. Acciones disponibles y datos consultados según roles (ABOGADO vs JEFE) y unidad ejecutora.
+ * 1. Registro de contrato -> Consulta persistida -> Edición sin duplicidad y validación de campos obligatorios.
+ * 2. Casos de error: contrato inexistente con 404 real, bloqueo de guardado, y fallo de servicios sin confirmación falsa.
+ * 3. Acciones disponibles y datos consultados según roles (ABOGADO vs JEFE) y segregación por unidad ejecutora.
  */
 describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)', () => {
+  const VIGENCIA_PARAM_ID = 9001;
+
   let alertServiceMock: {
     showAlert: jest.Mock;
     showSuccessAlert: jest.Mock;
@@ -87,7 +89,7 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
           { provide: AlertService, useValue: alertServiceMock },
           { provide: RolService, useValue: { getRol: () => ['ABOGADO_CONTRATACION_RECTOR'] } },
           { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
-          { provide: VigenciaService, useValue: { vigenciaActualId: () => of(2026) } },
+          { provide: VigenciaService, useValue: { vigenciaActualId: () => of(VIGENCIA_PARAM_ID) } },
           {
             provide: ParametrosService,
             useValue: {
@@ -100,14 +102,33 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
       });
     });
 
+    it('cuando el formulario contiene campos obligatorios vacíos o inválidos, detiene el flujo y no llama al MID ni al CRUD', () => {
+      const fixture = TestBed.createComponent(PasoInfoGeneralComponent);
+      const component = fixture.componentInstance;
+      fixture.componentRef.setInput('contratoGeneral', null);
+      fixture.detectChanges();
+
+      // Formulario inicial sin diligenciar campos requeridos (plazoEjecucion, tipoCompromisoId, etc.)
+      component.guardarYContinuar();
+
+      expect(alertServiceMock.showAlert).toHaveBeenCalledWith(
+        'Por favor complete todos los campos obligatorios del paso general',
+        'Formulario incompleto'
+      );
+      expect(midServiceMock.postConsecutivo).not.toHaveBeenCalled();
+      expect(crudServiceMock.post).not.toHaveBeenCalled();
+      expect(crudServiceMock.put).not.toHaveBeenCalled();
+    });
+
     it('al crear un contrato nuevo pide consecutivo al MID, hace POST al CRUD y crea estado Borrador', async () => {
       const fixture = TestBed.createComponent(PasoInfoGeneralComponent);
       const component = fixture.componentInstance;
       fixture.componentRef.setInput('contratoGeneral', null);
       fixture.detectChanges();
 
-      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
+      // Diligenciar todos los campos obligatorios para que el formulario sea genuinamente válido
       component.formInfoGeneral.patchValue({
+        unidadEjecutoraId: 1,
         tipoCompromisoId: 1,
         tipoContratoId: 2,
         modalidadSeleccionId: 3,
@@ -116,19 +137,21 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
         procedimientoId: 6,
         plazoEjecucion: 12,
         unidadEjecucionId: 1,
-        unidadEjecutoraId: 1,
       });
+      if (component.formInfoGeneral.get('vigenciaId')) {
+        (component.formInfoGeneral.get('vigenciaId') as any)?.setValue(VIGENCIA_PARAM_ID);
+      }
 
       component.guardarYContinuar();
       await new Promise((resuelto) => setTimeout(resuelto));
 
       expect(midServiceMock.postConsecutivo).toHaveBeenCalledWith(
-        expect.objectContaining({ unidad_ejecutora_id: 1, vigencia_id: 2026 })
+        expect.objectContaining({ unidad_ejecutora_id: 1, vigencia_id: VIGENCIA_PARAM_ID })
       );
       expect(crudServiceMock.post).toHaveBeenCalledWith(
         expect.objectContaining({
           consecutivo_elaboracion: 'CT-2026-101',
-          vigencia_id: 2026,
+          vigencia_id: VIGENCIA_PARAM_ID,
           unidad_ejecutora_id: 1,
         })
       );
@@ -149,8 +172,20 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
       fixture.componentRef.setInput('contratoGeneral', contratoExistente);
       fixture.detectChanges();
 
-      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
-      component.formInfoGeneral.patchValue({ plazoEjecucion: 24, unidadEjecutoraId: 1 });
+      component.formInfoGeneral.patchValue({
+        unidadEjecutoraId: 1,
+        tipoCompromisoId: 1,
+        tipoContratoId: 2,
+        modalidadSeleccionId: 3,
+        tipologiaEspecificaId: 4,
+        regimenContratacionId: 5,
+        procedimientoId: 6,
+        plazoEjecucion: 24,
+        unidadEjecucionId: 1,
+      });
+      if (component.formInfoGeneral.get('vigenciaId')) {
+        (component.formInfoGeneral.get('vigenciaId') as any)?.setValue(VIGENCIA_PARAM_ID);
+      }
       component.guardarYContinuar();
       await new Promise((resuelto) => setTimeout(resuelto));
 
@@ -166,29 +201,38 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
   });
 
   describe('Escenario 2: Validaciones y robustez ante fallos de conexión o contratos inexistentes', () => {
-    it('muestra alerta clara cuando el contrato consultado por ID no existe o viene vacío', () => {
+    it('ante respuesta 404 del CRUD por contrato inexistente, muestra "Contrato no encontrado", bloquea formulario y sale a consulta', () => {
+      const mockRouter = { navigate: jest.fn() };
       TestBed.configureTestingModule({
         declarations: [RegistroContratoComponent],
         providers: [
           {
             provide: ContratoGeneralCrudService,
-            useValue: { get: jest.fn().mockReturnValue(of({ Success: true, Data: null })) },
+            useValue: {
+              get: jest.fn().mockReturnValue(throwError(() => ({ status: 404, message: 'Not found' }))),
+            },
           },
           { provide: AlertService, useValue: alertServiceMock },
-          { provide: Router, useValue: { navigate: jest.fn() } },
+          { provide: Router, useValue: mockRouter },
         ],
         schemas: [NO_ERRORS_SCHEMA],
       });
 
       const fixture = TestBed.createComponent(RegistroContratoComponent);
       const component = fixture.componentInstance;
-      fixture.componentRef.setInput('contratoGeneralId', 9999);
+      fixture.componentRef.setInput('contratoGeneralId', 999999);
+      fixture.componentRef.setInput('editMode', true);
       component.cargarContratoGeneral({ forzar: true });
 
       expect(alertServiceMock.showErrorAlert).toHaveBeenCalledWith(
         'No se encontró el contrato general especificado',
         'Contrato no encontrado'
       );
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/gestion-contractual/contratos/consultar']);
+      expect(component.contratoNoEncontrado).toBe(true);
+      expect(component.contratoGeneralId()).toBe(0);
+      expect(component.editMode()).toBe(false);
+      expect(component.tituloVista).toBe('Contrato no encontrado');
     });
 
     it('retiene los datos del formulario y notifica error ante fallo HTTP del CRUD sin emitir confirmación falsa', async () => {
@@ -206,7 +250,7 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
           { provide: AlertService, useValue: alertServiceMock },
           { provide: RolService, useValue: { getRol: () => ['ABOGADO_CONTRATACION_RECTOR'] } },
           { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
-          { provide: VigenciaService, useValue: { vigenciaActualId: () => of(2026) } },
+          { provide: VigenciaService, useValue: { vigenciaActualId: () => of(VIGENCIA_PARAM_ID) } },
           {
             provide: ParametrosService,
             useValue: {
@@ -223,8 +267,20 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
       fixture.componentRef.setInput('contratoGeneral', { id: 50, unidad_ejecutora_id: 1 });
       fixture.detectChanges();
 
-      jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
-      component.formInfoGeneral.patchValue({ plazoEjecucion: 36, unidadEjecutoraId: 1 });
+      component.formInfoGeneral.patchValue({
+        unidadEjecutoraId: 1,
+        tipoCompromisoId: 1,
+        tipoContratoId: 2,
+        modalidadSeleccionId: 3,
+        tipologiaEspecificaId: 4,
+        regimenContratacionId: 5,
+        procedimientoId: 6,
+        plazoEjecucion: 36,
+        unidadEjecucionId: 1,
+      });
+      if (component.formInfoGeneral.get('vigenciaId')) {
+        (component.formInfoGeneral.get('vigenciaId') as any)?.setValue(VIGENCIA_PARAM_ID);
+      }
       component.guardarYContinuar();
       await new Promise((resuelto) => setTimeout(resuelto));
 
@@ -242,7 +298,7 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
 
   describe('Escenario 3: Acciones disponibles y filtrado según roles y unidad ejecutora', () => {
     let component: ConsultaContratoComponent;
-    let fixture: any;
+    let fixture: ComponentFixture<ConsultaContratoComponent>;
 
     beforeEach(async () => {
       TestBed.configureTestingModule({
@@ -317,6 +373,42 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
 
       // Las columnas visibles para el JEFE deben incluir "select"
       expect(component.columnasVisibles).toContain('select');
+    });
+
+    it('discrimina acciones respetando la asignación por unidad ejecutora institucional (Rectoría vs IDEXUD)', () => {
+      // Abogado asignado a Rectoría
+      component.roles = ['ABOGADO_CONTRATACION_RECTOR'];
+      component.rolActivo = 'ABOGADO';
+      const contratoRectoria: ContratoGeneral = {
+        id: 10,
+        unidad_ejecutora_id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+        estados: { estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR },
+      };
+      const accionesRector = component.getAccionesPorRolYEstado(contratoRectoria);
+      expect(accionesRector).toContain('Editar Contrato');
+      expect(accionesRector).toContain('Enviar Aprobación Jefe OC');
+
+      // Abogado asignado a IDEXUD
+      component.roles = ['ABOGADO_CONTRATACION_IDEXUD'];
+      const contratoIdexud: ContratoGeneral = {
+        id: 20,
+        unidad_ejecutora_id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+        estados: { estado_interno_parametro_id: environment.ESTADOS_INTERNOS.BORRADOR },
+      };
+      const accionesIdexud = component.getAccionesPorRolYEstado(contratoIdexud);
+      expect(accionesIdexud).toContain('Editar Contrato');
+      expect(accionesIdexud).toContain('Enviar Aprobación Jefe OC');
+
+      // Jefe en IDEXUD para contratos en revisión de IDEXUD
+      component.roles = ['JEFE_CONTRATACION_IDEXUD'];
+      component.rolActivo = 'JEFE';
+      const contratoRevisionIdexud: ContratoGeneral = {
+        id: 21,
+        unidad_ejecutora_id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+        estados: { estado_interno_parametro_id: environment.ESTADOS_INTERNOS.EN_REVISION_JEFE },
+      };
+      const accionesJefeIdexud = component.getAccionesPorRolYEstado(contratoRevisionIdexud);
+      expect(accionesJefeIdexud).toContain('Revisar Contrato');
     });
 
     it('al seleccionar una unidad ejecutora en los filtros, se envía a los parámetros de consulta del MID', () => {

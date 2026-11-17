@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { AlertService } from 'src/app/services/alert.service';
@@ -8,12 +9,17 @@ import { RegistroContratoComponent } from './registro-contrato.component';
 describe('RegistroContratoComponent', () => {
   let component: RegistroContratoComponent;
   let fixture: ComponentFixture<RegistroContratoComponent>;
+  let mockRouter: { navigate: jest.Mock };
 
   beforeEach(() => {
     RegistroContratoComponent.prototype.ngAfterViewInit = jest.fn();
+    mockRouter = { navigate: jest.fn() };
 
     TestBed.configureTestingModule({
       declarations: [RegistroContratoComponent],
+      providers: [
+        { provide: Router, useValue: mockRouter },
+      ],
       schemas: [NO_ERRORS_SCHEMA],
     });
 
@@ -178,7 +184,7 @@ describe('RegistroContratoComponent', () => {
     expect(get).toHaveBeenCalledTimes(2);
   });
 
-  it('muestra alerta de error cuando el contrato no existe o la respuesta no tiene ID', () => {
+  it('muestra alerta de error y redirige a consulta cuando el contrato no existe (Data vacía)', () => {
     const alertService = TestBed.inject(AlertService);
     const alertSpy = jest.spyOn(alertService, 'showErrorAlert').mockImplementation(() => Promise.resolve());
     jest
@@ -191,18 +197,40 @@ describe('RegistroContratoComponent', () => {
       'No se encontró el contrato general especificado',
       'Contrato no encontrado'
     );
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/gestion-contractual/contratos/consultar']);
+    expect(component.contratoNoEncontrado).toBe(true);
+    expect(component.tituloVista).toBe('Contrato no encontrado');
   });
 
-  it('muestra alerta de error cuando la consulta al CRUD falla con error HTTP', () => {
+  it('muestra alerta "Contrato no encontrado" y redirige a consulta cuando el CRUD responde 404', () => {
     const alertService = TestBed.inject(AlertService);
     const alertSpy = jest.spyOn(alertService, 'showErrorAlert').mockImplementation(() => Promise.resolve());
     jest
       .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
-      .mockReturnValue(throwError(() => new Error('Fallo de conexión')));
+      .mockReturnValue(throwError(() => ({ status: 404, message: 'Not found' })));
+
+    fixture.componentRef.setInput('contratoGeneralId', 999999);
+    component.cargarContratoGeneral({ forzar: true });
+    expect(alertSpy).toHaveBeenCalledWith(
+      'No se encontró el contrato general especificado',
+      'Contrato no encontrado'
+    );
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/gestion-contractual/contratos/consultar']);
+    expect(component.contratoNoEncontrado).toBe(true);
+    expect(component.tituloVista).toBe('Contrato no encontrado');
+  });
+
+  it('muestra alerta de error genérico cuando la consulta al CRUD falla con 500 y no redirige', () => {
+    const alertService = TestBed.inject(AlertService);
+    const alertSpy = jest.spyOn(alertService, 'showErrorAlert').mockImplementation(() => Promise.resolve());
+    jest
+      .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+      .mockReturnValue(throwError(() => ({ status: 500, message: 'Fallo de conexión' })));
 
     fixture.componentRef.setInput('contratoGeneralId', 999);
     component.cargarContratoGeneral({ forzar: true });
     expect(alertSpy).toHaveBeenCalledWith('Error al cargar el contrato general');
+    expect(mockRouter.navigate).not.toHaveBeenCalled();
   });
 
   describe('tituloVista', () => {
