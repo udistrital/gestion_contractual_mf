@@ -17,6 +17,11 @@ import { firstValueFrom } from 'rxjs';
 import { AmparoPolizaDto, ApiResponse, ContratoGeneral, ParametroListResponse, ParametroResponse } from 'src/app/types/types';
 import { AlertService } from 'src/app/services/alert.service';
 
+export interface AmparosBatchResponse {
+  creados?: AmparoPolizaDto[];
+  errores?: { amparo: AmparoPolizaDto; error: string }[];
+}
+
 @Component({
     selector: 'app-paso-garantias',
     templateUrl: './paso-garantias.component.html',
@@ -193,7 +198,7 @@ export class PasoGarantiasComponent implements OnInit {
     }
 
     try {
-      let response: any;
+      let response: ApiResponse<AmparosBatchResponse | AmparoPolizaDto[]> | undefined;
 
       if (this.datosExitentes) {
         response = await firstValueFrom(
@@ -207,10 +212,11 @@ export class PasoGarantiasComponent implements OnInit {
 
       // El MID registra los amparos de a uno. Si alguno falla, responde Status 206
       // con { creados, errores: [{ amparo, error }] }
-      const esParcial = response?.Status === 206 || (response?.Data as any)?.errores?.length > 0;
+      const batchData = response?.Data as AmparosBatchResponse | undefined;
+      const esParcial = response?.Status === 206 || (batchData?.errores != null && batchData.errores.length > 0);
 
       if (esParcial) {
-        const errores: { amparo: any; error: string }[] = (response?.Data as any)?.errores || [];
+        const errores = batchData?.errores || [];
         const nombresErrores = errores.map((err) => {
           const amparoId = err.amparo?.amparo_id;
           const param = this.amparos.find((a) => Number(a.Id) === Number(amparoId));
@@ -218,7 +224,7 @@ export class PasoGarantiasComponent implements OnInit {
         });
 
         // Actualizar los IDs de los amparos que sí se crearon para no duplicarlos
-        const creados: any[] = (response?.Data as any)?.creados || [];
+        const creados = batchData?.creados || [];
         if (creados.length > 0) {
           creados.forEach((creado) => {
             const fila = this.filasFormArray.controls.find(
@@ -254,9 +260,10 @@ export class PasoGarantiasComponent implements OnInit {
           'Error al guardar amparos'
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string } | undefined;
       this.alertService.showErrorAlert(
-        error?.message || 'Ocurrió un error al enviar el amparo. Por favor, inténtelo de nuevo.',
+        err?.message || 'Ocurrió un error al enviar el amparo. Por favor, inténtelo de nuevo.',
         'Error al enviar amparo'
       );
     }
