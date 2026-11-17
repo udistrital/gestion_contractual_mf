@@ -512,6 +512,16 @@ export class PasoInfoGeneralComponent implements OnInit {
     if (this.guardando()) return;
     this.guardando.set(true);
 
+    if (this.viewMode() || this.formInfoGeneral.invalid) {
+      this.guardando.set(false);
+      this.formInfoGeneral.markAllAsTouched();
+      this.alertService.showAlert(
+        'Por favor complete todos los campos obligatorios del paso general',
+        'Formulario incompleto'
+      );
+      return;
+    }
+
     const formData = this.formInfoGeneral.value;
     const unidad_ejecutora_id = String(formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id);
 
