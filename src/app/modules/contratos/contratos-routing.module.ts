@@ -7,7 +7,7 @@ import { EditarContratoComponent } from './consulta-contrato/editar-contrato/edi
 import { DetalleContratoComponent } from './consulta-contrato/detalle-contrato/detalle-contrato.component';
 import { authGuard } from 'src/_guards/auth.guard';
 
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
@@ -32,11 +32,6 @@ const routes: Routes = [
     path: 'editar/:contratoId',
     canActivate: [authGuard],
     component: EditarContratoComponent,
-  },
-  {
-    path: 'documentos/:idContrato',
-    canActivate: [authGuard],
-    component: RevisionContratoComponent,
   },
   {
     path: 'documentos/:contratoId',

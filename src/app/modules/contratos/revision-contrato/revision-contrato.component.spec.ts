@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { RevisionContratoComponent } from './revision-contrato.component';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -419,3 +420,39 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     expect(botonReintentar()).toBeDefined();
   });
 });
+
+describe('RevisionContratoComponent: id del contrato desde la ruta', () => {
+  function montarConParametros(parametros: Record<string, string>) {
+    TestBed.configureTestingModule({
+      declarations: [RevisionContratoComponent],
+      providers: [
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap(parametros) } } },
+        { provide: MatDialog, useValue: { open: jest.fn() } },
+        { provide: AlertService, useValue: { showErrorAlert: jest.fn(), showSuccessAlert: jest.fn() } },
+        {
+          provide: ContratoGeneralCrudService,
+          useValue: { get: jest.fn().mockReturnValue(of({ Data: {} })), getEstados: jest.fn().mockReturnValue(of({ Data: [] })) },
+        },
+        { provide: GestionContractualCrudService, useValue: { getDocumentos: jest.fn().mockReturnValue(of({ Data: [] })) } },
+        { provide: ContratoGeneralMidService, useValue: {} },
+        { provide: GestorDocumentalService, useValue: { getDocumento: jest.fn() } },
+        { provide: MinutasMidService, useValue: { getMinutaPdf: jest.fn().mockReturnValue(of('JVBERi0xLjQK')) } },
+        { provide: RolService, useValue: { getRol: () => [] } },
+        { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+    });
+    const component = TestBed.createComponent(RevisionContratoComponent).componentInstance;
+    component.getIdContratoUrl();
+    return component;
+  }
+
+  it('lee el id del parámetro contratoId de documentos/:contratoId', () => {
+    expect(montarConParametros({ contratoId: '77' }).contrato_general_id).toBe(77);
+  });
+
+  it('ya no lee el parámetro idContrato de la ruta retirada', () => {
+    expect(montarConParametros({ idContrato: '77' }).contrato_general_id).toBe(0);
+  });
+});
+

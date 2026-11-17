@@ -101,9 +101,7 @@ export class RevisionContratoComponent {
   }
 
   getIdContratoUrl() {
-    const id =
-      this.route.snapshot.paramMap.get('idContrato') ||
-      this.route.snapshot.paramMap.get('contratoId');
+    const id = this.route.snapshot.paramMap.get('contratoId');
     this.contrato_general_id = id ? Number(id) : 0;
   }
 
