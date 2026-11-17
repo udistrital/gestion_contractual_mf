@@ -141,6 +141,22 @@ describe('ConsultaContratoComponent', () => {
     expect(compAbogado.rolActivo).toBe('ABOGADO');
   });
 
+  it('debe inicializar rol ORDENADOR si el usuario tiene rol de ordenador', () => {
+    component.roles = ['ORDENADOR_DEL_GASTO'];
+    component.determinarRolInicial();
+    expect(component.rolActivo).toBe('ORDENADOR');
+  });
+
+  it('debe inicializar rol PROVEEDOR si el usuario tiene rol de proveedor o contratista', () => {
+    component.roles = ['PROVEEDOR'];
+    component.determinarRolInicial();
+    expect(component.rolActivo).toBe('PROVEEDOR');
+
+    component.roles = ['CONTRATISTA'];
+    component.determinarRolInicial();
+    expect(component.rolActivo).toBe('PROVEEDOR');
+  });
+
   it('debe permitir cambiar de rol en modo pruebas', () => {
     component.cambiarRolPruebas('ABOGADO');
     expect(component.rolActivo).toBe('ABOGADO');
@@ -350,6 +366,13 @@ describe('ConsultaContratoComponent', () => {
 
     it('no debe incluir la columna "select" en columnasVisibles cuando el rol activo es ABOGADO', () => {
       component.rolActivo = 'ABOGADO';
+      expect(component.columnasVisibles).not.toContain('select');
+    });
+
+    it('no debe incluir la columna "select" en columnasVisibles cuando el rol activo es ORDENADOR o PROVEEDOR', () => {
+      component.rolActivo = 'ORDENADOR';
+      expect(component.columnasVisibles).not.toContain('select');
+      component.rolActivo = 'PROVEEDOR';
       expect(component.columnasVisibles).not.toContain('select');
     });
 
@@ -635,6 +658,29 @@ describe('ConsultaContratoComponent', () => {
       expect(mockRouter.navigate).toHaveBeenLastCalledWith(['/contratos/documentos', 55]);
       component.realizarAccion({ id: 55 } as any, 'Editar Contrato');
       expect(mockRouter.navigate).toHaveBeenLastCalledWith(['/contratos/editar', 55]);
+    });
+
+    it('el Ordenador del Gasto ve "Revisar Contrato" en estados de revisión o firma', () => {
+      component.rolActivo = 'ORDENADOR';
+      component.roles = ['ORDENADOR_DEL_GASTO'];
+      const accionesRevision = component.getAccionesPorRolYEstado(
+        contratoEn(environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR)
+      );
+      expect(accionesRevision).toContain('Revisar Contrato');
+
+      const accionesFirma = component.getAccionesPorRolYEstado(
+        contratoEn(environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR)
+      );
+      expect(accionesFirma).toContain('Revisar Contrato');
+    });
+
+    it('el Proveedor o Contratista ve "Revisar Contrato" en EN_FIRMA_CONTRATISTA', () => {
+      component.rolActivo = 'PROVEEDOR';
+      component.roles = ['PROVEEDOR'];
+      const acciones = component.getAccionesPorRolYEstado(
+        contratoEn(environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA)
+      );
+      expect(acciones).toContain('Revisar Contrato');
     });
   });
 });

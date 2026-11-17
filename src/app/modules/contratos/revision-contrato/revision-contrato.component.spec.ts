@@ -145,7 +145,11 @@ describe('RevisionContratoComponent: estados y número de contrato desde el MID'
       postEstadoContrato: jest.fn(),
     };
     mid = { postEstadoContrato: jest.fn().mockReturnValue(respuesta('7')) };
-    alertas = { showErrorAlert: jest.fn(), showSuccessAlert: jest.fn() };
+    alertas = {
+      showErrorAlert: jest.fn(),
+      showSuccessAlert: jest.fn(),
+      showConfirmAlert: jest.fn().mockResolvedValue({ isConfirmed: true }),
+    };
     TestBed.configureTestingModule({
       imports: [RouterTestingModule],
       declarations: [RevisionContratoComponent],
@@ -237,5 +241,67 @@ describe('RevisionContratoComponent: estados y número de contrato desde el MID'
 
     expect(alertas['showErrorAlert']).toHaveBeenCalledWith('El contrato no tiene vigencia_id');
     expect(alertas['showSuccessAlert']).not.toHaveBeenCalled();
+  });
+
+  describe('ejecución de acciones según el BPMN (#412)', () => {
+    it('el Jefe de Contratación aprueba directamente con confirmación sin requerir subida de archivo', async () => {
+      const component = montar({ numero_contrato: '' });
+      component.textos = { accion: 'Aprobar y Enviar a Ordenador', confirmacion: '¿Confirmar?', requiereArchivo: false };
+      alertas['showConfirmAlert'].mockResolvedValue({ isConfirmed: true });
+      const dialogSpy = jest.spyOn(TestBed.inject(MatDialog), 'open');
+      const aprobarSpy = jest.spyOn(component, 'aprobarContrato').mockImplementation();
+
+      await component.ejecutarAccionAprobacion();
+
+      expect(alertas['showConfirmAlert']).toHaveBeenCalledWith('¿Confirmar?', 'Confirmar Acción');
+      expect(dialogSpy).not.toHaveBeenCalled();
+      expect(aprobarSpy).toHaveBeenCalled();
+    });
+
+    it('el Ordenador en Rectoría o con requiereArchivo abre el modal de cargue de minuta firmada', async () => {
+      const component = montar({ numero_contrato: '' });
+      component.textos = { accion: 'Firmar y Enviar a Contratista', requiereArchivo: true };
+      const dialogSpy = jest.spyOn(TestBed.inject(MatDialog), 'open').mockReturnValue({ afterClosed: () => of({ confirmado: true }) } as any);
+      const aprobarSpy = jest.spyOn(component, 'aprobarContrato').mockImplementation();
+
+      await component.ejecutarAccionAprobacion();
+
+      expect(alertas['showConfirmAlert']).not.toHaveBeenCalled();
+      expect(dialogSpy).toHaveBeenCalled();
+      expect(aprobarSpy).toHaveBeenCalled();
+    });
+
+    it('evita concurrencia y doble clic cuando guardando es verdadero', async () => {
+      const component = montar({ numero_contrato: '' });
+      component.guardando = true;
+      const dialogSpy = jest.spyOn(TestBed.inject(MatDialog), 'open');
+
+      await component.ejecutarAccionAprobacion();
+
+      expect(alertas['showConfirmAlert']).not.toHaveBeenCalled();
+      expect(dialogSpy).not.toHaveBeenCalled();
+    });
+
+    it('tras aprobación exitosa recarga datos iniciales para actualizar la vista y ocultar acciones', () => {
+      const component = montar({ numero_contrato: '' });
+      const recargarSpy = jest.spyOn(component, 'cargarDatosIniciales').mockImplementation();
+
+      component.crearEstadoContrato({ usuario_id: 1, usuario_rol: 'JEFE_CONTRATACION_RECTOR', estado_parametro_id: 1, estado_interno_parametro_id: 2 });
+
+      expect(recargarSpy).toHaveBeenCalled();
+      expect(component.guardando).toBe(false);
+    });
+
+    it('tras rechazo exitoso recarga datos iniciales para reflejar el estado rechazado', () => {
+      const component = montar({ numero_contrato: '' });
+      const recargarSpy = jest.spyOn(component, 'cargarDatosIniciales').mockImplementation();
+      jest.spyOn(TestBed.inject(MatDialog), 'open').mockReturnValue({ afterClosed: () => of({ rechazado: true }) } as any);
+
+      component.abrirModalRechazo();
+
+      expect(alertas['showSuccessAlert']).toHaveBeenCalledWith('El contrato fue rechazado', 'CONTRATO RECHAZADO');
+      expect(recargarSpy).toHaveBeenCalled();
+      expect(component.mostrarBotones).toBe(false);
+    });
   });
 });
