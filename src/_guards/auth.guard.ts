@@ -17,8 +17,19 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
     }
   }
 
-  // Obtener parámetros de la ruta
-  const params = route.params;
+  // Obtener parámetros de todo el árbol de rutas (state.root hasta la hoja),
+  // ya que cuando el guard corre en una ruta padre o con loadChildren, route.params puede llegar vacío.
+  const params: Record<string, string> = {};
+  if (state?.root) {
+    for (let r: ActivatedRouteSnapshot | null = state.root; r; r = r.firstChild) {
+      if (r.params) {
+        Object.assign(params, r.params);
+      }
+    }
+  }
+  if (route?.params) {
+    Object.assign(params, route.params);
+  }
 
   if (menuPermisos != null) {
     // Pasar tanto la URL como los parámetros a la función de verificación
