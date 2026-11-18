@@ -27,6 +27,13 @@
 
         <div class="main-content">
           @if (selectedTab === 0) {
+            <!-- La etiqueta va fuera del recuadro: el visor ocupa el recuadro igual que en "Documentos" -->
+            @if (estadoMinuta.tipo === 'documento') {
+              <div class="origen-minuta d-flex align-items-center fondo-acento-50 mb-2">
+                <mat-icon>info</mat-icon>
+                <p class="mx-2 mb-0">{{ etiquetaOrigenMinuta }}</p>
+              </div>
+            }
             <div class="pdf-container">
               @switch (estadoMinuta.tipo) {
                 @case ('cargando') {
@@ -36,10 +43,6 @@
                   </div>
                 }
                 @case ('documento') {
-                  <div class="origen-minuta d-flex align-items-center fondo-acento-50 mb-2">
-                    <mat-icon>info</mat-icon>
-                    <p class="mx-2 mb-0">{{ etiquetaOrigenMinuta }}</p>
-                  </div>
                   <app-pdf-visualizador
                     [base64Document]="documentos.minuta"
                     (errorDocumento)="onErrorVisorMinuta()"

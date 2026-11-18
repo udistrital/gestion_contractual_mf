@@ -420,7 +420,7 @@ test.describe('Revisión: pestaña Minuta', () => {
     simulacion.minutaGuardada = true;
     const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
     try {
-      await expect(panel(page).locator('.origen-minuta p')).toHaveText('Minuta cargada el 10/11/2026', { timeout: 60_000 });
+      await expect(page.locator('app-revision-contrato .origen-minuta p')).toHaveText('Minuta cargada el 10/11/2026', { timeout: 60_000 });
       await expect(panel(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
       expect(llamadasMinuta).toEqual([]);
     } finally {
@@ -434,7 +434,7 @@ test.describe('Revisión: pestaña Minuta', () => {
       simulacion.minutaGuardada = true;
       const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
       try {
-        await expect(panel(page).locator('.origen-minuta p')).toHaveText(
+        await expect(page.locator('app-revision-contrato .origen-minuta p')).toHaveText(
           'Minuta generada con los datos actuales, sin firmar',
           { timeout: 60_000 }
         );
@@ -448,7 +448,7 @@ test.describe('Revisión: pestaña Minuta', () => {
   test('minuta generada: la muestra con su etiqueta', async ({ browser }) => {
     const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
     try {
-      await expect(panel(page).locator('.origen-minuta p')).toHaveText(
+      await expect(page.locator('app-revision-contrato .origen-minuta p')).toHaveText(
         'Minuta generada con los datos actuales, sin firmar',
         { timeout: 60_000 }
       );
@@ -474,7 +474,7 @@ test.describe('Revisión: pestaña Minuta', () => {
         await panel(page).getByRole('button', { name: 'Reintentar' }).click();
         await expect(panel(page).locator('.estado-minuta mat-spinner')).toBeVisible();
 
-        await expect(panel(page).locator('.origen-minuta p')).toHaveText('Minuta generada con los datos actuales, sin firmar');
+        await expect(page.locator('app-revision-contrato .origen-minuta p')).toHaveText('Minuta generada con los datos actuales, sin firmar');
         await expect(panel(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
         expect(llamadasMinuta).toHaveLength(2);
       } finally {
