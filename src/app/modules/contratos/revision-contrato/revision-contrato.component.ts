@@ -24,6 +24,7 @@ import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid
 import { esErrorMinuta, mensajeDeErrorMinuta } from 'src/app/services/minuta-mid.service';
 import { MinutaDocumento, MinutaDocumentoService } from 'src/app/services/minuta-documento.service';
 import { MENSAJES_MINUTA } from 'src/app/core/constants/mensajes-minuta';
+import { etiquetaOrigenMinuta, fechaDdMmAaaa } from 'src/app/utils/minuta-estado';
 
 type OrigenMinuta = MinutaDocumento['origen'];
 
@@ -33,15 +34,6 @@ export type EstadoMinuta =
   | { tipo: 'documento'; origen: OrigenMinuta; fecha: string | null }
   | { tipo: 'error'; mensaje: string; reintentable: boolean }
   | { tipo: 'sin-documento' };
-
-/**
- * "2026-11-11T10:30:00Z" → "11/11/2026". Toma el día del texto, sin pasarlo
- * por Date: el CRUD guarda la hora de Bogotá y Date podría correr el día.
- */
-function fechaDdMmAaaa(valor: unknown): string | null {
-  const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(valor ?? ''));
-  return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : null;
-}
 
 @Component({
     selector: 'app-revision-contrato',
@@ -266,10 +258,7 @@ export class RevisionContratoComponent {
   /** Texto sobre el visor según de dónde salió la minuta. */
   get etiquetaOrigenMinuta(): string {
     if (this.estadoMinuta.tipo !== 'documento') return '';
-    if (this.estadoMinuta.origen === 'generada') {
-      return 'Minuta generada con los datos actuales, sin firmar';
-    }
-    return this.estadoMinuta.fecha ? `Minuta cargada el ${this.estadoMinuta.fecha}` : 'Minuta cargada';
+    return etiquetaOrigenMinuta(this.estadoMinuta.origen, this.estadoMinuta.fecha ?? undefined);
   }
 
   get mensajeErrorMinuta(): string {

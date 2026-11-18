@@ -19,7 +19,7 @@ import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { mensajeDeErrorMinuta } from 'src/app/services/minuta-mid.service';
 import { MinutaDocumentoService } from 'src/app/services/minuta-documento.service';
-import { minutaEditable } from 'src/app/utils/minuta-estado';
+import { etiquetaOrigenMinuta, minutaEditable } from 'src/app/utils/minuta-estado';
 import { MENSAJES_MINUTA } from 'src/app/core/constants/mensajes-minuta';
 import { EstadosSinAlerta } from 'src/app/managers/errorManager';
 import { UserService } from 'src/app/services/user.service';
@@ -1661,7 +1661,12 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       // registra desde aquí (decisión del 18/11).
       this.dialog.open(PdfViewerModalComponent, {
         width: '70vw',
-        data: { file, datos: null, titulo: editable ? 'Minuta preliminar' : 'Minuta' },
+        data: {
+          file,
+          datos: null,
+          titulo: editable ? 'Minuta preliminar' : 'Minuta',
+          descripcion: etiquetaOrigenMinuta(minuta.origen, minuta.fecha),
+        },
       });
     } catch (error: unknown) {
       console.error('Error al generar la vista previa de minuta:', error);

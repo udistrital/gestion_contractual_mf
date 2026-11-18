@@ -37,3 +37,21 @@ export const ESTADOS_MINUTA_CARGADA: readonly number[] = [
 export function minutaEditable(estadoInterno: number | null | undefined): boolean {
   return !estadoInterno || !ESTADOS_MINUTA_CARGADA.includes(Number(estadoInterno));
 }
+
+/**
+ * "2026-11-11T10:30:00Z" → "11/11/2026". Toma el día del texto, sin pasarlo
+ * por Date: el CRUD guarda la hora de Bogotá y Date podría correr el día.
+ */
+export function fechaDdMmAaaa(valor: unknown): string | null {
+  const texto = String(valor ?? '');
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) return texto;
+  const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(texto);
+  return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : null;
+}
+
+/** Texto del origen de la minuta, igual en la revisión y en el modal. */
+export function etiquetaOrigenMinuta(origen: 'cargada' | 'generada', fecha?: unknown): string {
+  if (origen === 'generada') return 'Minuta generada con los datos actuales, sin firmar';
+  const dia = fechaDdMmAaaa(fecha);
+  return dia ? `Minuta cargada el ${dia}` : 'Minuta cargada';
+}
