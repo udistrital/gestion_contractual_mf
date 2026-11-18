@@ -17,7 +17,6 @@ import { PasoInfoGeneralComponent } from './registro-contrato/paso-info-general/
 import { PasoInfoPresupuestalComponent } from './registro-contrato/paso-info-presupuestal/paso-info-presupuestal.component';
 import { PasoObligacionesComponent } from './registro-contrato/paso-obligaciones/paso-obligaciones.component';
 import { PasoSupervisoresComponent } from './registro-contrato/paso-supervisores/paso-supervisores.component';
-import { PdfViewerModalComponent } from './registro-contrato/pdf-viewer-modal/pdf-viewer-modal.component';
 import { RegistroContratoComponent } from './registro-contrato/registro-contrato.component';
 import { RevisionContratoComponent } from './revision-contrato/revision-contrato.component';
 import { PdfVisualizadorComponent } from './revision-contrato/pdf-visualizador/pdf-visualizador.component';
@@ -48,7 +47,6 @@ const registrarComponents = [
   PasoClausulasParagrafosComponent,
   ParagrafoDialogComponent,
   PasoDocumentosComponent,
-  PdfViewerModalComponent,
   InViewDirective,
 ]
 

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
@@ -7,6 +8,9 @@ import { ProveedoresService } from 'src/app/services/proveedores.service';
 import { UserService } from 'src/app/services/user.service';
 import { abrirVentanaPdf, mostrarPdfEnVentana } from 'src/app/utils/visor-pdf';
 import { RegistroActasService } from './registro-actas.service';
+import { PdfViewerModalComponent } from 'src/app/shared/components/pdf-viewer-modal/pdf-viewer-modal.component';
+import { base64ToBlob } from 'src/app/utils/file-conversor';
+import { environment } from 'src/environments/environment';
 
 // Roles que pueden registrar el acta de inicio (los mismos de minuta_contractual_mid)
 const ROLES_ACTA_INICIO = ['ABOGADO_CONTRATACION_RECTOR', 'ABOGADO_CONTRATACION_IDEXUD', 'CONTRATISTA'];
@@ -78,6 +82,7 @@ export class RegistroActasComponent implements OnInit {
     private contratoGeneralMidService: ContratoGeneralMidService,
     private proveedoresService: ProveedoresService,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     private userService: UserService 
   ) {}
 
@@ -256,7 +261,8 @@ export class RegistroActasComponent implements OnInit {
           this.snackBar.open(response?.Message || 'Error al registrar el acta de inicio', 'Cerrar', { duration: 2000 });
           return;
         }
-        this.guardarPdfActaInicio(Number(this.form.value.consecutivoContrato), response.Data);
+        this.snackBar.open('Acta de inicio registrada correctamente', 'Cerrar', { duration: 2000 });
+        this.abrirVisorActaInicio(Number(this.form.value.consecutivoContrato), response.Data);
         this.form.reset();
       },
       (error) => {
@@ -266,24 +272,23 @@ export class RegistroActasComponent implements OnInit {
     );
   }
 
-  // minuta_contractual_mid solo devuelve el PDF (base64): aquí se sube al
-  // gestor documental y se registra en documentos-contratos
-  private guardarPdfActaInicio(contratoId: number, data: any) {
-    const error = 'Acta de inicio registrada, pero no se pudo guardar el PDF en el gestor documental';
-    this.registroActasService.subirActaInicio(contratoId, data.pdf).subscribe({
-      next: (subida: any) => {
-        if (subida?.Status !== '200' || !subida?.res?.Id) {
-          this.snackBar.open(error, 'Cerrar', { duration: 4000 });
-          return;
-        }
-        this.registroActasService
-          .registrarDocumentoActaInicio(data.acta_inicio.id, subida.res.Id, subida.res.Enlace)
-          .subscribe({
-            next: () => this.snackBar.open('Acta de inicio registrada correctamente', 'Cerrar', { duration: 2000 }),
-            error: () => this.snackBar.open(error, 'Cerrar', { duration: 4000 }),
-          });
+  // minuta_contractual_mid solo devuelve el PDF (base64): el visor lo muestra y
+  // con "Guardar" lo sube al gestor documental y lo registra en documentos-contratos
+  private abrirVisorActaInicio(contratoId: number, data: any) {
+    this.dialog.open(PdfViewerModalComponent, {
+      width: '70vw',
+      data: {
+        file: base64ToBlob(data.pdf, 'application/pdf'),
+        datos: {
+          base64: data.pdf,
+          nombre: `ACTA DE INICIO ${contratoId}`,
+          descripcion: `Acta de inicio, contrato general id ${contratoId}`,
+          id_tipo_documento_gestor: environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.ACTAS_DE_INICIO,
+          tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.ACTA_INICIO,
+          entidad_tipo: 'acta_inicio',
+          entidad_id: data.acta_inicio.id,
+        },
       },
-      error: () => this.snackBar.open(error, 'Cerrar', { duration: 4000 }),
     });
   }
 
