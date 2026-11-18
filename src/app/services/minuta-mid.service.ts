@@ -3,11 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RequestManager } from '../managers/requestManager';
 import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { ErrorMinuta, RespuestaMinuta, TipoErrorMinuta } from '../types/types';
-import {
-  MENSAJES_MINUTA,
-  NOMBRES_FALTANTES_MINUTA,
-  PATRONES_MENSAJE_MINUTA,
-} from '../core/constants/mensajes-minuta';
+import { MENSAJES_MINUTA, PATRONES_MENSAJE_MINUTA } from '../core/constants/mensajes-minuta';
 
 const PREFIJO_DATA_URI = /^data:application\/pdf;base64,/i;
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
@@ -98,6 +94,7 @@ function cuerpoDeError(error: unknown): RespuestaMinuta | null {
 
 function errorDeConexion(error: unknown): ErrorMinuta {
   const status = error instanceof HttpErrorResponse && error.status > 0 ? error.status : null;
+  console.warn('[minuta] Sin conexión con minuta_contractual_mid', { status });
   return errorMinuta(status, 'conexion', MENSAJES_MINUTA.conexion, true);
 }
 
@@ -105,6 +102,7 @@ function errorDeConexion(error: unknown): ErrorMinuta {
 function pdfDeRespuesta(cuerpo: unknown): string {
   // Texto en lugar de JSON (p. ej. una página HTML del gateway).
   if (typeof cuerpo === 'string') {
+    console.warn('[minuta] La respuesta no es JSON (posible página del gateway)');
     throw errorMinuta(null, 'conexion', MENSAJES_MINUTA.conexion, true);
   }
   if (!esSobreMinuta(cuerpo)) {
@@ -127,16 +125,18 @@ function pdfDeRespuesta(cuerpo: unknown): string {
         : errorMinuta(status, 'no-encontrado', MENSAJES_MINUTA.noEncontrado, false);
     case 422: {
       const faltantes = faltantesDelMensaje(mensaje);
-      const legibles = faltantes.map((f) => NOMBRES_FALTANTES_MINUTA[f] ?? f);
-      const error = errorMinuta(status, 'faltan-datos', MENSAJES_MINUTA.faltanDatos(legibles), true);
+      const error = errorMinuta(status, 'faltan-datos', MENSAJES_MINUTA.faltanDatos(faltantes), true);
       throw { ...error, faltantes };
     }
     case 502: {
+      // El nombre del servicio no se muestra al usuario: queda en el error y en la consola.
       const servicio = PATRONES_MENSAJE_MINUTA.servicio.exec(mensaje)?.[1];
-      const error = errorMinuta(status, 'servicio', MENSAJES_MINUTA.servicio(servicio), true);
+      console.warn('[minuta] Servicio no disponible', { status, servicio, mensaje });
+      const error = errorMinuta(status, 'servicio', MENSAJES_MINUTA.servicio, true);
       throw servicio ? { ...error, servicio } : error;
     }
     default:
+      console.warn('[minuta] Error al generar la minuta', { status, mensaje });
       throw errorMinuta(status, 'interno', MENSAJES_MINUTA.interno, true);
   }
 }
