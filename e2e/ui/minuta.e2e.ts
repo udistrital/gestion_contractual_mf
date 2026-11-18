@@ -24,6 +24,11 @@ import {
  * Ejecutar: pnpm run test:e2e -- minuta
  */
 const CONTRATO_ID = 9001;
+/** Estados internos del contrato (environment.ESTADOS_INTERNOS). */
+const BORRADOR = 6799;
+const RECHAZADO = 6803;
+const EN_REVISION_JEFE = 6800;
+const FALLA_SERVICIO = 'No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.';
 const PDF = readFileSync(join(__dirname, '..', 'support', 'minuta-minima.pdf')).toString('base64');
 
 const menuPermitido = Buffer.from(
@@ -144,6 +149,8 @@ const simulacion = {
   retrasoMinutaMs: 0,
   minutaGuardada: false,
   guardadoClausulasOk: true,
+  /** Estado interno actual del contrato (Parámetros); por defecto Borrador. */
+  estadoInterno: BORRADOR,
 };
 const llamadasMinuta: string[] = [];
 
@@ -154,6 +161,7 @@ function reiniciarSimulacion() {
     retrasoMinutaMs: 0,
     minutaGuardada: false,
     guardadoClausulasOk: true,
+    estadoInterno: BORRADOR,
   });
   llamadasMinuta.length = 0;
 }
@@ -174,6 +182,10 @@ function responderCrud(route: Route, ruta: string, query: URLSearchParams): Prom
   const json = (data: unknown, status = 200) => route.fulfill({ status, json: data });
   if (ruta === `gestion_contractual_crud/v1/contratos-generales/${CONTRATO_ID}`) return json(ok(contrato));
   const lista = ruta.match(/^gestion_contractual_crud\/v1\/([\w-]+)\/$/);
+  if (lista?.[1] === 'estados-contrato') {
+    const estado = { id: 3, contrato_general_id: DEL_CONTRATO, estado_parametro_id: 6773, actual: true, activo: true };
+    return json(ok([{ ...estado, estado_interno_parametro_id: simulacion.estadoInterno }]));
+  }
   if (lista?.[1] === 'documentos-contratos') {
     const guardada = { id: 9, documento_enlace: 'uid-minuta-guardada', fecha_creacion: '2026-11-10T22:15:00Z' };
     return json(ok(simulacion.minutaGuardada ? [guardada] : []));
@@ -280,7 +292,9 @@ for (const modo of ['HTTP 200', 'HTTP real'] as Modo[]) {
     test('200: abre el modal "Minuta preliminar" con el PDF', async () => {
       await botonVistaPrevia(page).click();
       await expect(modalMinuta(page)).toBeVisible();
-      await expect(modalMinuta(page).locator('h1')).toHaveText('Minuta preliminar');
+      await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta preliminar');
+      await expect(modalMinuta(page)).toContainText('Minuta generada con los datos actuales, sin firmar');
+      await expect(modalMinuta(page).getByRole('button', { name: /Guardar/ })).toHaveCount(0);
       await expect(modalMinuta(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
       expect(llamadasMinuta).toEqual([`minuta_contractual_mid/minutas/contratos/${CONTRATO_ID}`]);
     });
@@ -292,13 +306,21 @@ for (const modo of ['HTTP 200', 'HTTP real'] as Modo[]) {
       await expect(modalMinuta(page)).toHaveCount(0);
     });
 
-    test('422: lista los datos faltantes con nombres legibles', async () => {
+    test('422: indica el paso del registro donde se completa el dato', async () => {
       simulacion.minuta = MINUTA.faltanDatos;
       await botonVistaPrevia(page).click();
       await expect(page.locator('.swal2-popup')).toContainText(
-        'Faltan datos para generar la minuta: ordenador del gasto.'
+        'Faltan datos en el paso General y Presupuestal: ordenador del gasto.'
       );
       await expect(page.locator('.swal2-popup')).not.toContainText('Faltan datos: ordenador');
+      await expect(modalMinuta(page)).toHaveCount(0);
+    });
+
+    test('502: mensaje único, sin nombres técnicos', async () => {
+      simulacion.minuta = MINUTA.servicioCaido;
+      await botonVistaPrevia(page).click();
+      await expect(page.locator('.swal2-popup')).toContainText(FALLA_SERVICIO);
+      await expect(page.locator('.swal2-popup')).not.toContainText('plantillas_mid');
       await expect(modalMinuta(page)).toHaveCount(0);
     });
 
@@ -326,6 +348,40 @@ for (const modo of ['HTTP 200', 'HTTP real'] as Modo[]) {
     });
   });
 }
+
+test('detalle fuera de Borrador: el botón "Minuta" muestra la minuta cargada', async ({ browser }) => {
+  reiniciarSimulacion();
+  simulacion.estadoInterno = EN_REVISION_JEFE;
+  simulacion.minutaGuardada = true;
+  const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/detalle/${CONTRATO_ID}`);
+  try {
+    await irAClausulas(page);
+    await expect(botonVistaPrevia(page)).toHaveAccessibleName('Minuta');
+    await expect(botonVistaPreviaDock(page)).toHaveAccessibleName('Minuta');
+    await botonVistaPrevia(page).click();
+    await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta');
+    await expect(modalMinuta(page)).toContainText('Minuta cargada el 10/11/2026');
+    await expect(modalMinuta(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
+    await expect(modalMinuta(page).getByRole('button', { name: /Guardar/ })).toHaveCount(0);
+    expect(llamadasMinuta).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
+test('edición en Borrador: la vista previa no ofrece "Guardar"', async ({ browser }) => {
+  reiniciarSimulacion();
+  const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/editar/${CONTRATO_ID}`);
+  try {
+    await irAClausulas(page);
+    await botonVistaPrevia(page).click();
+    await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta preliminar');
+    await expect(modalMinuta(page).getByRole('button', { name: /Cerrar/ })).toBeVisible();
+    await expect(modalMinuta(page).getByRole('button', { name: /Guardar/ })).toHaveCount(0);
+  } finally {
+    await ctx.close();
+  }
+});
 
 test('edición: si falla el guardado previo de cláusulas no genera la minuta y deja una sola alerta', async ({ browser }) => {
   reiniciarSimulacion();
@@ -359,11 +415,12 @@ test.describe('Revisión: pestaña Minuta', () => {
 
   test.beforeEach(() => reiniciarSimulacion());
 
-  test('minuta guardada: la muestra con "Minuta cargada el dd/mm/aaaa" y no la genera', async ({ browser }) => {
+  test('En revisión del jefe con minuta cargada: la muestra con "Minuta cargada el dd/mm/aaaa" y no la genera', async ({ browser }) => {
+    simulacion.estadoInterno = EN_REVISION_JEFE;
     simulacion.minutaGuardada = true;
     const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
     try {
-      await expect(panel(page).locator('.origen-minuta')).toHaveText('Minuta cargada el 10/11/2026', { timeout: 60_000 });
+      await expect(panel(page).locator('.origen-minuta p')).toHaveText('Minuta cargada el 10/11/2026', { timeout: 60_000 });
       await expect(panel(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
       expect(llamadasMinuta).toEqual([]);
     } finally {
@@ -371,10 +428,27 @@ test.describe('Revisión: pestaña Minuta', () => {
     }
   });
 
+  for (const [nombre, estado] of [['Borrador', BORRADOR], ['Rechazado', RECHAZADO]] as const) {
+    test(`${nombre} con minuta cargada: genera con los datos actuales e ignora la cargada`, async ({ browser }) => {
+      simulacion.estadoInterno = estado;
+      simulacion.minutaGuardada = true;
+      const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
+      try {
+        await expect(panel(page).locator('.origen-minuta p')).toHaveText(
+          'Minuta generada con los datos actuales, sin firmar',
+          { timeout: 60_000 }
+        );
+        expect(llamadasMinuta).toHaveLength(1);
+      } finally {
+        await ctx.close();
+      }
+    });
+  }
+
   test('minuta generada: la muestra con su etiqueta', async ({ browser }) => {
     const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
     try {
-      await expect(panel(page).locator('.origen-minuta')).toHaveText(
+      await expect(panel(page).locator('.origen-minuta p')).toHaveText(
         'Minuta generada con los datos actuales, sin firmar',
         { timeout: 60_000 }
       );
@@ -392,14 +466,15 @@ test.describe('Revisión: pestaña Minuta', () => {
       const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
       try {
         const error = panel(page).locator('.estado-minuta[role="alert"]');
-        await expect(error).toContainText('Un servicio no respondió (plantillas_mid). Intente de nuevo.', { timeout: 60_000 });
+        await expect(error).toContainText(FALLA_SERVICIO, { timeout: 60_000 });
+        await expect(error).not.toContainText('plantillas_mid');
 
         simulacion.minuta = MINUTA.ok;
         simulacion.retrasoMinutaMs = 1000;
         await panel(page).getByRole('button', { name: 'Reintentar' }).click();
         await expect(panel(page).locator('.estado-minuta mat-spinner')).toBeVisible();
 
-        await expect(panel(page).locator('.origen-minuta')).toHaveText('Minuta generada con los datos actuales, sin firmar');
+        await expect(panel(page).locator('.origen-minuta p')).toHaveText('Minuta generada con los datos actuales, sin firmar');
         await expect(panel(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
         expect(llamadasMinuta).toHaveLength(2);
       } finally {

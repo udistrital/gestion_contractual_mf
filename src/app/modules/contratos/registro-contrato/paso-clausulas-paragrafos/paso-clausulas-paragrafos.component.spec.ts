@@ -13,6 +13,9 @@ import { Subject, of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
 import { ErrorMinuta } from 'src/app/types/types';
+import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
+import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
+import { environment } from 'src/environments/environment';
 
 const PDF = btoa('%PDF-1.4\n%%EOF\n');
 const GUARDADO_FALLIDO =
@@ -25,6 +28,8 @@ describe('PasoClausulasParagrafosComponent', () => {
   let mockAlertService: any;
   let mockMinutasMidService: any;
   let mockDialog: any;
+  let mockGestionCrud: { getDocumentos: jest.Mock };
+  let mockGestor: { getDocumento: jest.Mock };
 
   beforeEach(() => {
     mockCdpsService = {
@@ -46,6 +51,14 @@ describe('PasoClausulasParagrafosComponent', () => {
     mockDialog = {
       open: jest.fn(),
     };
+
+    // Minuta cargada en documentos-contratos (solo se consulta fuera de Borrador y Rechazado).
+    mockGestionCrud = {
+      getDocumentos: jest.fn().mockReturnValue(
+        of({ Data: [{ id: 9, documento_enlace: 'uid-9', fecha_creacion: '2026-11-10T22:15:00Z' }] })
+      ),
+    };
+    mockGestor = { getDocumento: jest.fn().mockReturnValue(of({ file: PDF })) };
 
     TestBed.configureTestingModule({
       declarations: [PasoClausulasParagrafosComponent],
@@ -86,6 +99,8 @@ describe('PasoClausulasParagrafosComponent', () => {
             delete: jest.fn().mockReturnValue(of({ Success: true, Data: {} })),
           },
         },
+        { provide: GestionContractualCrudService, useValue: mockGestionCrud },
+        { provide: GestorDocumentalService, useValue: mockGestor },
         {
           provide: ContratoGeneralCrudService,
           useValue: {
@@ -581,7 +596,9 @@ describe('PasoClausulasParagrafosComponent', () => {
       expect(modal).toBe(PdfViewerModalComponent);
       expect(config.data.titulo).toBe('Minuta preliminar');
       expect(config.data.file).toBeInstanceOf(Blob);
-      expect(config.data.datos).toEqual(expect.objectContaining({ base64: PDF, contrato_general_id: 2 }));
+      expect(config.data.datos).toBeNull();
+      expect(config.data.descripcion).toBe('Minuta generada con los datos actuales, sin firmar');
+      expect(mockGestionCrud.getDocumentos).not.toHaveBeenCalled();
       expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
       expect(component.generandoMinuta).toBe(false);
     });
@@ -613,7 +630,9 @@ describe('PasoClausulasParagrafosComponent', () => {
 
       await component.openPdfViewer();
 
-      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith('No se pudo generar la minuta. Intente de nuevo.');
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
+        'No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.'
+      );
       expect(dialog.open).not.toHaveBeenCalled();
     });
 
@@ -700,6 +719,78 @@ describe('PasoClausulasParagrafosComponent', () => {
       expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
       expect(dialog.open).toHaveBeenCalledTimes(1);
       expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+    });
+    describe('fuera de Borrador y Rechazado (18/11)', () => {
+      const EN_REVISION_JEFE = environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
+      const textoBotones = () =>
+        Array.from(fixture.nativeElement.querySelectorAll('button.preview-btn, button.dock-btn-preview')).map(
+          (b: any) => b.querySelector('span').textContent.trim()
+        );
+
+      it('en Borrador o Rechazado el botón dice "Vista Previa de Minuta"', () => {
+        fixture.detectChanges(); // sincroniza el contrato (consulta el estado simulado) antes de fijarlo
+        for (const estado of [environment.ESTADOS_INTERNOS.BORRADOR, environment.ESTADOS_INTERNOS.RECHAZADO]) {
+          component.estadoInternoActual = estado;
+          fixture.detectChanges();
+          expect(textoBotones()).toEqual(['Vista Previa de Minuta', 'Vista Previa Minuta']);
+        }
+      });
+
+      it('en En revisión del jefe los dos botones dicen "Minuta"', () => {
+        fixture.detectChanges(); // sincroniza el contrato (consulta el estado simulado) antes de fijarlo
+        component.estadoInternoActual = EN_REVISION_JEFE;
+        fixture.detectChanges();
+        expect(textoBotones()).toEqual(['Minuta', 'Minuta']);
+      });
+
+      it('muestra la minuta cargada en el modal "Minuta", sin guardado previo ni "Guardar"', async () => {
+        component.estadoInternoActual = EN_REVISION_JEFE;
+
+        await component.openPdfViewer();
+
+        expect(clausulasService['put']).not.toHaveBeenCalled();
+        expect(clausulasService['post']).not.toHaveBeenCalled();
+        expect(mockGestor.getDocumento).toHaveBeenCalledWith('uid-9');
+        expect(mockMinutasMidService.getMinutaPdf).not.toHaveBeenCalled();
+        const config = dialog.open.mock.calls[0][1];
+        expect(config.data.titulo).toBe('Minuta');
+        expect(config.data.descripcion).toBe('Minuta cargada el 10/11/2026');
+        expect(config.data.datos).toBeNull();
+      });
+
+      it('sin minuta cargada la genera y la muestra en el modal "Minuta"', async () => {
+        component.estadoInternoActual = EN_REVISION_JEFE;
+        mockGestionCrud.getDocumentos.mockReturnValue(of({ Data: [] }));
+
+        await component.openPdfViewer();
+
+        expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
+        expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta');
+        expect(dialog.open.mock.calls[0][1].data.descripcion).toBe('Minuta generada con los datos actuales, sin firmar');
+      });
+
+      it('espera a conocer el estado interno antes de decidir', async () => {
+        const estados = new Subject<unknown>();
+        TestBed.inject(ContratoGeneralCrudService).getEstados = jest.fn().mockReturnValue(estados) as any;
+        fixture.componentRef.setInput('contratoGeneral', { id: 3 } as any);
+        fixture.detectChanges();
+        component.contratoId = 3;
+
+        const pendiente = component.openPdfViewer();
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(clausulasService['put']).not.toHaveBeenCalled();
+        expect(mockGestionCrud.getDocumentos).not.toHaveBeenCalled();
+        expect(mockMinutasMidService.getMinutaPdf).not.toHaveBeenCalled();
+
+        estados.next({ Data: [{ id: 5, estado_interno_parametro_id: EN_REVISION_JEFE }] });
+        estados.complete();
+        await pendiente;
+
+        expect(clausulasService['put']).not.toHaveBeenCalled();
+        expect(mockGestionCrud.getDocumentos).toHaveBeenCalledTimes(1);
+        expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta');
+      });
     });
   });
 });

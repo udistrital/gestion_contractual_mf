@@ -14,6 +14,7 @@ const URL_MINUTA = `${environment.MINUTA_CONTRACTUAL_MID_SERVICE}minutas/contrat
 const PDF = btoa('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n');
 
 type Modo = 'HTTP 200' | 'HTTP real';
+const FALLA = 'No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.';
 interface Resultado {
   pdf?: string;
   error?: ErrorMinuta;
@@ -23,7 +24,10 @@ describe('MinutasMidService', () => {
   let service: MinutasMidService;
   let httpMock: HttpTestingController;
 
+  let advertencias: jest.SpyInstance;
+
   beforeEach(() => {
+    advertencias = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
@@ -33,6 +37,7 @@ describe('MinutasMidService', () => {
 
   afterEach(() => {
     httpMock.verify();
+    advertencias.mockRestore();
   });
 
   /** Pide la minuta y deja en `resultado` el PDF o el ErrorMinuta. */
@@ -91,7 +96,7 @@ describe('MinutasMidService', () => {
       {
         status: 422,
         tipo: 'faltan-datos',
-        mensaje: 'Faltan datos para generar la minuta: ordenador del gasto.',
+        mensaje: 'Faltan datos en el paso General y Presupuestal: ordenador del gasto.',
         reintentable: true,
         faltantes: ['ordenador'],
       },
@@ -102,18 +107,23 @@ describe('MinutasMidService', () => {
       {
         status: 422,
         tipo: 'faltan-datos',
-        mensaje: 'Faltan datos para generar la minuta: ordenador del gasto, contratista, vigencia, cláusulas.',
+        mensaje:
+          'Faltan datos en el paso General y Presupuestal: ordenador del gasto, vigencia. ' +
+          'Faltan datos en el paso Solicitante y Supervisor: contratista. ' +
+          'Faltan datos en el paso Clausulado y Parágrafos: cláusulas.',
         reintentable: true,
         faltantes: ['ordenador', 'contratista', 'vigencia', 'clausulas'],
       },
     ],
     [
-      '422 con un faltante desconocido',
+      '422 con un faltante que no se llena en ningún paso',
       sobre(422, 'Faltan datos: clausulas, firma_digital'),
       {
         status: 422,
         tipo: 'faltan-datos',
-        mensaje: 'Faltan datos para generar la minuta: cláusulas, firma_digital.',
+        mensaje:
+          'Faltan datos en el paso Clausulado y Parágrafos: cláusulas. ' +
+          'Falta firma_digital en el contrato. Contacte a soporte.',
         reintentable: true,
         faltantes: ['clausulas', 'firma_digital'],
       },
@@ -124,7 +134,7 @@ describe('MinutasMidService', () => {
       {
         status: 502,
         tipo: 'servicio',
-        mensaje: 'Un servicio no respondió (gestion_contractual_mid). Intente de nuevo.',
+        mensaje: FALLA,
         reintentable: true,
         servicio: 'gestion_contractual_mid',
       },
@@ -135,7 +145,7 @@ describe('MinutasMidService', () => {
       {
         status: 502,
         tipo: 'servicio',
-        mensaje: 'Un servicio no respondió (plantillas_mid). Intente de nuevo.',
+        mensaje: FALLA,
         reintentable: true,
         servicio: 'plantillas_mid',
       },
@@ -143,12 +153,12 @@ describe('MinutasMidService', () => {
     [
       '500 error interno',
       sobre(500, 'Error al generar la minuta'),
-      { status: 500, tipo: 'interno', mensaje: 'No se pudo generar la minuta. Intente de nuevo.', reintentable: true },
+      { status: 500, tipo: 'interno', mensaje: FALLA, reintentable: true },
     ],
     [
       'Status inesperado (418)',
       sobre(418, 'Cualquier cosa'),
-      { status: 418, tipo: 'interno', mensaje: 'No se pudo generar la minuta. Intente de nuevo.', reintentable: true },
+      { status: 418, tipo: 'interno', mensaje: FALLA, reintentable: true },
     ],
   ];
 
@@ -168,6 +178,31 @@ describe('MinutasMidService', () => {
     });
   });
 
+  it('502: el nombre del servicio no se muestra al usuario, queda en el error y en console.warn', () => {
+    const resultado = pedirMinuta();
+    responder(sobre(502, 'Servicio no disponible: plantillas_mid (paso 1: HTML)'), 'HTTP real');
+    expect(resultado.error!.mensaje).toBe(FALLA);
+    expect(resultado.error!.mensaje).not.toContain('plantillas_mid');
+    expect(resultado.error!.servicio).toBe('plantillas_mid');
+    expect(advertencias).toHaveBeenCalledWith(
+      '[minuta] Servicio no disponible',
+      expect.objectContaining({ status: 502, servicio: 'plantillas_mid' })
+    );
+  });
+
+  it('500, Status inesperado y falta de conexión dan el mismo mensaje que el 502', () => {
+    const mensajes: string[] = [];
+    for (const cuerpo of [sobre(500, 'x'), sobre(418, 'y')]) {
+      const r = pedirMinuta();
+      responder(cuerpo, 'HTTP real');
+      mensajes.push(r.error!.mensaje);
+    }
+    const r = pedirMinuta();
+    httpMock.expectOne(URL_MINUTA).error(new ProgressEvent('error'));
+    mensajes.push(r.error!.mensaje);
+    expect(new Set(mensajes)).toEqual(new Set([FALLA]));
+  });
+
   describe('getMinutaPdf con respuestas vacías o inválidas', () => {
     const INVALIDA: ErrorMinuta = {
       status: 200,
@@ -175,7 +210,7 @@ describe('MinutasMidService', () => {
       mensaje: 'La minuta llegó vacía o dañada.',
       reintentable: true,
     };
-    const CONEXION = 'No hay conexión con el servicio de minutas. Intente de nuevo.';
+    const CONEXION = FALLA;
 
     it.each<[string, unknown]>([
       ['Data vacía', ''],
@@ -249,7 +284,7 @@ describe('MinutasMidService', () => {
       expect(resultado.error).toEqual({
         status: 500,
         tipo: 'interno',
-        mensaje: 'No se pudo generar la minuta. Intente de nuevo.',
+        mensaje: FALLA,
         reintentable: true,
       });
     });
@@ -261,7 +296,7 @@ describe('MinutasMidService', () => {
       expect(resultado.error).toEqual({
         status: 503,
         tipo: 'interno',
-        mensaje: 'No se pudo generar la minuta. Intente de nuevo.',
+        mensaje: FALLA,
         reintentable: true,
       });
     });

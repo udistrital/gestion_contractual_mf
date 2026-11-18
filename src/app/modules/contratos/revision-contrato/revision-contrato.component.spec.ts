@@ -12,7 +12,7 @@ import { environment } from 'src/environments/environment';
 import { MinutasMidService } from 'src/app/services/minuta-mid.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
-import { Subject, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('RevisionContratoComponent', () => {
@@ -100,6 +100,7 @@ describe('RevisionContratoComponent', () => {
       mockGestionCrudService.getDocumentos.mockReturnValueOnce(
         of({ Success: true, Status: '200', Data: [{ id: 9, documento_enlace: 'uid-9' }] })
       );
+      component.estadoInternoActual = environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
       component.getMinuta();
       expect(mockGestionCrudService.getDocumentos).toHaveBeenCalledWith({
         query:
@@ -242,10 +243,12 @@ describe('RevisionContratoComponent: estados y número de contrato desde el MID'
 
 describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
   const PDF = 'JVBERi0xLjQK';
+  const FALLA = 'No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.';
+  const E = environment.ESTADOS_INTERNOS;
   const error502 = {
     status: 502,
     tipo: 'servicio',
-    mensaje: 'Un servicio no respondió (plantillas_mid). Intente de nuevo.',
+    mensaje: FALLA,
     reintentable: true,
     servicio: 'plantillas_mid',
   };
@@ -257,7 +260,9 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
   let gestor: jest.Mock;
   let minutaPdf: jest.Mock;
 
-  function montar(contratoId = 42) {
+  /** Por defecto, En revisión del jefe: primero la minuta cargada y, si no hay, la generada. */
+  function montar(contratoId = 42, estado: number = E.EN_REVISION_JEFE, estados$?: Observable<unknown>) {
+    const respuestaEstados = estados$ ?? of({ Data: estado ? [{ estado_interno_parametro_id: estado }] : [] });
     TestBed.configureTestingModule({
       imports: [RouterTestingModule],
       declarations: [RevisionContratoComponent],
@@ -266,7 +271,7 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
         { provide: AlertService, useValue: { showErrorAlert: jest.fn(), showSuccessAlert: jest.fn() } },
         {
           provide: ContratoGeneralCrudService,
-          useValue: { get: jest.fn().mockReturnValue(of({ Data: {} })), getEstados: jest.fn().mockReturnValue(of({ Data: [] })) },
+          useValue: { get: jest.fn().mockReturnValue(of({ Data: {} })), getEstados: jest.fn().mockReturnValue(respuestaEstados) },
         },
         { provide: GestionContractualCrudService, useValue: { getDocumentos: documentos } },
         { provide: ContratoGeneralMidService, useValue: {} },
@@ -306,7 +311,7 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
 
     expect(gestor).toHaveBeenCalledWith('uid-9');
     expect(minutaPdf).not.toHaveBeenCalled();
-    expect(component.estadoMinuta).toEqual({ tipo: 'documento', origen: 'guardada', fecha: '10/11/2026' });
+    expect(component.estadoMinuta).toEqual({ tipo: 'documento', origen: 'cargada', fecha: '10/11/2026' });
     expect(component.documentos.minuta).toBe(PDF);
     expect(texto()).toContain('Minuta cargada el 10/11/2026');
     expect(fixture.nativeElement.querySelector('app-pdf-visualizador')).not.toBeNull();
@@ -375,7 +380,7 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     minutaPdf.mockReturnValue(throwError(() => new Error('Http failure response for …: 0 Unknown Error')));
     montar();
 
-    expect(texto()).toContain('No se pudo generar la minuta. Intente de nuevo.');
+    expect(texto()).toContain(FALLA);
     expect(texto()).not.toContain('Http failure');
     expect(botonReintentar()).toBeDefined();
   });
@@ -418,6 +423,69 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     expect(component.documentos.minuta).toBe('');
     expect(texto()).toContain('La minuta llegó vacía o dañada.');
     expect(botonReintentar()).toBeDefined();
+  });
+  describe('regla por estado interno (18/11)', () => {
+    const conCargada = () =>
+      documentos.mockReturnValue(
+        of({ Data: [{ id: 9, documento_enlace: 'uid-9', fecha_creacion: '2026-11-10T22:15:00Z' }] })
+      );
+
+    it.each([['Borrador', E.BORRADOR], ['Rechazado', E.RECHAZADO]])(
+      '%s: genera con los datos actuales aunque haya una minuta cargada',
+      (_caso, estado) => {
+        conCargada();
+        montar(42, estado);
+        expect(documentos).not.toHaveBeenCalled();
+        expect(minutaPdf).toHaveBeenCalledTimes(1);
+        expect(component.etiquetaOrigenMinuta).toBe('Minuta generada con los datos actuales, sin firmar');
+      }
+    );
+
+    it.each([
+      ['En revisión del jefe', E.EN_REVISION_JEFE],
+      ['En firma del ordenador', E.EN_FIRMA_ORDENADOR],
+      ['Firmas completas', E.FIRMAS_COMPLETAS],
+    ])('%s: muestra la minuta cargada', (_caso, estado) => {
+      conCargada();
+      montar(42, estado);
+      expect(minutaPdf).not.toHaveBeenCalled();
+      expect(component.etiquetaOrigenMinuta).toBe('Minuta cargada el 10/11/2026');
+    });
+
+    it.each([
+      ['En revisión del jefe', E.EN_REVISION_JEFE],
+      ['En firma del ordenador', E.EN_FIRMA_ORDENADOR],
+      ['Firmas completas', E.FIRMAS_COMPLETAS],
+    ])('%s sin minuta cargada: la genera', (_caso, estado) => {
+      montar(42, estado);
+      expect(documentos).toHaveBeenCalledTimes(1);
+      expect(minutaPdf).toHaveBeenCalledTimes(1);
+      expect(component.etiquetaOrigenMinuta).toBe('Minuta generada con los datos actuales, sin firmar');
+    });
+
+    it('decide después de conocer el estado: nada se pide antes y se pide una sola vez', () => {
+      conCargada();
+      const estados = new Subject<unknown>();
+      montar(42, E.EN_REVISION_JEFE, estados);
+      expect(component.estadoMinuta).toEqual({ tipo: 'cargando' });
+      expect(documentos).not.toHaveBeenCalled();
+      expect(minutaPdf).not.toHaveBeenCalled();
+
+      estados.next({ Data: [{ estado_interno_parametro_id: E.EN_REVISION_JEFE }] });
+      estados.complete();
+      fixture.detectChanges();
+
+      expect(documentos).toHaveBeenCalledTimes(1);
+      expect(minutaPdf).not.toHaveBeenCalled();
+      expect(component.etiquetaOrigenMinuta).toBe('Minuta cargada el 10/11/2026');
+    });
+
+    it('si no se puede consultar el estado, genera (lo más conservador)', () => {
+      conCargada();
+      montar(42, E.EN_REVISION_JEFE, throwError(() => new Error('crud')));
+      expect(documentos).not.toHaveBeenCalled();
+      expect(minutaPdf).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

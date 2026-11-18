@@ -1,3 +1,4 @@
+import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 import { Component, Input, NO_ERRORS_SCHEMA, TemplateRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
@@ -693,6 +694,8 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
           { provide: ClausulasParagrafosService, useValue: clausulasService },
           { provide: MinutasMidService, useValue: { getMinutaPdf: jest.fn().mockReturnValue(of('JVBERi0xLjQK')) } },
+          { provide: GestorDocumentalService, useValue: { getDocumento: jest.fn() } },
+          { provide: GestionContractualCrudService, useValue: { getDocumentos: jest.fn().mockReturnValue(of({ Data: [] })) } },
           {
             provide: ParametrosService,
             useValue: { get: jest.fn().mockReturnValue(of({ Status: '200', Data: [{ Id: '1', Nombre: 'PRIMERA' }] })) },
