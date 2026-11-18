@@ -596,7 +596,7 @@ describe('PasoClausulasParagrafosComponent', () => {
       expect(modal).toBe(PdfViewerModalComponent);
       expect(config.data.titulo).toBe('Minuta preliminar');
       expect(config.data.file).toBeInstanceOf(Blob);
-      expect(config.data.datos).toBeNull();
+      expect(config.data).not.toHaveProperty('datos');
       expect(config.data.descripcion).toBe('Minuta generada con los datos actuales, sin firmar');
       expect(mockGestionCrud.getDocumentos).not.toHaveBeenCalled();
       expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
@@ -755,7 +755,7 @@ describe('PasoClausulasParagrafosComponent', () => {
         const config = dialog.open.mock.calls[0][1];
         expect(config.data.titulo).toBe('Minuta');
         expect(config.data.descripcion).toBe('Minuta cargada el 10/11/2026');
-        expect(config.data.datos).toBeNull();
+        expect(config.data).not.toHaveProperty('datos');
       });
 
       it('sin minuta cargada la genera y la muestra en el modal "Minuta"', async () => {

@@ -7,12 +7,9 @@ import {
 } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FileService } from 'src/app/services/file.service';
-import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { AlertService } from 'src/app/services/alert.service';
-import { DocumentoContrato } from 'src/app/types/types';
-import { environment } from 'src/environments/environment';
-import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 
+/** Visor de PDF en la plantilla de modal del MF (solo lectura). */
 @Component({
     selector: 'app-pdf-viewer-modal',
     templateUrl: './pdf-viewer-modal.component.html',
@@ -23,10 +20,8 @@ export class PdfViewerModalComponent implements OnInit {
   @ViewChild('pdfCanvas', { static: true })
   pdfCanvas!: ElementRef<HTMLCanvasElement>;
 
-  isLoading: boolean = false;
   pdfLoading = true;
   pdfSrc?: Uint8Array;
-  guardarDoc: boolean = false;
   /** Título del modal; "Documentos" si quien lo abre no envía otro. */
   titulo = 'Documentos';
   /** Texto bajo el título en la plantilla de modal del MF. */
@@ -34,15 +29,12 @@ export class PdfViewerModalComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
-    public data: { file: File; datos: any; titulo?: string; descripcion?: string },
+    public data: { file: File; titulo?: string; descripcion?: string },
     private fileService: FileService,
-    private alertService: AlertService,
-    private gestorDocumentalService: GestorDocumentalService,
-    private gestionContractualCrudService: GestionContractualCrudService
+    private alertService: AlertService
   ) {}
 
   async ngOnInit() {
-    this.guardarDoc = this.data.datos || false;
     this.titulo = this.data.titulo || 'Documentos';
     this.descripcion = this.data.descripcion || '';
     await this.loadPdf();
@@ -60,80 +52,8 @@ export class PdfViewerModalComponent implements OnInit {
     }
   }
 
-  // Guardar el documento del contrato (pdf) en gestor_documental_mid
-  guardarDocumentoGestorDocumental() {
-    this.isLoading = true;
-
-    const { base64, nombre, descripcion } = this.data.datos;
-    const idTipoDoc = environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.MINUTAS;
-
-    const data = [
-      {
-        IdTipoDocumento: idTipoDoc,
-        nombre,
-        descripcion,
-        metadatos: {},
-        file: base64,
-      },
-    ];
-
-    this.gestorDocumentalService.postAny('document/upload', data).subscribe({
-      next: ({ Status, res }: { Status: string; res: any }) => {
-        if (Status === '200' && res?.Id) {
-          this.registrarDocumento(res);
-        } else {
-          this.handleError('Error al guardar el PDF');
-          this.isLoading = false;
-        }
-      },
-      error: (error: any) => {
-        this.handleError('Error al guardar el PDF', error),
-          (this.isLoading = false);
-      },
-    });
-  }
-
-  // Registrar el id y uid de la respuesta del gestor_documental_mid en gestion_contractual_crud
-  registrarDocumento(documento: any) {
-    const { Id: documento_id, Enlace: documento_enlace } = documento;
-    const { contrato_general_id, usuario_id, usuario_rol } = this.data.datos;
-
-    const documentoContrato: DocumentoContrato = {
-      tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
-      entidad_tipo: 'contrato_general',
-      entidad_id: contrato_general_id,
-      documento_id,
-      documento_enlace,
-    };
-
-    this.gestionContractualCrudService
-      .postDocumento(documentoContrato)
-      .subscribe({
-        next: (response: any) => {
-          if (response?.Data?.id) {
-            this.alertService.showSuccessAlert(
-              'El documento del contrato se ha guardado exitosamente'
-            );
-          } else {
-            this.alertService.showErrorAlert(
-              'Error al registrar el documento del contrato'
-            );
-          }
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.handleError(
-            'Error al registrar el documento del contrato',
-            error
-          ),
-            (this.isLoading = false);
-        },
-      });
-  }
-
-  private handleError(message: string, error?: any, callback?: () => void) {
+  private handleError(message: string, error?: any) {
     console.error(message, error);
     this.alertService.showErrorAlert(message);
-    if (callback) callback();
   }
 }

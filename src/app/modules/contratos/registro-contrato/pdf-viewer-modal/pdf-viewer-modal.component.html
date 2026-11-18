@@ -28,17 +28,5 @@
       <mat-icon>close</mat-icon>
       Cerrar
     </button>
-    @if (guardarDoc) {
-      <button
-        mat-raised-button
-        color="primary"
-        class="mb-sm"
-        [disabled]="isLoading"
-        (click)="guardarDocumentoGestorDocumental()"
-      >
-        <mat-icon>cloud_upload</mat-icon>
-        {{ isLoading ? 'Guardando...' : 'Guardar' }}
-      </button>
-    }
   </mat-dialog-actions>
 </ng-template>

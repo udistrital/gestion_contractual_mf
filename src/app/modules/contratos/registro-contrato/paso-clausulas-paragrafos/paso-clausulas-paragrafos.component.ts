@@ -1657,13 +1657,11 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       );
       const file = base64ToBlob(minuta.base64, 'application/pdf');
 
-      // Sin datos de registro el visor no ofrece "Guardar": la minuta no se
-      // registra desde aquí (decisión del 18/11).
+      // Solo lectura: la minuta no se registra desde aquí (decisión del 18/11).
       this.dialog.open(PdfViewerModalComponent, {
         width: '70vw',
         data: {
           file,
-          datos: null,
           titulo: editable ? 'Minuta preliminar' : 'Minuta',
           descripcion: etiquetaOrigenMinuta(minuta.origen, minuta.fecha),
         },

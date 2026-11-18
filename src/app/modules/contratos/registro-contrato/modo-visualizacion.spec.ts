@@ -745,7 +745,7 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
       await component.openPdfViewer();
       expect(dialog.open).toHaveBeenCalledWith(
         PdfViewerModalComponent,
-        expect.objectContaining({ data: expect.objectContaining({ datos: null, titulo: 'Minuta preliminar' }) })
+        expect.objectContaining({ data: expect.objectContaining({ titulo: 'Minuta preliminar' }) })
       );
       expect(clausulasService.post).not.toHaveBeenCalled();
     });
