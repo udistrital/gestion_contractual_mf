@@ -22,9 +22,7 @@ import { MinutaDocumentoService } from 'src/app/services/minuta-documento.servic
 import { minutaEditable } from 'src/app/utils/minuta-estado';
 import { MENSAJES_MINUTA } from 'src/app/core/constants/mensajes-minuta';
 import { EstadosSinAlerta } from 'src/app/managers/errorManager';
-import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
-import { rolPorEstado } from 'src/app/utils/rolesEstados';
 import { finalize, lastValueFrom } from 'rxjs';
 import { ApiResponse, ContratoGeneral, EspecificacionTecnica } from 'src/app/types/types';
 import { numeroALetras } from '../paso-info-presupuestal/paso-info-presupuestal.utilidades';
@@ -63,7 +61,6 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   contratoGeneral = input<ContratoGeneral>()
   viewMode = input<boolean>(false);
 
-  roles: string[] = [];
   usuario_id: number = 0;
   estadoInternoActual: number = 0;
   form: FormGroup;
@@ -95,7 +92,6 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly dialog = inject(MatDialog);
   private readonly contratoGeneralCrudService = inject(ContratoGeneralCrudService);
-  private readonly rolService = inject(RolService);
   private readonly userService = inject(UserService);
   private readonly clausulasParagrafosService = inject(ClausulasParagrafosService);
   private readonly minutaDocumentoService = inject(MinutaDocumentoService);
@@ -116,7 +112,6 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.roles = this.rolService.getRol();
     this.getIdUsuario();
     this.cargarIndices();
     this.cargarDatosContextoMinuta();
@@ -155,14 +150,6 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       this.contratoCargadoId = this.contratoId;
       this.cargarContrato();
     }
-  }
-
-  getRolPorEstado(): string {
-    const rolesEsperados = rolPorEstado[this.estadoInternoActual] || [];
-    const rolEncontrado = rolesEsperados.find((rol: any) =>
-      this.roles.includes(rol)
-    );
-    return rolEncontrado || '';
   }
 
   getIdUsuario() {
@@ -1668,23 +1655,13 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       const minuta = await lastValueFrom(
         this.minutaDocumentoService.obtenerMinuta(contratoId, this.estadoInternoActual)
       );
-      const base64Data = minuta.base64;
-      const file = base64ToBlob(base64Data, 'application/pdf');
-      const datos = {
-        base64: base64Data,
-        nombre: `MINUTA ${contratoId}`,
-        descripcion: `Cargue de minuta firmada, contrato general id ${contratoId}`,
-        contrato_general_id: contratoId,
-        usuario_id: this.usuarioId,
-        usuario_rol: this.getRolPorEstado(),
-      };
+      const file = base64ToBlob(minuta.base64, 'application/pdf');
 
-      // Sin datos de registro el visor no ofrece guardar la minuta (solo lectura).
+      // Sin datos de registro el visor no ofrece "Guardar": la minuta no se
+      // registra desde aquí (decisión del 18/11).
       this.dialog.open(PdfViewerModalComponent, {
         width: '70vw',
-        data: editable
-          ? { file, datos: this.viewMode() ? null : datos, titulo: 'Minuta preliminar' }
-          : { file, datos: null, titulo: 'Minuta' },
+        data: { file, datos: null, titulo: editable ? 'Minuta preliminar' : 'Minuta' },
       });
     } catch (error: unknown) {
       console.error('Error al generar la vista previa de minuta:', error);
