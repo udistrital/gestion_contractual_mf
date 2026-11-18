@@ -17,7 +17,9 @@ import { MatStepper } from '@angular/material/stepper';
 import { NgZone } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
-import { MinutasMidService, mensajeDeErrorMinuta } from 'src/app/services/minuta-mid.service';
+import { mensajeDeErrorMinuta } from 'src/app/services/minuta-mid.service';
+import { MinutaDocumentoService } from 'src/app/services/minuta-documento.service';
+import { minutaEditable } from 'src/app/utils/minuta-estado';
 import { MENSAJES_MINUTA } from 'src/app/core/constants/mensajes-minuta';
 import { EstadosSinAlerta } from 'src/app/managers/errorManager';
 import { RolService } from 'src/app/services/rol.service';
@@ -78,6 +80,8 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   /** Mientras se genera la vista previa de la minuta (botones deshabilitados). */
   generandoMinuta = false;
   private estadoActualCargadoId: number = 0;
+  /** Se resuelve cuando se conoce el estado interno (o no se pudo consultar). */
+  private estadoListo: Promise<void> = Promise.resolve();
 
   // Datos contextuales para interpolación de minutas ARGO
   especificacionesList: EspecificacionTecnica[] = [];
@@ -94,7 +98,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   private readonly rolService = inject(RolService);
   private readonly userService = inject(UserService);
   private readonly clausulasParagrafosService = inject(ClausulasParagrafosService);
-  private readonly minutasMidService = inject(MinutasMidService);
+  private readonly minutaDocumentoService = inject(MinutaDocumentoService);
   private readonly parametrosService = inject(ParametrosService);
   private readonly cdpsService = inject(CdpsService);
   private readonly sanitizer = inject(DomSanitizer);
@@ -172,24 +176,47 @@ export class PasoClausulasParagrafosComponent implements OnInit {
     if (!cId || cId <= 0 || this.estadoActualCargadoId === cId) return;
     this.estadoActualCargadoId = cId;
 
-    this.contratoGeneralCrudService
-      .getEstados({
-        query: `contrato_general_id.id:${cId},actual:true,activo:true`,
-        sortby: 'fecha_creacion,id',
-        order: 'desc',
-        limit: 1,
-      })
-      .subscribe({
-        next: (response: any) => {
-          const estado = response?.Data?.[0];
-          if (estado?.id) {
-            this.estadoInternoActual = estado.estado_interno_parametro_id || 0;
-          }
-        },
-        error: (error) => {
-          console.warn('Estado actual no encontrado o pendiente de registrar:', error);
-        },
-      });
+    this.estadoListo = new Promise<void>((resolve) => {
+      this.contratoGeneralCrudService
+        .getEstados({
+          query: `contrato_general_id.id:${cId},actual:true,activo:true`,
+          sortby: 'fecha_creacion,id',
+          order: 'desc',
+          limit: 1,
+        })
+        .subscribe({
+          next: (response: any) => {
+            const estado = response?.Data?.[0];
+            if (estado?.id) {
+              this.estadoInternoActual = estado.estado_interno_parametro_id || 0;
+            }
+            resolve();
+          },
+          error: (error) => {
+            console.warn('Estado actual no encontrado o pendiente de registrar:', error);
+            resolve();
+          },
+        });
+    });
+  }
+
+  /**
+   * true en Borrador, Rechazado o sin estado: la vista previa genera la minuta
+   * con los datos actuales. Fuera de esos estados el botón es "Minuta" y muestra
+   * la última minuta cargada (decisión del 18/11, #405).
+   */
+  get esMinutaEditable(): boolean {
+    return minutaEditable(this.estadoInternoActual);
+  }
+
+  get textoBotonMinuta(): string {
+    if (this.generandoMinuta) return this.esMinutaEditable ? 'Generando minuta…' : 'Cargando minuta…';
+    return this.esMinutaEditable ? 'Vista Previa de Minuta' : 'Minuta';
+  }
+
+  get textoBotonMinutaDock(): string {
+    if (this.generandoMinuta) return this.esMinutaEditable ? 'Generando minuta…' : 'Cargando minuta…';
+    return this.esMinutaEditable ? 'Vista Previa Minuta' : 'Minuta';
   }
 
   get clausulas(): FormArray {
@@ -1621,10 +1648,16 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
     this.generandoMinuta = true;
     try {
-      // La minuta se arma con las cláusulas guardadas: si no se pudieron guardar,
-      // no se genera para no mostrar un documento desactualizado. Se omite la
-      // alerta genérica del error HTTP para que quede un solo mensaje.
-      if (!this.viewMode()) {
+      // La regla depende del estado interno: se espera a conocerlo antes de decidir.
+      await this.estadoListo;
+      const editable = this.esMinutaEditable;
+
+      // En Borrador o Rechazado la minuta se arma con las cláusulas guardadas: si
+      // no se pudieron guardar, no se genera para no mostrar un documento
+      // desactualizado. Se omite la alerta genérica del error HTTP para que quede
+      // un solo mensaje. Fuera de esos estados se muestra la minuta cargada, sin
+      // guardar.
+      if (editable && !this.viewMode()) {
         const guardado = await this.actualizarContrato(false, false);
         if (!guardado) {
           this.alertService.showErrorAlert(MENSAJES_MINUTA.guardadoPrevioFallido);
@@ -1632,7 +1665,10 @@ export class PasoClausulasParagrafosComponent implements OnInit {
         }
       }
 
-      const base64Data = await lastValueFrom(this.minutasMidService.getMinutaPdf(contratoId));
+      const minuta = await lastValueFrom(
+        this.minutaDocumentoService.obtenerMinuta(contratoId, this.estadoInternoActual)
+      );
+      const base64Data = minuta.base64;
       const file = base64ToBlob(base64Data, 'application/pdf');
       const datos = {
         base64: base64Data,
@@ -1646,7 +1682,9 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       // Sin datos de registro el visor no ofrece guardar la minuta (solo lectura).
       this.dialog.open(PdfViewerModalComponent, {
         width: '70vw',
-        data: { file, datos: this.viewMode() ? null : datos, titulo: 'Minuta preliminar' },
+        data: editable
+          ? { file, datos: this.viewMode() ? null : datos, titulo: 'Minuta preliminar' }
+          : { file, datos: null, titulo: 'Minuta' },
       });
     } catch (error: unknown) {
       console.error('Error al generar la vista previa de minuta:', error);

@@ -23,10 +23,10 @@
           class="banner-action-btn preview-btn"
           (click)="openPdfViewer()"
           [disabled]="generandoMinuta"
-          title="Ver vista previa de la minuta preliminar"
+          [title]="esMinutaEditable ? 'Ver vista previa de la minuta preliminar' : 'Ver la minuta del contrato'"
         >
           <mat-icon>visibility</mat-icon>
-          <span>{{ generandoMinuta ? 'Generando minuta…' : 'Vista Previa de Minuta' }}</span>
+          <span>{{ textoBotonMinuta }}</span>
         </button>
 
         @if (!viewMode()) {
@@ -410,7 +410,7 @@
           [disabled]="generandoMinuta"
         >
           <mat-icon>visibility</mat-icon>
-          <span>{{ generandoMinuta ? 'Generando minuta…' : 'Vista Previa Minuta' }}</span>
+          <span>{{ textoBotonMinutaDock }}</span>
         </button>
         <div class="dock-step-indicator">
           <span class="dock-step-badge">Paso 4 de 5</span>
