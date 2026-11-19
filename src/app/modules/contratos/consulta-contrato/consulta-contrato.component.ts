@@ -979,6 +979,9 @@ export class ConsultaContratoComponent implements OnInit {
       },
       error: async () => {
         this.isLoading = false;
+        this.dataSource.data = [];
+        this.totalRegistros = 0;
+        this.actualizarMetricasYAlertas();
         await this.alertService.showErrorAlert('Error al consultar contratos');
       },
       complete: () => {

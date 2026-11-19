@@ -94,6 +94,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   editMode = model<boolean>(false);
   viewMode = model<boolean>(false);
   contratoGeneral: ContratoGeneral | undefined = undefined;
+  contratoNoEncontrado: boolean = false;
 
   contratistaPrevalidado: any = null;
   bloquearContratista: boolean = false;
@@ -138,6 +139,9 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   }
 
   get tituloVista(): string {
+    if (this.contratoNoEncontrado) {
+      return 'Contrato no encontrado';
+    }
     if (this.viewMode()) {
       return 'Detalle del Contrato';
     }
@@ -367,15 +371,36 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
                 this.contratoGeneral.aplica_poliza ? '1' : '0'
               );
             }
+            this.contratoNoEncontrado = false;
             this.verificarPasosGuardadosIniciales();
             this.cdRef.detectChanges();
+          } else {
+            this.manejarContratoNoEncontrado();
           }
         },
         error: (err) => {
           console.error('Error al cargar contrato general:', err);
-          this.alertService.showErrorAlert('Error al cargar el contrato general');
+          const es404 = err?.status === 404 || err?.Status === 404 || err?.Status === '404';
+          if (es404) {
+            this.manejarContratoNoEncontrado();
+          } else {
+            this.alertService.showErrorAlert('Error al cargar el contrato general');
+          }
         },
       });
+  }
+
+  private manejarContratoNoEncontrado(): void {
+    this.contratoNoEncontrado = true;
+    this.contratoGeneral = undefined;
+    this.contratoCargadoId = 0;
+    this.contratoGeneralId.set(0);
+    this.editMode.set(false);
+    this.alertService.showErrorAlert(
+      'No se encontró el contrato general especificado',
+      'Contrato no encontrado'
+    );
+    this.router.navigate(['/gestion-contractual/contratos/consultar']);
   }
 
   private verificarPasosGuardadosIniciales() {
