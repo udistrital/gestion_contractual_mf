@@ -27,15 +27,52 @@
 
         <div class="main-content">
           @if (selectedTab === 0) {
+            <!-- La etiqueta va fuera del recuadro: el visor ocupa el recuadro igual que en "Documentos" -->
+            @if (estadoMinuta.tipo === 'documento') {
+              <div class="origen-minuta d-flex align-items-center fondo-acento-50 mb-2">
+                <mat-icon>info</mat-icon>
+                <p class="mx-2 mb-0">{{ etiquetaOrigenMinuta }}</p>
+              </div>
+            }
             <div class="pdf-container">
-              @if (isLoading) {
-                <div class="loading-shade">
-                  <mat-spinner></mat-spinner>
-                </div>
+              @switch (estadoMinuta.tipo) {
+                @case ('cargando') {
+                  <div class="estado-minuta d-flex flex-column justify-content-center align-items-center my-4" role="status">
+                    <mat-spinner color="primary" class="mb-2"></mat-spinner>
+                    <p>Cargando minuta…</p>
+                  </div>
+                }
+                @case ('documento') {
+                  <app-pdf-visualizador
+                    [base64Document]="documentos.minuta"
+                    (errorDocumento)="onErrorVisorMinuta()"
+                  ></app-pdf-visualizador>
+                }
+                @case ('error') {
+                  <div class="estado-minuta my-4" role="alert">
+                    <div class="d-flex justify-content-center align-items-center fondo-acento-50 mb-2">
+                      <mat-icon>info</mat-icon>
+                      <p class="mx-2 mb-0">{{ mensajeErrorMinuta }}</p>
+                    </div>
+                    @if (minutaReintentable) {
+                      <div class="d-flex justify-content-center">
+                        <button mat-raised-button color="primary" class="mb-sm" (click)="reintentarMinuta()">
+                          <mat-icon>refresh</mat-icon>
+                          Reintentar
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+                @case ('sin-documento') {
+                  <div class="estado-minuta my-4">
+                    <div class="d-flex justify-content-center align-items-center fondo-acento-50 mb-2">
+                      <mat-icon>info</mat-icon>
+                      <p class="mx-2 mb-0">No hay minuta disponible.</p>
+                    </div>
+                  </div>
+                }
               }
-              <app-pdf-visualizador
-                [base64Document]="documentos.minuta"
-              ></app-pdf-visualizador>
             </div>
           }
           @if (selectedTab === 1) {

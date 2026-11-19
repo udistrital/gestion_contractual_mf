@@ -29,7 +29,10 @@ import { ContratoGeneral, EstadoContrato, ParametroResponse } from 'src/app/type
 import { accionesPorRolYEstado } from 'src/app/utils/accionesPorRolYEstado';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { UserService } from 'src/app/services/user.service';
-import { forkJoin } from 'rxjs';
+import { Observable, catchError, forkJoin, map, switchMap, throwError } from 'rxjs';
+import { MinutaDocumentoService } from 'src/app/services/minuta-documento.service';
+import { mensajeDeErrorMinuta } from 'src/app/services/minuta-mid.service';
+import { MENSAJES_MINUTA } from 'src/app/core/constants/mensajes-minuta';
 import {
   MomentDateAdapter,
   MAT_MOMENT_DATE_ADAPTER_OPTIONS,
@@ -182,7 +185,8 @@ export class ConsultaContratoComponent implements OnInit {
     private userService: UserService,
     private rolService: RolService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private minutaDocumentoService: MinutaDocumentoService
   ) {}
 
   form = this._formBuilder.group({
@@ -732,58 +736,87 @@ export class ConsultaContratoComponent implements OnInit {
     }
   }
 
+  /**
+   * Único camino a "En revisión del jefe": el abogado envía un contrato en
+   * Borrador o Rechazado. El modal sigue abierto mientras se genera y registra
+   * la minuta vigente y se registra el estado (enviarAprobacionJefe).
+   */
   abrirModalEnviarAprobacion(contrato: ContratoGeneral): void {
     const dialogRef = this.dialog.open(ModalEnviarAprobacionComponent, {
       width: '640px',
       maxWidth: '92vw',
       disableClose: false,
-      data: { contrato },
+      data: {
+        contrato,
+        enviar: (observacion: string) => this.enviarAprobacionJefe(contrato, observacion),
+      },
     });
 
     dialogRef.afterClosed().subscribe((res: ModalEnviarAprobacionResultado) => {
-      if (res && res.confirmado) {
-        const rolUsuario =
-          (this.roles || []).find((r) => r.includes('ABOGADO')) ||
-          (this.rolActivo === 'ABOGADO'
-            ? 'ABOGADO_CONTRATACION_RECTOR'
-            : 'JEFE_CONTRATACION_RECTOR');
-
-        const nuevoEstado: EstadoContrato = {
-          contrato_general_id: { id: contrato.id as number },
-          usuario_id: this.usuarioId || 1,
-          usuario_rol: rolUsuario,
-          estado_parametro_id:
-            environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773,
-          estado_interno_parametro_id:
-            environment.ESTADOS_INTERNOS.EN_REVISION_JEFE,
-          motivo: res.observacion || 'Envío a revisión y aprobación de Jefatura',
-        };
-
-        this.contratoGeneralCrudService.postEstadoContrato(nuevoEstado).subscribe({
-          next: () => {
-            if (!contrato.estados) {
-              contrato.estados = {};
-            }
-            contrato.estados.estado_interno_parametro_id =
-              environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
-            contrato.estados.nombre_estado = 'Por aprobar';
-            if (res.observacion) {
-              contrato.observaciones = res.observacion;
-            }
-            this.actualizarMetricasYAlertas();
-            this.alertService.showSuccessAlert(
-              'El contrato fue enviado para aprobación de la Jefatura con éxito.'
-            );
-          },
-          error: (err) => {
-            console.error('Error al persistir estado en backend:', err);
-            this.alertService.showErrorAlert(
-              'No fue posible enviar el contrato para aprobación.'
-            );
-          },
-        });
+      if (!res?.confirmado || !res.enviado) return;
+      if (!contrato.estados) {
+        contrato.estados = {};
       }
+      contrato.estados.estado_interno_parametro_id =
+        environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
+      contrato.estados.nombre_estado = 'Por aprobar';
+      if (res.observacion) {
+        contrato.observaciones = res.observacion;
+      }
+      this.actualizarMetricasYAlertas();
+      this.alertService.showSuccessAlert(
+        'El contrato fue enviado para aprobación de la Jefatura con éxito.'
+      );
     });
+  }
+
+  /**
+   * Envía el contrato al jefe: primero la minuta vigente (se genera, se sube,
+   * se registra y se desactivan las anteriores; decisión del líder técnico,
+   * #405) y solo entonces el cambio de estado. Si la minuta falla, el contrato
+   * no se envía. Los errores llegan al modal con el `mensaje` para el usuario;
+   * aquí no se lanzan alertas porque quedarían detrás del diálogo.
+   */
+  enviarAprobacionJefe(contrato: ContratoGeneral, observacion: string): Observable<void> {
+    const contratoId = contrato.id as number;
+    const rolUsuario =
+      (this.roles || []).find((r) => r.includes('ABOGADO')) ||
+      (this.rolActivo === 'ABOGADO'
+        ? 'ABOGADO_CONTRATACION_RECTOR'
+        : 'JEFE_CONTRATACION_RECTOR');
+    const usuarioId = this.usuarioId || 1;
+
+    const nuevoEstado: EstadoContrato = {
+      contrato_general_id: { id: contratoId },
+      usuario_id: usuarioId,
+      usuario_rol: rolUsuario,
+      estado_parametro_id:
+        environment.ESTADOS_GENERALES?.POR_SUSCRIBIR || 6773,
+      estado_interno_parametro_id:
+        environment.ESTADOS_INTERNOS.EN_REVISION_JEFE,
+      motivo: observacion || 'Envío a revisión y aprobación de Jefatura',
+    };
+
+    return this.minutaDocumentoService
+      .registrarMinutaVigente(contratoId, usuarioId, rolUsuario)
+      .pipe(
+        catchError((error: unknown) =>
+          throwError(() => ({
+            mensaje: `${MENSAJES_MINUTA.envioBloqueado} ${mensajeDeErrorMinuta(error)}`,
+          }))
+        ),
+        switchMap(() =>
+          this.contratoGeneralCrudService.postEstadoContrato(nuevoEstado, 'todos').pipe(
+            catchError((err: unknown) => {
+              console.error('Error al persistir estado en backend:', err);
+              return throwError(() => ({
+                mensaje: 'No fue posible enviar el contrato para aprobación.',
+              }));
+            })
+          )
+        ),
+        map(() => undefined)
+      );
   }
 
   abrirModalAprobacionMasiva(): void {

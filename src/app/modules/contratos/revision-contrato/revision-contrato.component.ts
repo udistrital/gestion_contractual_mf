@@ -21,7 +21,19 @@ import {
 import { SubirArchivoComponent } from './cargar-archivo/cargar-archivo.component';
 import { forkJoin } from 'rxjs';
 import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid.service';
-import { MinutasMidService } from 'src/app/services/minuta-mid.service';
+import { esErrorMinuta, mensajeDeErrorMinuta } from 'src/app/services/minuta-mid.service';
+import { MinutaDocumento, MinutaDocumentoService } from 'src/app/services/minuta-documento.service';
+import { MENSAJES_MINUTA } from 'src/app/core/constants/mensajes-minuta';
+import { etiquetaOrigenMinuta, fechaDdMmAaaa } from 'src/app/utils/minuta-estado';
+
+type OrigenMinuta = MinutaDocumento['origen'];
+
+/** Estado de la pestaña Minuta. */
+export type EstadoMinuta =
+  | { tipo: 'cargando' }
+  | { tipo: 'documento'; origen: OrigenMinuta; fecha: string | null }
+  | { tipo: 'error'; mensaje: string; reintentable: boolean }
+  | { tipo: 'sin-documento' };
 
 @Component({
     selector: 'app-revision-contrato',
@@ -34,6 +46,7 @@ export class RevisionContratoComponent {
   selectedTab: number = 0;
   tabs: string[] = ['Minuta', 'Documentos'];
   documentos = { minuta: '', documentos_precontractuales: '' };
+  estadoMinuta: EstadoMinuta = { tipo: 'cargando' };
   contrato_general_id = 0;
   unidad_ejecutora_id = 0;
   numero_contrato: string = '';
@@ -52,7 +65,7 @@ export class RevisionContratoComponent {
     private gestionContractualCrudService: GestionContractualCrudService,
     private contratoGeneralMidService: ContratoGeneralMidService,
     private gestorDocumentalService: GestorDocumentalService,
-    private minutasMidService: MinutasMidService,
+    private minutaDocumentoService: MinutaDocumentoService,
     private rolService: RolService,
     private userService: UserService
   ) {}
@@ -61,8 +74,8 @@ export class RevisionContratoComponent {
     this.roles = this.rolService.getRol();
     this.getIdContratoUrl();
     this.getIdUsuario();
-    this.getMinuta();
     this.getDocumentosPrecontractuales();
+    // La minuta depende del estado interno (regla del 18/11): se pide al conocerlo.
     this.cargarDatosIniciales();
   }
 
@@ -77,9 +90,7 @@ export class RevisionContratoComponent {
   }
 
   getIdContratoUrl() {
-    const id =
-      this.route.snapshot.paramMap.get('idContrato') ||
-      this.route.snapshot.paramMap.get('contratoId');
+    const id = this.route.snapshot.paramMap.get('contratoId');
     this.contrato_general_id = id ? Number(id) : 0;
   }
 
@@ -98,7 +109,10 @@ export class RevisionContratoComponent {
   }
 
   cargarDatosIniciales() {
-    if (!this.contrato_general_id) return;
+    if (!this.contrato_general_id) {
+      this.estadoMinuta = { tipo: 'sin-documento' };
+      return;
+    }
     forkJoin({
       contrato: this.contratoGeneralCrudService.get(this.contrato_general_id),
       // Estados del contrato, del más reciente al más antiguo.
@@ -126,9 +140,12 @@ export class RevisionContratoComponent {
         }
 
         this.getTextosMensajes();
+        this.getMinuta();
       },
       error: (error) => {
         console.warn('Error al cargar datos iniciales del contrato:', error);
+        // Sin estado conocido se genera con los datos actuales (lo más conservador).
+        this.getMinuta();
       },
     });
   }
@@ -194,58 +211,63 @@ export class RevisionContratoComponent {
     };
   }
 
+  /**
+   * Minuta según el estado interno (MinutaDocumentoService): en Borrador o
+   * Rechazado se genera; desde En revisión del jefe, la última cargada (la del
+   * envío al jefe o la que cargó el flujo después) o, si no hay, la generada.
+   * Se llama cuando el estado ya se conoce.
+   */
   getMinuta() {
-    this.isLoading = true;
-    this.gestionContractualCrudService
-      .getDocumentos(
-        this.consultaDocumentoVigente(environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA)
-      )
+    if (!this.contrato_general_id) {
+      this.estadoMinuta = { tipo: 'sin-documento' };
+      return;
+    }
+    this.estadoMinuta = { tipo: 'cargando' };
+    this.documentos.minuta = '';
+    this.minutaDocumentoService
+      .obtenerMinuta(this.contrato_general_id, this.estadoInternoActual)
       .subscribe({
-        next: (documentos: any) => {
-          const docsList = documentos?.Data || [];
-          const documentoActual = docsList[0];
-          if (documentoActual?.documento_enlace) {
-            this.gestorDocumentalService
-              .getDocumento(documentoActual.documento_enlace)
-              .subscribe({
-                next: (response: any) => {
-                  if (response?.file) {
-                    this.documentos.minuta = response.file;
-                    this.isLoading = false;
-                  } else {
-                    this.obtenerMinutaRenderizadaMid();
-                  }
-                },
-                error: () => this.obtenerMinutaRenderizadaMid(),
-              });
-          } else {
-            this.obtenerMinutaRenderizadaMid();
-          }
-        },
-        error: () => {
-          this.obtenerMinutaRenderizadaMid();
+        next: (minuta) => this.mostrarMinuta(minuta.base64, minuta.origen, minuta.fecha),
+        error: (error: unknown) => {
+          this.documentos.minuta = '';
+          this.estadoMinuta = {
+            tipo: 'error',
+            mensaje: mensajeDeErrorMinuta(error),
+            reintentable: esErrorMinuta(error) ? error.reintentable : true,
+          };
         },
       });
   }
 
-  obtenerMinutaRenderizadaMid() {
-    if (!this.contrato_general_id) {
-      this.isLoading = false;
-      return;
-    }
-    this.minutasMidService.getMinuta(this.contrato_general_id).subscribe({
-      next: (response: any) => {
-        const base64 = response?.Data || response;
-        if (typeof base64 === 'string' && base64.length > 0) {
-          this.documentos.minuta = base64;
-        }
-        this.isLoading = false;
-      },
-      error: (error: any) => {
-        console.warn('No se pudo obtener minuta renderizada desde minuta_mid:', error);
-        this.isLoading = false;
-      },
-    });
+  /** Borra el documento anterior y vuelve a pedir la minuta. */
+  reintentarMinuta() {
+    this.documentos.minuta = '';
+    this.getMinuta();
+  }
+
+  /** El visor no pudo mostrar el PDF (base64 o PDF dañado). */
+  onErrorVisorMinuta() {
+    this.documentos.minuta = '';
+    this.estadoMinuta = { tipo: 'error', mensaje: MENSAJES_MINUTA.invalida, reintentable: true };
+  }
+
+  private mostrarMinuta(base64: string, origen: OrigenMinuta, fechaCreacion?: unknown) {
+    this.documentos.minuta = base64;
+    this.estadoMinuta = { tipo: 'documento', origen, fecha: fechaDdMmAaaa(fechaCreacion) };
+  }
+
+  /** Texto sobre el visor según de dónde salió la minuta. */
+  get etiquetaOrigenMinuta(): string {
+    if (this.estadoMinuta.tipo !== 'documento') return '';
+    return etiquetaOrigenMinuta(this.estadoMinuta.origen, this.estadoMinuta.fecha ?? undefined);
+  }
+
+  get mensajeErrorMinuta(): string {
+    return this.estadoMinuta.tipo === 'error' ? this.estadoMinuta.mensaje : '';
+  }
+
+  get minutaReintentable(): boolean {
+    return this.estadoMinuta.tipo === 'error' && this.estadoMinuta.reintentable;
   }
 
   getDocumentosPrecontractuales() {

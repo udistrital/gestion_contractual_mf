@@ -192,3 +192,13 @@
   width: 18px;
   height: 18px;
 }
+
+/* Motivo por el que no se pudo enviar (minuta o estado), dentro del modal. */
+.mensaje-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+}

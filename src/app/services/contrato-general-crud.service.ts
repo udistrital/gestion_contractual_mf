@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { EstadosSinAlerta } from '../managers/errorManager';
 import { RequestManager } from '../managers/requestManager';
 import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -107,9 +108,9 @@ export class ContratoGeneralCrudService {
     return this.requestManager.get(rutaConsulta(RECURSOS_CRUD.estadoContrato, consulta));
   }
 
-  postEstadoContrato(estado: EstadoContrato): Observable<any> {
+  postEstadoContrato(estado: EstadoContrato, estadosSinAlerta: EstadosSinAlerta = []): Observable<any> {
     this.requestManager.setPath('GESTION_CONTRACTUAL_CRUD_SERVICE');
-    return this.requestManager.post(`${RECURSOS_CRUD.estadoContrato}/`, estado);
+    return this.requestManager.post(`${RECURSOS_CRUD.estadoContrato}/`, estado, estadosSinAlerta);
   }
 
   // especificacion_tecnica
