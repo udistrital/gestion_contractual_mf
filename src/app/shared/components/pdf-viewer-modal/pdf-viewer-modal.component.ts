@@ -10,7 +10,6 @@ import { FileService } from 'src/app/services/file.service';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { DocumentoContrato } from 'src/app/types/types';
-import { environment } from 'src/environments/environment';
 import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 
 @Component({
@@ -54,16 +53,17 @@ export class PdfViewerModalComponent implements OnInit {
     }
   }
 
-  // Guardar el documento del contrato (pdf) en gestor_documental_mid
+  // Guardar el documento (pdf) en gestor_documental_mid. El tipo de documento
+  // del gestor (colección) y el del CRUD llegan en data.datos
   guardarDocumentoGestorDocumental() {
     this.isLoading = true;
 
-    const { base64, nombre, descripcion } = this.data.datos;
-    const idTipoDoc = environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.MINUTAS;
+    const { base64, nombre, descripcion, id_tipo_documento_gestor } =
+      this.data.datos;
 
     const data = [
       {
-        IdTipoDocumento: idTipoDoc,
+        IdTipoDocumento: id_tipo_documento_gestor,
         nombre,
         descripcion,
         metadatos: {},
@@ -90,12 +90,12 @@ export class PdfViewerModalComponent implements OnInit {
   // Registrar el id y uid de la respuesta del gestor_documental_mid en gestion_contractual_crud
   registrarDocumento(documento: any) {
     const { Id: documento_id, Enlace: documento_enlace } = documento;
-    const { contrato_general_id, usuario_id, usuario_rol } = this.data.datos;
+    const { tipo_documento_id, entidad_tipo, entidad_id } = this.data.datos;
 
     const documentoContrato: DocumentoContrato = {
-      tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
-      entidad_tipo: 'contrato_general',
-      entidad_id: contrato_general_id,
+      tipo_documento_id,
+      entidad_tipo,
+      entidad_id,
       documento_id,
       documento_enlace,
     };

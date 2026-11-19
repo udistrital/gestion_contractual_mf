@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, effect, inject, input, OnInit, output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
+import { PdfViewerModalComponent } from 'src/app/shared/components/pdf-viewer-modal/pdf-viewer-modal.component';
 import {
   FormBuilder,
   FormGroup,
@@ -1629,7 +1629,10 @@ export class PasoClausulasParagrafosComponent implements OnInit {
         base64: base64Data,
         nombre: `MINUTA ${contratoId}`,
         descripcion: `Cargue de minuta firmada, contrato general id ${contratoId}`,
-        contrato_general_id: contratoId,
+        id_tipo_documento_gestor: environment.TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL.MINUTAS,
+        tipo_documento_id: environment.TIPO_DOCUMENTO_ID_PARAMETROS.MINUTA,
+        entidad_tipo: 'contrato_general',
+        entidad_id: contratoId,
         usuario_id: this.usuarioId,
         usuario_rol: this.getRolPorEstado(),
       };

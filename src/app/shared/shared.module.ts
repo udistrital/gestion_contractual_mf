@@ -11,6 +11,7 @@ import { QuillModule } from "ngx-quill";
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
 import { SpinnerComponent } from './components/spinner/spinner.component';
+import { PdfViewerModalComponent } from './components/pdf-viewer-modal/pdf-viewer-modal.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { SpinnerComponent } from './components/spinner/spinner.component';
     PlantillaModalComponent,
     EditorEnriquecidoComponent,
     SearchableSelectComponent,
-    SpinnerComponent
+    SpinnerComponent,
+    PdfViewerModalComponent,
   ],
   imports: [
     MaterialModule,
@@ -43,6 +45,7 @@ import { SpinnerComponent } from './components/spinner/spinner.component';
     QuillModule,
     PdfViewerModule,
     SpinnerComponent,
+    PdfViewerModalComponent,
   ],
   providers: [
     { provide: MAT_DIALOG_DATA, useValue: {} },
