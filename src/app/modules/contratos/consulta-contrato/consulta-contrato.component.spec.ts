@@ -313,6 +313,23 @@ describe('ConsultaContratoComponent', () => {
     expect(component.isLoading).toBe(false);
   });
 
+  it('debe limpiar tabla, total de registros y actualizar métricas ante error del MID', () => {
+    component.dataSource.data = [{ id: 99 } as any];
+    component.totalRegistros = 1;
+    const metricasSpy = jest.spyOn(component as any, 'actualizarMetricasYAlertas');
+
+    mockContratoMidService.getContratos.mockReturnValue(throwError(() => new Error('Error backend')));
+    component.consultar();
+
+    expect(component.dataSource.data).toEqual([]);
+    expect(component.totalRegistros).toBe(0);
+    expect(metricasSpy).toHaveBeenCalled();
+    const tabTodos = component.pestanasEstados.find((p) => p.nombre === 'Todos');
+    expect(tabTodos?.count).toBe(0);
+    expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith('Error al consultar contratos');
+    expect(component.isLoading).toBe(false);
+  });
+
   it('debe resolver nombres y fallbacks N/A para tipo de contrato, persona y contratista', () => {
     component.tipoContratoId = [{ Id: 1, Nombre: 'Prestación de Servicios' }];
     component.tipoPersona = [{ Id: 1, Nombre: 'Natural' }];
