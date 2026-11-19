@@ -174,8 +174,8 @@ test('registrar póliza: la vigencia lista los contratos y el acta queda en la p
   ).toBeVisible();
   await capturar('11-poliza-acta-registrada');
 
-  const polizaId = sql(`select id from contratacion.poliza where contrato_general_id = ${contratoId}`);
-  expect(sql(`select entidad_tipo, entidad_id, documento_enlace from contratacion.documento_contrato where activo`)).toBe(
+  const polizaId = sql(`select id from gestion_contractual.poliza where contrato_general_id = ${contratoId}`);
+  expect(sql(`select entidad_tipo, entidad_id, documento_enlace from gestion_contractual.documento_contrato where activo`)).toBe(
     `poliza|${polizaId}|${ENLACE_ACTA}`
   );
 });

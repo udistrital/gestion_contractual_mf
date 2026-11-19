@@ -95,7 +95,7 @@ function sql(consulta: string): string {
 /** Fila de la tabla con cada columna separada por | y NULL donde no hay valor. */
 function columnas(tabla: string, condicion: string, nombres: string[]): string {
   const valores = nombres.map((c) => `coalesce(${c}::text, 'NULL')`).join(', ');
-  return sql(`select concat_ws('|', ${valores}) from contratacion.${tabla} where ${condicion}`);
+  return sql(`select concat_ws('|', ${valores}) from gestion_contractual.${tabla} where ${condicion}`);
 }
 
 const nulos = (nombres: string[]) => nombres.map(() => 'NULL').join('|');
@@ -245,7 +245,7 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
     }
     // El valor no cambió después del POST: guardar el paso no hace PUT del CDP.
     expect.soft(peticionesAlCrud.filter((p) => p.startsWith('PUT') && p.includes('/disponibilidades-presupuestales/'))).toEqual([]);
-    valorATomarRegistrado = sql(`select valor_a_tomar from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`);
+    valorATomarRegistrado = sql(`select valor_a_tomar from gestion_contractual.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`);
     expect.soft(Number(valorATomarRegistrado)).toBe(VALOR_A_TOMAR_REGISTRO);
     await capturar(page, '01-paso1-guardado');
   });
@@ -357,8 +357,8 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
     sinValorOrdenador = columnas('ordenador_contrato', delContrato, camposSinValorOrdenador);
     cargoSupervisorInicial = columnas('supervisor_contrato', delContrato, ['cargo_id']);
     // El formulario no maneja estos campos: se simulan guardados por otra vía.
-    sql(`update contratacion.supervisor_contrato set cargo_id = 45 where ${delContrato}`);
-    sql(`update contratacion.ordenador_contrato set cargo_id = 12, ordenador_sicapital_id = 1001, documento_identidad = '1000000003' where ${delContrato}`);
+    sql(`update gestion_contractual.supervisor_contrato set cargo_id = 45 where ${delContrato}`);
+    sql(`update gestion_contractual.ordenador_contrato set cargo_id = 12, ordenador_sicapital_id = 1001, documento_identidad = '1000000003' where ${delContrato}`);
 
     await abrirEdicion(page, contratoId);
     const presupuestal = page.locator('app-paso-info-presupuestal');
@@ -369,7 +369,7 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
     await expect(valorATomar).toHaveValue(String(VALOR_A_TOMAR_REGISTRO));
     await capturar(page, '08a-edicion-valor-a-tomar-guardado');
     await valorATomar.fill(String(VALOR_A_TOMAR_EDICION));
-    const cdpId = sql(`select id from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`);
+    const cdpId = sql(`select id from gestion_contractual.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`);
     const putCdp = page.waitForResponse(
       (r) => r.request().method() === 'PUT' && r.url().endsWith(`/v1/disponibilidades-presupuestales/${cdpId}`)
     );
@@ -423,20 +423,20 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
   await test.step('base de datos: un solo ordenador activo, contratista y solicitante en contrato_general', async () => {
     const contrato = sql(
       `select proveedor_numero_documento, tipo_persona_id, dependencia_solicitante_id, tipo_control_id, clase_proveedor_id ` +
-        `from contratacion.contrato_general where id = ${contratoId}`
+        `from gestion_contractual.contrato_general where id = ${contratoId}`
     );
     const sinValor = columnas('contrato_general', `id = ${contratoId}`, camposSinValorContrato);
     const cargoSupervisor = columnas('supervisor_contrato', delContrato, ['cargo_id']);
     const ordenadorEditado = columnas('ordenador_contrato', delContrato, ['cargo_id', 'ordenador_sicapital_id', 'documento_identidad']);
     const conteos = {
-      ordenadores_activos: sql(`select count(*) from contratacion.ordenador_contrato where contrato_general_id = ${contratoId} and activo`),
-      cdps_activos: sql(`select count(*) from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
-      supervisores_activos: sql(`select count(*) from contratacion.supervisor_contrato where contrato_general_id = ${contratoId} and activo`),
-      especificaciones_activas: sql(`select count(*) from contratacion.especificacion_tecnica where contrato_general_id = ${contratoId} and activo`),
-      vigencia_id: sql(`select vigencia_id from contratacion.contrato_general where id = ${contratoId}`),
-      estado_actual: sql(`select estado_interno_parametro_id from contratacion.estado_contrato where contrato_general_id = ${contratoId} and actual`),
-      fecha_registro_cdp: sql(`select fecha_registro from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
-      valor_a_tomar_cdp: sql(`select valor_a_tomar from contratacion.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
+      ordenadores_activos: sql(`select count(*) from gestion_contractual.ordenador_contrato where contrato_general_id = ${contratoId} and activo`),
+      cdps_activos: sql(`select count(*) from gestion_contractual.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
+      supervisores_activos: sql(`select count(*) from gestion_contractual.supervisor_contrato where contrato_general_id = ${contratoId} and activo`),
+      especificaciones_activas: sql(`select count(*) from gestion_contractual.especificacion_tecnica where contrato_general_id = ${contratoId} and activo`),
+      vigencia_id: sql(`select vigencia_id from gestion_contractual.contrato_general where id = ${contratoId}`),
+      estado_actual: sql(`select estado_interno_parametro_id from gestion_contractual.estado_contrato where contrato_general_id = ${contratoId} and actual`),
+      fecha_registro_cdp: sql(`select fecha_registro from gestion_contractual.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
+      valor_a_tomar_cdp: sql(`select valor_a_tomar from gestion_contractual.disponibilidad_presupuestal where contrato_general_id = ${contratoId} and activo`),
       numero_y_vigencia_cdp: columnas('disponibilidad_presupuestal', `${delContrato} and activo`, ['numero_cdp_id', 'vigencia_cdp_id']),
     };
     writeFileSync(
@@ -484,8 +484,8 @@ test('paso 1 en edición: actualiza el mismo contrato y no crea otro', async () 
   const id = contratoId;
   expect(id, 'contrato creado en la prueba anterior').toBeGreaterThan(0);
   const consultar = () => ({
-    contratos: sql('select count(*) from contratacion.contrato_general'),
-    estados: sql(`select count(*) from contratacion.estado_contrato where contrato_general_id = ${id}`),
+    contratos: sql('select count(*) from gestion_contractual.contrato_general'),
+    estados: sql(`select count(*) from gestion_contractual.estado_contrato where contrato_general_id = ${id}`),
     fila: columnas('contrato_general', `id = ${id}`, ['consecutivo_elaboracion', 'plazo_ejecucion', 'proveedor_numero_documento', 'dependencia_solicitante_id']),
   });
   const antes = consultar();
@@ -547,7 +547,7 @@ test('fecha de estudios: conserva el día al guardar y al editar', async () => {
 
   const fechaGuardada = () => columnas('contrato_general', `id = ${contratoId}`, ['fecha_suscripcion_estudio']);
   const fechas = [fechaGuardada()];
-  const contratos = sql('select count(*) from contratacion.contrato_general');
+  const contratos = sql('select count(*) from gestion_contractual.contrato_general');
 
   // Guardar otra vez sin salir del registro actualiza el contrato recién creado.
   await guardarPaso1(page, contratoId);
@@ -582,7 +582,7 @@ test('fecha de estudios: conserva el día al guardar y al editar', async () => {
       `aplica_poliza (el control no aplica): ${aplicaPoliza}\n`
   );
   expect.soft(fechas).toEqual(fechas.map(() => hoyColombia));
-  expect.soft(sql('select count(*) from contratacion.contrato_general'), 'no debe aparecer otro contrato').toBe(contratos);
+  expect.soft(sql('select count(*) from gestion_contractual.contrato_general'), 'no debe aparecer otro contrato').toBe(contratos);
   expect.soft(aplicaPoliza).toBe('NULL');
   expect.soft(noSimuladas, 'peticiones sin simular').toEqual([]);
 });
