@@ -410,13 +410,16 @@ describe('ConsultaContratoComponent', () => {
       expect(component.estanTodosSeleccionados()).toBe(false);
     });
 
+    /** Error que recibió el modal en el último envío (lo muestra dentro del modal). */
+    let errorEnModal: any;
     /** Como el modal real: ejecuta data.enviar y se cierra con enviado solo si termina bien. */
     const modalQueEnvia = (observacion: string) => {
+      errorEnModal = undefined;
       mockMatDialog.open.mockImplementationOnce((_c: unknown, config: any) => {
         let resultado: unknown;
         config.data.enviar(observacion).subscribe({
           next: () => (resultado = { confirmado: true, observacion, enviado: true }),
-          error: () => undefined,
+          error: (e: unknown) => (errorEnModal = e),
         });
         return { afterClosed: () => of(resultado) };
       });
@@ -470,7 +473,8 @@ describe('ConsultaContratoComponent', () => {
             contrato_general_id: { id: 77 },
             estado_interno_parametro_id: environment.ESTADOS_INTERNOS.EN_REVISION_JEFE,
             motivo: 'nota',
-          })
+          }),
+          'todos'
         );
       });
 
@@ -491,9 +495,10 @@ describe('ConsultaContratoComponent', () => {
         expect(mockCrudService.postEstadoContrato).not.toHaveBeenCalled();
         expect(contrato.estados.estado_interno_parametro_id).toBe(6799);
         expect(mockAlertService.showSuccessAlert).not.toHaveBeenCalled();
-        expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
-          'No se pudo enviar el contrato. Faltan datos en el paso General y Presupuestal: ordenador del gasto.'
-        );
+        expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+        expect(errorEnModal).toEqual({
+          mensaje: 'No se pudo enviar el contrato. Faltan datos en el paso General y Presupuestal: ordenador del gasto.',
+        });
       });
 
       it('si la minuta falla por un servicio (502), no cambia el estado y muestra el mensaje único de falla', () => {
@@ -512,9 +517,11 @@ describe('ConsultaContratoComponent', () => {
 
         expect(mockCrudService.postEstadoContrato).not.toHaveBeenCalled();
         expect(contrato.estados.estado_interno_parametro_id).toBe(6799);
-        expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
-          'No se pudo enviar el contrato. No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.'
-        );
+        expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+        expect(errorEnModal).toEqual({
+          mensaje:
+            'No se pudo enviar el contrato. No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.',
+        });
       });
 
       it('un error que no es de la minuta muestra el mensaje genérico, nunca un texto técnico', () => {
@@ -525,9 +532,11 @@ describe('ConsultaContratoComponent', () => {
         component.abrirModalEnviarAprobacion(contrato);
 
         expect(mockCrudService.postEstadoContrato).not.toHaveBeenCalled();
-        expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
-          'No se pudo enviar el contrato. No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.'
-        );
+        expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+        expect(errorEnModal).toEqual({
+          mensaje:
+            'No se pudo enviar el contrato. No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.',
+        });
       });
 
       it('si el modal se cancela, no genera la minuta ni cambia el estado', () => {
@@ -660,9 +669,7 @@ describe('ConsultaContratoComponent', () => {
       component.abrirModalEnviarAprobacion(contratoEnvio);
       expect(contratoEnvio.estados.estado_interno_parametro_id).toBe(6799);
       expect(mockAlertService.showSuccessAlert).not.toHaveBeenCalled();
-      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
-        'No fue posible enviar el contrato para aprobación.'
-      );
+      expect(errorEnModal).toEqual({ mensaje: 'No fue posible enviar el contrato para aprobación.' });
 
       const cLote: any = { id: 1, estados: { estado_interno_parametro_id: 6800 } };
       component.seleccionContratos.select(cLote);

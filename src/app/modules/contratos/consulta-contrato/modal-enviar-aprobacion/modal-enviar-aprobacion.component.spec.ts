@@ -112,16 +112,34 @@ describe('ModalEnviarAprobacionComponent', () => {
       expect(mockDialogRef.close).toHaveBeenCalledWith({ confirmado: true, observacion: 'nota', enviado: true });
     });
 
-    it('si el envío falla, el modal sigue abierto y el botón se libera para reintentar', () => {
+    it('si el envío falla, el modal sigue abierto, muestra el motivo y el botón se libera para reintentar', () => {
       component.confirmar();
-      envio.error({ mensaje: 'Faltan datos' });
+      envio.error({ mensaje: 'No se pudo enviar el contrato. Faltan datos en el paso General y Presupuestal: ordenador del gasto.' });
       fixture.detectChanges();
 
+      const alerta = fixture.nativeElement.querySelector('.mensaje-error[role="alert"]') as HTMLElement;
+      expect(alerta.textContent).toContain(
+        'No se pudo enviar el contrato. Faltan datos en el paso General y Presupuestal: ordenador del gasto.'
+      );
       expect(mockDialogRef.close).not.toHaveBeenCalled();
       expect(component.enviando).toBe(false);
       expect((mockDialogRef as any).disableClose).toBe(false);
       expect(botonConfirmar().disabled).toBe(false);
       expect(botonConfirmar().textContent).toContain('Confirmar y Enviar');
+    });
+
+    it('un error sin mensaje muestra el texto genérico, y al reintentar se limpia', () => {
+      component.confirmar();
+      envio.error(new Error('boom'));
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.mensaje-error').textContent).toContain(
+        'No fue posible enviar el contrato para aprobación.'
+      );
+
+      envio = new Subject<unknown>();
+      component.confirmar();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.mensaje-error')).toBeNull();
     });
   });
 

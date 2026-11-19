@@ -682,14 +682,17 @@ test.describe('Envío al jefe con minuta vigente', () => {
       await abrirModalEnvio(page);
       await botonConfirmarEnvio(page).click();
 
-      await expect(page.locator('.swal2-popup')).toContainText(
+      // El motivo va dentro del modal: una alerta aparte quedaría detrás del diálogo.
+      const motivo = modalEnvio(page).locator('.mensaje-error[role="alert"]');
+      await expect(motivo).toContainText(
         'No se pudo enviar el contrato. Faltan datos en el paso General y Presupuestal: ordenador del gasto.',
         { timeout: 15_000 }
       );
+      await expect(motivo).toBeInViewport();
+      await expect(page.locator('.swal2-popup')).toHaveCount(0);
       expect(escrituras).toEqual(['generar']);
       expect(simulacion.estadoInterno).toBe(BORRADOR);
 
-      await page.locator('.swal2-confirm').dispatchEvent('click');
       await expect(modalEnvio(page)).toBeVisible();
       await expect(botonConfirmarEnvio(page)).toBeEnabled();
       await expect(botonConfirmarEnvio(page)).toContainText('Confirmar y Enviar');
