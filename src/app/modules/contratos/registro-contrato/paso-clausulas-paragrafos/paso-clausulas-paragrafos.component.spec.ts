@@ -720,7 +720,7 @@ describe('PasoClausulasParagrafosComponent', () => {
       expect(dialog.open).toHaveBeenCalledTimes(1);
       expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
     });
-    describe('desde Aprobado por el jefe (18/11, con la corrección de En revisión del jefe)', () => {
+    describe('desde En revisión del jefe (18/11 y revisión del PR)', () => {
       const ESTADO_CARGADA = environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR;
       const EN_REVISION_JEFE = environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
       const textoBotones = () =>
@@ -737,17 +737,17 @@ describe('PasoClausulasParagrafosComponent', () => {
         }
       });
 
-      it('en En revisión del jefe el botón sigue siendo "Vista Previa de Minuta" y genera', async () => {
+      it('en En revisión del jefe el botón dice "Ver Minuta" y muestra la cargada, sin generar', async () => {
         fixture.detectChanges(); // sincroniza el contrato (consulta el estado simulado) antes de fijarlo
         component.estadoInternoActual = EN_REVISION_JEFE;
         fixture.detectChanges();
-        expect(textoBotones()).toEqual(['Vista Previa de Minuta', 'Vista Previa Minuta']);
+        expect(textoBotones()).toEqual(['Ver Minuta', 'Ver Minuta']);
 
         await component.openPdfViewer();
 
-        expect(mockGestionCrud.getDocumentos).not.toHaveBeenCalled();
-        expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
-        expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta preliminar');
+        expect(mockGestor.getDocumento).toHaveBeenCalledWith('uid-9');
+        expect(mockMinutasMidService.getMinutaPdf).not.toHaveBeenCalled();
+        expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta');
       });
 
       it('en En firma del ordenador los dos botones dicen "Ver Minuta"', () => {

@@ -12,8 +12,9 @@ import {
 } from '../support/servicios-simulados';
 
 /**
- * E2E de #405: minuta en la vista previa del paso de cláusulas y en la pestaña
- * "Minuta" de la revisión, con backend SIMULADO. Ninguna petición sale a los
+ * E2E de #405: minuta en la vista previa del paso de cláusulas, en la pestaña
+ * "Minuta" de la revisión y al enviar el contrato al jefe desde la consulta,
+ * con backend SIMULADO. Ninguna petición sale a los
  * servicios. La minuta (minuta_contractual_mid) se responde con el sobre
  * {Success, Status, Message, Data} de udistrital/minuta_contractual_mid#14, con
  * HTTP 200 (el resultado va en Status) y con el código HTTP real; el PDF es un
@@ -34,6 +35,7 @@ const PDF = readFileSync(join(__dirname, '..', 'support', 'minuta-minima.pdf')).
 
 const menuPermitido = Buffer.from(
   JSON.stringify([
+    { Url: '/gestion-contractual/contratos/gestionar' },
     { Url: `/gestion-contractual/contratos/detalle/${CONTRATO_ID}` },
     { Url: `/gestion-contractual/contratos/editar/${CONTRATO_ID}` },
     { Url: `/gestion-contractual/contratos/documentos/${CONTRATO_ID}` },
@@ -124,6 +126,19 @@ const RECURSOS_DEL_CONTRATO: Record<string, unknown[]> = {
   ],
 };
 
+/** Fila del contrato en la consulta (gestion_contractual_mid/contratos-generales). */
+function filaConsulta() {
+  return {
+    ...contrato,
+    estados: {
+      estado_parametro_id: 6773,
+      estado_interno_parametro_id: simulacion.estadoInterno,
+      nombre_estado: simulacion.estadoInterno === RECHAZADO ? 'Rechazado' : 'Borrador',
+    },
+    contratista: { nombre_completo: 'Contratista de Prueba' },
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Respuestas de la minuta
 // ---------------------------------------------------------------------------
@@ -157,6 +172,25 @@ const simulacion = {
 };
 const llamadasMinuta: string[] = [];
 
+/** Registros de documentos-contratos del contrato (borrado lógico: activo = false). */
+interface DocumentoSimulado {
+  id: number;
+  documento_id: number;
+  documento_enlace: string;
+  fecha_creacion: string;
+  activo: boolean;
+}
+const MINUTA_VIEJA: DocumentoSimulado = {
+  id: 9,
+  documento_id: 4009,
+  documento_enlace: 'uid-minuta-guardada',
+  fecha_creacion: '2026-11-10T22:15:00Z',
+  activo: true,
+};
+let documentos: DocumentoSimulado[] = [];
+/** Orden de las escrituras al enviar: subir, registrar, desactivar y estado. */
+const escrituras: string[] = [];
+
 function reiniciarSimulacion() {
   Object.assign(simulacion, {
     minuta: MINUTA.ok,
@@ -168,6 +202,16 @@ function reiniciarSimulacion() {
     estadoAnterior: 0,
   });
   llamadasMinuta.length = 0;
+  documentos = [];
+  escrituras.length = 0;
+}
+
+/** Con `minutaGuardada`, el contrato ya tiene una minuta cargada (la vieja). */
+function documentosActuales(): DocumentoSimulado[] {
+  if (simulacion.minutaGuardada && !documentos.some((d) => d.id === MINUTA_VIEJA.id)) {
+    documentos.push({ ...MINUTA_VIEJA });
+  }
+  return documentos;
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +220,7 @@ function reiniciarSimulacion() {
 
 async function responderMinuta(route: Route, ruta: string): Promise<void> {
   llamadasMinuta.push(ruta);
+  escrituras.push('generar');
   if (simulacion.retrasoMinutaMs) await new Promise((r) => setTimeout(r, simulacion.retrasoMinutaMs));
   const status = simulacion.modo === 'HTTP real' ? Number(simulacion.minuta['Status']) : 200;
   return route.fulfill({ status, json: simulacion.minuta });
@@ -185,6 +230,35 @@ async function responderMinuta(route: Route, ruta: string): Promise<void> {
 function responderCrud(route: Route, ruta: string, query: URLSearchParams): Promise<void> | null {
   const json = (data: unknown, status = 200) => route.fulfill({ status, json: data });
   if (ruta === `gestion_contractual_crud/v1/contratos-generales/${CONTRATO_ID}`) return json(ok(contrato));
+  const metodo = route.request().method();
+  if (ruta === 'gestion_contractual_crud/v1/estados-contrato/' && metodo === 'POST') {
+    const cuerpo = route.request().postDataJSON();
+    escrituras.push(`estado ${cuerpo.estado_interno_parametro_id}`);
+    simulacion.estadoAnterior = simulacion.estadoInterno;
+    simulacion.estadoInterno = cuerpo.estado_interno_parametro_id;
+    return json(ok({ id: 40, ...cuerpo }), 201);
+  }
+  if (ruta === 'gestion_contractual_crud/v1/documentos-contratos/' && metodo === 'POST') {
+    const cuerpo = route.request().postDataJSON();
+    escrituras.push(`registrar ${cuerpo.documento_enlace}`);
+    const nuevo: DocumentoSimulado = {
+      id: 30,
+      documento_id: cuerpo.documento_id,
+      documento_enlace: cuerpo.documento_enlace,
+      fecha_creacion: '2026-11-19T09:00:00Z',
+      activo: true,
+    };
+    documentosActuales().push(nuevo);
+    return json(ok({ ...cuerpo, ...nuevo }), 201);
+  }
+  const borrado = ruta.match(/^gestion_contractual_crud\/v1\/documentos-contratos\/(\d+)$/);
+  if (borrado && metodo === 'DELETE') {
+    const doc = documentosActuales().find((d) => d.id === Number(borrado[1]));
+    if (!doc) return json({ Success: false, Status: 404, Message: 'no existe', Data: null }, 404);
+    escrituras.push(`desactivar ${doc.id}`);
+    doc.activo = false;
+    return json(ok({ Id: doc.id }));
+  }
   const lista = ruta.match(/^gestion_contractual_crud\/v1\/([\w-]+)\/$/);
   if (lista?.[1] === 'estados-contrato') {
     const estado = { id: 3, contrato_general_id: DEL_CONTRATO, estado_parametro_id: 6773, actual: true, activo: true };
@@ -195,8 +269,12 @@ function responderCrud(route: Route, ruta: string, query: URLSearchParams): Prom
     return json(ok([{ ...estado, estado_interno_parametro_id: simulacion.estadoInterno }, ...anterior]));
   }
   if (lista?.[1] === 'documentos-contratos') {
-    const guardada = { id: 9, documento_enlace: 'uid-minuta-guardada', fecha_creacion: '2026-11-10T22:15:00Z' };
-    return json(ok(simulacion.minutaGuardada ? [guardada] : []));
+    // Activas, de la más reciente a la más antigua (sortby fecha_creacion,id desc).
+    const activas = documentosActuales()
+      .filter((d) => d.activo)
+      .sort((a, b) => b.fecha_creacion.localeCompare(a.fecha_creacion) || b.id - a.id);
+    const limite = Number(query.get('limit') ?? 10);
+    return json(ok(limite > 0 ? activas.slice(0, limite) : activas));
   }
   if (lista && (query.get('query') ?? '').includes(`contrato_general_id.id:${CONTRATO_ID}`)) {
     return json(ok(RECURSOS_DEL_CONTRATO[lista[1]] ?? []));
@@ -210,7 +288,19 @@ function responder(route: Route): Promise<void> {
   const ruta = url.pathname.replace('/apioas/', '');
   const metodo = route.request().method();
   if (ruta.startsWith('minuta_contractual_mid/minutas/')) return responderMinuta(route, ruta);
-  if (ruta === 'gestor_documental_mid/v1/document/uid-minuta-guardada') return route.fulfill({ json: { file: PDF } });
+  if (ruta === 'gestor_documental_mid/v1/document/upload' && metodo === 'POST') {
+    const [archivo] = route.request().postDataJSON();
+    escrituras.push(`subir ${archivo.nombre}`);
+    return route.fulfill({ json: { Status: '200', res: { Id: 4100, Enlace: 'uid-minuta-nueva' } } });
+  }
+  if (/^gestor_documental_mid\/v1\/document\/uid-minuta-(guardada|nueva)$/.test(ruta)) {
+    return route.fulfill({ json: { file: PDF } });
+  }
+  if (ruta === 'gestion_contractual_mid/contratos-generales' && metodo === 'GET') {
+    return route.fulfill({
+      json: { ...ok([filaConsulta()]), Status: 200, Metadata: { total: 1 } },
+    });
+  }
   if (/^clausulas_paragrafos_crud\/contratos\/\d+$/.test(ruta) && ['PUT', 'POST'].includes(metodo)) {
     return simulacion.guardadoClausulasOk
       ? route.fulfill({ json: { Success: true, Status: 200, Message: 'ok', Data: {} } })
@@ -377,18 +467,19 @@ test('detalle En firma del ordenador: el botón "Ver Minuta" muestra la minuta c
   }
 });
 
-test('detalle En revisión del jefe: el botón sigue siendo "Vista Previa de Minuta" y genera', async ({ browser }) => {
+test('detalle En revisión del jefe: el botón "Ver Minuta" muestra la minuta cargada, sin generar', async ({ browser }) => {
   reiniciarSimulacion();
   simulacion.estadoInterno = EN_REVISION_JEFE;
   simulacion.minutaGuardada = true;
   const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/detalle/${CONTRATO_ID}`);
   try {
     await irAClausulas(page);
-    await expect(botonVistaPrevia(page)).toHaveAccessibleName('Vista Previa de Minuta');
+    await expect(botonVistaPrevia(page)).toHaveAccessibleName('Ver Minuta');
+    await expect(botonVistaPreviaDock(page)).toHaveAccessibleName('Ver Minuta');
     await botonVistaPrevia(page).click();
-    await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta preliminar');
-    await expect(modalMinuta(page)).toContainText('Minuta generada con los datos actuales, sin firmar');
-    expect(llamadasMinuta).toHaveLength(1);
+    await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta');
+    await expect(modalMinuta(page)).toContainText('Minuta cargada el 10/11/2026');
+    expect(llamadasMinuta).toEqual([]);
   } finally {
     await ctx.close();
   }
@@ -456,7 +547,6 @@ test.describe('Revisión: pestaña Minuta', () => {
   for (const [nombre, estado] of [
     ['Borrador', BORRADOR],
     ['Rechazado', RECHAZADO],
-    ['En revisión del jefe', EN_REVISION_JEFE],
   ] as const) {
     test(`${nombre} con minuta cargada: genera con los datos actuales e ignora la cargada`, async ({ browser }) => {
       simulacion.estadoInterno = estado;
@@ -474,18 +564,15 @@ test.describe('Revisión: pestaña Minuta', () => {
     });
   }
 
-  test('reenviado después de un rechazo, con una minuta vieja cargada: no la muestra', async ({ browser }) => {
+  test('En revisión del jefe con minuta cargada: la muestra y no genera', async ({ browser }) => {
     simulacion.estadoInterno = EN_REVISION_JEFE;
-    simulacion.estadoAnterior = RECHAZADO;
     simulacion.minutaGuardada = true;
     const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
     try {
-      await expect(page.locator('app-revision-contrato .origen-minuta p')).toHaveText(
-        'Minuta generada con los datos actuales, sin firmar',
-        { timeout: 60_000 }
-      );
-      await expect(page.locator('app-revision-contrato')).not.toContainText('Minuta cargada');
-      expect(llamadasMinuta).toHaveLength(1);
+      await expect(page.locator('app-revision-contrato .origen-minuta p')).toHaveText('Minuta cargada el 10/11/2026', {
+        timeout: 60_000,
+      });
+      expect(llamadasMinuta).toEqual([]);
     } finally {
       await ctx.close();
     }
@@ -543,4 +630,103 @@ test.describe('Revisión: pestaña Minuta', () => {
       }
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Envío al jefe desde la consulta: minuta vigente antes del estado
+// ---------------------------------------------------------------------------
+
+test.describe('Envío al jefe con minuta vigente', () => {
+  const RUTA_CONSULTA = '/gestion-contractual/contratos/gestionar';
+  const modalEnvio = (page: Page) => page.locator('app-modal-enviar-aprobacion');
+  const botonConfirmarEnvio = (page: Page) => modalEnvio(page).locator('.btn-confirmar');
+
+  test.beforeEach(() => reiniciarSimulacion());
+
+  async function abrirModalEnvio(page: Page) {
+    const menu = page.getByRole('button', { name: 'Menú de acciones del contrato' }).first();
+    await expect(menu).toBeVisible({ timeout: 60_000 });
+    await menu.click();
+    await page.getByRole('menuitem', { name: /Enviar Aprobación Jefe OC/ }).click();
+    await expect(modalEnvio(page)).toBeVisible();
+  }
+
+  test('desde Borrador: genera, sube y registra la minuta antes de registrar el estado', async ({ browser }) => {
+    simulacion.retrasoMinutaMs = 1500;
+    const { ctx, page } = await abrir(browser, RUTA_CONSULTA);
+    try {
+      await abrirModalEnvio(page);
+      await botonConfirmarEnvio(page).click();
+      await expect(botonConfirmarEnvio(page)).toBeDisabled();
+      await expect(botonConfirmarEnvio(page)).toContainText('Generando minuta y enviando…');
+
+      await expect(page.locator('.swal2-popup')).toContainText('enviado para aprobación', { timeout: 15_000 });
+      await expect(modalEnvio(page)).toHaveCount(0);
+      expect(escrituras).toEqual([
+        'generar',
+        `subir MINUTA ${CONTRATO_ID}`,
+        'registrar uid-minuta-nueva',
+        `estado ${EN_REVISION_JEFE}`,
+      ]);
+      expect(documentos.filter((d) => d.activo).map((d) => d.id)).toEqual([30]);
+    } finally {
+      await ctx.close();
+    }
+  });
+
+  test('bloqueado por un 422: muestra el paso que falta, no cambia el estado y libera el botón', async ({ browser }) => {
+    simulacion.minuta = MINUTA.faltanDatos;
+    simulacion.modo = 'HTTP real';
+    const { ctx, page } = await abrir(browser, RUTA_CONSULTA);
+    try {
+      await abrirModalEnvio(page);
+      await botonConfirmarEnvio(page).click();
+
+      await expect(page.locator('.swal2-popup')).toContainText(
+        'No se pudo enviar el contrato. Faltan datos en el paso General y Presupuestal: ordenador del gasto.',
+        { timeout: 15_000 }
+      );
+      expect(escrituras).toEqual(['generar']);
+      expect(simulacion.estadoInterno).toBe(BORRADOR);
+
+      await page.locator('.swal2-confirm').dispatchEvent('click');
+      await expect(modalEnvio(page)).toBeVisible();
+      await expect(botonConfirmarEnvio(page)).toBeEnabled();
+      await expect(botonConfirmarEnvio(page)).toContainText('Confirmar y Enviar');
+    } finally {
+      await ctx.close();
+    }
+  });
+
+  test('rechazado y reenviado: registra la nueva, desactiva la vieja y la revisión del jefe muestra la nueva', async ({ browser }) => {
+    simulacion.estadoInterno = RECHAZADO;
+    simulacion.minutaGuardada = true;
+    const { ctx, page } = await abrir(browser, RUTA_CONSULTA);
+    try {
+      await abrirModalEnvio(page);
+      await botonConfirmarEnvio(page).click();
+      await expect(page.locator('.swal2-popup')).toContainText('enviado para aprobación', { timeout: 15_000 });
+
+      expect(escrituras).toEqual([
+        'generar',
+        `subir MINUTA ${CONTRATO_ID}`,
+        'registrar uid-minuta-nueva',
+        `desactivar ${MINUTA_VIEJA.id}`,
+        `estado ${EN_REVISION_JEFE}`,
+      ]);
+      expect(documentos.map((d) => [d.id, d.activo])).toEqual([
+        [MINUTA_VIEJA.id, false],
+        [30, true],
+      ]);
+
+      llamadasMinuta.length = 0;
+      await page.goto(`/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
+      await expect(page.locator('app-revision-contrato .origen-minuta p')).toHaveText('Minuta cargada el 19/11/2026', {
+        timeout: 60_000,
+      });
+      expect(llamadasMinuta).toEqual([]);
+    } finally {
+      await ctx.close();
+    }
+  });
 });

@@ -433,7 +433,6 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     it.each([
       ['Borrador', E.BORRADOR],
       ['Rechazado', E.RECHAZADO],
-      ['En revisión del jefe', E.EN_REVISION_JEFE],
     ])(
       '%s: genera con los datos actuales aunque haya una minuta cargada',
       (_caso, estado) => {
@@ -446,6 +445,7 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     );
 
     it.each([
+      ['En revisión del jefe', E.EN_REVISION_JEFE],
       ['Aprobado por el jefe', E.APROBADO_JEFE],
       ['En firma del ordenador', E.EN_FIRMA_ORDENADOR],
       ['Firmas completas', E.FIRMAS_COMPLETAS],
@@ -457,6 +457,7 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     });
 
     it.each([
+      ['En revisión del jefe', E.EN_REVISION_JEFE],
       ['Aprobado por el jefe', E.APROBADO_JEFE],
       ['En firma del ordenador', E.EN_FIRMA_ORDENADOR],
       ['Firmas completas', E.FIRMAS_COMPLETAS],
@@ -484,8 +485,11 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
       expect(component.etiquetaOrigenMinuta).toBe('Minuta cargada el 10/11/2026');
     });
 
-    it('contrato reenviado después de un rechazo: no muestra la minuta vieja cargada', () => {
-      conCargada();
+    it('contrato reenviado después de un rechazo: muestra la minuta registrada al reenviar, no genera', () => {
+      // El envío desactivó la vieja; la consulta trae la activa más reciente (la del reenvío).
+      documentos.mockReturnValue(
+        of({ Data: [{ id: 30, documento_enlace: 'uid-30', fecha_creacion: '2026-11-19T09:00:00Z' }] })
+      );
       // Estados del más reciente al más antiguo: reenviado a revisión del jefe tras el rechazo del ordenador.
       const historial = of({
         Data: [
@@ -498,11 +502,17 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
       montar(42, E.EN_REVISION_JEFE, historial);
 
       expect(component.estadoInternoActual).toBe(E.EN_REVISION_JEFE);
-      expect(documentos).not.toHaveBeenCalled();
-      expect(gestor).not.toHaveBeenCalled();
-      expect(minutaPdf).toHaveBeenCalledTimes(1);
-      expect(component.etiquetaOrigenMinuta).toBe('Minuta generada con los datos actuales, sin firmar');
-      expect(texto()).not.toContain('Minuta cargada');
+      expect(documentos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: expect.stringContaining('activo:true'),
+          sortby: 'fecha_creacion,id',
+          order: 'desc',
+          limit: 1,
+        })
+      );
+      expect(gestor).toHaveBeenCalledWith('uid-30');
+      expect(minutaPdf).not.toHaveBeenCalled();
+      expect(component.etiquetaOrigenMinuta).toBe('Minuta cargada el 19/11/2026');
     });
 
     it('si no se puede consultar el estado, genera (lo más conservador)', () => {

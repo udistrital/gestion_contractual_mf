@@ -3,11 +3,10 @@ import { etiquetaOrigenMinuta, fechaDdMmAaaa, minutaEditable } from './minuta-es
 
 const E = environment.ESTADOS_INTERNOS;
 
-describe('minutaEditable (regla del 18/11)', () => {
+describe('minutaEditable (regla del 18/11 y revisión del PR)', () => {
   it.each<[string, number | null | undefined]>([
     ['Borrador', E.BORRADOR],
     ['Rechazado', E.RECHAZADO],
-    ['En revisión del jefe (corrección: el rechazo no desactiva las minutas cargadas)', E.EN_REVISION_JEFE],
     ['sin estado (0)', 0],
     ['sin estado (null)', null],
     ['sin estado (undefined)', undefined],
@@ -18,6 +17,7 @@ describe('minutaEditable (regla del 18/11)', () => {
   });
 
   it.each<[string, number]>([
+    ['En revisión del jefe (la minuta vigente del envío)', E.EN_REVISION_JEFE],
     ['Aprobado por el jefe', E.APROBADO_JEFE],
     ['En revisión del ordenador (IDEXUD)', E.EN_REVISION_ORDENADOR],
     ['Revisado por el ordenador (IDEXUD)', E.REVISADO_ORDENADOR],
