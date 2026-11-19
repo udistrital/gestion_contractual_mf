@@ -101,7 +101,8 @@ test('aprobación del jefe: el MID asigna el número al pasar a SUSCRITO', async
       localStorage.setItem('user', user);
     },
     [
-      b64([{ Url: `/gestion-contractual/contratos/documentos/${id}` }]),
+      // Solo la vista principal: documentos/:id se autoriza por la consulta.
+      b64([{ Url: '/gestion-contractual/contratos/consultar' }]),
       b64({ user: { role: ['JEFE_CONTRATACION_RECTOR'] }, userService: { role: [] } }),
     ] as const
   );

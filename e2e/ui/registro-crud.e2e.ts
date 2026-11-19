@@ -140,7 +140,8 @@ async function capturar(page: Page, archivo: string) {
 async function abrirEdicion(page: Page, id: number) {
   await page.evaluate(
     (menuEdicion) => localStorage.setItem('menu', menuEdicion),
-    menu(['/gestion-contractual/contratos/registrar', `/gestion-contractual/contratos/detalle/${id}`, `/gestion-contractual/contratos/editar/${id}`])
+    // Solo vistas principales: editar y detalle se autorizan por la consulta.
+    menu(['/gestion-contractual/contratos/registrar', '/gestion-contractual/contratos/consultar'])
   );
   await page.goto(`/gestion-contractual/contratos/editar/${id}`);
 }
@@ -173,7 +174,7 @@ test.beforeAll(async ({ browser }) => {
   await context.route(/autenticacion\.portaloas\.udistrital\.edu\.co\/apioas\//, responder);
   await context.addInitScript(
     ([menuInicial, user, proveedor]) => {
-      // Se conserva el menú si la prueba lo amplió (el guard compara la URL exacta).
+      // Se conserva el menú si la prueba lo amplió con otra vista principal.
       if (!localStorage.getItem('menu')) localStorage.setItem('menu', menuInicial);
       localStorage.setItem('user', user);
       // Entrada real al registro: desde la consulta, con el contratista ya validado
@@ -313,7 +314,7 @@ test('registro y edición contra el CRUD real y detalle del contrato', async () 
   await test.step('detalle del contrato con los datos guardados en el CRUD', async () => {
     await page.evaluate(
       (menuDetalle) => localStorage.setItem('menu', menuDetalle),
-      menu(['/gestion-contractual/contratos/registrar', `/gestion-contractual/contratos/detalle/${contratoId}`])
+      menu(['/gestion-contractual/contratos/registrar', '/gestion-contractual/contratos/consultar'])
     );
     await page.goto(`/gestion-contractual/contratos/detalle/${contratoId}`);
     await expect(page.getByText('Detalle del Contrato').first()).toBeVisible();

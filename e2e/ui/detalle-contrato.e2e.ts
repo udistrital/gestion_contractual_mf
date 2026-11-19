@@ -26,8 +26,9 @@ import {
 const CONTRATO_ID = 9001;
 const EVIDENCIAS = process.env.EVIDENCIAS_390 ?? join(homedir(), 'argo_repos', 'evidencias-390');
 
+// Solo vistas principales (como en Configuración): el detalle se autoriza por la consulta.
 const menuPermitido = Buffer.from(
-  JSON.stringify([{ Url: `/gestion-contractual/contratos/detalle/${CONTRATO_ID}` }, { Url: '/gestion-contractual/contratos/gestionar' }])
+  JSON.stringify([{ Url: '/gestion-contractual/contratos/consultar' }, { Url: '/gestion-contractual/contratos/gestionar' }])
 ).toString('base64');
 const usuario = Buffer.from(
   JSON.stringify({ user: { role: ['ABOGADO_CONTRATACION_RECTOR'] }, userService: { role: [] } })
