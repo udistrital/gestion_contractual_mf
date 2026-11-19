@@ -61,6 +61,12 @@
         </span>
       </div>
     </div>
+    @if (mensajeError) {
+      <div class="fondo-acento-50 mensaje-error" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ mensajeError }}</span>
+      </div>
+    }
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="modal-actions">

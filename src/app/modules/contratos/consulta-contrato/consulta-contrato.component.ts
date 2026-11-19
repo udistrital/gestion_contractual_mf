@@ -774,8 +774,8 @@ export class ConsultaContratoComponent implements OnInit {
    * Envía el contrato al jefe: primero la minuta vigente (se genera, se sube,
    * se registra y se desactivan las anteriores; decisión del líder técnico,
    * #405) y solo entonces el cambio de estado. Si la minuta falla, el contrato
-   * no se envía y se muestra su mensaje. Los errores ya mostrados se propagan
-   * para que el modal libere el botón.
+   * no se envía. Los errores llegan al modal con el `mensaje` para el usuario;
+   * aquí no se lanzan alertas porque quedarían detrás del diálogo.
    */
   enviarAprobacionJefe(contrato: ContratoGeneral, observacion: string): Observable<void> {
     const contratoId = contrato.id as number;
@@ -800,20 +800,18 @@ export class ConsultaContratoComponent implements OnInit {
     return this.minutaDocumentoService
       .registrarMinutaVigente(contratoId, usuarioId, rolUsuario)
       .pipe(
-        catchError((error: unknown) => {
-          this.alertService.showErrorAlert(
-            `${MENSAJES_MINUTA.envioBloqueado} ${mensajeDeErrorMinuta(error)}`
-          );
-          return throwError(() => error);
-        }),
+        catchError((error: unknown) =>
+          throwError(() => ({
+            mensaje: `${MENSAJES_MINUTA.envioBloqueado} ${mensajeDeErrorMinuta(error)}`,
+          }))
+        ),
         switchMap(() =>
-          this.contratoGeneralCrudService.postEstadoContrato(nuevoEstado).pipe(
+          this.contratoGeneralCrudService.postEstadoContrato(nuevoEstado, 'todos').pipe(
             catchError((err: unknown) => {
               console.error('Error al persistir estado en backend:', err);
-              this.alertService.showErrorAlert(
-                'No fue posible enviar el contrato para aprobación.'
-              );
-              return throwError(() => err);
+              return throwError(() => ({
+                mensaje: 'No fue posible enviar el contrato para aprobación.',
+              }));
             })
           )
         ),
