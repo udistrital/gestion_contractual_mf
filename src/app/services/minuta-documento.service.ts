@@ -17,12 +17,12 @@ export interface MinutaDocumento {
 }
 
 /**
- * Regla única de qué minuta se muestra (decisión del 18/11, #405, con la
- * corrección de "En revisión del jefe"): en Borrador, Rechazado, En revisión
- * del jefe o sin estado se genera con los datos actuales; desde "Aprobado por
- * el jefe" se muestra la última minuta cargada en el flujo (tipo MINUTA) y, si
- * no hay o falla su descarga, se genera. Los errores al generar llegan como
- * ErrorMinuta (getMinutaPdf).
+ * Regla única de qué minuta se muestra (decisión del 18/11 y del líder técnico
+ * en la revisión del PR, #405): en Borrador, Rechazado o sin estado se genera
+ * con los datos actuales; desde "En revisión del jefe" se muestra la última
+ * minuta cargada en el flujo (tipo MINUTA), que en esa revisión es la generada
+ * al enviar (registrarMinutaVigente); si no hay o falla su descarga, se genera.
+ * Los errores al generar llegan como ErrorMinuta (getMinutaPdf).
  */
 @Injectable({
   providedIn: 'root',

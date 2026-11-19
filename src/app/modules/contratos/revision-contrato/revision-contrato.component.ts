@@ -212,9 +212,10 @@ export class RevisionContratoComponent {
   }
 
   /**
-   * Minuta según el estado interno (MinutaDocumentoService): en Borrador,
-   * Rechazado o En revisión del jefe se genera; desde Aprobado por el jefe, la
-   * última cargada o, si no hay, la generada. Se llama cuando el estado ya se conoce.
+   * Minuta según el estado interno (MinutaDocumentoService): en Borrador o
+   * Rechazado se genera; desde En revisión del jefe, la última cargada (la del
+   * envío al jefe o la que cargó el flujo después) o, si no hay, la generada.
+   * Se llama cuando el estado ya se conoce.
    */
   getMinuta() {
     if (!this.contrato_general_id) {

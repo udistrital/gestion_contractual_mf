@@ -188,10 +188,10 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   /**
-   * true en Borrador, Rechazado, En revisión del jefe o sin estado (según
-   * minutaEditable): el botón es "Vista Previa de Minuta" y genera la minuta con
-   * los datos actuales. Desde Aprobado por el jefe el botón es "Ver Minuta" y muestra
-   * la última minuta cargada (decisión del 18/11, #405).
+   * true en Borrador, Rechazado o sin estado (según minutaEditable): el botón
+   * es "Vista Previa de Minuta" y genera la minuta con los datos actuales. Desde
+   * En revisión del jefe el botón es "Ver Minuta" y muestra la última minuta
+   * cargada, que en esa revisión es la generada al enviar (#405).
    */
   get esMinutaEditable(): boolean {
     return minutaEditable(this.estadoInternoActual);
