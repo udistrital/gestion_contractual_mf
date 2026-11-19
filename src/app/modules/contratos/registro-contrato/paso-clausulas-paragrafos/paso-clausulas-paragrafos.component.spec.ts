@@ -750,11 +750,11 @@ describe('PasoClausulasParagrafosComponent', () => {
         expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta preliminar');
       });
 
-      it('en En firma del ordenador los dos botones dicen "Minuta"', () => {
+      it('en En firma del ordenador los dos botones dicen "Ver Minuta"', () => {
         fixture.detectChanges(); // sincroniza el contrato (consulta el estado simulado) antes de fijarlo
         component.estadoInternoActual = ESTADO_CARGADA;
         fixture.detectChanges();
-        expect(textoBotones()).toEqual(['Minuta', 'Minuta']);
+        expect(textoBotones()).toEqual(['Ver Minuta', 'Ver Minuta']);
       });
 
       it('muestra la minuta cargada en el modal "Minuta", sin guardado previo ni "Guardar"', async () => {

@@ -190,7 +190,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   /**
    * true en Borrador, Rechazado, En revisión del jefe o sin estado (según
    * minutaEditable): el botón es "Vista Previa de Minuta" y genera la minuta con
-   * los datos actuales. Desde Aprobado por el jefe el botón es "Minuta" y muestra
+   * los datos actuales. Desde Aprobado por el jefe el botón es "Ver Minuta" y muestra
    * la última minuta cargada (decisión del 18/11, #405).
    */
   get esMinutaEditable(): boolean {
@@ -199,12 +199,12 @@ export class PasoClausulasParagrafosComponent implements OnInit {
 
   get textoBotonMinuta(): string {
     if (this.generandoMinuta) return this.esMinutaEditable ? 'Generando minuta…' : 'Cargando minuta…';
-    return this.esMinutaEditable ? 'Vista Previa de Minuta' : 'Minuta';
+    return this.esMinutaEditable ? 'Vista Previa de Minuta' : 'Ver Minuta';
   }
 
   get textoBotonMinutaDock(): string {
     if (this.generandoMinuta) return this.esMinutaEditable ? 'Generando minuta…' : 'Cargando minuta…';
-    return this.esMinutaEditable ? 'Vista Previa Minuta' : 'Minuta';
+    return this.esMinutaEditable ? 'Vista Previa Minuta' : 'Ver Minuta';
   }
 
   get clausulas(): FormArray {

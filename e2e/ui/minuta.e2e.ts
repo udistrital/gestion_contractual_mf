@@ -357,15 +357,15 @@ for (const modo of ['HTTP 200', 'HTTP real'] as Modo[]) {
   });
 }
 
-test('detalle En firma del ordenador: el botón "Minuta" muestra la minuta cargada', async ({ browser }) => {
+test('detalle En firma del ordenador: el botón "Ver Minuta" muestra la minuta cargada en el modal "Minuta"', async ({ browser }) => {
   reiniciarSimulacion();
   simulacion.estadoInterno = EN_FIRMA_ORDENADOR;
   simulacion.minutaGuardada = true;
   const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/detalle/${CONTRATO_ID}`);
   try {
     await irAClausulas(page);
-    await expect(botonVistaPrevia(page)).toHaveAccessibleName('Minuta');
-    await expect(botonVistaPreviaDock(page)).toHaveAccessibleName('Minuta');
+    await expect(botonVistaPrevia(page)).toHaveAccessibleName('Ver Minuta');
+    await expect(botonVistaPreviaDock(page)).toHaveAccessibleName('Ver Minuta');
     await botonVistaPrevia(page).click();
     await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta');
     await expect(modalMinuta(page)).toContainText('Minuta cargada el 10/11/2026');
