@@ -4,6 +4,7 @@ import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterOutlet, RouterStat
 import { RouterTestingHarness } from '@angular/router/testing';
 import { authGuard } from './auth.guard';
 import { AlertService } from 'src/app/services/alert.service';
+import { CONTRATOS_ROUTES } from 'src/app/modules/contratos/contratos-routing.module';
 
 @Component({
   selector: 'test-parent',
@@ -26,6 +27,22 @@ class DummyDetalleComponent {}
   template: '<div>Editar</div>',
 })
 class DummyEditarComponent {}
+
+@Component({
+  selector: 'test-vista',
+  standalone: true,
+  template: '<div>Vista</div>',
+})
+class DummyVistaComponent {}
+
+/** Rutas reales de contratos con componentes sustitutos, cargadas en diferido como en la app. */
+const contratosConDummy = (): Routes =>
+  CONTRATOS_ROUTES.map((ruta) => (ruta.component ? { ...ruta, component: DummyVistaComponent } : ruta));
+
+const rutasApp: Routes = [
+  { path: 'gestion-contractual/contratos', canActivate: [authGuard], loadChildren: () => Promise.resolve(contratosConDummy()) },
+  { path: 'contratos', canActivate: [authGuard], loadChildren: () => Promise.resolve(contratosConDummy()) },
+];
 
 const testRoutes: Routes = [
   {
@@ -247,6 +264,76 @@ describe('authGuard', () => {
         'No tiene permisos para realizar esta acción',
         'Acceso prohibido'
       );
+    });
+  });
+
+  describe('vistas internas autorizadas por su vista principal (rutas reales de contratos)', () => {
+    const CONSULTAR = '/gestion-contractual/contratos/consultar';
+    const GESTIONAR = '/gestion-contractual/contratos/gestionar';
+    const REGISTRAR = '/gestion-contractual/contratos/registrar';
+
+    let harness: RouterTestingHarness | undefined;
+
+    beforeEach(() => {
+      harness = undefined;
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [DummyVistaComponent],
+        providers: [provideRouter(rutasApp), { provide: AlertService, useValue: mockAlertService }],
+      });
+      localStorage.clear();
+    });
+
+    /**
+     * Navega con el menú dado y devuelve si el router quedó en la URL pedida. Un solo harness por
+     * prueba: cada llamada usa una URL distinta para que la navegación no se ignore por repetida.
+     */
+    async function navegar(menu: string[], url: string): Promise<boolean> {
+      localStorage.setItem('menu', btoa(JSON.stringify(menu.map((Url) => ({ Url })))));
+      harness ??= await RouterTestingHarness.create();
+      await harness.navigateByUrl(url);
+      return TestBed.inject(Router).url === url;
+    }
+
+    it('(a) con consultar en el menú, detalle/42 entra; también con gestionar', async () => {
+      expect(await navegar([CONSULTAR], '/gestion-contractual/contratos/detalle/42')).toBe(true);
+      expect(await navegar([GESTIONAR], '/gestion-contractual/contratos/detalle/43')).toBe(true);
+      expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+    });
+
+    it('(b) sin consultar ni gestionar (solo registrar), detalle/42 se rechaza', async () => {
+      expect(await navegar([REGISTRAR], '/gestion-contractual/contratos/detalle/42')).toBe(false);
+      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
+        'No tiene permisos para realizar esta acción',
+        'Acceso prohibido'
+      );
+    });
+
+    it('(c) editar/5 entra con la vista de la que depende y se rechaza sin ella', async () => {
+      expect(await navegar([CONSULTAR], '/gestion-contractual/contratos/editar/5')).toBe(true);
+      expect(await navegar([REGISTRAR], '/gestion-contractual/contratos/editar/6')).toBe(false);
+    });
+
+    it('documentos/7 entra con consultar y se rechaza solo con registrar', async () => {
+      expect(await navegar([CONSULTAR], '/gestion-contractual/contratos/documentos/7')).toBe(true);
+      expect(await navegar([REGISTRAR], '/gestion-contractual/contratos/documentos/8')).toBe(false);
+    });
+
+    it('(d) una vista principal que no está en el menú se rechaza; la que está entra', async () => {
+      expect(await navegar([CONSULTAR], REGISTRAR)).toBe(false);
+      expect(await navegar([CONSULTAR], GESTIONAR)).toBe(false);
+      expect(await navegar([CONSULTAR], CONSULTAR)).toBe(true);
+    });
+
+    it('la URL interna registrada en el menú no basta sin su vista principal', async () => {
+      expect(await navegar(['/gestion-contractual/contratos/detalle'], '/gestion-contractual/contratos/detalle/42')).toBe(false);
+    });
+
+    it('(e) con y sin el prefijo /gestion-contractual en el menú y en la URL', async () => {
+      expect(await navegar(['/contratos/consultar'], '/gestion-contractual/contratos/detalle/42')).toBe(true);
+      expect(await navegar([CONSULTAR], '/contratos/detalle/44')).toBe(true);
+      expect(await navegar(['/contratos/consultar'], '/contratos/editar/5')).toBe(true);
+      expect(await navegar(['/contratos/registrar'], '/contratos/detalle/45')).toBe(false);
     });
   });
 });
