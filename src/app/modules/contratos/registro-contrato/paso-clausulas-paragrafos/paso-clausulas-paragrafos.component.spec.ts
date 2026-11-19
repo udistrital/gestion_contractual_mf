@@ -720,7 +720,8 @@ describe('PasoClausulasParagrafosComponent', () => {
       expect(dialog.open).toHaveBeenCalledTimes(1);
       expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
     });
-    describe('fuera de Borrador y Rechazado (18/11)', () => {
+    describe('desde Aprobado por el jefe (18/11, con la corrección de En revisión del jefe)', () => {
+      const ESTADO_CARGADA = environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR;
       const EN_REVISION_JEFE = environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
       const textoBotones = () =>
         Array.from(fixture.nativeElement.querySelectorAll('button.preview-btn, button.dock-btn-preview')).map(
@@ -736,15 +737,28 @@ describe('PasoClausulasParagrafosComponent', () => {
         }
       });
 
-      it('en En revisión del jefe los dos botones dicen "Minuta"', () => {
+      it('en En revisión del jefe el botón sigue siendo "Vista Previa de Minuta" y genera', async () => {
         fixture.detectChanges(); // sincroniza el contrato (consulta el estado simulado) antes de fijarlo
         component.estadoInternoActual = EN_REVISION_JEFE;
+        fixture.detectChanges();
+        expect(textoBotones()).toEqual(['Vista Previa de Minuta', 'Vista Previa Minuta']);
+
+        await component.openPdfViewer();
+
+        expect(mockGestionCrud.getDocumentos).not.toHaveBeenCalled();
+        expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
+        expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta preliminar');
+      });
+
+      it('en En firma del ordenador los dos botones dicen "Minuta"', () => {
+        fixture.detectChanges(); // sincroniza el contrato (consulta el estado simulado) antes de fijarlo
+        component.estadoInternoActual = ESTADO_CARGADA;
         fixture.detectChanges();
         expect(textoBotones()).toEqual(['Minuta', 'Minuta']);
       });
 
       it('muestra la minuta cargada en el modal "Minuta", sin guardado previo ni "Guardar"', async () => {
-        component.estadoInternoActual = EN_REVISION_JEFE;
+        component.estadoInternoActual = ESTADO_CARGADA;
 
         await component.openPdfViewer();
 
@@ -759,7 +773,7 @@ describe('PasoClausulasParagrafosComponent', () => {
       });
 
       it('sin minuta cargada la genera y la muestra en el modal "Minuta"', async () => {
-        component.estadoInternoActual = EN_REVISION_JEFE;
+        component.estadoInternoActual = ESTADO_CARGADA;
         mockGestionCrud.getDocumentos.mockReturnValue(of({ Data: [] }));
 
         await component.openPdfViewer();
@@ -783,7 +797,7 @@ describe('PasoClausulasParagrafosComponent', () => {
         expect(mockGestionCrud.getDocumentos).not.toHaveBeenCalled();
         expect(mockMinutasMidService.getMinutaPdf).not.toHaveBeenCalled();
 
-        estados.next({ Data: [{ id: 5, estado_interno_parametro_id: EN_REVISION_JEFE }] });
+        estados.next({ Data: [{ id: 5, estado_interno_parametro_id: ESTADO_CARGADA }] });
         estados.complete();
         await pendiente;
 

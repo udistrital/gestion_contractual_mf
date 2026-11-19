@@ -28,6 +28,7 @@ const CONTRATO_ID = 9001;
 const BORRADOR = 6799;
 const RECHAZADO = 6803;
 const EN_REVISION_JEFE = 6800;
+const EN_FIRMA_ORDENADOR = 6801;
 const FALLA_SERVICIO = 'No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.';
 const PDF = readFileSync(join(__dirname, '..', 'support', 'minuta-minima.pdf')).toString('base64');
 
@@ -151,6 +152,8 @@ const simulacion = {
   guardadoClausulasOk: true,
   /** Estado interno actual del contrato (Parámetros); por defecto Borrador. */
   estadoInterno: BORRADOR,
+  /** Estado interno anterior (por ejemplo Rechazado en un contrato reenviado). */
+  estadoAnterior: 0,
 };
 const llamadasMinuta: string[] = [];
 
@@ -162,6 +165,7 @@ function reiniciarSimulacion() {
     minutaGuardada: false,
     guardadoClausulasOk: true,
     estadoInterno: BORRADOR,
+    estadoAnterior: 0,
   });
   llamadasMinuta.length = 0;
 }
@@ -184,7 +188,11 @@ function responderCrud(route: Route, ruta: string, query: URLSearchParams): Prom
   const lista = ruta.match(/^gestion_contractual_crud\/v1\/([\w-]+)\/$/);
   if (lista?.[1] === 'estados-contrato') {
     const estado = { id: 3, contrato_general_id: DEL_CONTRATO, estado_parametro_id: 6773, actual: true, activo: true };
-    return json(ok([{ ...estado, estado_interno_parametro_id: simulacion.estadoInterno }]));
+    // Del más reciente al más antiguo, como los pide la revisión.
+    const anterior = simulacion.estadoAnterior
+      ? [{ ...estado, id: 2, actual: false, estado_interno_parametro_id: simulacion.estadoAnterior }]
+      : [];
+    return json(ok([{ ...estado, estado_interno_parametro_id: simulacion.estadoInterno }, ...anterior]));
   }
   if (lista?.[1] === 'documentos-contratos') {
     const guardada = { id: 9, documento_enlace: 'uid-minuta-guardada', fecha_creacion: '2026-11-10T22:15:00Z' };
@@ -349,9 +357,9 @@ for (const modo of ['HTTP 200', 'HTTP real'] as Modo[]) {
   });
 }
 
-test('detalle fuera de Borrador: el botón "Minuta" muestra la minuta cargada', async ({ browser }) => {
+test('detalle En firma del ordenador: el botón "Minuta" muestra la minuta cargada', async ({ browser }) => {
   reiniciarSimulacion();
-  simulacion.estadoInterno = EN_REVISION_JEFE;
+  simulacion.estadoInterno = EN_FIRMA_ORDENADOR;
   simulacion.minutaGuardada = true;
   const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/detalle/${CONTRATO_ID}`);
   try {
@@ -364,6 +372,23 @@ test('detalle fuera de Borrador: el botón "Minuta" muestra la minuta cargada', 
     await expect(modalMinuta(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
     await expect(modalMinuta(page).getByRole('button', { name: /Guardar/ })).toHaveCount(0);
     expect(llamadasMinuta).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
+test('detalle En revisión del jefe: el botón sigue siendo "Vista Previa de Minuta" y genera', async ({ browser }) => {
+  reiniciarSimulacion();
+  simulacion.estadoInterno = EN_REVISION_JEFE;
+  simulacion.minutaGuardada = true;
+  const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/detalle/${CONTRATO_ID}`);
+  try {
+    await irAClausulas(page);
+    await expect(botonVistaPrevia(page)).toHaveAccessibleName('Vista Previa de Minuta');
+    await botonVistaPrevia(page).click();
+    await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta preliminar');
+    await expect(modalMinuta(page)).toContainText('Minuta generada con los datos actuales, sin firmar');
+    expect(llamadasMinuta).toHaveLength(1);
   } finally {
     await ctx.close();
   }
@@ -415,8 +440,8 @@ test.describe('Revisión: pestaña Minuta', () => {
 
   test.beforeEach(() => reiniciarSimulacion());
 
-  test('En revisión del jefe con minuta cargada: la muestra con "Minuta cargada el dd/mm/aaaa" y no la genera', async ({ browser }) => {
-    simulacion.estadoInterno = EN_REVISION_JEFE;
+  test('En firma del ordenador con minuta cargada: la muestra con "Minuta cargada el dd/mm/aaaa" y no la genera', async ({ browser }) => {
+    simulacion.estadoInterno = EN_FIRMA_ORDENADOR;
     simulacion.minutaGuardada = true;
     const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
     try {
@@ -428,7 +453,11 @@ test.describe('Revisión: pestaña Minuta', () => {
     }
   });
 
-  for (const [nombre, estado] of [['Borrador', BORRADOR], ['Rechazado', RECHAZADO]] as const) {
+  for (const [nombre, estado] of [
+    ['Borrador', BORRADOR],
+    ['Rechazado', RECHAZADO],
+    ['En revisión del jefe', EN_REVISION_JEFE],
+  ] as const) {
     test(`${nombre} con minuta cargada: genera con los datos actuales e ignora la cargada`, async ({ browser }) => {
       simulacion.estadoInterno = estado;
       simulacion.minutaGuardada = true;
@@ -444,6 +473,23 @@ test.describe('Revisión: pestaña Minuta', () => {
       }
     });
   }
+
+  test('reenviado después de un rechazo, con una minuta vieja cargada: no la muestra', async ({ browser }) => {
+    simulacion.estadoInterno = EN_REVISION_JEFE;
+    simulacion.estadoAnterior = RECHAZADO;
+    simulacion.minutaGuardada = true;
+    const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);
+    try {
+      await expect(page.locator('app-revision-contrato .origen-minuta p')).toHaveText(
+        'Minuta generada con los datos actuales, sin firmar',
+        { timeout: 60_000 }
+      );
+      await expect(page.locator('app-revision-contrato')).not.toContainText('Minuta cargada');
+      expect(llamadasMinuta).toHaveLength(1);
+    } finally {
+      await ctx.close();
+    }
+  });
 
   test('minuta generada: la muestra con su etiqueta', async ({ browser }) => {
     const { ctx, page } = await abrir(browser, `/gestion-contractual/contratos/documentos/${CONTRATO_ID}`);

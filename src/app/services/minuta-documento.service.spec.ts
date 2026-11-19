@@ -39,7 +39,12 @@ describe('MinutaDocumentoService', () => {
     return r;
   }
 
-  it.each([['Borrador', E.BORRADOR], ['Rechazado', E.RECHAZADO], ['sin estado', null]])(
+  it.each([
+    ['Borrador', E.BORRADOR],
+    ['Rechazado', E.RECHAZADO],
+    ['En revisión del jefe', E.EN_REVISION_JEFE],
+    ['sin estado', null],
+  ])(
     '%s: genera aunque haya una minuta cargada, sin consultarla',
     (_caso, estado) => {
       expect(obtener(estado as number | null).minuta).toEqual({ base64: PDF_GENERADO, origen: 'generada' });
@@ -48,8 +53,8 @@ describe('MinutaDocumentoService', () => {
     }
   );
 
-  it('En revisión del jefe con minuta cargada: la devuelve con su fecha y no genera', () => {
-    expect(obtener(E.EN_REVISION_JEFE).minuta).toEqual({
+  it('Aprobado por el jefe con minuta cargada: la devuelve con su fecha y no genera', () => {
+    expect(obtener(E.APROBADO_JEFE).minuta).toEqual({
       base64: PDF_CARGADO,
       origen: 'cargada',
       fecha: '2026-11-10T22:15:00Z',
@@ -86,7 +91,7 @@ describe('MinutaDocumentoService', () => {
   it('no genera mientras la consulta de la minuta cargada no responde', () => {
     const consulta = new Subject<unknown>();
     getDocumentos.mockReturnValue(consulta);
-    const r = obtener(E.EN_REVISION_JEFE);
+    const r = obtener(E.APROBADO_JEFE);
     expect(getMinutaPdf).not.toHaveBeenCalled();
     consulta.next({ Data: [] });
     consulta.complete();

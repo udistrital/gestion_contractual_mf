@@ -100,7 +100,7 @@ describe('RevisionContratoComponent', () => {
       mockGestionCrudService.getDocumentos.mockReturnValueOnce(
         of({ Success: true, Status: '200', Data: [{ id: 9, documento_enlace: 'uid-9' }] })
       );
-      component.estadoInternoActual = environment.ESTADOS_INTERNOS.EN_REVISION_JEFE;
+      component.estadoInternoActual = environment.ESTADOS_INTERNOS.APROBADO_JEFE;
       component.getMinuta();
       expect(mockGestionCrudService.getDocumentos).toHaveBeenCalledWith({
         query:
@@ -260,8 +260,8 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
   let gestor: jest.Mock;
   let minutaPdf: jest.Mock;
 
-  /** Por defecto, En revisión del jefe: primero la minuta cargada y, si no hay, la generada. */
-  function montar(contratoId = 42, estado: number = E.EN_REVISION_JEFE, estados$?: Observable<unknown>) {
+  /** Por defecto, En firma del ordenador: primero la minuta cargada y, si no hay, la generada. */
+  function montar(contratoId = 42, estado: number = E.EN_FIRMA_ORDENADOR, estados$?: Observable<unknown>) {
     const respuestaEstados = estados$ ?? of({ Data: estado ? [{ estado_interno_parametro_id: estado }] : [] });
     TestBed.configureTestingModule({
       imports: [RouterTestingModule],
@@ -430,7 +430,11 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
         of({ Data: [{ id: 9, documento_enlace: 'uid-9', fecha_creacion: '2026-11-10T22:15:00Z' }] })
       );
 
-    it.each([['Borrador', E.BORRADOR], ['Rechazado', E.RECHAZADO]])(
+    it.each([
+      ['Borrador', E.BORRADOR],
+      ['Rechazado', E.RECHAZADO],
+      ['En revisión del jefe', E.EN_REVISION_JEFE],
+    ])(
       '%s: genera con los datos actuales aunque haya una minuta cargada',
       (_caso, estado) => {
         conCargada();
@@ -442,7 +446,7 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     );
 
     it.each([
-      ['En revisión del jefe', E.EN_REVISION_JEFE],
+      ['Aprobado por el jefe', E.APROBADO_JEFE],
       ['En firma del ordenador', E.EN_FIRMA_ORDENADOR],
       ['Firmas completas', E.FIRMAS_COMPLETAS],
     ])('%s: muestra la minuta cargada', (_caso, estado) => {
@@ -453,7 +457,7 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     });
 
     it.each([
-      ['En revisión del jefe', E.EN_REVISION_JEFE],
+      ['Aprobado por el jefe', E.APROBADO_JEFE],
       ['En firma del ordenador', E.EN_FIRMA_ORDENADOR],
       ['Firmas completas', E.FIRMAS_COMPLETAS],
     ])('%s sin minuta cargada: la genera', (_caso, estado) => {
@@ -466,12 +470,12 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
     it('decide después de conocer el estado: nada se pide antes y se pide una sola vez', () => {
       conCargada();
       const estados = new Subject<unknown>();
-      montar(42, E.EN_REVISION_JEFE, estados);
+      montar(42, E.APROBADO_JEFE, estados);
       expect(component.estadoMinuta).toEqual({ tipo: 'cargando' });
       expect(documentos).not.toHaveBeenCalled();
       expect(minutaPdf).not.toHaveBeenCalled();
 
-      estados.next({ Data: [{ estado_interno_parametro_id: E.EN_REVISION_JEFE }] });
+      estados.next({ Data: [{ estado_interno_parametro_id: E.APROBADO_JEFE }] });
       estados.complete();
       fixture.detectChanges();
 
@@ -480,9 +484,30 @@ describe('RevisionContratoComponent: pestaña Minuta (#405)', () => {
       expect(component.etiquetaOrigenMinuta).toBe('Minuta cargada el 10/11/2026');
     });
 
+    it('contrato reenviado después de un rechazo: no muestra la minuta vieja cargada', () => {
+      conCargada();
+      // Estados del más reciente al más antiguo: reenviado a revisión del jefe tras el rechazo del ordenador.
+      const historial = of({
+        Data: [
+          { estado_interno_parametro_id: E.EN_REVISION_JEFE },
+          { estado_interno_parametro_id: E.RECHAZADO },
+          { estado_interno_parametro_id: E.EN_FIRMA_ORDENADOR },
+          { estado_interno_parametro_id: E.APROBADO_JEFE },
+        ],
+      });
+      montar(42, E.EN_REVISION_JEFE, historial);
+
+      expect(component.estadoInternoActual).toBe(E.EN_REVISION_JEFE);
+      expect(documentos).not.toHaveBeenCalled();
+      expect(gestor).not.toHaveBeenCalled();
+      expect(minutaPdf).toHaveBeenCalledTimes(1);
+      expect(component.etiquetaOrigenMinuta).toBe('Minuta generada con los datos actuales, sin firmar');
+      expect(texto()).not.toContain('Minuta cargada');
+    });
+
     it('si no se puede consultar el estado, genera (lo más conservador)', () => {
       conCargada();
-      montar(42, E.EN_REVISION_JEFE, throwError(() => new Error('crud')));
+      montar(42, E.APROBADO_JEFE, throwError(() => new Error('crud')));
       expect(documentos).not.toHaveBeenCalled();
       expect(minutaPdf).toHaveBeenCalledTimes(1);
     });

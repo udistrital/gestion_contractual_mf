@@ -1,7 +1,6 @@
 import { environment } from 'src/environments/environment';
 
 const {
-  EN_REVISION_JEFE,
   APROBADO_JEFE,
   EN_REVISION_ORDENADOR,
   REVISADO_ORDENADOR,
@@ -13,11 +12,15 @@ const {
 } = environment.ESTADOS_INTERNOS;
 
 /**
- * Estados internos desde "En revisión del jefe" en adelante: se muestra la
+ * Estados internos desde "Aprobado por el jefe" en adelante: se muestra la
  * última minuta cargada en el flujo (decisión del 18/11, #405).
+ *
+ * "En revisión del jefe" no está: la minuta se carga al aprobar o firmar
+ * (SubirArchivoComponent) y el rechazo no desactiva las ya cargadas, así que un
+ * contrato reenviado tras un rechazo mostraría en esa revisión la minuta de la
+ * vuelta anterior. Desde que el jefe aprueba, la cargada es de la vuelta actual.
  */
 export const ESTADOS_MINUTA_CARGADA: readonly number[] = [
-  EN_REVISION_JEFE,
   APROBADO_JEFE,
   EN_REVISION_ORDENADOR,
   REVISADO_ORDENADOR,
@@ -30,7 +33,8 @@ export const ESTADOS_MINUTA_CARGADA: readonly number[] = [
 
 /**
  * true si la minuta se genera siempre con los datos actuales: Borrador,
- * Rechazado y registro nuevo (sin estado, nace en Borrador). Cualquier otro
+ * Rechazado, En revisión del jefe y registro nuevo (sin estado, nace en
+ * Borrador). Cualquier otro
  * estado que no esté en ESTADOS_MINUTA_CARGADA (por ejemplo Declinado) también
  * genera, por ser lo más conservador.
  */

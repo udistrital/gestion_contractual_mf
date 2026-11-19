@@ -188,8 +188,9 @@ export class PasoClausulasParagrafosComponent implements OnInit {
   }
 
   /**
-   * true en Borrador, Rechazado o sin estado: la vista previa genera la minuta
-   * con los datos actuales. Fuera de esos estados el botón es "Minuta" y muestra
+   * true en Borrador, Rechazado, En revisión del jefe o sin estado (según
+   * minutaEditable): el botón es "Vista Previa de Minuta" y genera la minuta con
+   * los datos actuales. Desde Aprobado por el jefe el botón es "Minuta" y muestra
    * la última minuta cargada (decisión del 18/11, #405).
    */
   get esMinutaEditable(): boolean {
@@ -1639,7 +1640,7 @@ export class PasoClausulasParagrafosComponent implements OnInit {
       await this.estadoListo;
       const editable = this.esMinutaEditable;
 
-      // En Borrador o Rechazado la minuta se arma con las cláusulas guardadas: si
+      // Mientras la minuta se genera (minutaEditable), se arma con las cláusulas guardadas: si
       // no se pudieron guardar, no se genera para no mostrar un documento
       // desactualizado. Se omite la alerta genérica del error HTTP para que quede
       // un solo mensaje. Fuera de esos estados se muestra la minuta cargada, sin
