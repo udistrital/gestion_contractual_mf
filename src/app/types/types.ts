@@ -390,7 +390,8 @@ export type TipoErrorMinuta =
   | 'servicio'
   | 'interno'
   | 'invalida'
-  | 'conexion';
+  | 'conexion'
+  | 'registro';
 
 /** Error de la minuta ya interpretado, con el mensaje para el usuario. */
 export interface ErrorMinuta {

@@ -7,7 +7,7 @@
       <h2 mat-dialog-title class="dialog-title">Enviar Contrato a Aprobación</h2>
       <p class="dialog-subtitle">Remisión oficial para VoBo del Jefe de Contratación</p>
     </div>
-    <button mat-icon-button (click)="cancelar()" class="btn-close" aria-label="Cerrar modal">
+    <button mat-icon-button (click)="cancelar()" class="btn-close" aria-label="Cerrar modal" [disabled]="enviando">
       <mat-icon>close</mat-icon>
     </button>
   </div>
@@ -64,7 +64,7 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="modal-actions">
-    <button mat-stroked-button type="button" (click)="cancelar()" class="btn-cancelar">
+    <button mat-stroked-button type="button" (click)="cancelar()" class="btn-cancelar" [disabled]="enviando">
       Cancelar
     </button>
     <button
@@ -73,9 +73,10 @@
       type="button"
       (click)="confirmar()"
       class="btn-confirmar"
+      [disabled]="enviando"
     >
-      <mat-icon>send</mat-icon>
-      Confirmar y Enviar
+      <mat-icon>{{ enviando ? 'hourglass_top' : 'send' }}</mat-icon>
+      {{ enviando ? 'Generando minuta y enviando…' : 'Confirmar y Enviar' }}
     </button>
   </mat-dialog-actions>
 </div>

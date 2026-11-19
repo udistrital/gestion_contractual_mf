@@ -69,6 +69,11 @@ export const MENSAJES_MINUTA = {
   conexion: FALLA_SERVICIO,
   guardadoPrevioFallido:
     'No se pudieron guardar las cláusulas. La minuta no se generó para no mostrar datos desactualizados.',
+  /** Falló la subida al gestor o el registro en documentos-contratos. */
+  registro:
+    'No se pudo guardar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.',
+  /** Prefijo cuando la minuta impide enviar el contrato al jefe. */
+  envioBloqueado: 'No se pudo enviar el contrato.',
 } as const;
 
 /** Fragmentos del Message de la minuta que el MF reconoce (no se muestran). */

@@ -101,11 +101,12 @@ export class RequestManager {
    * Perform a DELETE http request
    * @param endpoint service's end-point
    * @param id element's id for remove
+   * @param estadosSinAlerta estados de error que maneja quien llama, sin la alerta genérica
    * @returns Observable<any>
    */
-  delete(endpoint: any, id: any) {
+  delete(endpoint: any, id: any, estadosSinAlerta: EstadosSinAlerta = []) {
     return this.http.delete<any>(`${this.path}${endpoint}/${id}`, this.httpOptions).pipe(
-      catchError((error) => this.errManager.handleError(error)),
+      catchError((error) => this.errManager.handleError(error, estadosSinAlerta)),
     );
   }
 
