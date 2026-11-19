@@ -2,6 +2,13 @@ import { CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@ang
 import { inject } from '@angular/core';
 import { AlertService } from 'src/app/services/alert.service';
 
+/**
+ * Clave de `data` con la que una vista interna (p. ej. detalle/:contratoId) declara las vistas
+ * principales que la autorizan. En Configuración solo se registran las vistas principales: una
+ * vista interna se permite si alguna de sus vistas principales está en el menú.
+ */
+export const VISTAS_PRINCIPALES = 'vistasPrincipales';
+
 export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const alertService = inject(AlertService);
   const menuInfo = localStorage.getItem('menu');
@@ -31,9 +38,14 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
     Object.assign(params, route.params);
   }
 
+  // Se evalúa el destino final (la ruta más profunda), también cuando el guard corre en la ruta padre.
+  const vistasPrincipales = vistasPrincipalesDe(rutaMasProfunda(state?.root));
+
   if (menuPermisos != null) {
-    // Pasar tanto la URL como los parámetros a la función de verificación
-    if (checkUrlExists(menuPermisos, path, params)) {
+    const autorizado = vistasPrincipales.length > 0
+      ? vistasPrincipales.some((vista) => checkUrlExists(menuPermisos, vista, {}))
+      : checkUrlExists(menuPermisos, path, params);
+    if (autorizado) {
       return true;
     }
   }
@@ -41,6 +53,19 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
   alertService.showErrorAlert("No tiene permisos para realizar esta acción", "Acceso prohibido");
   return false;
 };
+
+function rutaMasProfunda(raiz: ActivatedRouteSnapshot | null | undefined): ActivatedRouteSnapshot | null {
+  let ruta: ActivatedRouteSnapshot | null = raiz ?? null;
+  while (ruta?.firstChild) {
+    ruta = ruta.firstChild;
+  }
+  return ruta;
+}
+
+function vistasPrincipalesDe(ruta: ActivatedRouteSnapshot | null): string[] {
+  const vistas: unknown = ruta?.data?.[VISTAS_PRINCIPALES];
+  return Array.isArray(vistas) ? vistas.filter((vista): vista is string => typeof vista === 'string') : [];
+}
 
 // Recorrer el menú para verificar si la URL y los parámetros existen
 function checkUrlExists(menuItems: any, targetUrl: string, params: any): boolean {
