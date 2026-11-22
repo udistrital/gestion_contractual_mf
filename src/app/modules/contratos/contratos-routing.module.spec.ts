@@ -1,4 +1,4 @@
-import { routes } from './contratos-routing.module';
+import { CONTRATOS_ROUTES as routes } from './contratos-routing.module';
 import { RevisionContratoComponent } from './revision-contrato/revision-contrato.component';
 
 describe('Rutas de contratos', () => {

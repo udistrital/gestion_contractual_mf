@@ -11,7 +11,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatStepper } from '@angular/material/stepper';
 import { Subject, of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
+import { PdfViewerModalComponent } from 'src/app/shared/components/pdf-viewer-modal/pdf-viewer-modal.component';
 import { ErrorMinuta } from 'src/app/types/types';
 import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';

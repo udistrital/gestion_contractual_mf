@@ -28,5 +28,19 @@
       <mat-icon>close</mat-icon>
       Cerrar
     </button>
+
+    <!-- Solo si quien abre el visor envía datos para guardar (acta de inicio, #359). -->
+    @if (guardarDoc) {
+      <button
+        mat-flat-button
+        color="primary"
+        class="mb-sm"
+        [disabled]="isLoading"
+        (click)="guardarDocumentoGestorDocumental()"
+      >
+        <mat-icon>save</mat-icon>
+        {{ isLoading ? 'Guardando...' : 'Guardar' }}
+      </button>
+    }
   </mat-dialog-actions>
 </ng-template>

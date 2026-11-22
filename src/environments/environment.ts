@@ -93,6 +93,9 @@ export const environment = {
     // póliza cuando exista (el tipo 133 solo tiene Minuta y Documentos precontractuales)
     ACTA_APROBACION_POLIZA: 176,
     DOCUMENTOS_PRECONTRACTUALES: 6716,
+    // TODO(#359): reemplazar por el id del parámetro del acta de inicio cuando
+    // exista (el tipo 133 solo tiene Minuta y Documentos precontractuales)
+    ACTA_INICIO: 175,
   },
   TIPO_DOCUMENTO_ID_GESTOR_DOCUMENTAL: {
     PLANTILLAS_XLSX: 183,

@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, effect, inject, input, OnInit, output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
+import { PdfViewerModalComponent } from 'src/app/shared/components/pdf-viewer-modal/pdf-viewer-modal.component';
 import {
   FormBuilder,
   FormGroup,

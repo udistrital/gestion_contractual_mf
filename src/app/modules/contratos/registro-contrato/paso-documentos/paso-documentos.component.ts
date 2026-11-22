@@ -1,7 +1,7 @@
 import { Component, EventEmitter, input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { PdfViewerModalComponent } from '../pdf-viewer-modal/pdf-viewer-modal.component';
+import { PdfViewerModalComponent } from 'src/app/shared/components/pdf-viewer-modal/pdf-viewer-modal.component';
 import { GestorDocumentalService } from 'src/app/services/gestor-documental.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { environment } from 'src/environments/environment';

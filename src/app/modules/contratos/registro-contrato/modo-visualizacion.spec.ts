@@ -30,7 +30,7 @@ import { PasoInfoGeneralComponent } from './paso-info-general/paso-info-general.
 import { PasoInfoPresupuestalComponent } from './paso-info-presupuestal/paso-info-presupuestal.component';
 import { PasoObligacionesComponent } from './paso-obligaciones/paso-obligaciones.component';
 import { PasoSupervisoresComponent } from './paso-supervisores/paso-supervisores.component';
-import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.component';
+import { PdfViewerModalComponent } from 'src/app/shared/components/pdf-viewer-modal/pdf-viewer-modal.component';
 import { RegistroContratoComponent } from './registro-contrato.component';
 
 /**

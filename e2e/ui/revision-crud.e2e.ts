@@ -101,7 +101,8 @@ test('aprobación del jefe: el MID asigna el número al pasar a SUSCRITO', async
       localStorage.setItem('user', user);
     },
     [
-      b64([{ Url: `/gestion-contractual/contratos/documentos/${id}` }]),
+      // Solo la vista principal: documentos/:id se autoriza por la consulta.
+      b64([{ Url: '/gestion-contractual/contratos/consultar' }]),
       b64({ user: { role: ['JEFE_CONTRATACION_RECTOR'] }, userService: { role: [] } }),
     ] as const
   );
@@ -120,10 +121,10 @@ test('aprobación del jefe: el MID asigna el número al pasar a SUSCRITO', async
   await expect(page.locator('.swal2-popup')).toContainText('Número de contrato: 1', { timeout: 30_000 });
   await page.screenshot({ path: join(EVIDENCIAS, '20-revision-numero-desde-mid.png') });
 
-  expect(sql(`select numero_contrato || '|' || vigencia_id from contratacion.contrato_general where id = ${id}`)).toBe(
+  expect(sql(`select numero_contrato || '|' || vigencia_id from gestion_contractual.contrato_general where id = ${id}`)).toBe(
     `1|${VIGENCIA_ID}`
   );
-  expect(sql(`select estado_parametro_id from contratacion.estado_contrato where contrato_general_id = ${id} and actual`)).toBe(
+  expect(sql(`select estado_parametro_id from gestion_contractual.estado_contrato where contrato_general_id = ${id} and actual`)).toBe(
     String(SUSCRITO)
   );
   // El MF no calcula ni escribe el número: solo registra estados en el MID.
