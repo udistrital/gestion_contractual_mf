@@ -587,17 +587,29 @@ describe('PasoClausulasParagrafosComponent', () => {
       dialog.open.mockClear();
     });
 
-    it('abre el modal "Minuta preliminar" solo con el PDF de getMinutaPdf', async () => {
+    it.each([
+      ['Borrador (genera)', environment.ESTADOS_INTERNOS.BORRADOR],
+      ['En revisión del jefe (cargada)', environment.ESTADOS_INTERNOS.EN_REVISION_JEFE],
+      ['En firma del ordenador (cargada)', environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR],
+    ])('al abrir la minuta en %s no se envían `datos` al visor, así que no aparece "Guardar"', async (_caso, estado) => {
+      component.estadoInternoActual = estado;
+
+      await component.openPdfViewer();
+
+      const data = dialog.open.mock.calls[0][1].data;
+      expect(data).not.toHaveProperty('datos');
+      expect(data).toEqual({ file: expect.any(Blob) });
+    });
+
+    it('abre el visor solo con el PDF de getMinutaPdf', async () => {
       await component.openPdfViewer();
 
       expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
       expect(dialog.open).toHaveBeenCalledTimes(1);
       const [modal, config] = dialog.open.mock.calls[0];
       expect(modal).toBe(PdfViewerModalComponent);
-      expect(config.data.titulo).toBe('Minuta preliminar');
+      expect(Object.keys(config.data)).toEqual(['file']);
       expect(config.data.file).toBeInstanceOf(Blob);
-      expect(config.data).not.toHaveProperty('datos');
-      expect(config.data.descripcion).toBe('Minuta generada con los datos actuales, sin firmar');
       expect(mockGestionCrud.getDocumentos).not.toHaveBeenCalled();
       expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
       expect(component.generandoMinuta).toBe(false);
@@ -747,7 +759,7 @@ describe('PasoClausulasParagrafosComponent', () => {
 
         expect(mockGestor.getDocumento).toHaveBeenCalledWith('uid-9');
         expect(mockMinutasMidService.getMinutaPdf).not.toHaveBeenCalled();
-        expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta');
+        expect(Object.keys(dialog.open.mock.calls[0][1].data)).toEqual(['file']);
       });
 
       it('en En firma del ordenador los dos botones dicen "Ver Minuta"', () => {
@@ -757,7 +769,7 @@ describe('PasoClausulasParagrafosComponent', () => {
         expect(textoBotones()).toEqual(['Ver Minuta', 'Ver Minuta']);
       });
 
-      it('muestra la minuta cargada en el modal "Minuta", sin guardado previo ni "Guardar"', async () => {
+      it('muestra la minuta cargada en el visor, sin guardado previo ni datos para "Guardar"', async () => {
         component.estadoInternoActual = ESTADO_CARGADA;
 
         await component.openPdfViewer();
@@ -767,20 +779,17 @@ describe('PasoClausulasParagrafosComponent', () => {
         expect(mockGestor.getDocumento).toHaveBeenCalledWith('uid-9');
         expect(mockMinutasMidService.getMinutaPdf).not.toHaveBeenCalled();
         const config = dialog.open.mock.calls[0][1];
-        expect(config.data.titulo).toBe('Minuta');
-        expect(config.data.descripcion).toBe('Minuta cargada el 10/11/2026');
-        expect(config.data).not.toHaveProperty('datos');
+        expect(Object.keys(config.data)).toEqual(['file']);
       });
 
-      it('sin minuta cargada la genera y la muestra en el modal "Minuta"', async () => {
+      it('sin minuta cargada la genera y la muestra en el visor', async () => {
         component.estadoInternoActual = ESTADO_CARGADA;
         mockGestionCrud.getDocumentos.mockReturnValue(of({ Data: [] }));
 
         await component.openPdfViewer();
 
         expect(mockMinutasMidService.getMinutaPdf).toHaveBeenCalledWith(2);
-        expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta');
-        expect(dialog.open.mock.calls[0][1].data.descripcion).toBe('Minuta generada con los datos actuales, sin firmar');
+        expect(Object.keys(dialog.open.mock.calls[0][1].data)).toEqual(['file']);
       });
 
       it('espera a conocer el estado interno antes de decidir', async () => {
@@ -803,7 +812,7 @@ describe('PasoClausulasParagrafosComponent', () => {
 
         expect(clausulasService['put']).not.toHaveBeenCalled();
         expect(mockGestionCrud.getDocumentos).toHaveBeenCalledTimes(1);
-        expect(dialog.open.mock.calls[0][1].data.titulo).toBe('Minuta');
+        expect(dialog.open).toHaveBeenCalledTimes(1);
       });
     });
   });

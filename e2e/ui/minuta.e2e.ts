@@ -387,11 +387,11 @@ for (const modo of ['HTTP 200', 'HTTP real'] as Modo[]) {
     });
     test.afterEach(async () => cerrarAlertaYModal(page));
 
-    test('200: abre el modal "Minuta preliminar" con el PDF', async () => {
+    test('200: abre el visor con el PDF generado', async () => {
       await botonVistaPrevia(page).click();
       await expect(modalMinuta(page)).toBeVisible();
-      await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta preliminar');
-      await expect(modalMinuta(page)).toContainText('Minuta generada con los datos actuales, sin firmar');
+      // Visor de develop (#359), abierto sin `datos`: sin "Guardar".
+      await expect(modalMinuta(page).locator('h1')).toHaveText('Documentos');
       await expect(modalMinuta(page).getByRole('button', { name: /Guardar/ })).toHaveCount(0);
       await expect(modalMinuta(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
       expect(llamadasMinuta).toEqual([`minuta_contractual_mid/minutas/contratos/${CONTRATO_ID}`]);
@@ -447,7 +447,7 @@ for (const modo of ['HTTP 200', 'HTTP real'] as Modo[]) {
   });
 }
 
-test('detalle En firma del ordenador: el botón "Ver Minuta" muestra la minuta cargada en el modal "Minuta"', async ({ browser }) => {
+test('detalle En firma del ordenador: el botón "Ver Minuta" muestra la minuta cargada, sin generar', async ({ browser }) => {
   reiniciarSimulacion();
   simulacion.estadoInterno = EN_FIRMA_ORDENADOR;
   simulacion.minutaGuardada = true;
@@ -457,8 +457,7 @@ test('detalle En firma del ordenador: el botón "Ver Minuta" muestra la minuta c
     await expect(botonVistaPrevia(page)).toHaveAccessibleName('Ver Minuta');
     await expect(botonVistaPreviaDock(page)).toHaveAccessibleName('Ver Minuta');
     await botonVistaPrevia(page).click();
-    await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta');
-    await expect(modalMinuta(page)).toContainText('Minuta cargada el 10/11/2026');
+    await expect(modalMinuta(page).locator('h1')).toHaveText('Documentos');
     await expect(modalMinuta(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
     await expect(modalMinuta(page).getByRole('button', { name: /Guardar/ })).toHaveCount(0);
     expect(llamadasMinuta).toEqual([]);
@@ -477,8 +476,7 @@ test('detalle En revisión del jefe: el botón "Ver Minuta" muestra la minuta ca
     await expect(botonVistaPrevia(page)).toHaveAccessibleName('Ver Minuta');
     await expect(botonVistaPreviaDock(page)).toHaveAccessibleName('Ver Minuta');
     await botonVistaPrevia(page).click();
-    await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta');
-    await expect(modalMinuta(page)).toContainText('Minuta cargada el 10/11/2026');
+    await expect(modalMinuta(page).locator('.textLayer').first()).toContainText('MINUTA DE PRUEBA');
     expect(llamadasMinuta).toEqual([]);
   } finally {
     await ctx.close();
@@ -491,7 +489,7 @@ test('edición en Borrador: la vista previa no ofrece "Guardar"', async ({ brows
   try {
     await irAClausulas(page);
     await botonVistaPrevia(page).click();
-    await expect(modalMinuta(page).locator('plantilla-modal b')).toHaveText('Minuta preliminar');
+    await expect(modalMinuta(page).locator('h1')).toHaveText('Documentos');
     await expect(modalMinuta(page).getByRole('button', { name: /Cerrar/ })).toBeVisible();
     await expect(modalMinuta(page).getByRole('button', { name: /Guardar/ })).toHaveCount(0);
   } finally {

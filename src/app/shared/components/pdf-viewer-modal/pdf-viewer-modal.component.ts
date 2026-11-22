@@ -12,26 +12,6 @@ import { AlertService } from 'src/app/services/alert.service';
 import { DocumentoContrato } from 'src/app/types/types';
 import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 
-/**
- * Datos para guardar el PDF desde el visor (acta de inicio, #359): el tipo de
- * documento del gestor (colección) y el del CRUD, y la entidad dueña.
- */
-export interface DatosGuardarPdf {
-  base64: string;
-  nombre: string;
-  descripcion: string;
-  id_tipo_documento_gestor: number;
-  tipo_documento_id: number;
-  entidad_tipo: DocumentoContrato['entidad_tipo'];
-  entidad_id: number;
-}
-
-/**
- * Visor de PDF en la plantilla de modal del MF. Es de solo lectura salvo que
- * quien lo abre envíe `datos`: solo entonces aparece "Guardar", que sube el PDF
- * al gestor documental y lo registra en documentos-contratos (acta de inicio).
- * La minuta nunca envía `datos` (decisión del 18/11, #405).
- */
 @Component({
     selector: 'app-pdf-viewer-modal',
     templateUrl: './pdf-viewer-modal.component.html',
@@ -45,16 +25,11 @@ export class PdfViewerModalComponent implements OnInit {
   isLoading: boolean = false;
   pdfLoading = true;
   pdfSrc?: Uint8Array;
-  /** true solo si quien abre el visor envía `datos` para guardar. */
   guardarDoc: boolean = false;
-  /** Título del modal; "Documentos" si quien lo abre no envía otro. */
-  titulo = 'Documentos';
-  /** Texto bajo el título en la plantilla de modal del MF. */
-  descripcion = '';
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
-    public data: { file: File; titulo?: string; descripcion?: string; datos?: DatosGuardarPdf },
+    public data: { file: File; datos: any },
     private fileService: FileService,
     private alertService: AlertService,
     private gestorDocumentalService: GestorDocumentalService,
@@ -62,9 +37,7 @@ export class PdfViewerModalComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    this.titulo = this.data.titulo || 'Documentos';
-    this.descripcion = this.data.descripcion || '';
-    this.guardarDoc = !!this.data.datos;
+    this.guardarDoc = this.data.datos || false;
     await this.loadPdf();
   }
 
@@ -83,7 +56,6 @@ export class PdfViewerModalComponent implements OnInit {
   // Guardar el documento (pdf) en gestor_documental_mid. El tipo de documento
   // del gestor (colección) y el del CRUD llegan en data.datos
   guardarDocumentoGestorDocumental() {
-    if (!this.data.datos) return;
     this.isLoading = true;
 
     const { base64, nombre, descripcion, id_tipo_documento_gestor } =
@@ -117,7 +89,6 @@ export class PdfViewerModalComponent implements OnInit {
 
   // Registrar el id y uid de la respuesta del gestor_documental_mid en gestion_contractual_crud
   registrarDocumento(documento: any) {
-    if (!this.data.datos) return;
     const { Id: documento_id, Enlace: documento_enlace } = documento;
     const { tipo_documento_id, entidad_tipo, entidad_id } = this.data.datos;
 

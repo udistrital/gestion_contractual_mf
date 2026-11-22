@@ -1,17 +1,7 @@
-<plantilla-modal
-  [icono]="'picture_as_pdf'"
-  [titulo]="titulo"
-  [descripcion]="descripcion"
-  [contenido]="contenidoDeModal"
-></plantilla-modal>
+<div class="dialog-container">
+  <h1 mat-dialog-title>Documentos</h1>
 
-<ng-template #contenidoDeModal>
-  @if (pdfLoading) {
-    <div class="d-flex flex-column justify-content-center align-items-center my-4">
-      <mat-spinner color="primary" class="mb-2"></mat-spinner>
-      <p>Cargando, por favor espere...</p>
-    </div>
-  } @else {
+  @if (!pdfLoading) {
     <mat-dialog-content class="mat-typography">
       <pdf-viewer
         [src]="pdfSrc"
@@ -23,24 +13,33 @@
     </mat-dialog-content>
   }
 
-  <mat-dialog-actions align="center">
-    <button mat-stroked-button color="primary" [mat-dialog-close] class="mb-sm">
-      <mat-icon>close</mat-icon>
+  @if (pdfLoading) {
+    <div class="spinner-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+
+  <mat-dialog-actions>
+    <button
+      mat-flat-button
+      mat-dialog-close
+      color="primary"
+      matTooltip="Cerrar visualizador"
+      >
       Cerrar
     </button>
 
-    <!-- Solo si quien abre el visor envía datos para guardar (acta de inicio, #359). -->
     @if (guardarDoc) {
       <button
-        mat-flat-button
+        mat-stroked-button
+        class="save-button"
         color="primary"
-        class="mb-sm"
+        matTooltip="Guardar documento"
         [disabled]="isLoading"
         (click)="guardarDocumentoGestorDocumental()"
-      >
-        <mat-icon>save</mat-icon>
-        {{ isLoading ? 'Guardando...' : 'Guardar' }}
+        >
+        {{ isLoading ? "Guardando..." : "Guardar" }}
       </button>
     }
   </mat-dialog-actions>
-</ng-template>
+</div>

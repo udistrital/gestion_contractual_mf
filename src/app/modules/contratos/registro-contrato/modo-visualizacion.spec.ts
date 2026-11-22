@@ -743,9 +743,10 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     it('la vista previa de la minuta no ofrece guardar el documento', async () => {
       await montar({ Success: true, Data: [clausula] });
       await component.openPdfViewer();
+      // Sin `datos`, el visor de develop (#359) no muestra "Guardar".
       expect(dialog.open).toHaveBeenCalledWith(
         PdfViewerModalComponent,
-        expect.objectContaining({ data: expect.objectContaining({ titulo: 'Minuta preliminar' }) })
+        expect.objectContaining({ data: { file: expect.any(Blob) } })
       );
       expect(clausulasService.post).not.toHaveBeenCalled();
     });
