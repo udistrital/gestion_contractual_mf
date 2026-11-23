@@ -137,3 +137,71 @@ test('aprobación del jefe: el MID asigna el número al pasar a SUSCRITO', async
   expect(cambiosEnviados.map((c) => c['estado_parametro_id'])).toEqual([6773, SUSCRITO]);
   await context.close();
 });
+
+test('rechazo del jefe con motivo: el botón Aceptar de la confirmación responde al clic', async ({ browser }) => {
+  test.setTimeout(120_000);
+  mkdirSync(EVIDENCIAS, { recursive: true });
+  const contrato = await postJson(`${CRUD_URL}/v1/contratos-generales/`, { unidad_ejecutora_id: RECTORIA, vigencia_id: VIGENCIA_ID + 1 });
+  const id = contrato.Data.id;
+  await postJson(`${CRUD_URL}/v1/estados-contrato/`, {
+    contrato_general_id: { id },
+    estado_parametro_id: 6773,
+    estado_interno_parametro_id: 6800,
+    usuario_id: 1,
+    usuario_rol: 'ABOGADO_CONTRATACION_RECTOR',
+  });
+
+  const context = await browser.newContext({ bypassCSP: true, viewport: { width: 1280, height: 800 } });
+  await context.route(/pruebascoreclientes.portaloas.udistrital.edu.co/, (route) =>
+    route.fulfill({ contentType: 'application/javascript', body: CORE_MF_STUB })
+  );
+  await context.route(/autenticacion\.portaloas\.udistrital\.edu\.co\/apioas\//, async (route) => {
+    const peticion = route.request();
+    const url = new URL(peticion.url());
+    const ruta = url.pathname.replace('/apioas/', '');
+    if (ruta.startsWith('gestion_contractual_crud/v1/')) {
+      const destino = `${CRUD_URL}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`;
+      if (peticion.method() === 'POST' && ruta === 'gestion_contractual_crud/v1/estados-contrato/') {
+        // Sin persona_id simulado el MF envía usuario_id 0, que el CRUD rechaza.
+        const cuerpo = peticion.postDataJSON();
+        return route.fulfill({ response: await route.fetch({ url: destino, postData: JSON.stringify({ ...cuerpo, usuario_id: cuerpo.usuario_id || USUARIO_ID_PRUEBA }) }) });
+      }
+      return route.fulfill({ response: await route.fetch({ url: destino }) });
+    }
+    if (/^minuta_contractual_mid\//.test(ruta)) return route.fulfill({ json: { Success: true, Status: 200, Data: 'JVBERi0xLjQK' } });
+    if (/^gestor_documental_mid\//.test(ruta)) return route.fulfill({ json: { file: 'JVBERi0xLjQK' } });
+    const externa = responderServicioExterno(route, ruta, url.searchParams);
+    if (externa) return externa;
+    return route.fulfill({ json: { Success: true, Status: 200, Data: [] } });
+  });
+  await context.addInitScript(
+    ([menu, user]) => {
+      localStorage.setItem('menu', menu);
+      localStorage.setItem('user', user);
+    },
+    [
+      b64([{ Url: '/gestion-contractual/contratos/consultar' }]),
+      b64({ user: { role: ['JEFE_CONTRATACION_RECTOR'] }, userService: { role: [] } }),
+    ] as const
+  );
+  const page = await context.newPage();
+  await page.goto(`/gestion-contractual/contratos/documentos/${id}`);
+
+  const rechazar = page.getByRole('button', { name: /Rechazar Contrato/ });
+  await expect(rechazar).toBeVisible({ timeout: 60_000 });
+  await rechazar.click();
+  const modal = page.locator('mat-dialog-container');
+  await modal.locator('textarea[formcontrolname="observaciones"]').fill('PRUEBA 397: falta el soporte del CDP firmado.');
+  await modal.locator('mat-dialog-actions button').click();
+
+  // Clic normal (eventos reales del mouse, sin force ni dispatchEvent): antes la confirmación quedaba debajo
+  // del diálogo, que el CDK muestra en la capa superior del navegador, y el clic caía en el modal.
+  await page.locator('.swal2-confirm').click({ timeout: 10_000 });
+  await expect(page.locator('.swal2-popup')).toContainText('CONTRATO RECHAZADO', { timeout: 15_000 });
+  await page.screenshot({ path: join(EVIDENCIAS, '21-rechazo-aceptar-responde.png') });
+
+  expect(
+    sql(`select estado_parametro_id || '|' || estado_interno_parametro_id || '|' || motivo from gestion_contractual.estado_contrato where contrato_general_id = ${id} and actual`)
+  ).toBe('6773|6803|PRUEBA 397: falta el soporte del CDP firmado.');
+  await context.close();
+});
