@@ -46,6 +46,21 @@ describe('PolizasService', () => {
     req.flush({ Success: true, Status: 200, Message: '', Data: [] });
   });
 
+  // udistrital/argo_documentacion#414: el id del contrato va en la consulta
+  it('pide el borrador del acta con POST acta-poliza/contratos/borrador?contrato-id=', () => {
+    const amparos = [
+      { id: 1, valor: 5000000, fecha_inicio: '2024-01-15', fecha_fin: null },
+    ];
+    service.getBorradorActaAprobacion(10, amparos).subscribe();
+
+    const req = httpMock.expectOne(
+      `${environment.MINUTA_CONTRACTUAL_MID_SERVICE}acta-poliza/contratos/borrador?contrato-id=10`
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ amparos });
+    req.flush({ Success: true, Status: 200, Message: '', Data: 'JVBER' });
+  });
+
   it('crea amparos en lote contra amparos-polizas', () => {
     const amparos = [{ contrato_general_id: 10, amparo_id: 1181 }];
     service.postAmparos(amparos).subscribe();
