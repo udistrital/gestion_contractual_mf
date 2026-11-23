@@ -1,6 +1,10 @@
-import { Component, OnInit, Optional } from '@angular/core';
+import { Component, OnInit, Optional, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { ParametrosService } from 'src/app/services/parametros.service';
+import {
+  MENSAJE_SIN_UNIDAD_PERMITIDA,
+  UnidadesPermitidasService,
+} from 'src/app/services/unidades-permitidas.service';
 import { ParametroResponse } from 'src/app/types/types';
 import { environment } from 'src/environments/environment';
 
@@ -29,7 +33,8 @@ export class ModalSeleccionarUeComponent implements OnInit {
     },
   };
 
-  unidades: UnidadEjecutoraOption[] = [
+  /** Catálogo de respaldo si Parámetros no responde. */
+  private readonly unidadesBase: UnidadEjecutoraOption[] = [
     {
       id: environment.UNIDADES_EJECUTORAS.RECTORIA,
       codigo: '01',
@@ -44,7 +49,14 @@ export class ModalSeleccionarUeComponent implements OnInit {
     }
   ];
 
-  selectedUe: UnidadEjecutoraOption = this.unidades[0];
+  /** Solo las unidades en las que el usuario puede registrar (UnidadesPermitidasService). */
+  unidades: UnidadEjecutoraOption[] = [];
+  selectedUe: UnidadEjecutoraOption | null = null;
+  cargando = true;
+  sinUnidadPermitida = false;
+  readonly mensajeSinUnidad = MENSAJE_SIN_UNIDAD_PERMITIDA;
+
+  private readonly unidadesPermitidas = inject(UnidadesPermitidasService);
 
   constructor(
     public dialogRef: MatDialogRef<ModalSeleccionarUeComponent>,
@@ -52,8 +64,20 @@ export class ModalSeleccionarUeComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    const catalogo = await this.cargarCatalogo();
+    this.unidades = await this.unidadesPermitidas.filtrar(catalogo, (ue) => ue.id);
+    this.selectedUe =
+      this.unidades.find((u) => u.id === this.selectedUe?.id) ||
+      this.unidades[0] ||
+      null;
+    this.sinUnidadPermitida = this.unidades.length === 0;
+    this.cargando = false;
+  }
+
+  /** Unidades de Parámetros; si la consulta falla o viene vacía, las de respaldo. */
+  private async cargarCatalogo(): Promise<UnidadEjecutoraOption[]> {
     if (!this.parametrosService?.getParametrosPorTipo) {
-      return;
+      return this.unidadesBase;
     }
 
     try {
@@ -64,7 +88,7 @@ export class ModalSeleccionarUeComponent implements OnInit {
         data?.[environment.UNIDAD_EJECUTORA_ID] || [];
 
       if (Array.isArray(parametrosUe) && parametrosUe.length > 0) {
-        this.unidades = parametrosUe.map((param, idx) => {
+        return parametrosUe.map((param, idx) => {
           const id = Number(param.Id);
           const base = this.descripcionesPorDefecto[id];
           const codigo =
@@ -84,13 +108,11 @@ export class ModalSeleccionarUeComponent implements OnInit {
             descripcion,
           };
         });
-        this.selectedUe =
-          this.unidades.find((u) => u.id === this.selectedUe?.id) ||
-          this.unidades[0];
       }
     } catch {
       // Mantiene las unidades base por defecto si falla la consulta de parámetros
     }
+    return this.unidadesBase;
   }
 
   seleccionar(ue: UnidadEjecutoraOption): void {
@@ -98,6 +120,7 @@ export class ModalSeleccionarUeComponent implements OnInit {
   }
 
   confirmar(): void {
+    if (!this.selectedUe) return;
     this.dialogRef.close(this.selectedUe);
   }
 

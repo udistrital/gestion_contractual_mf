@@ -89,6 +89,8 @@ describe('PasoInfoGeneralComponent: guardado', () => {
     fixture.componentRef.setInput('contratoGeneral', datos);
     fixture.detectChanges();
     await fixture.whenStable();
+    // ngOnInit espera las unidades permitidas (async/await nativo, fuera de whenStable).
+    await new Promise((resuelto) => setTimeout(resuelto));
     fixture.detectChanges();
     jest.spyOn(component.formInfoGeneral, 'invalid', 'get').mockReturnValue(false);
   }
@@ -290,5 +292,128 @@ describe('PasoInfoGeneralComponent: guardado', () => {
   it('deshabilita el selector de vigencia cuando el contrato ya existe', async () => {
     await montar(existente);
     expect(component.formInfoGeneral.get('vigenciaId')?.disabled).toBe(true);
+  });
+});
+
+describe('PasoInfoGeneralComponent: unidades ejecutoras permitidas', () => {
+  const RECTORIA = 6818;
+  const IDEXUD = 6819;
+  let fixture: ComponentFixture<PasoInfoGeneralComponent>;
+  let component: PasoInfoGeneralComponent;
+  let crud: Record<string, jest.Mock>;
+  let alertas: Record<string, jest.Mock>;
+
+  async function montar(
+    roles: string[],
+    opciones: { contrato?: any; ueNavegacion?: number; visualizacion?: boolean } = {}
+  ) {
+    window.history.replaceState(
+      opciones.ueNavegacion ? { unidadEjecutoraId: opciones.ueNavegacion } : null,
+      ''
+    );
+    crud = {
+      post: jest.fn().mockReturnValue(of({ Success: true, Status: 201, Data: { id: 42 } })),
+      put: jest.fn(),
+      postEstadoContrato: jest.fn().mockReturnValue(of({})),
+    };
+    alertas = { showErrorAlert: jest.fn(), showSuccessAlert: jest.fn(), showAlert: jest.fn() };
+    TestBed.configureTestingModule({
+      declarations: [PasoInfoGeneralComponent],
+      providers: [
+        { provide: AlertService, useValue: alertas },
+        { provide: RolService, useValue: { getRol: () => roles } },
+        {
+          provide: ParametrosService,
+          useValue: {
+            getParametrosPorTipo: jest.fn().mockResolvedValue({
+              146: [
+                { Id: RECTORIA, Nombre: 'Rectoría' },
+                { Id: IDEXUD, Nombre: 'IDEXUD' },
+                { Id: 7001, Nombre: 'Otra unidad' },
+              ],
+            }),
+            getParametroPorPadreIdyTipoId: jest.fn().mockReturnValue([]),
+          },
+        },
+        { provide: ContratoGeneralCrudService, useValue: crud },
+        {
+          provide: ContratoGeneralMidService,
+          useValue: { postConsecutivo: jest.fn().mockReturnValue(of({ Success: true, Status: 200, Data: '1' })) },
+        },
+        { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
+        { provide: VigenciaService, useValue: { vigenciaActualId: jest.fn().mockReturnValue(of(9001)) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+    });
+    fixture = TestBed.createComponent(PasoInfoGeneralComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput('contratoGeneral', opciones.contrato);
+    fixture.componentRef.setInput('viewMode', !!opciones.visualizacion);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resuelto) => setTimeout(resuelto));
+    fixture.detectChanges();
+  }
+
+  const ids = () => component.unidadesEjecutoras.map((u) => u.Id);
+
+  afterEach(() => window.history.replaceState(null, ''));
+
+  it.each([
+    ['ABOGADO_CONTRATACION_RECTOR', RECTORIA],
+    ['ABOGADO_CONTRATACION_IDEXUD', IDEXUD],
+  ])('con el rol %s solo ofrece su unidad y la deja seleccionada', async (rol, unidad) => {
+    await montar([rol]);
+    expect(ids()).toEqual([unidad]);
+    expect(component.formInfoGeneral.value.unidadEjecutoraId).toBe(unidad);
+    expect(component.sinUnidadPermitida).toBe(false);
+  });
+
+  it('no agrega la unidad que llega del modal si el usuario no la tiene permitida', async () => {
+    await montar(['ABOGADO_CONTRATACION_RECTOR'], { ueNavegacion: IDEXUD });
+    expect(ids()).toEqual([RECTORIA]);
+    expect(component.formInfoGeneral.value.unidadEjecutoraId).toBe(RECTORIA);
+  });
+
+  it('con las dos unidades ofrece ambas y preselecciona la que llega del modal', async () => {
+    await montar(['ABOGADO_CONTRATACION_RECTOR', 'ABOGADO_CONTRATACION_IDEXUD'], { ueNavegacion: IDEXUD });
+    expect(ids()).toEqual([RECTORIA, IDEXUD]);
+    expect(component.formInfoGeneral.value.unidadEjecutoraId).toBe(IDEXUD);
+  });
+
+  it('con las dos unidades y sin unidad del modal no preselecciona ninguna', async () => {
+    await montar(['ABOGADO_CONTRATACION_RECTOR', 'ABOGADO_CONTRATACION_IDEXUD']);
+    expect(ids()).toEqual([RECTORIA, IDEXUD]);
+    expect(component.formInfoGeneral.value.unidadEjecutoraId).toBeNull();
+  });
+
+  it('sin unidad permitida no muestra el catálogo, avisa y no guarda', async () => {
+    await montar(['ADMIN_ARGO']);
+    expect(ids()).toEqual([]);
+    expect(component.sinUnidadPermitida).toBe(true);
+    expect(fixture.nativeElement.querySelector('.aviso-sin-unidad')?.textContent).toContain(
+      'no tiene una unidad ejecutora autorizada'
+    );
+
+    component.guardarYContinuar();
+    await new Promise((resuelto) => setTimeout(resuelto));
+    expect(alertas['showErrorAlert']).toHaveBeenCalledWith(
+      expect.stringContaining('no tiene una unidad ejecutora autorizada'),
+      'Sin unidad ejecutora autorizada'
+    );
+    expect(crud['post']).not.toHaveBeenCalled();
+  });
+
+  it('un contrato existente conserva y muestra su unidad aunque no esté entre las permitidas', async () => {
+    await montar(['ABOGADO_CONTRATACION_RECTOR'], { contrato: { id: 42, unidad_ejecutora_id: IDEXUD } });
+    expect(ids()).toEqual([RECTORIA, IDEXUD]);
+    expect(component.formInfoGeneral.value.unidadEjecutoraId).toBe(IDEXUD);
+    expect(component.sinUnidadPermitida).toBe(false);
+  });
+
+  it('en visualización sin roles muestra la unidad guardada sin el aviso', async () => {
+    await montar([], { contrato: { id: 42, unidad_ejecutora_id: RECTORIA }, visualizacion: true });
+    expect(ids()).toEqual([RECTORIA]);
+    expect(component.sinUnidadPermitida).toBe(false);
   });
 });

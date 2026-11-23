@@ -19,6 +19,10 @@ import { RolService } from 'src/app/services/rol.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { UserService } from 'src/app/services/user.service';
 import {
+  MENSAJE_SIN_UNIDAD_PERMITIDA,
+  UnidadesPermitidasService,
+} from 'src/app/services/unidades-permitidas.service';
+import {
   ApiResponse,
   ContratoGeneral,
   EstadoContrato,
@@ -105,9 +109,10 @@ export class PasoInfoGeneralComponent implements OnInit {
   private readonly vigenciaService = inject(VigenciaService);
   private readonly cdRef = inject(ChangeDetectorRef);
   private readonly userService = inject(UserService);
+  private readonly unidadesPermitidasService = inject(UnidadesPermitidasService);
 
   formInfoGeneral = this.fb.group({
-    unidadEjecutoraId: [0, Validators.required],
+    unidadEjecutoraId: [null as number | null, Validators.required],
     vigenciaId: [null as number | null, Validators.required],
     tipoCompromisoId: [null as number | null, Validators.required],
     tipoContratoId: [null as number | null, Validators.required],
@@ -138,6 +143,9 @@ export class PasoInfoGeneralComponent implements OnInit {
 
   unidadesEjecutoras: SimpleItem[] = [];
   unidadesEjecutorasParametros: ParametroResponse[] = [];
+  /** Contrato nuevo y el usuario no tiene unidad autorizada: no puede registrar. */
+  sinUnidadPermitida = false;
+  readonly mensajeSinUnidad = MENSAJE_SIN_UNIDAD_PERMITIDA;
   vigenciasContrato: ParametroResponse[] = [];
 
   tiposParametrosRequeridos = [
@@ -182,7 +190,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     await this.loadInitialData();
     // Las opciones dependientes (tipo de contrato, tipología, perfil) también
     // se cargan en modo visualización para poder mostrar los valores guardados.
-    this.processRoles();
+    await this.processRoles();
     this.setuptipoCompromisoId();
     this.setuptipoContratoId();
     if (!this.viewMode()) {
@@ -310,92 +318,65 @@ export class PasoInfoGeneralComponent implements OnInit {
     return param?.Nombre || fallback;
   }
 
-  private processRoles(): void {
-    const nombreRectoria = this.obtenerNombreUnidadEjecutora(
-      environment.UNIDADES_EJECUTORAS.RECTORIA,
-      'Rectoría'
-    );
-    const nombreIdexud = this.obtenerNombreUnidadEjecutora(
-      environment.UNIDADES_EJECUTORAS.IDEXUD,
-      'IDEXUD'
-    );
+  /** Catálogo de unidades de Parámetros; si no llega, Rectoría e IDEXUD. */
+  private catalogoUnidades(): SimpleItem[] {
+    if (this.unidadesEjecutorasParametros?.length > 0) {
+      return this.unidadesEjecutorasParametros.map((p) => ({
+        Id: Number(p.Id),
+        Nombre: p.Nombre,
+      }));
+    }
+    return [
+      {
+        Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
+        Nombre: this.obtenerNombreUnidadEjecutora(environment.UNIDADES_EJECUTORAS.RECTORIA, 'Rectoría'),
+      },
+      {
+        Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
+        Nombre: this.obtenerNombreUnidadEjecutora(environment.UNIDADES_EJECUTORAS.IDEXUD, 'IDEXUD'),
+      },
+    ];
+  }
 
-    const catalogoUnidades: SimpleItem[] =
-      this.unidadesEjecutorasParametros?.length > 0
-        ? this.unidadesEjecutorasParametros.map((p) => ({
-            Id: Number(p.Id),
-            Nombre: p.Nombre,
-          }))
-        : [
-            {
-              Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-              Nombre: nombreRectoria,
-            },
-            {
-              Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-              Nombre: nombreIdexud,
-            },
-          ];
+  /**
+   * Solo se ofrecen las unidades permitidas (UnidadesPermitidasService). La unidad
+   * que llega del modal (history.state) se preselecciona solo si está permitida.
+   * Un contrato existente conserva su unidad en la lista para poder mostrarla.
+   */
+  private async processRoles(): Promise<void> {
+    const catalogo = this.catalogoUnidades();
+    this.unidadesEjecutoras = await this.unidadesPermitidasService.filtrar(catalogo, (u) => u.Id);
+    this.incluirUnidadGuardada(this.contratoGeneral()?.unidad_ejecutora_id);
 
-    const filteredRoles = this.roles.filter(
-      (role) => role.includes('RECTOR') || role.includes('IDEXUD')
-    );
-
-    const ueIdNavegacion = Number(history.state?.unidadEjecutoraId);
-
-    if (filteredRoles.length === 0) {
-      this.unidadesEjecutoras = catalogoUnidades;
-      const ueSeleccionada =
-        catalogoUnidades.find((u) => u.Id === ueIdNavegacion)?.Id ??
-        catalogoUnidades[0]?.Id;
-      this.formInfoGeneral.patchValue({
-        unidadEjecutoraId: ueSeleccionada
-      });
+    if (this.contratoGeneral()?.id || this.viewMode()) {
       return;
     }
 
-    const mappedItems = filteredRoles
-      .map((role) => {
-        if (role.includes('RECTOR')) {
-          return {
-            Id: environment.UNIDADES_EJECUTORAS.RECTORIA,
-            Nombre: nombreRectoria,
-          };
-        }
-        if (role.includes('IDEXUD')) {
-          return {
-            Id: environment.UNIDADES_EJECUTORAS.IDEXUD,
-            Nombre: nombreIdexud,
-          };
-        }
-        return null;
-      })
-      .filter((item): item is SimpleItem => item !== null);
-
-    if (ueIdNavegacion) {
-      const ueDesdeCatalogo = catalogoUnidades.find((u) => u.Id === ueIdNavegacion);
-      if (ueDesdeCatalogo) {
-        mappedItems.push(ueDesdeCatalogo);
-      }
+    this.sinUnidadPermitida = this.unidadesEjecutoras.length === 0;
+    if (this.sinUnidadPermitida) {
+      this.formInfoGeneral.patchValue({ unidadEjecutoraId: null });
+      return;
     }
 
-    const uniqueMap = new Map(mappedItems.map((item) => [item.Id, item]));
-    this.unidadesEjecutoras = Array.from(uniqueMap.values());
-
-    if (
-      ueIdNavegacion &&
-      this.unidadesEjecutoras.some((u) => u.Id === ueIdNavegacion)
-    ) {
-      this.formInfoGeneral.patchValue({
-        unidadEjecutoraId: ueIdNavegacion
-      });
+    const ueIdNavegacion = Number(history.state?.unidadEjecutoraId);
+    if (ueIdNavegacion && this.unidadesEjecutoras.some((u) => u.Id === ueIdNavegacion)) {
+      this.formInfoGeneral.patchValue({ unidadEjecutoraId: ueIdNavegacion });
     } else if (this.unidadesEjecutoras.length === 1) {
-      this.formInfoGeneral.patchValue({
-        unidadEjecutoraId: this.unidadesEjecutoras[0].Id
-      });
+      this.formInfoGeneral.patchValue({ unidadEjecutoraId: this.unidadesEjecutoras[0].Id });
     }
   }
 
+  /** Agrega a la lista la unidad guardada en el contrato si no está entre las permitidas. */
+  private incluirUnidadGuardada(unidadId: number | null | undefined): void {
+    const id = Number(unidadId);
+    if (!id || this.unidadesEjecutoras.some((u) => u.Id === id)) {
+      return;
+    }
+    const unidad = this.catalogoUnidades().find((u) => u.Id === id);
+    if (unidad) {
+      this.unidadesEjecutoras = [...this.unidadesEjecutoras, unidad];
+    }
+  }
 
   setupAplicaPoliza() {
     this.formInfoGeneral
@@ -487,6 +468,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     const data = this.contratoGeneral();
     if (!data) return;
 
+    this.incluirUnidadGuardada(data.unidad_ejecutora_id);
     const formData = {
       unidadEjecutoraId: data.unidad_ejecutora_id,
       vigenciaId: data.vigencia_id ?? null,
@@ -534,6 +516,10 @@ export class PasoInfoGeneralComponent implements OnInit {
   guardarYContinuar() {
     // Hasta que llegue el contrato recargado no se sabe si el siguiente guardado es POST o PUT.
     if (this.guardando()) return;
+    if (this.sinUnidadPermitida) {
+      this.alertService.showErrorAlert(this.mensajeSinUnidad, 'Sin unidad ejecutora autorizada');
+      return;
+    }
     this.guardando.set(true);
 
     if (this.viewMode() || this.formInfoGeneral.invalid) {
@@ -547,7 +533,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     }
 
     const formData = this.formInfoGeneral.value;
-    const unidad_ejecutora_id = String(formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id);
+    const unidad_ejecutora_id = String(formData.unidadEjecutoraId);
 
     // Un contrato existente ya tiene consecutivo: no se pide otro.
     if (this.contratoGeneral()?.id) {
@@ -641,7 +627,7 @@ export class PasoInfoGeneralComponent implements OnInit {
       procedimiento_id: formData.procedimientoId,
       plazo_ejecucion: Number(formData.plazoEjecucion),
       unidad_ejecucion_id: formData.unidadEjecucionId,
-      unidad_ejecutora_id: formData.unidadEjecutoraId || this.unidadesEjecutoras[0]?.Id,
+      unidad_ejecutora_id: formData.unidadEjecutoraId,
     };
 
     const contratoId = this.contratoGeneral()?.id;

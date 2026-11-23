@@ -13,6 +13,13 @@
     </div>
   </div>
 
+  @if (sinUnidadPermitida) {
+    <div class="aviso-sin-unidad mb-4" role="alert">
+      <mat-icon class="aviso-icon">block</mat-icon>
+      <p class="aviso-texto">{{ mensajeSinUnidad }}</p>
+    </div>
+  }
+
   @if (loadedData()) {
     <form [formGroup]="formInfoGeneral">
       <div class="bloque-card mb-4">
@@ -272,7 +279,7 @@
                 mat-raised-button
                 (click)="guardarYContinuar()"
                 color="primary"
-                [disabled]="!formInfoGeneral.valid || guardando()"
+                [disabled]="!formInfoGeneral.valid || guardando() || sinUnidadPermitida"
               >
                 <mat-icon>save</mat-icon>
                 Guardar Datos Básicos
