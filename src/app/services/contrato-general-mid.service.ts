@@ -31,7 +31,7 @@ export class ContratoGeneralMidService {
   /** Registra un estado; al pasar a SUSCRITO el MID asigna y devuelve el número de contrato. */
   postEstadoContrato(idContrato: number, cambio: CambioEstadoContrato): Observable<any> {
     this.requestManager.setPath("GESTION_CONTRACTUAL_MID_SERVICE");
-    return this.requestManager.post(`contratos-generales/${idContrato}/estados`, cambio);
+    return this.requestManager.post(`contratos-generales/estados?contrato-id=${idContrato}`, cambio);
   }
 
   getContratos(params: any): Observable<any> {
