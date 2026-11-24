@@ -61,7 +61,7 @@ describe('TableroDatosService', () => {
       `parametro?query=TipoParametroId:${environment.VIGENCIA_ID},Nombre:2026&fields=Id&limit=1`
     );
     expect(requestManager.setPath).toHaveBeenCalledWith('GESTION_CONTRACTUAL_MID_SERVICE');
-    expect(requestManager.get).toHaveBeenCalledWith('tableros/contratos?vigencia_id=6900');
+    expect(requestManager.get).toHaveBeenCalledWith('tableros/contratos?vigencia-id=6900');
   });
 
   it('guarda el Id de cada vigencia para no volver a consultarlo', async () => {
