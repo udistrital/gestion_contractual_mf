@@ -42,7 +42,7 @@ export class TableroDatosService {
       switchMap((vigenciaId) => {
         // Año sin parámetro de vigencia: ningún contrato puede tenerlo
         if (vigenciaId === null) return of([] as ContratoTableroCrud[]);
-        const filtro = vigenciaId ? `?vigencia-id=${vigenciaId}` : '';
+        const filtro = vigenciaId ? `?vigencia_id=${vigenciaId}` : '';
         this.requestManager.setPath('GESTION_CONTRACTUAL_MID_SERVICE');
         return this.requestManager
           .get<any>(`tableros/contratos${filtro}`)
