@@ -25,7 +25,7 @@ describe('ContratoGeneralMidService', () => {
   afterEach(() => http.verify());
 
   // udistrital/argo_documentacion#414: el id del contrato va en la consulta
-  it('registra el estado con POST contratos-generales/estados?contrato-id= y el cambio sin el id', () => {
+  it('registra el estado con POST contratos-generales/estados?contrato_id= y el cambio sin el id', () => {
     const cambio: CambioEstadoContrato = {
       usuario_id: 7,
       usuario_rol: 'JEFE_CONTRATACION_RECTOR',
@@ -36,7 +36,7 @@ describe('ContratoGeneralMidService', () => {
     service.postEstadoContrato(42, cambio).subscribe((r) => (respuesta = r));
 
     const req = http.expectOne(
-      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}contratos-generales/estados?contrato-id=42`
+      `${environment.GESTION_CONTRACTUAL_MID_SERVICE}contratos-generales/estados?contrato_id=42`
     );
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(cambio);

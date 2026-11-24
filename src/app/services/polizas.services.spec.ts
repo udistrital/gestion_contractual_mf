@@ -47,14 +47,14 @@ describe('PolizasService', () => {
   });
 
   // udistrital/argo_documentacion#414: el id del contrato va en la consulta
-  it('pide el borrador del acta con POST acta-poliza/contratos/borrador?contrato-id=', () => {
+  it('pide el borrador del acta con POST acta-poliza/contratos/borrador?contrato_id=', () => {
     const amparos = [
       { id: 1, valor: 5000000, fecha_inicio: '2024-01-15', fecha_fin: null },
     ];
     service.getBorradorActaAprobacion(10, amparos).subscribe();
 
     const req = httpMock.expectOne(
-      `${environment.MINUTA_CONTRACTUAL_MID_SERVICE}acta-poliza/contratos/borrador?contrato-id=10`
+      `${environment.MINUTA_CONTRACTUAL_MID_SERVICE}acta-poliza/contratos/borrador?contrato_id=10`
     );
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ amparos });
