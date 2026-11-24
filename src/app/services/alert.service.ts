@@ -49,8 +49,14 @@ export class AlertService {
     });
   }
 
-  showConfirmAlert(text: string, title: string = 'Atención'): Promise<SweetAlertResult> {
+  /**
+   * `target`: elemento donde se agrega la alerta. Desde un MatDialog se pasa el host del overlay, que el CDK
+   * muestra en la capa superior del navegador (popover); en el body la alerta quedaría debajo del diálogo.
+   * Ese host desactiva pointer-events y la alerta lo heredaría: al abrir, se reactivan en su contenedor.
+   */
+  showConfirmAlert(text: string, title: string = 'Atención', target?: HTMLElement): Promise<SweetAlertResult> {
     return Swal.fire({
+      ...(target ? { target, didOpen: () => Swal.getContainer()?.style.setProperty('pointer-events', 'auto') } : {}),
       title: title,
       text: text,
       icon: 'warning',
