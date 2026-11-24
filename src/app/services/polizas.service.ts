@@ -108,7 +108,7 @@ export class PolizasService {
   ): Observable<any> {
     this.requestManager.setPath('MINUTA_CONTRACTUAL_MID_SERVICE');
     return this.requestManager.post(
-      `acta-poliza/contratos/borrador?contrato-id=${contratoGeneralId}`,
+      `acta-poliza/contratos/borrador?contrato_id=${contratoGeneralId}`,
       { amparos }
     );
   }

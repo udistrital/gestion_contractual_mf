@@ -17,7 +17,7 @@ export class RegistroActasService {
 
   previsualizarActaInicio(contrato_id: number, datos: any): Observable<any> {
     this.requestManager.setPath('MINUTA_CONTRACTUAL_MID_SERVICE');
-    return this.requestManager.post(`acta-inicio/contratos/previsualizacion?contrato-id=${contrato_id}`, datos);
+    return this.requestManager.post(`acta-inicio/contratos/previsualizacion?contrato_id=${contrato_id}`, datos);
   }
 
   generarActaInicio(contrato_id: number, datos: any): Observable<any> {
