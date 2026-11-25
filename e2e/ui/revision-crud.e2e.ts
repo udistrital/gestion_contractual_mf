@@ -7,7 +7,7 @@ import { CORE_MF_STUB, responderServicioExterno } from '../support/servicios-sim
 
 /**
  * Aprobación del jefe contra el CRUD y el MID REALES (#397): el MF registra
- * los estados en POST /contratos-generales/{id}/estados del MID, que asigna el número
+ * los estados en POST /contratos-generales/estados?contrato_id= del MID, que asigna el número
  * al pasar a SUSCRITO. Se simulan core-mf, minuta, gestor documental y Parámetros.
  * persona_id va simulado: sin él el MF envía usuario_id 0, que el CRUD rechaza, así que
  * la prueba lo cambia por USUARIO_ID_PRUEBA antes de reenviar al MID.
@@ -72,8 +72,9 @@ test('aprobación del jefe: el MID asigna el número al pasar a SUSCRITO', async
       const destino = `${CRUD_URL}/${ruta.replace('gestion_contractual_crud/', '')}${url.search}`;
       return route.fulfill({ response: await route.fetch({ url: destino }) });
     }
-    if (/^gestion_contractual_mid\/contratos-generales\/\d+\/estados$/.test(ruta)) {
-      const destino = `${MID_URL}/${ruta.replace('gestion_contractual_mid/', '')}`;
+    if (ruta === 'gestion_contractual_mid/contratos-generales/estados') {
+      expect(url.searchParams.get('contrato_id')).toMatch(/^[1-9]\d*$/);
+      const destino = `${MID_URL}/${ruta.replace('gestion_contractual_mid/', '')}${url.search}`;
       const cuerpo = peticion.postDataJSON();
       cambiosEnviados.push(cuerpo);
       const postData = JSON.stringify({ ...cuerpo, usuario_id: cuerpo.usuario_id || USUARIO_ID_PRUEBA });
