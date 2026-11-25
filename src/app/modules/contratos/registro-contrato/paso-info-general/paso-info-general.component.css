@@ -131,3 +131,23 @@ mat-form-field,
   color: #191c1e;
   cursor: default;
 }
+
+.aviso-sin-unidad {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-left: 4px solid var(--md-warning-500, #f59e0b);
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+
+.aviso-sin-unidad .aviso-icon {
+  color: var(--md-warning-500, #d97706);
+  flex-shrink: 0;
+}
+
+.aviso-sin-unidad .aviso-texto {
+  margin: 0;
+}
