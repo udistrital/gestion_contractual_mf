@@ -43,12 +43,6 @@ export const CONTRATOS_ROUTES: Routes = [
     component: EditarContratoComponent,
   },
   {
-    path: 'documentos/:idContrato',
-    canActivate: [authGuard],
-    data: DESDE_CONSULTA,
-    component: RevisionContratoComponent,
-  },
-  {
     path: 'documentos/:contratoId',
     canActivate: [authGuard],
     data: DESDE_CONSULTA,

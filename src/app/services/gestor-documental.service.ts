@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { RequestManager } from '../managers/requestManager';
 import { Observable } from 'rxjs';
+import { EstadosSinAlerta } from '../managers/errorManager';
 
 @Injectable()
 export class GestorDocumentalService {
@@ -8,9 +9,9 @@ export class GestorDocumentalService {
     this.requestManager.setPath('GESTOR_DOCUMENTAL_SERVICE');
   }
 
-  postAny(endpoint: string, element: any): Observable<any> {
+  postAny(endpoint: string, element: any, estadosSinAlerta: EstadosSinAlerta = []): Observable<any> {
     this.requestManager.setPath('GESTOR_DOCUMENTAL_SERVICE');
-    return this.requestManager.post(endpoint, element);
+    return this.requestManager.post(endpoint, element, estadosSinAlerta);
   }
 
   getDocumento(documento_enlace: string): Observable<any> {

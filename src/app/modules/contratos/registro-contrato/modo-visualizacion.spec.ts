@@ -1,3 +1,4 @@
+import { GestionContractualCrudService } from 'src/app/services/gestion-contractual-crud.service';
 import { Component, Input, NO_ERRORS_SCHEMA, TemplateRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
@@ -692,7 +693,9 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
           { provide: RolService, useValue: { getRol: () => [] } },
           { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },
           { provide: ClausulasParagrafosService, useValue: clausulasService },
-          { provide: MinutasMidService, useValue: { getMinuta: jest.fn().mockReturnValue(of({ Data: 'JVBERi0xLjQK' })) } },
+          { provide: MinutasMidService, useValue: { getMinutaPdf: jest.fn().mockReturnValue(of('JVBERi0xLjQK')) } },
+          { provide: GestorDocumentalService, useValue: { getDocumento: jest.fn() } },
+          { provide: GestionContractualCrudService, useValue: { getDocumentos: jest.fn().mockReturnValue(of({ Data: [] })) } },
           {
             provide: ParametrosService,
             useValue: { get: jest.fn().mockReturnValue(of({ Status: '200', Data: [{ Id: '1', Nombre: 'PRIMERA' }] })) },
@@ -740,10 +743,12 @@ describe('Modo visualización de los pasos del registro de contrato', () => {
     it('la vista previa de la minuta no ofrece guardar el documento', async () => {
       await montar({ Success: true, Data: [clausula] });
       await component.openPdfViewer();
+      // Sin `datos`, el visor de develop (#359) no muestra "Guardar".
       expect(dialog.open).toHaveBeenCalledWith(
         PdfViewerModalComponent,
-        expect.objectContaining({ data: expect.objectContaining({ datos: null }) })
+        expect.objectContaining({ data: { file: expect.any(Blob) } })
       );
+      expect(clausulasService.post).not.toHaveBeenCalled();
     });
   });
 
