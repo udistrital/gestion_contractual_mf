@@ -702,24 +702,15 @@ export class ConsultaContratoComponent implements OnInit {
       case 'Ver Contrato':
       case 'Revisar Contrato':
       case 'Ver Documentos': {
-        const docBase = this.router.url.includes('gestion-contractual')
-          ? '/gestion-contractual/contratos/documentos'
-          : '/contratos/documentos';
-        this.router.navigate([docBase, contrato.id]);
+        this.router.navigate(['documentos', contrato.id], {relativeTo: this.route.parent});
         break;
       }
       case 'Ver Detalle': {
-        const detalleBase = this.router.url.includes('gestion-contractual')
-          ? '/gestion-contractual/contratos/detalle'
-          : '/contratos/detalle';
-        this.router.navigate([detalleBase, contrato.id]);
+        this.router.navigate(['detalle', contrato.id], {relativeTo: this.route.parent});
         break;
       }
       case 'Editar Contrato': {
-        const editBase = this.router.url.includes('gestion-contractual')
-          ? '/gestion-contractual/contratos/editar'
-          : '/contratos/editar';
-        this.router.navigate([editBase, contrato.id]);
+        this.router.navigate(['editar', contrato.id], {relativeTo: this.route.parent});
         break;
       }
       case 'Enviar Aprobación Jefe OC':
