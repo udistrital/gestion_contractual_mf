@@ -1,14 +1,24 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Observable, finalize } from 'rxjs';
 import { ContratoGeneral } from 'src/app/types/types';
 
 export interface ModalEnviarAprobacionData {
   contrato: ContratoGeneral;
+  /**
+   * Envío del contrato (minuta vigente y cambio de estado). Si viene, el modal
+   * sigue abierto mientras se ejecuta y solo se cierra si termina bien. Si falla,
+   * muestra dentro del modal el `mensaje` del error y libera el botón: una alerta
+   * aparte quedaría detrás del diálogo, que se dibuja en la capa superior.
+   */
+  enviar?: (observacion: string) => Observable<unknown>;
 }
 
 export interface ModalEnviarAprobacionResultado {
   confirmado: boolean;
   observacion?: string;
+  /** true si el modal ejecutó `enviar` y terminó bien. */
+  enviado?: boolean;
 }
 
 @Component({
@@ -19,6 +29,10 @@ export interface ModalEnviarAprobacionResultado {
 })
 export class ModalEnviarAprobacionComponent {
   observacion: string = '';
+  /** Mientras se envía: botones deshabilitados y el modal no se cierra. */
+  enviando = false;
+  /** Por qué no se pudo enviar; se muestra dentro del modal. */
+  mensajeError = '';
 
   constructor(
     public dialogRef: MatDialogRef<ModalEnviarAprobacionComponent>,
@@ -57,13 +71,36 @@ export class ModalEnviarAprobacionComponent {
   }
 
   cancelar(): void {
+    if (this.enviando) return;
     this.dialogRef.close({ confirmado: false });
   }
 
   confirmar(): void {
-    this.dialogRef.close({
-      confirmado: true,
-      observacion: this.observacion.trim(),
-    });
+    if (this.enviando) return;
+    const observacion = this.observacion.trim();
+    if (!this.data?.enviar) {
+      this.dialogRef.close({ confirmado: true, observacion });
+      return;
+    }
+    this.enviando = true;
+    this.mensajeError = '';
+    this.dialogRef.disableClose = true;
+    this.data
+      .enviar(observacion)
+      .pipe(
+        finalize(() => {
+          this.enviando = false;
+          this.dialogRef.disableClose = false;
+        })
+      )
+      .subscribe({
+        next: () => this.dialogRef.close({ confirmado: true, observacion, enviado: true }),
+        // El modal sigue abierto para corregir o reintentar.
+        error: (error: unknown) => {
+          const mensaje = (error as { mensaje?: unknown } | null)?.mensaje;
+          this.mensajeError =
+            typeof mensaje === 'string' && mensaje ? mensaje : 'No fue posible enviar el contrato para aprobación.';
+        },
+      });
   }
 }

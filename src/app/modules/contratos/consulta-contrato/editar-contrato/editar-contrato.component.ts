@@ -18,10 +18,8 @@ export class EditarContratoComponent implements OnInit {
     const extractId = (params: any): number => {
       const val =
         params?.get?.('contratoId') ||
-        params?.get?.('idContrato') ||
         params?.get?.('id') ||
         params?.contratoId ||
-        params?.idContrato ||
         params?.id;
       return val ? parseInt(val, 10) : 0;
     };

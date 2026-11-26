@@ -16,6 +16,7 @@ import { VigenciaService } from 'src/app/services/vigencia.service';
 import { ParametrosService } from 'src/app/services/parametros.service';
 import { environment } from 'src/environments/environment';
 import { ContratoGeneral } from 'src/app/types/types';
+import { MinutaDocumentoService } from 'src/app/services/minuta-documento.service';
 
 /**
  * Pruebas de Integración y Estabilización del Ciclo de Vida del Contrato (Issue #402).
@@ -312,6 +313,7 @@ describe('Integración y Estabilización del Ciclo de Vida del Contrato (#402)',
             },
           },
           { provide: ContratoGeneralCrudService, useValue: { postEstadoContrato: jest.fn() } },
+          { provide: MinutaDocumentoService, useValue: { registrarMinutaVigente: jest.fn() } },
           { provide: AlertService, useValue: alertServiceMock },
           { provide: RolService, useValue: { getRol: () => ['ABOGADO_CONTRATACION_RECTOR'], cargarRol: jest.fn() } },
           { provide: UserService, useValue: { getPersonaId: jest.fn().mockResolvedValue(1) } },

@@ -12,6 +12,8 @@ import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid
 import { RolService } from 'src/app/services/rol.service';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { UserService } from 'src/app/services/user.service';
+import { MinutaDocumentoService } from 'src/app/services/minuta-documento.service';
+import { ErrorMinuta } from 'src/app/types/types';
 import { ConsultaContratoComponent } from './consulta-contrato.component';
 import { ModalSeleccionarUeComponent } from './modal-seleccionar-ue/modal-seleccionar-ue.component';
 import { ModalValidarContratistaComponent } from './modal-validar-contratista/modal-validar-contratista.component';
@@ -27,6 +29,7 @@ describe('ConsultaContratoComponent', () => {
   let mockRouter: { navigate: jest.Mock };
   let mockCrudService: { postEstadoContrato: jest.Mock };
   let mockUserService: { getPersonaId: jest.Mock };
+  let mockMinutaDocumento: { registrarMinutaVigente: jest.Mock };
 
   beforeEach(() => {
     mockAlertService = {
@@ -104,6 +107,10 @@ describe('ConsultaContratoComponent', () => {
       getPersonaId: jest.fn().mockResolvedValue(1),
     };
 
+    mockMinutaDocumento = {
+      registrarMinutaVigente: jest.fn().mockReturnValue(of(501)),
+    };
+
     TestBed.configureTestingModule({
       declarations: [ConsultaContratoComponent],
       providers: [
@@ -113,6 +120,7 @@ describe('ConsultaContratoComponent', () => {
         { provide: ParametrosService, useValue: mockParametrosService },
         { provide: ContratoGeneralMidService, useValue: mockContratoMidService },
         { provide: ContratoGeneralCrudService, useValue: mockCrudService },
+        { provide: MinutaDocumentoService, useValue: mockMinutaDocumento },
         { provide: UserService, useValue: mockUserService },
         { provide: RolService, useValue: mockRolService },
         { provide: Router, useValue: mockRouter },
@@ -402,14 +410,27 @@ describe('ConsultaContratoComponent', () => {
       expect(component.estanTodosSeleccionados()).toBe(false);
     });
 
+    /** Error que recibió el modal en el último envío (lo muestra dentro del modal). */
+    let errorEnModal: any;
+    /** Como el modal real: ejecuta data.enviar y se cierra con enviado solo si termina bien. */
+    const modalQueEnvia = (observacion: string) => {
+      errorEnModal = undefined;
+      mockMatDialog.open.mockImplementationOnce((_c: unknown, config: any) => {
+        let resultado: unknown;
+        config.data.enviar(observacion).subscribe({
+          next: () => (resultado = { confirmado: true, observacion, enviado: true }),
+          error: (e: unknown) => (errorEnModal = e),
+        });
+        return { afterClosed: () => of(resultado) };
+      });
+    };
+
     it('debe abrir ModalEnviarAprobacionComponent y actualizar estado a EN_REVISION_JEFE', () => {
       const contrato: any = {
         id: 77,
         estados: { estado_interno_parametro_id: 6799, nombre_estado: 'Borrador' },
       };
-      mockMatDialog.open.mockReturnValue({
-        afterClosed: () => of({ confirmado: true, observacion: 'Revisión urgente' }),
-      });
+      modalQueEnvia('Revisión urgente');
 
       component.abrirModalEnviarAprobacion(contrato);
 
@@ -420,6 +441,114 @@ describe('ConsultaContratoComponent', () => {
       expect(mockAlertService.showSuccessAlert).toHaveBeenCalledWith(
         'El contrato fue enviado para aprobación de la Jefatura con éxito.'
       );
+    });
+
+    describe('envío al jefe con minuta vigente (#405)', () => {
+      const borrador = (): any => ({
+        id: 77,
+        estados: { estado_interno_parametro_id: 6799, nombre_estado: 'Borrador' },
+      });
+
+      it('registra la minuta vigente antes del estado, con el usuario y el rol del abogado', async () => {
+        component.usuarioId = 33;
+        component.roles = ['ABOGADO_CONTRATACION_RECTOR'];
+        const orden: string[] = [];
+        mockMinutaDocumento.registrarMinutaVigente.mockImplementation(() => {
+          orden.push('minuta');
+          return of(501);
+        });
+        mockCrudService.postEstadoContrato.mockImplementation(() => {
+          orden.push('estado');
+          return of({ id: 1 });
+        });
+
+        await new Promise<void>((listo) =>
+          component.enviarAprobacionJefe(borrador(), 'nota').subscribe({ complete: listo })
+        );
+
+        expect(orden).toEqual(['minuta', 'estado']);
+        expect(mockMinutaDocumento.registrarMinutaVigente).toHaveBeenCalledWith(77, 33, 'ABOGADO_CONTRATACION_RECTOR');
+        expect(mockCrudService.postEstadoContrato).toHaveBeenCalledWith(
+          expect.objectContaining({
+            contrato_general_id: { id: 77 },
+            estado_interno_parametro_id: environment.ESTADOS_INTERNOS.EN_REVISION_JEFE,
+            motivo: 'nota',
+          }),
+          'todos'
+        );
+      });
+
+      it('si la minuta falla por faltantes, no cambia el estado y muestra el mensaje del paso', () => {
+        const faltan: ErrorMinuta = {
+          status: 422,
+          tipo: 'faltan-datos',
+          mensaje: 'Faltan datos en el paso General y Presupuestal: ordenador del gasto.',
+          reintentable: true,
+          faltantes: ['ordenador'],
+        };
+        mockMinutaDocumento.registrarMinutaVigente.mockReturnValue(throwError(() => faltan));
+        const contrato = borrador();
+        modalQueEnvia('');
+
+        component.abrirModalEnviarAprobacion(contrato);
+
+        expect(mockCrudService.postEstadoContrato).not.toHaveBeenCalled();
+        expect(contrato.estados.estado_interno_parametro_id).toBe(6799);
+        expect(mockAlertService.showSuccessAlert).not.toHaveBeenCalled();
+        expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+        expect(errorEnModal).toEqual({
+          mensaje: 'No se pudo enviar el contrato. Faltan datos en el paso General y Presupuestal: ordenador del gasto.',
+        });
+      });
+
+      it('si la minuta falla por un servicio (502), no cambia el estado y muestra el mensaje único de falla', () => {
+        mockMinutaDocumento.registrarMinutaVigente.mockReturnValue(
+          throwError(() => ({
+            status: 502,
+            tipo: 'servicio',
+            mensaje: 'No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.',
+            reintentable: true,
+          }))
+        );
+        const contrato = borrador();
+        modalQueEnvia('');
+
+        component.abrirModalEnviarAprobacion(contrato);
+
+        expect(mockCrudService.postEstadoContrato).not.toHaveBeenCalled();
+        expect(contrato.estados.estado_interno_parametro_id).toBe(6799);
+        expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+        expect(errorEnModal).toEqual({
+          mensaje:
+            'No se pudo enviar el contrato. No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.',
+        });
+      });
+
+      it('un error que no es de la minuta muestra el mensaje genérico, nunca un texto técnico', () => {
+        mockMinutaDocumento.registrarMinutaVigente.mockReturnValue(throwError(() => new Error('boom')));
+        const contrato = borrador();
+        modalQueEnvia('');
+
+        component.abrirModalEnviarAprobacion(contrato);
+
+        expect(mockCrudService.postEstadoContrato).not.toHaveBeenCalled();
+        expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
+        expect(errorEnModal).toEqual({
+          mensaje:
+            'No se pudo enviar el contrato. No se pudo generar la minuta. Intente en unos minutos; si el problema continúa, contacte a soporte.',
+        });
+      });
+
+      it('si el modal se cancela, no genera la minuta ni cambia el estado', () => {
+        const contrato = borrador();
+        mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of({ confirmado: false }) });
+
+        component.abrirModalEnviarAprobacion(contrato);
+
+        expect(mockMinutaDocumento.registrarMinutaVigente).not.toHaveBeenCalled();
+        expect(mockCrudService.postEstadoContrato).not.toHaveBeenCalled();
+        expect(contrato.estados.estado_interno_parametro_id).toBe(6799);
+      });
     });
 
     it('debe abrir ModalAprobacionMasivaComponent y aplicar VoBo oficial a los contratos seleccionados', () => {
@@ -535,16 +664,12 @@ describe('ConsultaContratoComponent', () => {
         id: 77,
         estados: { estado_interno_parametro_id: 6799, nombre_estado: 'Borrador' },
       };
-      mockMatDialog.open.mockReturnValueOnce({
-        afterClosed: () => of({ confirmado: true, observacion: 'Revisión urgente' }),
-      });
+      modalQueEnvia('Revisión urgente');
 
       component.abrirModalEnviarAprobacion(contratoEnvio);
       expect(contratoEnvio.estados.estado_interno_parametro_id).toBe(6799);
       expect(mockAlertService.showSuccessAlert).not.toHaveBeenCalled();
-      expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
-        'No fue posible enviar el contrato para aprobación.'
-      );
+      expect(errorEnModal).toEqual({ mensaje: 'No fue posible enviar el contrato para aprobación.' });
 
       const cLote: any = { id: 1, estados: { estado_interno_parametro_id: 6800 } };
       component.seleccionContratos.select(cLote);

@@ -8,23 +8,18 @@ import { DetalleContratoComponent } from './consulta-contrato/detalle-contrato/d
 import { authGuard, VISTAS_PRINCIPALES } from 'src/_guards/auth.guard';
 
 /**
- * Vistas internas: no se registran en Configuración. Se abren desde la consulta de contratos
- * (ConsultaContratoComponent, en consultar y gestionar) y se autorizan por esas vistas principales.
+ * Registrar y las vistas internas se abren desde la consulta de contratos
+ * (ConsultaContratoComponent, en consultar) y se autorizan por esa vista principal.
  */
 const DESDE_CONSULTA = {
-  [VISTAS_PRINCIPALES]: ['/gestion-contractual/contratos/consultar', '/gestion-contractual/contratos/gestionar'],
+  [VISTAS_PRINCIPALES]: ['/gestion-contractual/contratos/consultar'],
 };
 
 export const CONTRATOS_ROUTES: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'gestionar',
-  },
-  {
-    path: 'gestionar',
-    canActivate: [authGuard],
-    component: ConsultaContratoComponent,
+    redirectTo: 'consultar',
   },
   {
     path: 'consultar',
@@ -34,6 +29,7 @@ export const CONTRATOS_ROUTES: Routes = [
   {
     path: 'registrar',
     canActivate: [authGuard],
+    data: DESDE_CONSULTA,
     component: RegistroContratoComponent,
   },
   {
@@ -41,12 +37,6 @@ export const CONTRATOS_ROUTES: Routes = [
     canActivate: [authGuard],
     data: DESDE_CONSULTA,
     component: EditarContratoComponent,
-  },
-  {
-    path: 'documentos/:idContrato',
-    canActivate: [authGuard],
-    data: DESDE_CONSULTA,
-    component: RevisionContratoComponent,
   },
   {
     path: 'documentos/:contratoId',
