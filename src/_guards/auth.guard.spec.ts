@@ -267,9 +267,8 @@ describe('authGuard', () => {
     });
   });
 
-  describe('vistas internas autorizadas por su vista principal (rutas reales de contratos)', () => {
+  describe('rutas de contratos autorizadas por consultar', () => {
     const CONSULTAR = '/gestion-contractual/contratos/consultar';
-    const GESTIONAR = '/gestion-contractual/contratos/gestionar';
     const REGISTRAR = '/gestion-contractual/contratos/registrar';
 
     let harness: RouterTestingHarness | undefined;
@@ -295,13 +294,12 @@ describe('authGuard', () => {
       return TestBed.inject(Router).url === url;
     }
 
-    it('(a) con consultar en el menú, detalle/42 entra; también con gestionar', async () => {
+    it('(a) con consultar en el menú, detalle/42 entra', async () => {
       expect(await navegar([CONSULTAR], '/gestion-contractual/contratos/detalle/42')).toBe(true);
-      expect(await navegar([GESTIONAR], '/gestion-contractual/contratos/detalle/43')).toBe(true);
       expect(mockAlertService.showErrorAlert).not.toHaveBeenCalled();
     });
 
-    it('(b) sin consultar ni gestionar (solo registrar), detalle/42 se rechaza', async () => {
+    it('(b) sin consultar (solo registrar), detalle/42 se rechaza', async () => {
       expect(await navegar([REGISTRAR], '/gestion-contractual/contratos/detalle/42')).toBe(false);
       expect(mockAlertService.showErrorAlert).toHaveBeenCalledWith(
         'No tiene permisos para realizar esta acción',
@@ -319,9 +317,8 @@ describe('authGuard', () => {
       expect(await navegar([REGISTRAR], '/gestion-contractual/contratos/documentos/8')).toBe(false);
     });
 
-    it('(d) una vista principal que no está en el menú se rechaza; la que está entra', async () => {
-      expect(await navegar([CONSULTAR], REGISTRAR)).toBe(false);
-      expect(await navegar([CONSULTAR], GESTIONAR)).toBe(false);
+    it('(d) registrar se autoriza desde consultar; consultar requiere su propia entrada', async () => {
+      expect(await navegar([CONSULTAR], REGISTRAR)).toBe(true);
       expect(await navegar([CONSULTAR], CONSULTAR)).toBe(true);
     });
 
