@@ -69,6 +69,7 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   selectedIndex = 0;
   showEspecificacionesTecnicas = false;
   showAplicaPoliza = false;
+  tipoCompromisoSeleccionado = '';
 
   // Estados de persistencia y avance
   pasosGuardados = new Set<string>();
@@ -462,18 +463,37 @@ export class RegistroContratoComponent implements OnInit, AfterViewInit {
   }
 
   onTipoCompromisoChange(tipoCompromisoId: string) {
-    this.showEspecificacionesTecnicas =
-      tipoCompromisoId === environment.ORDEN_ID.toString();
+    this.tipoCompromisoSeleccionado = tipoCompromisoId
+      ? tipoCompromisoId.toString()
+      : '';
+    const esOrden =
+      this.tipoCompromisoSeleccionado === environment.ORDEN_ID.toString();
+
+    this.showEspecificacionesTecnicas = esOrden;
 
     if (!this.showEspecificacionesTecnicas) {
       const currentSteps = this.stepsCompleted.value;
       currentSteps[3] = true;
       this.stepsCompleted.next(currentSteps);
     }
+
+    if (esOrden) {
+      const valorPolizaForm =
+        this.pasoInfoGeneral?.formInfoGeneral?.getRawValue()?.aplicaPoliza;
+      this.onAplicaPolizaChange(valorPolizaForm === '1' ? '1' : '0');
+    } else if (this.tipoCompromisoSeleccionado) {
+      this.showAplicaPoliza = true;
+    } else {
+      this.showAplicaPoliza = false;
+    }
   }
 
   onAplicaPolizaChange(aplicaPoliza: string) {
-    this.showAplicaPoliza = aplicaPoliza === '1'; // 1 = Si, 0 = No
+    const esOrden =
+      !this.tipoCompromisoSeleccionado ||
+      this.tipoCompromisoSeleccionado === environment.ORDEN_ID.toString();
+
+    this.showAplicaPoliza = esOrden ? aplicaPoliza === '1' : true; // 1 = Si, 0 = No
     if (!this.showAplicaPoliza) {
       const currentSteps = this.stepsCompleted.value;
       currentSteps[4] = true;

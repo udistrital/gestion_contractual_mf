@@ -185,9 +185,8 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.processRoles();
     this.setuptipoCompromisoId();
     this.setuptipoContratoId();
+    this.setupAplicaPoliza();
     if (!this.viewMode()) {
-      this.setupAplicaPoliza();
-
       this.initialFormValue = this.formInfoGeneral.value;
       this.formInfoGeneral.valueChanges.subscribe(() => {
         this.formSaved = false;
@@ -204,32 +203,30 @@ export class PasoInfoGeneralComponent implements OnInit {
       .get('tipoCompromisoId')
       ?.valueChanges.subscribe((id_compromiso) => {
         if (id_compromiso) {
-          //Emite el evento para que el padre sepa que se seleccionó un tipo de compromiso
-          this.tipoCompromisoChange.emit(id_compromiso.toString());
-
           this.CargartipoContratoIds(id_compromiso);
           this.showFieldsBasedOnCompromiso(id_compromiso);
-          if (id_compromiso) {
-            this.CargartipologiaEspecificaId(id_compromiso);
+          this.CargartipologiaEspecificaId(id_compromiso);
 
-            const idCompromisoStr = id_compromiso.toString();
-            const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
+          const idCompromisoStr = id_compromiso.toString();
+          const perfilCompromisoIdStr = environment.ORDEN_ID.toString();
 
-            const perfilCompromisoControl =
-              this.formInfoGeneral.get('aplicaPoliza');
-            if (idCompromisoStr === perfilCompromisoIdStr) {
-              perfilCompromisoControl?.setValidators(Validators.required);
-              if (!this.viewMode()) {
-                perfilCompromisoControl?.enable();
-              }
-            } else {
-              perfilCompromisoControl?.clearValidators();
-              perfilCompromisoControl?.disable();
+          const perfilCompromisoControl =
+            this.formInfoGeneral.get('aplicaPoliza');
+          if (idCompromisoStr === perfilCompromisoIdStr) {
+            perfilCompromisoControl?.setValidators(Validators.required);
+            if (!this.viewMode()) {
+              perfilCompromisoControl?.enable();
             }
-            perfilCompromisoControl?.updateValueAndValidity();
-
-            this.cdRef.detectChanges();
+          } else {
+            perfilCompromisoControl?.clearValidators();
+            perfilCompromisoControl?.disable();
           }
+          perfilCompromisoControl?.updateValueAndValidity();
+
+          // Emite el evento una vez actualizado el estado de aplicaPoliza para el tipo de compromiso
+          this.tipoCompromisoChange.emit(idCompromisoStr);
+
+          this.cdRef.detectChanges();
         }
       });
   }
@@ -401,9 +398,7 @@ export class PasoInfoGeneralComponent implements OnInit {
     this.formInfoGeneral
       .get('aplicaPoliza')
       ?.valueChanges.subscribe((value) => {
-        if (value) {
-          this.aplicaPolizaChange.emit(value.toString());
-        }
+        this.aplicaPolizaChange.emit(value ? value.toString() : '0');
       });
   }
 
