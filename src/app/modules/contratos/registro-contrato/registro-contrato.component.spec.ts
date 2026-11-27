@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { ContratoGeneralCrudService } from 'src/app/services/contrato-general-crud.service';
 import { AlertService } from 'src/app/services/alert.service';
 import { RegistroContratoComponent } from './registro-contrato.component';
@@ -250,6 +251,75 @@ describe('RegistroContratoComponent', () => {
       fixture.componentRef.setInput('contratoGeneralId', 42);
       component.contratoGeneral = undefined;
       expect(component.tituloVista).toBe('Edición del contrato 42');
+    });
+  });
+
+  describe('Visibilidad condicional anidada de Amparos y Garantías', () => {
+    it('al seleccionar "3-Orden" mantiene oculto por defecto el stepper de amparos y garantías y muestra especificaciones técnicas', () => {
+      component.onTipoCompromisoChange(environment.ORDEN_ID.toString());
+
+      expect(component.showEspecificacionesTecnicas).toBe(true);
+      expect(component.showAplicaPoliza).toBe(false);
+      expect(component.pasosDinamicos.some((p) => p.id === 'garantias')).toBe(false);
+    });
+
+    it('en "3-Orden", muestra el stepper de amparos y garantías si "Aplica Póliza" es "Sí" (1) y lo oculta si es "No" (0)', () => {
+      component.onTipoCompromisoChange(environment.ORDEN_ID.toString());
+      expect(component.showAplicaPoliza).toBe(false);
+
+      component.onAplicaPolizaChange('1');
+      expect(component.showAplicaPoliza).toBe(true);
+      expect(component.pasosDinamicos.some((p) => p.id === 'garantias')).toBe(true);
+
+      component.onAplicaPolizaChange('0');
+      expect(component.showAplicaPoliza).toBe(false);
+      expect(component.pasosDinamicos.some((p) => p.id === 'garantias')).toBe(false);
+    });
+
+    it.each([
+      ['Contrato', environment.CONTRATO_ID],
+      ['Convenio', environment.CONVENIO_ID],
+    ])(
+      'para %s (%s) mantiene visible de forma regular el stepper de amparos y garantías y oculta especificaciones técnicas',
+      (_nombre, tipoCompromisoId) => {
+        component.onTipoCompromisoChange(tipoCompromisoId.toString());
+
+        expect(component.showEspecificacionesTecnicas).toBe(false);
+        expect(component.showAplicaPoliza).toBe(true);
+        expect(component.pasosDinamicos.some((p) => p.id === 'garantias')).toBe(true);
+      }
+    );
+
+    it('al cambiar de Contrato o Convenio a "3-Orden", vuelve a ocultar por defecto el stepper de garantías hasta seleccionar "Sí"', () => {
+      component.onTipoCompromisoChange(environment.CONTRATO_ID.toString());
+      expect(component.showAplicaPoliza).toBe(true);
+
+      component.onTipoCompromisoChange(environment.ORDEN_ID.toString());
+      expect(component.showAplicaPoliza).toBe(false);
+
+      component.onAplicaPolizaChange('1');
+      expect(component.showAplicaPoliza).toBe(true);
+    });
+
+    it('al cargar un Contrato existente con aplica_poliza null mantiene visible el stepper de garantías', () => {
+      jest
+        .spyOn(TestBed.inject(ContratoGeneralCrudService), 'get')
+        .mockReturnValue(
+          of({
+            Data: {
+              id: 77,
+              tipo_compromiso_id: environment.CONTRATO_ID,
+              aplica_poliza: null,
+            },
+          })
+        );
+
+      fixture.componentRef.setInput('contratoGeneralId', 77);
+      fixture.detectChanges();
+
+      expect(component.showEspecificacionesTecnicas).toBe(false);
+      expect(component.showAplicaPoliza).toBe(true);
+      expect(component.pasosDinamicos.some((p) => p.id === 'garantias')).toBe(true);
     });
   });
 });

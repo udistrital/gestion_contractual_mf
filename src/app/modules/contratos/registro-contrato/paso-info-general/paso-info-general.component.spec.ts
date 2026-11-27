@@ -8,13 +8,14 @@ import { ContratoGeneralMidService } from 'src/app/services/contrato-general-mid
 import { VigenciaService } from 'src/app/services/vigencia.service';
 import { RolService } from 'src/app/services/rol.service';
 import { UserService } from 'src/app/services/user.service';
+import { environment } from 'src/environments/environment';
 import { of, throwError } from 'rxjs';
 
 describe('PasoInfoGeneralComponent', () => {
   let component: PasoInfoGeneralComponent;
   let fixture: ComponentFixture<PasoInfoGeneralComponent>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [PasoInfoGeneralComponent],
       providers: [
@@ -39,10 +40,49 @@ describe('PasoInfoGeneralComponent', () => {
     fixture = TestBed.createComponent(PasoInfoGeneralComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('despliega y habilita el campo "Aplica Póliza" al seleccionar "3-Orden"', () => {
+    const tipoSpy = jest.spyOn(component.tipoCompromisoChange, 'emit');
+
+    component.formInfoGeneral.get('tipoCompromisoId')?.setValue(environment.ORDEN_ID);
+
+    expect(component.formInfoGeneral.get('aplicaPoliza')?.enabled).toBe(true);
+    expect(component.campoAplica('aplicaPoliza')).toBe(true);
+    expect(tipoSpy).toHaveBeenCalledWith(environment.ORDEN_ID.toString());
+  });
+
+  it.each([
+    ['Contrato', environment.CONTRATO_ID],
+    ['Convenio', environment.CONVENIO_ID],
+  ])('oculta y deshabilita el campo "Aplica Póliza" al seleccionar %s (%s)', (_nombre, tipoCompromisoId) => {
+    // Primero activamos Orden con póliza en Sí
+    component.formInfoGeneral.get('tipoCompromisoId')?.setValue(environment.ORDEN_ID);
+    component.formInfoGeneral.get('aplicaPoliza')?.setValue('1');
+    expect(component.campoAplica('aplicaPoliza')).toBe(true);
+
+    // Luego cambiamos a Contrato o Convenio
+    component.formInfoGeneral.get('tipoCompromisoId')?.setValue(tipoCompromisoId);
+
+    expect(component.formInfoGeneral.get('aplicaPoliza')?.disabled).toBe(true);
+    expect(component.formInfoGeneral.get('aplicaPoliza')?.value).toBeNull();
+    expect(component.campoAplica('aplicaPoliza')).toBe(false);
+  });
+
+  it('emite los cambios de "Aplica Póliza" ("1" para Sí y "0" para No)', () => {
+    const polizaSpy = jest.spyOn(component.aplicaPolizaChange, 'emit');
+    component.formInfoGeneral.get('tipoCompromisoId')?.setValue(environment.ORDEN_ID);
+
+    component.formInfoGeneral.get('aplicaPoliza')?.setValue('1');
+    expect(polizaSpy).toHaveBeenLastCalledWith('1');
+
+    component.formInfoGeneral.get('aplicaPoliza')?.setValue('0');
+    expect(polizaSpy).toHaveBeenLastCalledWith('0');
   });
 });
 
