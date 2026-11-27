@@ -123,6 +123,17 @@ export const accionesPorRolYEstado: {
     [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
   },
   PROVEEDOR: {
+    //CONTRATISTA / PROVEEDOR
+    [environment.ESTADOS_INTERNOS.BORRADOR]: [],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [],
+    [environment.ESTADOS_INTERNOS.EN_REVISION_ORDENADOR]: [],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_ORDENADOR]: [],
+    [environment.ESTADOS_INTERNOS.EN_FIRMA_CONTRATISTA]: ['Revisar Contrato'],
+    [environment.ESTADOS_INTERNOS.FIRMAS_COMPLETAS]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.RECHAZADO]: ['Ver Documentos'],
+    [environment.ESTADOS_INTERNOS.DECLINADO]: ['Ver Documentos'],
+  },
+  CONTRATISTA: {
     //CONTRATISTA
     [environment.ESTADOS_INTERNOS.BORRADOR]: [],
     [environment.ESTADOS_INTERNOS.EN_REVISION_JEFE]: [],

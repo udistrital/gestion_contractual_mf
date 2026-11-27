@@ -93,6 +93,7 @@
                 <button
                   mat-raised-button
                   color="primary"
+                  [disabled]="guardando"
                   (click)="abrirModalRechazo()"
                   >
                   Rechazar Contrato
@@ -101,7 +102,8 @@
               <button
                 mat-raised-button
                 color="primary"
-                (click)="abrirModalCargarArchivo()"
+                [disabled]="guardando"
+                (click)="ejecutarAccionAprobacion()"
                 >
                 {{ textos.accion }}
               </button>

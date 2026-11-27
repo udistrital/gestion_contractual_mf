@@ -55,6 +55,7 @@ export class RevisionContratoComponent {
   estadoInternoActual: number = 0;
   estadoInternoAnterior: number = 0;
   mostrarBotones: boolean = false;
+  guardando: boolean = false;
   textos: any;
 
   constructor(
@@ -127,7 +128,7 @@ export class RevisionContratoComponent {
         const contratoData = contrato?.Data;
         if (contratoData) {
           this.unidad_ejecutora_id = contratoData.unidad_ejecutora_id || 0;
-          this.numero_contrato = contratoData.numero_contrato || '';
+          this.numero_contrato = contratoData.numero_contrato || this.numero_contrato || '';
         }
 
         const estados = estadosContrato?.Data || [];
@@ -301,7 +302,7 @@ export class RevisionContratoComponent {
       });
   }
 
-  mostrarBotonRechazo() {
+  mostrarBotonRechazo(): boolean {
     return !(
       this.estadoInternoAnterior ==
         environment.ESTADOS_INTERNOS.FIRMADO_CONTRATISTA &&
@@ -310,7 +311,29 @@ export class RevisionContratoComponent {
     );
   }
 
+  requiereCargueArchivo(): boolean {
+    return Boolean(this.textos?.requiereArchivo);
+  }
+
+  async ejecutarAccionAprobacion(): Promise<void> {
+    if (this.guardando) return;
+
+    if (this.requiereCargueArchivo()) {
+      this.abrirModalCargarArchivo();
+      return;
+    }
+
+    const confirmacion = await this.alertService.showConfirmAlert(
+      this.textos?.confirmacion || '¿Está seguro(a) de continuar con esta acción?',
+      'Confirmar Acción'
+    );
+    if (confirmacion?.isConfirmed) {
+      this.aprobarContrato();
+    }
+  }
+
   abrirModalCargarArchivo(): void {
+    if (this.guardando) return;
     const dialog = this.dialog.open(SubirArchivoComponent, {
       width: '800px',
       data: {
@@ -327,13 +350,13 @@ export class RevisionContratoComponent {
 
     dialog.afterClosed().subscribe((result) => {
       if (result?.confirmado) {
-        this.mostrarBotones = false;
         this.aprobarContrato();
       }
     });
   }
 
   abrirModalRechazo(): void {
+    if (this.guardando) return;
     const rol = this.getRolPorEstado();
     const dialogRef = this.dialog.open(ModalMotivosRechazoComponent, {
       width: '70vw',
@@ -347,12 +370,15 @@ export class RevisionContratoComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         if (result?.rechazado) {
+          this.guardando = false;
           this.mostrarBotones = false;
           this.alertService.showSuccessAlert(
             'El contrato fue rechazado',
             'CONTRATO RECHAZADO'
           );
+          this.cargarDatosIniciales();
         } else {
+          this.guardando = false;
           this.alertService.showErrorAlert(
             'Error al rechazar contrato',
             'Por favor, intente de nuevo'
@@ -363,11 +389,19 @@ export class RevisionContratoComponent {
   }
 
   aprobarContrato() {
+    if (this.guardando) return;
+    this.guardando = true;
+    this.mostrarBotones = false;
+
     let estados: number[] =
       flujoEstados[this.unidad_ejecutora_id]?.[this.estadoInternoActual];
     const rol = this.getRolPorEstado();
 
-    if (!rol || !estados?.length) return;
+    if (!rol || !estados?.length) {
+      this.guardando = false;
+      this.mostrarBotones = true;
+      return;
+    }
 
     const [estadoActual, estadoAnterior] = estados;
 
@@ -404,10 +438,16 @@ export class RevisionContratoComponent {
               },
               numeroAntes
             );
+          } else {
+            this.guardando = false;
+            this.mostrarBotones = true;
           }
         },
-        error: (error) =>
-          this.handleError(this.mensajeDelMid(error, 'Error al crear estado automático'), error),
+        error: (error) => {
+          this.guardando = false;
+          this.mostrarBotones = true;
+          this.handleError(this.mensajeDelMid(error, 'Error al crear estado automático'), error);
+        },
       });
   }
 
@@ -416,6 +456,7 @@ export class RevisionContratoComponent {
       .postEstadoContrato(this.contrato_general_id, cambio)
       .subscribe({
         next: (response: any) => {
+          this.guardando = false;
           if (response?.Data?.estado?.id) {
             this.recibirNumero(response);
             const numeroNuevo = this.numero_contrato !== numeroAntes ? this.numero_contrato : '';
@@ -425,10 +466,16 @@ export class RevisionContratoComponent {
                 : this.textos.enviado,
               'CONTRATO ENVIADO'
             );
+            this.cargarDatosIniciales();
+          } else {
+            this.mostrarBotones = true;
           }
         },
-        error: (error) =>
-          this.handleError(this.mensajeDelMid(error, 'Error al crear estado de contrato'), error),
+        error: (error) => {
+          this.guardando = false;
+          this.mostrarBotones = true;
+          this.handleError(this.mensajeDelMid(error, 'Error al crear estado de contrato'), error);
+        },
       });
   }
 
