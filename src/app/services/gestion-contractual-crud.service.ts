@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { RECURSOS_CRUD } from '../core/constants/recursos-crud';
 import { RequestManager } from '../managers/requestManager';
 import { ConsultaCrud, DocumentoContrato } from '../types/types';
+import { EstadosSinAlerta } from '../managers/errorManager';
 import { rutaConsulta } from './contrato-general-crud.service';
 
 @Injectable({
@@ -18,8 +19,18 @@ export class GestionContractualCrudService {
         return this.get(rutaConsulta(RECURSOS_CRUD.documentoContrato, consulta));
     }
 
-    postDocumento(documento: DocumentoContrato) {
-        return this.post(`${RECURSOS_CRUD.documentoContrato}/`, documento);
+    postDocumento(documento: DocumentoContrato, estadosSinAlerta: EstadosSinAlerta = []) {
+        this.requestManager.setPath("GESTION_CONTRACTUAL_CRUD_SERVICE");
+        return this.requestManager.post(`${RECURSOS_CRUD.documentoContrato}/`, documento, estadosSinAlerta);
+    }
+
+    /**
+     * Desactiva un documento: el DELETE del CRUD Beego es un borrado lógico
+     * (activo = false y fecha_modificacion); la fila no se borra.
+     */
+    desactivarDocumento(id: number, estadosSinAlerta: EstadosSinAlerta = []) {
+        this.requestManager.setPath("GESTION_CONTRACTUAL_CRUD_SERVICE");
+        return this.requestManager.delete(RECURSOS_CRUD.documentoContrato, id, estadosSinAlerta);
     }
 
     // Método genérico GET

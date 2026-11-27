@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatDialog } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -22,7 +22,8 @@ export class ModalMotivosRechazoComponent implements OnInit {
     public dialog: MatDialog,
     private alertService: AlertService,
     private fb: FormBuilder,
-    private contratoGeneralCrudService: ContratoGeneralCrudService
+    private contratoGeneralCrudService: ContratoGeneralCrudService,
+    private elementRef: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit() {
@@ -36,8 +37,11 @@ export class ModalMotivosRechazoComponent implements OnInit {
   }
 
   preguntarConfirmacionRechazo() {
+    // El CDK muestra el diálogo en la capa superior del navegador (popover), por encima de cualquier
+    // z-index: la confirmación se agrega en el mismo host para que quede encima del modal y reciba el clic.
+    const capaDelDialogo = this.elementRef.nativeElement.closest<HTMLElement>('.cdk-overlay-popover') ?? undefined;
     this.alertService
-      .showConfirmAlert('¿Está seguro(a) de rechazar el contrato?')
+      .showConfirmAlert('¿Está seguro(a) de rechazar el contrato?', undefined, capaDelDialogo)
       .then((confirmado) => {
         if (!confirmado.value) {
           return;

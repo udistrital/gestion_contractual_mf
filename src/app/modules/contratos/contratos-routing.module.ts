@@ -5,18 +5,21 @@ import { ConsultaContratoComponent } from './consulta-contrato/consulta-contrato
 import { RevisionContratoComponent } from './revision-contrato/revision-contrato.component';
 import { EditarContratoComponent } from './consulta-contrato/editar-contrato/editar-contrato.component';
 import { DetalleContratoComponent } from './consulta-contrato/detalle-contrato/detalle-contrato.component';
-import { authGuard } from 'src/_guards/auth.guard';
+import { authGuard, VISTAS_PRINCIPALES } from 'src/_guards/auth.guard';
 
-const routes: Routes = [
+/**
+ * Registrar y las vistas internas se abren desde la consulta de contratos
+ * (ConsultaContratoComponent, en consultar) y se autorizan por esa vista principal.
+ */
+const DESDE_CONSULTA = {
+  [VISTAS_PRINCIPALES]: ['/gestion-contractual/contratos/consultar'],
+};
+
+export const CONTRATOS_ROUTES: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'gestionar',
-  },
-  {
-    path: 'gestionar',
-    canActivate: [authGuard],
-    component: ConsultaContratoComponent,
+    redirectTo: 'consultar',
   },
   {
     path: 'consultar',
@@ -26,33 +29,32 @@ const routes: Routes = [
   {
     path: 'registrar',
     canActivate: [authGuard],
+    data: DESDE_CONSULTA,
     component: RegistroContratoComponent,
   },
   {
     path: 'editar/:contratoId',
     canActivate: [authGuard],
+    data: DESDE_CONSULTA,
     component: EditarContratoComponent,
-  },
-  {
-    path: 'documentos/:idContrato',
-    canActivate: [authGuard],
-    component: RevisionContratoComponent,
   },
   {
     path: 'documentos/:contratoId',
     canActivate: [authGuard],
+    data: DESDE_CONSULTA,
     component: RevisionContratoComponent,
   },
   {
     path: 'detalle/:contratoId',
     canActivate: [authGuard],
+    data: DESDE_CONSULTA,
     component: DetalleContratoComponent,
   },
 ]
 
 @NgModule({
   declarations: [],
-  imports: [RouterModule.forChild(routes)],
+  imports: [RouterModule.forChild(CONTRATOS_ROUTES)],
   exports: [RouterModule]
 })
 export class ContratosRoutingModule { }
