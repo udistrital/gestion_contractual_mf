@@ -77,11 +77,13 @@ export const environment = {
     EN_REVISION_JEFE: 6800,
     APROBADO_JEFE: 6809,
     EN_REVISION_ORDENADOR: 6821, // IDEXUD
-    REVISADO_ORDENADOR: 6822, // IDEXUD
+    REVISADO_ORDENADOR: 6822, // IDEXUD. APROBADO_ORDENADOR en los diagramas de estados
     EN_FIRMA_ORDENADOR: 6801,
     FIRMADO_ORDENADOR: 6808,
     EN_FIRMA_CONTRATISTA: 6802,
     FIRMADO_CONTRATISTA: 6804,
+    // TODO(#411): reemplazar por el id del parámetro cuando Parámetros lo cree (nombre propuesto)
+    EN_AJUSTE_CONTRATISTA: 0,
     FIRMAS_COMPLETAS: 6817,
     RECHAZADO: 6803,
     DECLINADO: 6807,
